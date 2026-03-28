@@ -1,0 +1,346 @@
+package client
+
+import (
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+)
+
+func createTestJWT(claims JWTClaims) string {
+	// Create a simple test JWT (header.payload.signature)
+	header := map[string]string{
+		"alg": "HS256",
+		"typ": "JWT",
+	}
+
+	headerBytes, _ := json.Marshal(header)
+	claimsBytes, _ := json.Marshal(claims)
+
+	headerEncoded := base64.URLEncoding.EncodeToString(headerBytes)
+	payloadEncoded := base64.URLEncoding.EncodeToString(claimsBytes)
+
+	// Remove padding
+	headerEncoded = strings.TrimRight(headerEncoded, "=")
+	payloadEncoded = strings.TrimRight(payloadEncoded, "=")
+
+	return fmt.Sprintf("%s.%s.fake_signature", headerEncoded, payloadEncoded)
+}
+
+func TestValidateAuthToken(t *testing.T) {
+	tests := []struct {
+		name    string
+		token   string
+		wantErr bool
+		errType error
+	}{
+		{
+			name:    "empty token",
+			token:   "",
+			wantErr: true,
+		},
+		{
+			name:    "short opaque token",
+			token:   "short",
+			wantErr: true,
+		},
+		{
+			name:    "valid opaque token",
+			token:   "this-is-a-valid-opaque-token-12345",
+			wantErr: false,
+		},
+		{
+			name:    "invalid JWT format",
+			token:   "invalid.jwt",
+			wantErr: true,
+			errType: ErrInvalidTokenFormat,
+		},
+		{
+			name: "valid JWT",
+			token: createTestJWT(JWTClaims{
+				Subject:        "test-user",
+				ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
+				IssuedAt:       time.Now().Unix(),
+			}),
+			wantErr: false,
+		},
+		{
+			name: "expired JWT",
+			token: createTestJWT(JWTClaims{
+				Subject:        "test-user",
+				ExpirationTime: time.Now().Add(-1 * time.Hour).Unix(),
+				IssuedAt:       time.Now().Add(-2 * time.Hour).Unix(),
+			}),
+			wantErr: true,
+			errType: ErrTokenExpired,
+		},
+		{
+			name: "not yet valid JWT - beyond leeway",
+			token: createTestJWT(JWTClaims{
+				Subject:        "test-user",
+				ExpirationTime: time.Now().Add(2 * time.Hour).Unix(),
+				NotBefore:      time.Now().Add(1 * time.Hour).Unix(),
+				IssuedAt:       time.Now().Unix(),
+			}),
+			wantErr: true,
+		},
+		{
+			name: "not yet valid JWT - within leeway accepted",
+			token: createTestJWT(JWTClaims{
+				Subject:        "test-user",
+				ExpirationTime: time.Now().Add(2 * time.Hour).Unix(),
+				NotBefore:      time.Now().Add(10 * time.Second).Unix(),
+				IssuedAt:       time.Now().Unix(),
+			}),
+			wantErr: false,
+		},
+		{
+			name: "recently expired JWT - within leeway accepted",
+			token: createTestJWT(JWTClaims{
+				Subject:        "test-user",
+				ExpirationTime: time.Now().Add(-10 * time.Second).Unix(),
+				IssuedAt:       time.Now().Add(-1 * time.Hour).Unix(),
+			}),
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAuthToken(tt.token)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateAuthToken() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if tt.errType != nil && err != nil {
+				if !strings.Contains(err.Error(), tt.errType.Error()) {
+					t.Errorf("ValidateAuthToken() error = %v, want error containing %v", err, tt.errType)
+				}
+			}
+		})
+	}
+}
+
+func TestParseJWTToken(t *testing.T) {
+	testClaims := JWTClaims{
+		Subject:        "test-user",
+		Issuer:         "test-issuer",
+		ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
+		IssuedAt:       time.Now().Unix(),
+	}
+
+	token := createTestJWT(testClaims)
+
+	claims, err := ParseJWTToken(token)
+	if err != nil {
+		t.Fatalf("ParseJWTToken() error = %v", err)
+	}
+
+	if claims.Subject != testClaims.Subject {
+		t.Errorf("ParseJWTToken() subject = %v, want %v", claims.Subject, testClaims.Subject)
+	}
+
+	if claims.Issuer != testClaims.Issuer {
+		t.Errorf("ParseJWTToken() issuer = %v, want %v", claims.Issuer, testClaims.Issuer)
+	}
+
+	if claims.ExpirationTime != testClaims.ExpirationTime {
+		t.Errorf("ParseJWTToken() exp = %v, want %v", claims.ExpirationTime, testClaims.ExpirationTime)
+	}
+}
+
+func TestJWTClaims_IsExpired(t *testing.T) {
+	tests := []struct {
+		name    string
+		claims  JWTClaims
+		expired bool
+	}{
+		{
+			name: "no expiration",
+			claims: JWTClaims{
+				ExpirationTime: 0,
+			},
+			expired: false,
+		},
+		{
+			name: "expired well beyond leeway",
+			claims: JWTClaims{
+				ExpirationTime: time.Now().Add(-1 * time.Hour).Unix(),
+			},
+			expired: true,
+		},
+		{
+			name: "expired beyond leeway",
+			claims: JWTClaims{
+				ExpirationTime: time.Now().Add(-60 * time.Second).Unix(),
+			},
+			expired: true,
+		},
+		{
+			name: "expired within leeway - still valid",
+			claims: JWTClaims{
+				ExpirationTime: time.Now().Add(-15 * time.Second).Unix(),
+			},
+			expired: false,
+		},
+		{
+			name: "not expired",
+			claims: JWTClaims{
+				ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
+			},
+			expired: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.claims.IsExpired(); got != tt.expired {
+				t.Errorf("JWTClaims.IsExpired() = %v, want %v", got, tt.expired)
+			}
+		})
+	}
+}
+
+func TestJWTClaims_ExpiresIn(t *testing.T) {
+	// Test token that expires in 1 hour
+	claims := JWTClaims{
+		ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
+	}
+
+	expiresIn := claims.ExpiresIn()
+
+	// Should be approximately 1 hour (within 1 minute tolerance)
+	expected := 1 * time.Hour
+	tolerance := 1 * time.Minute
+
+	if expiresIn < expected-tolerance || expiresIn > expected+tolerance {
+		t.Errorf("JWTClaims.ExpiresIn() = %v, want approximately %v", expiresIn, expected)
+	}
+
+	// Test token with no expiration
+	claimsNoExp := JWTClaims{
+		ExpirationTime: 0,
+	}
+
+	if got := claimsNoExp.ExpiresIn(); got != 0 {
+		t.Errorf("JWTClaims.ExpiresIn() for no expiration = %v, want 0", got)
+	}
+}
+
+func TestTokenAuth_AuthScheme(t *testing.T) {
+	tests := []struct {
+		name   string
+		scheme AuthScheme
+		want   string
+	}{
+		{
+			name:   "bearer scheme (default zero value)",
+			scheme: AuthSchemeBearer,
+			want:   "Bearer my-token",
+		},
+		{
+			name:   "token scheme",
+			scheme: AuthSchemeToken,
+			want:   "Token my-token",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ta := tokenAuth{
+				token:  "my-token",
+				scheme: tt.scheme,
+			}
+			md, err := ta.GetRequestMetadata(context.Background())
+			if err != nil {
+				t.Fatalf("GetRequestMetadata() error = %v", err)
+			}
+			got := md["Authorization"]
+			if got != tt.want {
+				t.Errorf("Authorization = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAuthScheme_String(t *testing.T) {
+	if got := AuthSchemeBearer.String(); got != "Bearer" {
+		t.Errorf("AuthSchemeBearer.String() = %q, want %q", got, "Bearer")
+	}
+	if got := AuthSchemeToken.String(); got != "Token" {
+		t.Errorf("AuthSchemeToken.String() = %q, want %q", got, "Token")
+	}
+}
+
+func TestJWTClaims_IsNotYetValid(t *testing.T) {
+	tests := []struct {
+		name        string
+		claims      JWTClaims
+		notYetValid bool
+	}{
+		{
+			name: "no nbf claim",
+			claims: JWTClaims{
+				NotBefore: 0,
+			},
+			notYetValid: false,
+		},
+		{
+			name: "not yet valid - well beyond leeway",
+			claims: JWTClaims{
+				NotBefore: time.Now().Add(1 * time.Hour).Unix(),
+			},
+			notYetValid: true,
+		},
+		{
+			name: "not yet valid - beyond leeway",
+			claims: JWTClaims{
+				NotBefore: time.Now().Add(60 * time.Second).Unix(),
+			},
+			notYetValid: true,
+		},
+		{
+			name: "not yet valid but within leeway - accepted",
+			claims: JWTClaims{
+				NotBefore: time.Now().Add(15 * time.Second).Unix(),
+			},
+			notYetValid: false,
+		},
+		{
+			name: "already valid",
+			claims: JWTClaims{
+				NotBefore: time.Now().Add(-1 * time.Hour).Unix(),
+			},
+			notYetValid: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.claims.IsNotYetValid(); got != tt.notYetValid {
+				t.Errorf("JWTClaims.IsNotYetValid() = %v, want %v", got, tt.notYetValid)
+			}
+		})
+	}
+}
+
+func TestClockSkewLeeway(t *testing.T) {
+	// Verify that both methods use the same leeway constant.
+	// A token with nbf = now + leeway/2 should be accepted.
+	halfLeeway := clockSkewLeeway / 2
+
+	nbfClaims := JWTClaims{NotBefore: time.Now().Add(halfLeeway).Unix()}
+	if nbfClaims.IsNotYetValid() {
+		t.Errorf("token with nbf %v in future should be accepted within %v leeway", halfLeeway, clockSkewLeeway)
+	}
+
+	// A token that expired leeway/2 ago should still be accepted.
+	expClaims := JWTClaims{ExpirationTime: time.Now().Add(-halfLeeway).Unix()}
+	if expClaims.IsExpired() {
+		t.Errorf("token expired %v ago should be accepted within %v leeway", halfLeeway, clockSkewLeeway)
+	}
+}

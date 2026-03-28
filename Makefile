@@ -1,0 +1,13 @@
+.PHONY: build test lint clean
+
+build: ## Build all packages
+	go build ./...
+
+test: ## Run all tests
+	go test ./...
+
+lint: ## Run linter
+	go vet ./...
+
+clean: ## Clean build artifacts
+	go clean ./...
