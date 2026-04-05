@@ -1,12 +1,12 @@
-// Package client provides Admiral API clients with connection management,
-// authentication, and token validation.
+// Package client provides Admiral API clients with connection management
+// and authentication.
 //
 // # Quick Start
 //
 // Create a client and access services:
 //
 //	c, err := client.New(ctx, client.Config{
-//	    AuthToken: "your-token",
+//	    AuthToken: "admp_...",
 //	})
 //	if err != nil {
 //	    log.Fatal(err)
@@ -20,19 +20,17 @@
 //
 // The Config struct provides options for customizing the client:
 //
-//   - AuthToken: Required authentication token
+//   - AuthToken: Required Admiral access token (PAT or SAT)
+//   - TokenValidator: Optional custom token validator (defaults to opaque token format checks)
 //   - ConnectionOptions: TLS, timeouts, keepalive settings
 //   - Logger: Custom logger implementation
 //
 // # Token Validation
 //
-// The client validates JWT tokens on creation and provides methods for
-// ongoing token validation:
+// The client validates opaque token format on creation (prefix, length, and
+// CRC32 checksum). You can also validate explicitly:
 //
 //	if err := c.ValidateToken(); err != nil {
-//	    // Token is invalid or expired
+//	    // Token has invalid format
 //	}
-//
-//	info, _ := c.GetTokenInfo()
-//	fmt.Println("Expires in:", info.ExpiresIn())
 package client

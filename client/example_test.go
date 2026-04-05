@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"go.admiral.io/sdk/client"
 )
@@ -13,7 +12,7 @@ func ExampleNew() {
 	// Create a client configuration
 	cfg := client.Config{
 		HostPort:  "localhost:9443",
-		AuthToken: "your-token-here",
+		AuthToken: "admp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA000000", // Replace with your token
 		ConnectionOptions: client.ConnectionOptions{
 			Insecure: true, // For testing only
 		},
@@ -37,7 +36,7 @@ func ExampleClient_ValidateToken() {
 	// Create a client configuration
 	cfg := client.Config{
 		HostPort:  "localhost:9443",
-		AuthToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTl9.invalid", // Example JWT
+		AuthToken: "admp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA000000", // Replace with your token
 		ConnectionOptions: client.ConnectionOptions{
 			Insecure: true, // For testing only
 		},
@@ -50,44 +49,13 @@ func ExampleClient_ValidateToken() {
 	}
 	defer func() { _ = c.Close() }()
 
-	// Validate token
+	// Validate token format
 	if err := c.ValidateToken(); err != nil {
 		log.Printf("Token validation failed: %v", err)
 		return
 	}
 
-	// Get token information
-	tokenInfo, err := c.GetTokenInfo()
-	if err != nil {
-		log.Printf("Failed to get token info: %v", err)
-		return
-	}
-
-	fmt.Printf("Token subject: %s\n", tokenInfo.Subject)
-	fmt.Printf("Token expires in: %v\n", tokenInfo.ExpiresIn())
-}
-
-func ExampleJWTClaims_IsExpired() {
-	claims := &client.JWTClaims{
-		ExpirationTime: time.Now().Add(-1 * time.Hour).Unix(), // Expired 1 hour ago
-	}
-
-	if claims.IsExpired() {
-		fmt.Println("Token is expired")
-	} else {
-		fmt.Println("Token is still valid")
-	}
-
-	// Output: Token is expired
-}
-
-func ExampleJWTClaims_ExpiresIn() {
-	claims := &client.JWTClaims{
-		ExpirationTime: time.Now().Add(2 * time.Hour).Unix(), // Expires in 2 hours
-	}
-
-	expiresIn := claims.ExpiresIn()
-	fmt.Printf("Token expires in approximately %.0f minutes\n", expiresIn.Minutes())
+	fmt.Println("Token is valid")
 }
 
 func ExampleVersion() {
@@ -104,7 +72,7 @@ func ExampleClient_Version() {
 	// Create a client configuration
 	cfg := client.Config{
 		HostPort:  "localhost:9443",
-		AuthToken: "your-token-here",
+		AuthToken: "admp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA000000", // Replace with your token
 		ConnectionOptions: client.ConnectionOptions{
 			Insecure: true, // For testing only
 		},

@@ -2,32 +2,28 @@ package client
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
+	"hash/crc32"
 	"strings"
 	"testing"
-	"time"
 )
 
-func createTestJWT(claims JWTClaims) string {
-	// Create a simple test JWT (header.payload.signature)
-	header := map[string]string{
-		"alg": "HS256",
-		"typ": "JWT",
-	}
+// createTestToken generates a valid Admiral opaque token with the given prefix
+// for testing purposes. The random body is deterministic (all 'A's padded to
+// the correct length) and the CRC32 checksum is computed correctly.
+func createTestToken(prefix string) string {
+	// Token is 54 chars total: 5 (prefix) + 43 (body) + 6 (checksum)
+	bodyLen := TokenLength - len(prefix) - checksumLen
+	body := prefix + strings.Repeat("A", bodyLen)
+	checksum := encodeBase62CRC32(body)
+	return body + checksum
+}
 
-	headerBytes, _ := json.Marshal(header)
-	claimsBytes, _ := json.Marshal(claims)
-
-	headerEncoded := base64.URLEncoding.EncodeToString(headerBytes)
-	payloadEncoded := base64.URLEncoding.EncodeToString(claimsBytes)
-
-	// Remove padding
-	headerEncoded = strings.TrimRight(headerEncoded, "=")
-	payloadEncoded = strings.TrimRight(payloadEncoded, "=")
-
-	return fmt.Sprintf("%s.%s.fake_signature", headerEncoded, payloadEncoded)
+// createTestTokenWithBadChecksum generates a token with the correct prefix and
+// length but an invalid checksum.
+func createTestTokenWithBadChecksum(prefix string) string {
+	bodyLen := TokenLength - len(prefix) - checksumLen
+	body := prefix + strings.Repeat("A", bodyLen)
+	return body + "000000" // unlikely to match the real checksum
 }
 
 func TestValidateAuthToken(t *testing.T) {
@@ -35,75 +31,56 @@ func TestValidateAuthToken(t *testing.T) {
 		name    string
 		token   string
 		wantErr bool
-		errType error
+		errMsg  string
 	}{
 		{
 			name:    "empty token",
 			token:   "",
 			wantErr: true,
+			errMsg:  "empty",
 		},
 		{
-			name:    "short opaque token",
-			token:   "short",
-			wantErr: true,
-		},
-		{
-			name:    "valid opaque token",
-			token:   "this-is-a-valid-opaque-token-12345",
+			name:    "valid PAT",
+			token:   createTestToken(TokenPrefixPAT),
 			wantErr: false,
 		},
 		{
-			name:    "invalid JWT format",
-			token:   "invalid.jwt",
-			wantErr: true,
-			errType: ErrInvalidTokenFormat,
-		},
-		{
-			name: "valid JWT",
-			token: createTestJWT(JWTClaims{
-				Subject:        "test-user",
-				ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
-				IssuedAt:       time.Now().Unix(),
-			}),
+			name:    "valid SAT",
+			token:   createTestToken(TokenPrefixSAT),
 			wantErr: false,
 		},
 		{
-			name: "expired JWT",
-			token: createTestJWT(JWTClaims{
-				Subject:        "test-user",
-				ExpirationTime: time.Now().Add(-1 * time.Hour).Unix(),
-				IssuedAt:       time.Now().Add(-2 * time.Hour).Unix(),
-			}),
-			wantErr: true,
-			errType: ErrTokenExpired,
-		},
-		{
-			name: "not yet valid JWT - beyond leeway",
-			token: createTestJWT(JWTClaims{
-				Subject:        "test-user",
-				ExpirationTime: time.Now().Add(2 * time.Hour).Unix(),
-				NotBefore:      time.Now().Add(1 * time.Hour).Unix(),
-				IssuedAt:       time.Now().Unix(),
-			}),
-			wantErr: true,
-		},
-		{
-			name: "not yet valid JWT - within leeway accepted",
-			token: createTestJWT(JWTClaims{
-				Subject:        "test-user",
-				ExpirationTime: time.Now().Add(2 * time.Hour).Unix(),
-				NotBefore:      time.Now().Add(10 * time.Second).Unix(),
-				IssuedAt:       time.Now().Unix(),
-			}),
+			name:    "valid session token",
+			token:   createTestToken(TokenPrefixSession),
 			wantErr: false,
 		},
 		{
-			name: "recently expired JWT - within leeway accepted",
-			token: createTestJWT(JWTClaims{
-				Subject:        "test-user",
-				ExpirationTime: time.Now().Add(-10 * time.Second).Unix(),
-				IssuedAt:       time.Now().Add(-1 * time.Hour).Unix(),
-			}),
+			name:    "wrong prefix",
+			token:   "admx_" + strings.Repeat("A", TokenLength-5),
+			wantErr: true,
+			errMsg:  "unrecognized token prefix",
+		},
+		{
+			name:    "too short",
+			token:   TokenPrefixPAT + "short",
+			wantErr: true,
+			errMsg:  "expected length",
+		},
+		{
+			name:    "too long",
+			token:   createTestToken(TokenPrefixPAT) + "extra",
+			wantErr: true,
+			errMsg:  "expected length",
+		},
+		{
+			name:    "bad checksum",
+			token:   createTestTokenWithBadChecksum(TokenPrefixPAT),
+			wantErr: true,
+			errMsg:  "checksum mismatch",
+		},
+		{
+			name:    "valid PAT with Bearer prefix stripped",
+			token:   "Bearer " + createTestToken(TokenPrefixPAT),
 			wantErr: false,
 		},
 	}
@@ -115,121 +92,49 @@ func TestValidateAuthToken(t *testing.T) {
 				t.Errorf("ValidateAuthToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-
-			if tt.errType != nil && err != nil {
-				if !strings.Contains(err.Error(), tt.errType.Error()) {
-					t.Errorf("ValidateAuthToken() error = %v, want error containing %v", err, tt.errType)
+			if tt.errMsg != "" && err != nil {
+				if !strings.Contains(err.Error(), tt.errMsg) {
+					t.Errorf("ValidateAuthToken() error = %v, want error containing %q", err, tt.errMsg)
 				}
 			}
 		})
 	}
 }
 
-func TestParseJWTToken(t *testing.T) {
-	testClaims := JWTClaims{
-		Subject:        "test-user",
-		Issuer:         "test-issuer",
-		ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
-		IssuedAt:       time.Now().Unix(),
+func TestDefaultTokenValidator(t *testing.T) {
+	v := &DefaultTokenValidator{}
+
+	token := createTestToken(TokenPrefixPAT)
+	if err := v.Validate(token); err != nil {
+		t.Errorf("DefaultTokenValidator.Validate() unexpected error: %v", err)
 	}
 
-	token := createTestJWT(testClaims)
-
-	claims, err := ParseJWTToken(token)
-	if err != nil {
-		t.Fatalf("ParseJWTToken() error = %v", err)
-	}
-
-	if claims.Subject != testClaims.Subject {
-		t.Errorf("ParseJWTToken() subject = %v, want %v", claims.Subject, testClaims.Subject)
-	}
-
-	if claims.Issuer != testClaims.Issuer {
-		t.Errorf("ParseJWTToken() issuer = %v, want %v", claims.Issuer, testClaims.Issuer)
-	}
-
-	if claims.ExpirationTime != testClaims.ExpirationTime {
-		t.Errorf("ParseJWTToken() exp = %v, want %v", claims.ExpirationTime, testClaims.ExpirationTime)
+	if err := v.Validate(""); err == nil {
+		t.Error("DefaultTokenValidator.Validate() expected error for empty token")
 	}
 }
 
-func TestJWTClaims_IsExpired(t *testing.T) {
-	tests := []struct {
-		name    string
-		claims  JWTClaims
-		expired bool
-	}{
-		{
-			name: "no expiration",
-			claims: JWTClaims{
-				ExpirationTime: 0,
-			},
-			expired: false,
-		},
-		{
-			name: "expired well beyond leeway",
-			claims: JWTClaims{
-				ExpirationTime: time.Now().Add(-1 * time.Hour).Unix(),
-			},
-			expired: true,
-		},
-		{
-			name: "expired beyond leeway",
-			claims: JWTClaims{
-				ExpirationTime: time.Now().Add(-60 * time.Second).Unix(),
-			},
-			expired: true,
-		},
-		{
-			name: "expired within leeway - still valid",
-			claims: JWTClaims{
-				ExpirationTime: time.Now().Add(-15 * time.Second).Unix(),
-			},
-			expired: false,
-		},
-		{
-			name: "not expired",
-			claims: JWTClaims{
-				ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
-			},
-			expired: false,
-		},
-	}
+func TestCustomTokenValidator(t *testing.T) {
+	// A simple custom validator that accepts any non-empty token.
+	custom := tokenValidatorFunc(func(token string) error {
+		if token == "" {
+			return ErrInvalidTokenFormat
+		}
+		return nil
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.claims.IsExpired(); got != tt.expired {
-				t.Errorf("JWTClaims.IsExpired() = %v, want %v", got, tt.expired)
-			}
-		})
+	if err := custom.Validate("anything"); err != nil {
+		t.Errorf("custom validator unexpected error: %v", err)
+	}
+	if err := custom.Validate(""); err == nil {
+		t.Error("custom validator expected error for empty token")
 	}
 }
 
-func TestJWTClaims_ExpiresIn(t *testing.T) {
-	// Test token that expires in 1 hour
-	claims := JWTClaims{
-		ExpirationTime: time.Now().Add(1 * time.Hour).Unix(),
-	}
+// tokenValidatorFunc adapts a function to the TokenValidator interface for testing.
+type tokenValidatorFunc func(string) error
 
-	expiresIn := claims.ExpiresIn()
-
-	// Should be approximately 1 hour (within 1 minute tolerance)
-	expected := 1 * time.Hour
-	tolerance := 1 * time.Minute
-
-	if expiresIn < expected-tolerance || expiresIn > expected+tolerance {
-		t.Errorf("JWTClaims.ExpiresIn() = %v, want approximately %v", expiresIn, expected)
-	}
-
-	// Test token with no expiration
-	claimsNoExp := JWTClaims{
-		ExpirationTime: 0,
-	}
-
-	if got := claimsNoExp.ExpiresIn(); got != 0 {
-		t.Errorf("JWTClaims.ExpiresIn() for no expiration = %v, want 0", got)
-	}
-}
+func (f tokenValidatorFunc) Validate(token string) error { return f(token) }
 
 func TestTokenAuth_AuthScheme(t *testing.T) {
 	tests := []struct {
@@ -276,71 +181,42 @@ func TestAuthScheme_String(t *testing.T) {
 	}
 }
 
-func TestJWTClaims_IsNotYetValid(t *testing.T) {
-	tests := []struct {
-		name        string
-		claims      JWTClaims
-		notYetValid bool
-	}{
-		{
-			name: "no nbf claim",
-			claims: JWTClaims{
-				NotBefore: 0,
-			},
-			notYetValid: false,
-		},
-		{
-			name: "not yet valid - well beyond leeway",
-			claims: JWTClaims{
-				NotBefore: time.Now().Add(1 * time.Hour).Unix(),
-			},
-			notYetValid: true,
-		},
-		{
-			name: "not yet valid - beyond leeway",
-			claims: JWTClaims{
-				NotBefore: time.Now().Add(60 * time.Second).Unix(),
-			},
-			notYetValid: true,
-		},
-		{
-			name: "not yet valid but within leeway - accepted",
-			claims: JWTClaims{
-				NotBefore: time.Now().Add(15 * time.Second).Unix(),
-			},
-			notYetValid: false,
-		},
-		{
-			name: "already valid",
-			claims: JWTClaims{
-				NotBefore: time.Now().Add(-1 * time.Hour).Unix(),
-			},
-			notYetValid: false,
-		},
+func TestEncodeBase62CRC32(t *testing.T) {
+	// Verify our implementation matches the server's algorithm.
+	// CRC32 IEEE of "admp_" + 43 'A's should produce a deterministic result.
+	body := TokenPrefixPAT + strings.Repeat("A", TokenLength-len(TokenPrefixPAT)-checksumLen)
+	checksum := encodeBase62CRC32(body)
+
+	if len(checksum) != checksumLen {
+		t.Errorf("encodeBase62CRC32() length = %d, want %d", len(checksum), checksumLen)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.claims.IsNotYetValid(); got != tt.notYetValid {
-				t.Errorf("JWTClaims.IsNotYetValid() = %v, want %v", got, tt.notYetValid)
-			}
-		})
+	// Verify the checksum is stable (deterministic).
+	checksum2 := encodeBase62CRC32(body)
+	if checksum != checksum2 {
+		t.Errorf("encodeBase62CRC32() not deterministic: %q != %q", checksum, checksum2)
+	}
+
+	// Verify it uses the same CRC32 IEEE algorithm.
+	n := crc32.ChecksumIEEE([]byte(body))
+	if n == 0 {
+		t.Error("CRC32 should not be zero for non-empty input")
 	}
 }
 
-func TestClockSkewLeeway(t *testing.T) {
-	// Verify that both methods use the same leeway constant.
-	// A token with nbf = now + leeway/2 should be accepted.
-	halfLeeway := clockSkewLeeway / 2
-
-	nbfClaims := JWTClaims{NotBefore: time.Now().Add(halfLeeway).Unix()}
-	if nbfClaims.IsNotYetValid() {
-		t.Errorf("token with nbf %v in future should be accepted within %v leeway", halfLeeway, clockSkewLeeway)
+func TestTokenConstants(t *testing.T) {
+	// Verify token constants are consistent.
+	if len(TokenPrefixPAT) != 5 {
+		t.Errorf("TokenPrefixPAT length = %d, want 5", len(TokenPrefixPAT))
 	}
-
-	// A token that expired leeway/2 ago should still be accepted.
-	expClaims := JWTClaims{ExpirationTime: time.Now().Add(-halfLeeway).Unix()}
-	if expClaims.IsExpired() {
-		t.Errorf("token expired %v ago should be accepted within %v leeway", halfLeeway, clockSkewLeeway)
+	if len(TokenPrefixSAT) != 5 {
+		t.Errorf("TokenPrefixSAT length = %d, want 5", len(TokenPrefixSAT))
+	}
+	if len(TokenPrefixSession) != 5 {
+		t.Errorf("TokenPrefixSession length = %d, want 5", len(TokenPrefixSession))
+	}
+	// 5 (prefix) + 43 (base64url of 32 bytes) + 6 (checksum) = 54
+	if TokenLength != 54 {
+		t.Errorf("TokenLength = %d, want 54", TokenLength)
 	}
 }

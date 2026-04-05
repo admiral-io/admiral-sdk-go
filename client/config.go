@@ -37,6 +37,9 @@ type Config struct {
 	AuthToken         string
 	AuthScheme        AuthScheme
 	ConnectionOptions ConnectionOptions
+	// TokenValidator validates the auth token before use.
+	// Defaults to DefaultTokenValidator which checks Admiral opaque token format.
+	TokenValidator TokenValidator
 	// Logger for the client. Silent by default (NoOpLogger).
 	// Use NewStdLogger(os.Stderr, LevelInfo) or NewSlogLogger(slog.Default())
 	// to enable log output.
@@ -57,6 +60,9 @@ type ConnectionOptions struct {
 func (c *Config) CheckAndSetDefaults() error {
 	if c.Logger == nil {
 		c.Logger = NewNoOpLogger()
+	}
+	if c.TokenValidator == nil {
+		c.TokenValidator = &DefaultTokenValidator{}
 	}
 
 	if c.HostPort == "" {
@@ -92,8 +98,7 @@ func (c *Config) CheckAndSetDefaults() error {
 		return errors.New("auth token is required")
 	}
 
-	// Validate token format and expiration
-	if err := ValidateAuthToken(c.AuthToken); err != nil {
+	if err := c.TokenValidator.Validate(c.AuthToken); err != nil {
 		return fmt.Errorf("auth token validation failed: %w", err)
 	}
 	c.ConnectionOptions.DialOptions = append(

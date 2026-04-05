@@ -8,18 +8,19 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
-	clusterv1 "go.admiral.io/sdk/proto/admiral/api/cluster/v1"
-	componentv1 "go.admiral.io/sdk/proto/admiral/api/component/v1"
-	connectionv1 "go.admiral.io/sdk/proto/admiral/api/connection/v1"
-	deploymentv1 "go.admiral.io/sdk/proto/admiral/api/deployment/v1"
-	environmentv1 "go.admiral.io/sdk/proto/admiral/api/environment/v1"
-	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
-	runnerv1 "go.admiral.io/sdk/proto/admiral/api/runner/v1"
-	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
-	statev1 "go.admiral.io/sdk/proto/admiral/api/state/v1"
-	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
-	variablev1 "go.admiral.io/sdk/proto/admiral/api/variable/v1"
+	applicationv1 "go.admiral.io/sdk/proto/admiral/application/v1"
+	authenticationv1 "go.admiral.io/sdk/proto/admiral/authentication/v1"
+	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
+	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
+	connectionv1 "go.admiral.io/sdk/proto/admiral/connection/v1"
+	deploymentv1 "go.admiral.io/sdk/proto/admiral/deployment/v1"
+	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
+	healthcheckv1 "go.admiral.io/sdk/proto/admiral/healthcheck/v1"
+	runnerv1 "go.admiral.io/sdk/proto/admiral/runner/v1"
+	sourcev1 "go.admiral.io/sdk/proto/admiral/source/v1"
+	statev1 "go.admiral.io/sdk/proto/admiral/state/v1"
+	userv1 "go.admiral.io/sdk/proto/admiral/user/v1"
+	variablev1 "go.admiral.io/sdk/proto/admiral/variable/v1"
 )
 
 // Compile-time check that Client implements AdmiralClient
@@ -27,10 +28,12 @@ var _ AdmiralClient = (*Client)(nil)
 
 // Client is the Admiral API client.
 type Client struct {
-	conn      *grpc.ClientConn
-	logger    Logger
-	authToken string
+	conn           *grpc.ClientConn
+	logger         Logger
+	authToken      string
+	tokenValidator TokenValidator
 	application applicationv1.ApplicationAPIClient
+	authentication authenticationv1.AuthenticationAPIClient
 	cluster clusterv1.ClusterAPIClient
 	component componentv1.ComponentAPIClient
 	connection connectionv1.ConnectionAPIClient
@@ -78,10 +81,12 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 	cfg.Logger.Debugf("connected to Admiral API at %s", cfg.HostPort)
 
 	return &Client{
-		conn:      conn,
-		logger:    cfg.Logger,
-		authToken: cfg.AuthToken,
+		conn:           conn,
+		logger:         cfg.Logger,
+		authToken:      cfg.AuthToken,
+		tokenValidator: cfg.TokenValidator,
 		application: applicationv1.NewApplicationAPIClient(conn),
+		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
 		cluster: clusterv1.NewClusterAPIClient(conn),
 		component: componentv1.NewComponentAPIClient(conn),
 		connection: connectionv1.NewConnectionAPIClient(conn),
@@ -99,6 +104,11 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 // Application returns the ApplicationAPI client.
 func (c *Client) Application() applicationv1.ApplicationAPIClient {
 	return c.application
+}
+
+// Authentication returns the AuthenticationAPI client.
+func (c *Client) Authentication() authenticationv1.AuthenticationAPIClient {
+	return c.authentication
 }
 
 // Cluster returns the ClusterAPI client.
@@ -156,18 +166,9 @@ func (c *Client) Variable() variablev1.VariableAPIClient {
 	return c.variable
 }
 
-// ValidateToken validates the client's auth token format and expiration.
+// ValidateToken validates the client's auth token format.
 func (c *Client) ValidateToken() error {
-	return ValidateAuthToken(c.authToken)
-}
-
-// GetTokenInfo returns information about the client's auth token.
-func (c *Client) GetTokenInfo() (*TokenInfo, error) {
-	claims, err := ParseJWTToken(c.authToken)
-	if err != nil {
-		return nil, err
-	}
-	return &TokenInfo{JWTClaims: claims}, nil
+	return c.tokenValidator.Validate(c.authToken)
 }
 
 // Version returns the client library version string.

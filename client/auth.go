@@ -1,142 +1,106 @@
 package client
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"strings"
-	"time"
 )
 
-// clockSkewLeeway is the maximum acceptable clock difference between the client
-// and the auth server. RFC 7519 §4.1.5 recommends accounting for clock skew;
-// 30 seconds is the industry standard (golang-jwt, Auth0, etc.).
-const clockSkewLeeway = 30 * time.Second
+const (
+	// TokenPrefixPAT is the prefix for Personal Access Tokens.
+	TokenPrefixPAT = "admp_"
+	// TokenPrefixSAT is the prefix for Service/Agent Tokens.
+	TokenPrefixSAT = "adms_"
+	// TokenPrefixSession is the prefix for Session Tokens.
+	TokenPrefixSession = "adme_"
+
+	// TokenLength is the total length of an Admiral opaque token.
+	TokenLength = 54
+
+	// checksumLen is the length of the base62-encoded CRC32 checksum suffix.
+	checksumLen = 6
+)
+
+// base62 alphabet for CRC32 checksum encoding.
+const base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 var (
 	ErrInvalidTokenFormat = errors.New("invalid token format")
-	ErrTokenExpired       = errors.New("token is expired")
-	ErrInvalidClaims      = errors.New("invalid token claims")
+
+	validPrefixes = []string{TokenPrefixPAT, TokenPrefixSAT, TokenPrefixSession}
 )
 
-// TokenInfo contains information about the client's auth token.
-type TokenInfo struct {
-	*JWTClaims
+// TokenValidator validates an auth token before use.
+// Implementations can add custom validation logic beyond the default
+// Admiral opaque token format checks.
+type TokenValidator interface {
+	Validate(token string) error
 }
 
-// JWTClaims represents the standard JWT claims we care about for validation
-type JWTClaims struct {
-	Issuer         string `json:"iss,omitempty"`
-	Subject        string `json:"sub,omitempty"`
-	Audience       string `json:"aud,omitempty"`
-	ExpirationTime int64  `json:"exp,omitempty"`
-	NotBefore      int64  `json:"nbf,omitempty"`
-	IssuedAt       int64  `json:"iat,omitempty"`
-	JWTId          string `json:"jti,omitempty"`
+// DefaultTokenValidator validates Admiral opaque tokens by checking the
+// prefix, length, and CRC32 checksum.
+type DefaultTokenValidator struct{}
+
+// Validate checks that the token is a well-formed Admiral opaque token.
+func (v *DefaultTokenValidator) Validate(token string) error {
+	return ValidateAuthToken(token)
 }
 
-// IsExpired checks if the token is expired based on the exp claim.
-// A leeway of clockSkewLeeway is applied to tolerate minor clock differences
-// between client and server.
-func (c *JWTClaims) IsExpired() bool {
-	if c.ExpirationTime == 0 {
-		return false // No expiration set
-	}
-	return time.Now().Add(-clockSkewLeeway).Unix() >= c.ExpirationTime
-}
-
-// IsNotYetValid checks if the token is not yet valid based on the nbf claim.
-// A leeway of clockSkewLeeway is applied to tolerate minor clock differences
-// between client and server.
-func (c *JWTClaims) IsNotYetValid() bool {
-	if c.NotBefore == 0 {
-		return false // No nbf claim set
-	}
-	return time.Now().Add(clockSkewLeeway).Unix() < c.NotBefore
-}
-
-// ExpiresIn returns the duration until the token expires
-func (c *JWTClaims) ExpiresIn() time.Duration {
-	if c.ExpirationTime == 0 {
-		return 0 // No expiration
-	}
-	expTime := time.Unix(c.ExpirationTime, 0)
-	return time.Until(expTime)
-}
-
-// ParseJWTToken parses a JWT token and extracts claims without validating the signature.
-// This is sufficient for basic format validation and expiration checking.
-// For production use, you should also validate the signature with the appropriate key.
-func ParseJWTToken(token string) (*JWTClaims, error) {
-	// JWT tokens have 3 parts separated by dots: header.payload.signature
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("%w: expected 3 parts separated by '.', got %d", ErrInvalidTokenFormat, len(parts))
-	}
-
-	// Decode the payload (second part)
-	payload := parts[1]
-
-	// Add padding if necessary for base64 decoding
-	if padding := len(payload) % 4; padding != 0 {
-		payload += strings.Repeat("=", 4-padding)
-	}
-
-	decoded, err := base64.URLEncoding.DecodeString(payload)
-	if err != nil {
-		return nil, fmt.Errorf("%w: failed to decode payload: %v", ErrInvalidTokenFormat, err)
-	}
-
-	var claims JWTClaims
-	if err := json.Unmarshal(decoded, &claims); err != nil {
-		return nil, fmt.Errorf("%w: failed to parse claims: %v", ErrInvalidClaims, err)
-	}
-
-	return &claims, nil
-}
-
-// ValidateAuthToken validates the format and expiration of an auth token.
-// It assumes the token is a JWT but gracefully handles non-JWT tokens.
+// ValidateAuthToken validates the format of an Admiral opaque token.
+// It checks the prefix, length, and CRC32 checksum without requiring
+// a network call.
 func ValidateAuthToken(token string) error {
 	if token == "" {
 		return errors.New("auth token is empty")
 	}
 
-	// Check if token looks like a JWT (has Bearer prefix or dot-separated format)
-	actualToken := strings.TrimPrefix(token, "Bearer ")
+	// Strip Bearer prefix if present.
+	actual := strings.TrimPrefix(token, "Bearer ")
 
-	// If it doesn't look like a JWT (no dots), treat it as an opaque token
-	if !strings.Contains(actualToken, ".") {
-		// For opaque tokens, just check basic format requirements
-		if len(actualToken) < 10 {
-			return fmt.Errorf("token appears too short to be valid (length: %d)", len(actualToken))
-		}
-		return nil // Assume opaque token is valid
+	if len(actual) != TokenLength {
+		return fmt.Errorf("%w: expected length %d, got %d", ErrInvalidTokenFormat, TokenLength, len(actual))
 	}
 
-	// Parse as JWT
-	claims, err := ParseJWTToken(actualToken)
-	if err != nil {
-		return fmt.Errorf("JWT validation failed: %w", err)
+	if !hasValidPrefix(actual) {
+		return fmt.Errorf("%w: unrecognized token prefix", ErrInvalidTokenFormat)
 	}
 
-	// Check if token is expired
-	if claims.IsExpired() {
-		return fmt.Errorf("%w: token expired at %v", ErrTokenExpired, time.Unix(claims.ExpirationTime, 0))
-	}
-
-	// Check if token is not yet valid
-	if claims.IsNotYetValid() {
-		return fmt.Errorf("token not yet valid until %v", time.Unix(claims.NotBefore, 0))
-	}
-
-	// Warn if token expires soon (within 5 minutes)
-	if expiresIn := claims.ExpiresIn(); expiresIn > 0 && expiresIn < 5*time.Minute {
-		// Note: In a real implementation, you might want to log this warning
-		// instead of returning an error, depending on your requirements
-		_ = expiresIn // We'll just note it for now
+	if !validateChecksum(actual) {
+		return fmt.Errorf("%w: checksum mismatch", ErrInvalidTokenFormat)
 	}
 
 	return nil
+}
+
+// hasValidPrefix reports whether the token starts with a known Admiral prefix.
+func hasValidPrefix(token string) bool {
+	for _, p := range validPrefixes {
+		if strings.HasPrefix(token, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// validateChecksum verifies the CRC32 checksum suffix of an opaque token.
+func validateChecksum(token string) bool {
+	if len(token) <= checksumLen {
+		return false
+	}
+	body := token[:len(token)-checksumLen]
+	expected := encodeBase62CRC32(body)
+	return token[len(token)-checksumLen:] == expected
+}
+
+// encodeBase62CRC32 computes CRC32 of s and encodes it as a fixed-length
+// base62 string (zero-padded to checksumLen characters).
+func encodeBase62CRC32(s string) string {
+	n := crc32.ChecksumIEEE([]byte(s))
+	buf := make([]byte, checksumLen)
+	for i := checksumLen - 1; i >= 0; i-- {
+		buf[i] = base62[n%62]
+		n /= 62
+	}
+	return string(buf)
 }

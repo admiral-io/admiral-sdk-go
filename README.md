@@ -35,6 +35,7 @@ func main() {
 
 	// Access services via accessors
 	// c.Application().MethodName(ctx, req)
+	// c.Authentication().MethodName(ctx, req)
 	// c.Cluster().MethodName(ctx, req)
 	// c.Component().MethodName(ctx, req)
 	// c.Connection().MethodName(ctx, req)
@@ -53,18 +54,19 @@ func main() {
 
 | Service | Accessor | Import |
 |---------|----------|--------|
-| ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/api/application/v1` |
-| ClusterAPI | `Cluster()` | `go.admiral.io/sdk/proto/admiral/api/cluster/v1` |
-| ComponentAPI | `Component()` | `go.admiral.io/sdk/proto/admiral/api/component/v1` |
-| ConnectionAPI | `Connection()` | `go.admiral.io/sdk/proto/admiral/api/connection/v1` |
-| DeploymentAPI | `Deployment()` | `go.admiral.io/sdk/proto/admiral/api/deployment/v1` |
-| EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/api/environment/v1` |
-| HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/api/healthcheck/v1` |
-| RunnerAPI | `Runner()` | `go.admiral.io/sdk/proto/admiral/api/runner/v1` |
-| SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/api/source/v1` |
-| StateAPI | `State()` | `go.admiral.io/sdk/proto/admiral/api/state/v1` |
-| UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/api/user/v1` |
-| VariableAPI | `Variable()` | `go.admiral.io/sdk/proto/admiral/api/variable/v1` |
+| ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/application/v1` |
+| AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/authentication/v1` |
+| ClusterAPI | `Cluster()` | `go.admiral.io/sdk/proto/admiral/cluster/v1` |
+| ComponentAPI | `Component()` | `go.admiral.io/sdk/proto/admiral/component/v1` |
+| ConnectionAPI | `Connection()` | `go.admiral.io/sdk/proto/admiral/connection/v1` |
+| DeploymentAPI | `Deployment()` | `go.admiral.io/sdk/proto/admiral/deployment/v1` |
+| EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/environment/v1` |
+| HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/healthcheck/v1` |
+| RunnerAPI | `Runner()` | `go.admiral.io/sdk/proto/admiral/runner/v1` |
+| SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/source/v1` |
+| StateAPI | `State()` | `go.admiral.io/sdk/proto/admiral/state/v1` |
+| UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/user/v1` |
+| VariableAPI | `Variable()` | `go.admiral.io/sdk/proto/admiral/variable/v1` |
 
 ## Example
 
@@ -77,7 +79,7 @@ import (
 	"log"
 
 	"go.admiral.io/sdk/client"
-	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
+	applicationv1 "go.admiral.io/sdk/proto/admiral/application/v1"
 )
 
 func main() {
@@ -120,8 +122,8 @@ cfg := client.Config{
 	// Required: Server address
 	HostPort: "api.admiral.io:443",
 
-	// Required: Authentication token (JWT)
-	AuthToken: "your-jwt-token",
+	// Required: Admiral access token (PAT or SAT)
+	AuthToken: os.Getenv("ADMIRAL_TOKEN"),
 
 	// Optional: Connection options
 	ConnectionOptions: client.ConnectionOptions{
@@ -149,22 +151,22 @@ c, err := client.New(ctx, cfg)
 
 ## Token Validation
 
+The client validates token format on creation (prefix, length, CRC32 checksum).
+You can also validate explicitly:
+
 ```go
-// Validate token format and expiration
 if err := c.ValidateToken(); err != nil {
 	log.Fatal("Invalid token:", err)
 }
+```
 
-// Get detailed token information
-info, err := c.GetTokenInfo()
-if err != nil {
-	log.Fatal("Failed to parse token:", err)
+A custom `TokenValidator` can be provided to override the default validation:
+
+```go
+cfg := client.Config{
+	AuthToken:      os.Getenv("ADMIRAL_TOKEN"),
+	TokenValidator: &myCustomValidator{},
 }
-
-fmt.Printf("Subject: %s\n", info.Subject)
-fmt.Printf("Issuer: %s\n", info.Issuer)
-fmt.Printf("Expires in: %v\n", info.ExpiresIn())
-fmt.Printf("Is expired: %v\n", info.IsExpired())
 ```
 
 ## Version Information
