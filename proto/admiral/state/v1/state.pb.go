@@ -1641,20 +1641,20 @@ const file_admiral_state_v1_state_proto_rawDesc = "" +
 	"\x18ForceUnlockStateResponse\"9\n" +
 	"\x12DeleteStateRequest\x12#\n" +
 	"\bstate_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\astateId\"\x15\n" +
-	"\x13DeleteStateResponse2\xf9\x0e\n" +
-	"\bStateAPI\x12\xb6\x01\n" +
-	"\bGetState\x12!.admiral.state.v1.GetStateRequest\x1a\".admiral.state.v1.GetStateResponse\"c\xbaG!\n" +
-	"\x05State\x12\x18Retrieve state for a job\xa2\x97$\x11\n" +
+	"\x13DeleteStateResponse2\x99\x0f\n" +
+	"\bStateAPI\x12\xbe\x01\n" +
+	"\bGetState\x12!.admiral.state.v1.GetStateRequest\x1a\".admiral.state.v1.GetStateResponse\"k\xbaG)\n" +
+	"\rState Backend\x12\x18Retrieve state for a job\xa2\x97$\x11\n" +
 	"\n" +
-	"state:read\x12\x03sat\x82\xd3\xe4\x93\x02$\x12\"/api/v1/runner/jobs/{job_id}/state\x12\xb9\x01\n" +
-	"\tPushState\x12\".admiral.state.v1.PushStateRequest\x1a#.admiral.state.v1.PushStateResponse\"c\xbaG\x1d\n" +
-	"\x05State\x12\x14Push state for a job\xa2\x97$\x12\n" +
-	"\vstate:write\x12\x03sat\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/runner/jobs/{job_id}/state\x12\xbe\x01\n" +
-	"\tLockState\x12\".admiral.state.v1.LockStateRequest\x1a#.admiral.state.v1.LockStateResponse\"h\xbaG\x1d\n" +
-	"\x05State\x12\x14Lock state for a job\xa2\x97$\x12\n" +
-	"\vstate:write\x12\x03sat\x82\xd3\xe4\x93\x02,:\x01*\"'/api/v1/runner/jobs/{job_id}/state/lock\x12\xc8\x01\n" +
-	"\vUnlockState\x12$.admiral.state.v1.UnlockStateRequest\x1a%.admiral.state.v1.UnlockStateResponse\"l\xbaG\x1f\n" +
-	"\x05State\x12\x16Unlock state for a job\xa2\x97$\x12\n" +
+	"state:read\x12\x03sat\x82\xd3\xe4\x93\x02$\x12\"/api/v1/runner/jobs/{job_id}/state\x12\xc1\x01\n" +
+	"\tPushState\x12\".admiral.state.v1.PushStateRequest\x1a#.admiral.state.v1.PushStateResponse\"k\xbaG%\n" +
+	"\rState Backend\x12\x14Push state for a job\xa2\x97$\x12\n" +
+	"\vstate:write\x12\x03sat\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/runner/jobs/{job_id}/state\x12\xc6\x01\n" +
+	"\tLockState\x12\".admiral.state.v1.LockStateRequest\x1a#.admiral.state.v1.LockStateResponse\"p\xbaG%\n" +
+	"\rState Backend\x12\x14Lock state for a job\xa2\x97$\x12\n" +
+	"\vstate:write\x12\x03sat\x82\xd3\xe4\x93\x02,:\x01*\"'/api/v1/runner/jobs/{job_id}/state/lock\x12\xd0\x01\n" +
+	"\vUnlockState\x12$.admiral.state.v1.UnlockStateRequest\x1a%.admiral.state.v1.UnlockStateResponse\"t\xbaG'\n" +
+	"\rState Backend\x12\x16Unlock state for a job\xa2\x97$\x12\n" +
 	"\vstate:write\x12\x03sat\x82\xd3\xe4\x93\x02.:\x01*\")/api/v1/runner/jobs/{job_id}/state/unlock\x12\xbb\x01\n" +
 	"\x0fGetCurrentState\x12(.admiral.state.v1.GetCurrentStateRequest\x1a).admiral.state.v1.GetCurrentStateResponse\"S\xbaG\x1f\n" +
 	"\x05State\x12\x16Retrieve current state\xa2\x97$\f\n" +

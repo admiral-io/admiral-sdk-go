@@ -2794,7 +2794,7 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x16JOB_PHASE_INITIALIZING\x10\x01\x12\x16\n" +
 	"\x12JOB_PHASE_PLANNING\x10\x02\x12\x16\n" +
 	"\x12JOB_PHASE_APPLYING\x10\x03\x12\x18\n" +
-	"\x14JOB_PHASE_FINALIZING\x10\x042\xdb\x16\n" +
+	"\x14JOB_PHASE_FINALIZING\x10\x042\x9b\x17\n" +
 	"\tRunnerAPI\x12\xaa\x01\n" +
 	"\fCreateRunner\x12&.admiral.runner.v1.CreateRunnerRequest\x1a'.admiral.runner.v1.CreateRunnerResponse\"I\xbaG\x1a\n" +
 	"\aRunners\x12\x0fCreate a runner\xa2\x97$\x0e\n" +
@@ -2813,33 +2813,33 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\frunner:write\x82\xd3\xe4\x93\x02\x1d*\x1b/api/v1/runners/{runner_id}\x12\xc9\x01\n" +
 	"\x0fGetRunnerStatus\x12).admiral.runner.v1.GetRunnerStatusRequest\x1a*.admiral.runner.v1.GetRunnerStatusResponse\"_\xbaG!\n" +
 	"\aRunners\x12\x16Retrieve runner status\xa2\x97$\r\n" +
-	"\vrunner:read\x82\xd3\xe4\x93\x02$\x12\"/api/v1/runners/{runner_id}/status\x12\xd2\x01\n" +
-	"\x11CreateRunnerToken\x12+.admiral.runner.v1.CreateRunnerTokenRequest\x1a,.admiral.runner.v1.CreateRunnerTokenResponse\"b\xbaG \n" +
-	"\aRunners\x12\x15Create a runner token\xa2\x97$\x0e\n" +
-	"\frunner:write\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/runners/{runner_id}/tokens\x12\xc8\x01\n" +
-	"\x10ListRunnerTokens\x12*.admiral.runner.v1.ListRunnerTokensRequest\x1a+.admiral.runner.v1.ListRunnerTokensResponse\"[\xbaG\x1d\n" +
-	"\aRunners\x12\x12List runner tokens\xa2\x97$\r\n" +
-	"\vrunner:read\x82\xd3\xe4\x93\x02$\x12\"/api/v1/runners/{runner_id}/tokens\x12\xd2\x01\n" +
-	"\x0eGetRunnerToken\x12(.admiral.runner.v1.GetRunnerTokenRequest\x1a).admiral.runner.v1.GetRunnerTokenResponse\"k\xbaG\"\n" +
-	"\aRunners\x12\x17Retrieve a runner token\xa2\x97$\r\n" +
-	"\vrunner:read\x82\xd3\xe4\x93\x02/\x12-/api/v1/runners/{runner_id}/tokens/{token_id}\x12\xe4\x01\n" +
-	"\x11RevokeRunnerToken\x12+.admiral.runner.v1.RevokeRunnerTokenRequest\x1a,.admiral.runner.v1.RevokeRunnerTokenResponse\"t\xbaG \n" +
-	"\aRunners\x12\x15Revoke a runner token\xa2\x97$\x0e\n" +
-	"\frunner:write\x82\xd3\xe4\x93\x029:\x01*\"4/api/v1/runners/{runner_id}/tokens/{token_id}/revoke\x12\xb4\x01\n" +
-	"\tHeartbeat\x12#.admiral.runner.v1.HeartbeatRequest\x1a$.admiral.runner.v1.HeartbeatResponse\"\\\xbaG \n" +
-	"\aRunners\x12\x15Send runner heartbeat\xa2\x97$\x12\n" +
-	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/api/v1/runner/heartbeat\x12\xa8\x01\n" +
-	"\bClaimJob\x12\".admiral.runner.v1.ClaimJobRequest\x1a#.admiral.runner.v1.ClaimJobResponse\"S\xbaG\x16\n" +
-	"\aRunners\x12\vClaim a job\xa2\x97$\x12\n" +
-	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/runner/jobs/claim\x12\xc5\x01\n" +
-	"\fGetJobBundle\x12&.admiral.runner.v1.GetJobBundleRequest\x1a'.admiral.runner.v1.GetJobBundleResponse\"d\xbaG \n" +
-	"\aRunners\x12\x15Retrieve a job bundle\xa2\x97$\x12\n" +
-	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02%\x12#/api/v1/runner/jobs/{job_id}/bundle\x12\xcd\x01\n" +
-	"\x0fReportJobResult\x12).admiral.runner.v1.ReportJobResultRequest\x1a*.admiral.runner.v1.ReportJobResultResponse\"c\xbaG\x1c\n" +
-	"\aRunners\x12\x11Report job result\xa2\x97$\x12\n" +
-	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02(:\x01*\"#/api/v1/runner/jobs/{job_id}/result\x12\xbe\x01\n" +
-	"\x0eListRunnerJobs\x12(.admiral.runner.v1.ListRunnerJobsRequest\x1a).admiral.runner.v1.ListRunnerJobsResponse\"W\xbaG\x1b\n" +
-	"\aRunners\x12\x10List runner jobs\xa2\x97$\r\n" +
+	"\vrunner:read\x82\xd3\xe4\x93\x02$\x12\"/api/v1/runners/{runner_id}/status\x12\xd8\x01\n" +
+	"\x11CreateRunnerToken\x12+.admiral.runner.v1.CreateRunnerTokenRequest\x1a,.admiral.runner.v1.CreateRunnerTokenResponse\"h\xbaG&\n" +
+	"\rRunner Tokens\x12\x15Create a runner token\xa2\x97$\x0e\n" +
+	"\frunner:write\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/runners/{runner_id}/tokens\x12\xce\x01\n" +
+	"\x10ListRunnerTokens\x12*.admiral.runner.v1.ListRunnerTokensRequest\x1a+.admiral.runner.v1.ListRunnerTokensResponse\"a\xbaG#\n" +
+	"\rRunner Tokens\x12\x12List runner tokens\xa2\x97$\r\n" +
+	"\vrunner:read\x82\xd3\xe4\x93\x02$\x12\"/api/v1/runners/{runner_id}/tokens\x12\xd8\x01\n" +
+	"\x0eGetRunnerToken\x12(.admiral.runner.v1.GetRunnerTokenRequest\x1a).admiral.runner.v1.GetRunnerTokenResponse\"q\xbaG(\n" +
+	"\rRunner Tokens\x12\x17Retrieve a runner token\xa2\x97$\r\n" +
+	"\vrunner:read\x82\xd3\xe4\x93\x02/\x12-/api/v1/runners/{runner_id}/tokens/{token_id}\x12\xea\x01\n" +
+	"\x11RevokeRunnerToken\x12+.admiral.runner.v1.RevokeRunnerTokenRequest\x1a,.admiral.runner.v1.RevokeRunnerTokenResponse\"z\xbaG&\n" +
+	"\rRunner Tokens\x12\x15Revoke a runner token\xa2\x97$\x0e\n" +
+	"\frunner:write\x82\xd3\xe4\x93\x029:\x01*\"4/api/v1/runners/{runner_id}/tokens/{token_id}/revoke\x12\xbd\x01\n" +
+	"\tHeartbeat\x12#.admiral.runner.v1.HeartbeatRequest\x1a$.admiral.runner.v1.HeartbeatResponse\"e\xbaG)\n" +
+	"\x10Runner Execution\x12\x15Send runner heartbeat\xa2\x97$\x12\n" +
+	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/api/v1/runner/heartbeat\x12\xb1\x01\n" +
+	"\bClaimJob\x12\".admiral.runner.v1.ClaimJobRequest\x1a#.admiral.runner.v1.ClaimJobResponse\"\\\xbaG\x1f\n" +
+	"\x10Runner Execution\x12\vClaim a job\xa2\x97$\x12\n" +
+	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/api/v1/runner/jobs/claim\x12\xce\x01\n" +
+	"\fGetJobBundle\x12&.admiral.runner.v1.GetJobBundleRequest\x1a'.admiral.runner.v1.GetJobBundleResponse\"m\xbaG)\n" +
+	"\x10Runner Execution\x12\x15Retrieve a job bundle\xa2\x97$\x12\n" +
+	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02%\x12#/api/v1/runner/jobs/{job_id}/bundle\x12\xd6\x01\n" +
+	"\x0fReportJobResult\x12).admiral.runner.v1.ReportJobResultRequest\x1a*.admiral.runner.v1.ReportJobResultResponse\"l\xbaG%\n" +
+	"\x10Runner Execution\x12\x11Report job result\xa2\x97$\x12\n" +
+	"\vrunner:exec\x12\x03sat\x82\xd3\xe4\x93\x02(:\x01*\"#/api/v1/runner/jobs/{job_id}/result\x12\xc2\x01\n" +
+	"\x0eListRunnerJobs\x12(.admiral.runner.v1.ListRunnerJobsRequest\x1a).admiral.runner.v1.ListRunnerJobsResponse\"[\xbaG\x1f\n" +
+	"\vRunner Jobs\x12\x10List runner jobs\xa2\x97$\r\n" +
 	"\vrunner:read\x82\xd3\xe4\x93\x02\"\x12 /api/v1/runners/{runner_id}/jobsB\xbe\x01\n" +
 	"\x15com.admiral.runner.v1B\vRunnerProtoP\x01Z2go.admiral.io/sdk/proto/admiral/runner/v1;runnerv1\xa2\x02\x03ARX\xaa\x02\x11Admiral.Runner.V1\xca\x02\x11Admiral\\Runner\\V1\xe2\x02\x1dAdmiral\\Runner\\V1\\GPBMetadata\xea\x02\x13Admiral::Runner::V1b\x06proto3"
 

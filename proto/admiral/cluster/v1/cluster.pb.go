@@ -3201,7 +3201,7 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"\"WORKLOAD_HEALTH_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eWORKLOAD_HEALTH_STATUS_HEALTHY\x10\x01\x12#\n" +
 	"\x1fWORKLOAD_HEALTH_STATUS_DEGRADED\x10\x02\x12 \n" +
-	"\x1cWORKLOAD_HEALTH_STATUS_ERROR\x10\x032\xf4\x18\n" +
+	"\x1cWORKLOAD_HEALTH_STATUS_ERROR\x10\x032\xa9\x19\n" +
 	"\n" +
 	"ClusterAPI\x12\xb3\x01\n" +
 	"\rCreateCluster\x12(.admiral.cluster.v1.CreateClusterRequest\x1a).admiral.cluster.v1.CreateClusterResponse\"M\xbaG\x1c\n" +
@@ -3222,33 +3222,33 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"\rcluster:write\x82\xd3\xe4\x93\x02\":\x01*2\x1d/api/v1/clusters/{cluster.id}\x12\xbd\x01\n" +
 	"\rDeleteCluster\x12(.admiral.cluster.v1.DeleteClusterRequest\x1a).admiral.cluster.v1.DeleteClusterResponse\"W\xbaG\x1c\n" +
 	"\bClusters\x12\x10Delete a cluster\xa2\x97$\x0f\n" +
-	"\rcluster:write\x82\xd3\xe4\x93\x02\x1f*\x1d/api/v1/clusters/{cluster_id}\x12\xdc\x01\n" +
-	"\x12CreateClusterToken\x12-.admiral.cluster.v1.CreateClusterTokenRequest\x1a..admiral.cluster.v1.CreateClusterTokenResponse\"g\xbaG\"\n" +
-	"\bClusters\x12\x16Create a cluster token\xa2\x97$\x0f\n" +
-	"\rcluster:write\x82\xd3\xe4\x93\x02):\x01*\"$/api/v1/clusters/{cluster_id}/tokens\x12\xd2\x01\n" +
-	"\x11ListClusterTokens\x12,.admiral.cluster.v1.ListClusterTokensRequest\x1a-.admiral.cluster.v1.ListClusterTokensResponse\"`\xbaG\x1f\n" +
-	"\bClusters\x12\x13List cluster tokens\xa2\x97$\x0e\n" +
-	"\fcluster:read\x82\xd3\xe4\x93\x02&\x12$/api/v1/clusters/{cluster_id}/tokens\x12\xdc\x01\n" +
-	"\x0fGetClusterToken\x12*.admiral.cluster.v1.GetClusterTokenRequest\x1a+.admiral.cluster.v1.GetClusterTokenResponse\"p\xbaG$\n" +
-	"\bClusters\x12\x18Retrieve a cluster token\xa2\x97$\x0e\n" +
-	"\fcluster:read\x82\xd3\xe4\x93\x021\x12//api/v1/clusters/{cluster_id}/tokens/{token_id}\x12\xee\x01\n" +
-	"\x12RevokeClusterToken\x12-.admiral.cluster.v1.RevokeClusterTokenRequest\x1a..admiral.cluster.v1.RevokeClusterTokenResponse\"y\xbaG\"\n" +
-	"\bClusters\x12\x16Revoke a cluster token\xa2\x97$\x0f\n" +
-	"\rcluster:write\x82\xd3\xe4\x93\x02;:\x01*\"6/api/v1/clusters/{cluster_id}/tokens/{token_id}/revoke\x12\xd4\x01\n" +
-	"\x13ReportClusterStatus\x12..admiral.cluster.v1.ReportClusterStatusRequest\x1a/.admiral.cluster.v1.ReportClusterStatusResponse\"\\\xbaG!\n" +
-	"\bClusters\x12\x15Report cluster status\xa2\x97$\x15\n" +
-	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/agent/status\x12\xc4\x01\n" +
-	"\rListWorkloads\x12(.admiral.cluster.v1.ListWorkloadsRequest\x1a).admiral.cluster.v1.ListWorkloadsResponse\"^\xbaG\x1a\n" +
-	"\bClusters\x12\x0eList workloads\xa2\x97$\x0e\n" +
-	"\fcluster:read\x82\xd3\xe4\x93\x02)\x12'/api/v1/clusters/{cluster_id}/workloads\x12\xf2\x01\n" +
-	"\x14ReportWorkloadStatus\x12/.admiral.cluster.v1.ReportWorkloadStatusRequest\x1a0.admiral.cluster.v1.ReportWorkloadStatusResponse\"w\xbaG\"\n" +
-	"\bClusters\x12\x16Report workload status\xa2\x97$\x15\n" +
-	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x023:\x01*\"./api/v1/clusters/{cluster_id}/workloads/status\x12\xe8\x01\n" +
-	"\x11GetRevisionBundle\x12,.admiral.cluster.v1.GetRevisionBundleRequest\x1a-.admiral.cluster.v1.GetRevisionBundleResponse\"v\xbaG&\n" +
-	"\bClusters\x12\x1aRetrieve a revision bundle\xa2\x97$\x15\n" +
-	"\x0ecluster:deploy\x12\x03sat\x82\xd3\xe4\x93\x02.\x12,/api/v1/agent/revisions/{revision_id}/bundle\x12\xf0\x01\n" +
-	"\x14ReportRevisionResult\x12/.admiral.cluster.v1.ReportRevisionResultRequest\x1a0.admiral.cluster.v1.ReportRevisionResultResponse\"u\xbaG\"\n" +
-	"\bClusters\x12\x16Report revision result\xa2\x97$\x15\n" +
+	"\rcluster:write\x82\xd3\xe4\x93\x02\x1f*\x1d/api/v1/clusters/{cluster_id}\x12\xe2\x01\n" +
+	"\x12CreateClusterToken\x12-.admiral.cluster.v1.CreateClusterTokenRequest\x1a..admiral.cluster.v1.CreateClusterTokenResponse\"m\xbaG(\n" +
+	"\x0eCluster Tokens\x12\x16Create a cluster token\xa2\x97$\x0f\n" +
+	"\rcluster:write\x82\xd3\xe4\x93\x02):\x01*\"$/api/v1/clusters/{cluster_id}/tokens\x12\xd8\x01\n" +
+	"\x11ListClusterTokens\x12,.admiral.cluster.v1.ListClusterTokensRequest\x1a-.admiral.cluster.v1.ListClusterTokensResponse\"f\xbaG%\n" +
+	"\x0eCluster Tokens\x12\x13List cluster tokens\xa2\x97$\x0e\n" +
+	"\fcluster:read\x82\xd3\xe4\x93\x02&\x12$/api/v1/clusters/{cluster_id}/tokens\x12\xe2\x01\n" +
+	"\x0fGetClusterToken\x12*.admiral.cluster.v1.GetClusterTokenRequest\x1a+.admiral.cluster.v1.GetClusterTokenResponse\"v\xbaG*\n" +
+	"\x0eCluster Tokens\x12\x18Retrieve a cluster token\xa2\x97$\x0e\n" +
+	"\fcluster:read\x82\xd3\xe4\x93\x021\x12//api/v1/clusters/{cluster_id}/tokens/{token_id}\x12\xf4\x01\n" +
+	"\x12RevokeClusterToken\x12-.admiral.cluster.v1.RevokeClusterTokenRequest\x1a..admiral.cluster.v1.RevokeClusterTokenResponse\"\x7f\xbaG(\n" +
+	"\x0eCluster Tokens\x12\x16Revoke a cluster token\xa2\x97$\x0f\n" +
+	"\rcluster:write\x82\xd3\xe4\x93\x02;:\x01*\"6/api/v1/clusters/{cluster_id}/tokens/{token_id}/revoke\x12\xd9\x01\n" +
+	"\x13ReportClusterStatus\x12..admiral.cluster.v1.ReportClusterStatusRequest\x1a/.admiral.cluster.v1.ReportClusterStatusResponse\"a\xbaG&\n" +
+	"\rCluster Agent\x12\x15Report cluster status\xa2\x97$\x15\n" +
+	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/agent/status\x12\xcd\x01\n" +
+	"\rListWorkloads\x12(.admiral.cluster.v1.ListWorkloadsRequest\x1a).admiral.cluster.v1.ListWorkloadsResponse\"g\xbaG#\n" +
+	"\x11Cluster Workloads\x12\x0eList workloads\xa2\x97$\x0e\n" +
+	"\fcluster:read\x82\xd3\xe4\x93\x02)\x12'/api/v1/clusters/{cluster_id}/workloads\x12\xf7\x01\n" +
+	"\x14ReportWorkloadStatus\x12/.admiral.cluster.v1.ReportWorkloadStatusRequest\x1a0.admiral.cluster.v1.ReportWorkloadStatusResponse\"|\xbaG'\n" +
+	"\rCluster Agent\x12\x16Report workload status\xa2\x97$\x15\n" +
+	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x023:\x01*\"./api/v1/clusters/{cluster_id}/workloads/status\x12\xed\x01\n" +
+	"\x11GetRevisionBundle\x12,.admiral.cluster.v1.GetRevisionBundleRequest\x1a-.admiral.cluster.v1.GetRevisionBundleResponse\"{\xbaG+\n" +
+	"\rCluster Agent\x12\x1aRetrieve a revision bundle\xa2\x97$\x15\n" +
+	"\x0ecluster:deploy\x12\x03sat\x82\xd3\xe4\x93\x02.\x12,/api/v1/agent/revisions/{revision_id}/bundle\x12\xf5\x01\n" +
+	"\x14ReportRevisionResult\x12/.admiral.cluster.v1.ReportRevisionResultRequest\x1a0.admiral.cluster.v1.ReportRevisionResultResponse\"z\xbaG'\n" +
+	"\rCluster Agent\x12\x16Report revision result\xa2\x97$\x15\n" +
 	"\x0ecluster:deploy\x12\x03sat\x82\xd3\xe4\x93\x021:\x01*\",/api/v1/agent/revisions/{revision_id}/resultB\xc6\x01\n" +
 	"\x16com.admiral.cluster.v1B\fClusterProtoP\x01Z4go.admiral.io/sdk/proto/admiral/cluster/v1;clusterv1\xa2\x02\x03ACX\xaa\x02\x12Admiral.Cluster.V1\xca\x02\x12Admiral\\Cluster\\V1\xe2\x02\x1eAdmiral\\Cluster\\V1\\GPBMetadata\xea\x02\x14Admiral::Cluster::V1b\x06proto3"
 
