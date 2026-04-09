@@ -33,9 +33,19 @@ const (
 // EnvironmentAPI manages environments within an application.
 //
 // An environment is a named deployment target (e.g., dev, staging, prod) that
-// binds an application to a runtime where its workloads are deployed. Each
+// binds an application to its workload and infrastructure runtimes. Each
 // environment carries its own configuration, credentials, and compute targets.
 // Promotion between environments is explicit -- Admiral never auto-promotes.
+//
+// An environment carries two independent sets of runtime bindings:
+//   - **Workload targets**: where application workloads are deployed
+//     (e.g., a Kubernetes cluster, Cloud Run, ECS).
+//   - **Infrastructure targets**: how infrastructure is provisioned
+//     (e.g., Terraform via a runner, CloudFormation via a connection).
+//
+// Either or both can be configured depending on the application's components.
+// At most one target per type is allowed per environment -- the server enforces
+// uniqueness within each list.
 type EnvironmentAPIClient interface {
 	// CreateEnvironment creates a new environment for the specified application.
 	//
@@ -46,7 +56,7 @@ type EnvironmentAPIClient interface {
 	// Scope: `env:read`
 	GetEnvironment(ctx context.Context, in *GetEnvironmentRequest, opts ...grpc.CallOption) (*GetEnvironmentResponse, error)
 	// ListEnvironments returns a paginated list of environments. Use the filter
-	// to scope by application, runtime type, or labels.
+	// to scope by application, target type, or labels.
 	//
 	// Scope: `env:read`
 	ListEnvironments(ctx context.Context, in *ListEnvironmentsRequest, opts ...grpc.CallOption) (*ListEnvironmentsResponse, error)
@@ -130,9 +140,19 @@ func (c *environmentAPIClient) DeleteEnvironment(ctx context.Context, in *Delete
 // EnvironmentAPI manages environments within an application.
 //
 // An environment is a named deployment target (e.g., dev, staging, prod) that
-// binds an application to a runtime where its workloads are deployed. Each
+// binds an application to its workload and infrastructure runtimes. Each
 // environment carries its own configuration, credentials, and compute targets.
 // Promotion between environments is explicit -- Admiral never auto-promotes.
+//
+// An environment carries two independent sets of runtime bindings:
+//   - **Workload targets**: where application workloads are deployed
+//     (e.g., a Kubernetes cluster, Cloud Run, ECS).
+//   - **Infrastructure targets**: how infrastructure is provisioned
+//     (e.g., Terraform via a runner, CloudFormation via a connection).
+//
+// Either or both can be configured depending on the application's components.
+// At most one target per type is allowed per environment -- the server enforces
+// uniqueness within each list.
 type EnvironmentAPIServer interface {
 	// CreateEnvironment creates a new environment for the specified application.
 	//
@@ -143,7 +163,7 @@ type EnvironmentAPIServer interface {
 	// Scope: `env:read`
 	GetEnvironment(context.Context, *GetEnvironmentRequest) (*GetEnvironmentResponse, error)
 	// ListEnvironments returns a paginated list of environments. Use the filter
-	// to scope by application, runtime type, or labels.
+	// to scope by application, target type, or labels.
 	//
 	// Scope: `env:read`
 	ListEnvironments(context.Context, *ListEnvironmentsRequest) (*ListEnvironmentsResponse, error)

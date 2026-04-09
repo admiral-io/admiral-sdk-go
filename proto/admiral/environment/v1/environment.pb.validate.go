@@ -35,110 +35,6 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on InfrastructureConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *InfrastructureConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on InfrastructureConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// InfrastructureConfigMultiError, or nil if none found.
-func (m *InfrastructureConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *InfrastructureConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for RunnerId
-
-	if len(errors) > 0 {
-		return InfrastructureConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// InfrastructureConfigMultiError is an error wrapping multiple validation
-// errors returned by InfrastructureConfig.ValidateAll() if the designated
-// constraints aren't met.
-type InfrastructureConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m InfrastructureConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m InfrastructureConfigMultiError) AllErrors() []error { return m }
-
-// InfrastructureConfigValidationError is the validation error returned by
-// InfrastructureConfig.Validate if the designated constraints aren't met.
-type InfrastructureConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e InfrastructureConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e InfrastructureConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e InfrastructureConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e InfrastructureConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e InfrastructureConfigValidationError) ErrorName() string {
-	return "InfrastructureConfigValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e InfrastructureConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sInfrastructureConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = InfrastructureConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = InfrastructureConfigValidationError{}
-
 // Validate checks the field values on KubernetesConfig with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -245,6 +141,402 @@ var _ interface {
 	ErrorName() string
 } = KubernetesConfigValidationError{}
 
+// Validate checks the field values on TerraformConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *TerraformConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TerraformConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TerraformConfigMultiError, or nil if none found.
+func (m *TerraformConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TerraformConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for RunnerId
+
+	if len(errors) > 0 {
+		return TerraformConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// TerraformConfigMultiError is an error wrapping multiple validation errors
+// returned by TerraformConfig.ValidateAll() if the designated constraints
+// aren't met.
+type TerraformConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TerraformConfigMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TerraformConfigMultiError) AllErrors() []error { return m }
+
+// TerraformConfigValidationError is the validation error returned by
+// TerraformConfig.Validate if the designated constraints aren't met.
+type TerraformConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TerraformConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TerraformConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TerraformConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TerraformConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TerraformConfigValidationError) ErrorName() string { return "TerraformConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TerraformConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTerraformConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TerraformConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TerraformConfigValidationError{}
+
+// Validate checks the field values on WorkloadTarget with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *WorkloadTarget) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WorkloadTarget with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in WorkloadTargetMultiError,
+// or nil if none found.
+func (m *WorkloadTarget) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WorkloadTarget) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	switch v := m.Config.(type) {
+	case *WorkloadTarget_Kubernetes:
+		if v == nil {
+			err := WorkloadTargetValidationError{
+				field:  "Config",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetKubernetes()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, WorkloadTargetValidationError{
+						field:  "Kubernetes",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, WorkloadTargetValidationError{
+						field:  "Kubernetes",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetKubernetes()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return WorkloadTargetValidationError{
+					field:  "Kubernetes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
+	if len(errors) > 0 {
+		return WorkloadTargetMultiError(errors)
+	}
+
+	return nil
+}
+
+// WorkloadTargetMultiError is an error wrapping multiple validation errors
+// returned by WorkloadTarget.ValidateAll() if the designated constraints
+// aren't met.
+type WorkloadTargetMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WorkloadTargetMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WorkloadTargetMultiError) AllErrors() []error { return m }
+
+// WorkloadTargetValidationError is the validation error returned by
+// WorkloadTarget.Validate if the designated constraints aren't met.
+type WorkloadTargetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WorkloadTargetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WorkloadTargetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WorkloadTargetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WorkloadTargetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WorkloadTargetValidationError) ErrorName() string { return "WorkloadTargetValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WorkloadTargetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWorkloadTarget.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WorkloadTargetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WorkloadTargetValidationError{}
+
+// Validate checks the field values on InfrastructureTarget with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *InfrastructureTarget) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InfrastructureTarget with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InfrastructureTargetMultiError, or nil if none found.
+func (m *InfrastructureTarget) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InfrastructureTarget) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	switch v := m.Config.(type) {
+	case *InfrastructureTarget_Terraform:
+		if v == nil {
+			err := InfrastructureTargetValidationError{
+				field:  "Config",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetTerraform()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, InfrastructureTargetValidationError{
+						field:  "Terraform",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, InfrastructureTargetValidationError{
+						field:  "Terraform",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return InfrastructureTargetValidationError{
+					field:  "Terraform",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
+	if len(errors) > 0 {
+		return InfrastructureTargetMultiError(errors)
+	}
+
+	return nil
+}
+
+// InfrastructureTargetMultiError is an error wrapping multiple validation
+// errors returned by InfrastructureTarget.ValidateAll() if the designated
+// constraints aren't met.
+type InfrastructureTargetMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InfrastructureTargetMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InfrastructureTargetMultiError) AllErrors() []error { return m }
+
+// InfrastructureTargetValidationError is the validation error returned by
+// InfrastructureTarget.Validate if the designated constraints aren't met.
+type InfrastructureTargetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InfrastructureTargetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InfrastructureTargetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InfrastructureTargetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InfrastructureTargetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InfrastructureTargetValidationError) ErrorName() string {
+	return "InfrastructureTargetValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e InfrastructureTargetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInfrastructureTarget.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InfrastructureTargetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InfrastructureTargetValidationError{}
+
 // Validate checks the field values on Environment with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -275,38 +567,75 @@ func (m *Environment) validate(all bool) error {
 
 	// no validation rules for Description
 
-	// no validation rules for RuntimeType
+	for idx, item := range m.GetWorkloadTargets() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EnvironmentValidationError{
+						field:  fmt.Sprintf("WorkloadTargets[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EnvironmentValidationError{
+						field:  fmt.Sprintf("WorkloadTargets[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EnvironmentValidationError{
+					field:  fmt.Sprintf("WorkloadTargets[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetInfrastructureTargets() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EnvironmentValidationError{
+						field:  fmt.Sprintf("InfrastructureTargets[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EnvironmentValidationError{
+						field:  fmt.Sprintf("InfrastructureTargets[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EnvironmentValidationError{
+					field:  fmt.Sprintf("InfrastructureTargets[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	// no validation rules for Labels
-
-	if all {
-		switch v := interface{}(m.GetInfrastructure()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, EnvironmentValidationError{
-					field:  "Infrastructure",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, EnvironmentValidationError{
-					field:  "Infrastructure",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetInfrastructure()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return EnvironmentValidationError{
-				field:  "Infrastructure",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	// no validation rules for HasPendingChanges
 
@@ -455,52 +784,6 @@ func (m *Environment) validate(all bool) error {
 		}
 	}
 
-	switch v := m.RuntimeConfig.(type) {
-	case *Environment_Kubernetes:
-		if v == nil {
-			err := EnvironmentValidationError{
-				field:  "RuntimeConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetKubernetes()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, EnvironmentValidationError{
-						field:  "Kubernetes",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, EnvironmentValidationError{
-						field:  "Kubernetes",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetKubernetes()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return EnvironmentValidationError{
-					field:  "Kubernetes",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	default:
-		_ = v // ensures v is used
-	}
-
 	if len(errors) > 0 {
 		return EnvironmentMultiError(errors)
 	}
@@ -606,58 +889,15 @@ func (m *CreateEnvironmentRequest) validate(all bool) error {
 
 	// no validation rules for Description
 
-	// no validation rules for RuntimeType
-
-	// no validation rules for Labels
-
-	if all {
-		switch v := interface{}(m.GetInfrastructure()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateEnvironmentRequestValidationError{
-					field:  "Infrastructure",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateEnvironmentRequestValidationError{
-					field:  "Infrastructure",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetInfrastructure()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateEnvironmentRequestValidationError{
-				field:  "Infrastructure",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	switch v := m.RuntimeConfig.(type) {
-	case *CreateEnvironmentRequest_Kubernetes:
-		if v == nil {
-			err := CreateEnvironmentRequestValidationError{
-				field:  "RuntimeConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
+	for idx, item := range m.GetWorkloadTargets() {
+		_, _ = idx, item
 
 		if all {
-			switch v := interface{}(m.GetKubernetes()).(type) {
+			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, CreateEnvironmentRequestValidationError{
-						field:  "Kubernetes",
+						field:  fmt.Sprintf("WorkloadTargets[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -665,25 +905,59 @@ func (m *CreateEnvironmentRequest) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, CreateEnvironmentRequestValidationError{
-						field:  "Kubernetes",
+						field:  fmt.Sprintf("WorkloadTargets[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetKubernetes()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return CreateEnvironmentRequestValidationError{
-					field:  "Kubernetes",
+					field:  fmt.Sprintf("WorkloadTargets[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
 			}
 		}
 
-	default:
-		_ = v // ensures v is used
 	}
+
+	for idx, item := range m.GetInfrastructureTargets() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateEnvironmentRequestValidationError{
+						field:  fmt.Sprintf("InfrastructureTargets[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateEnvironmentRequestValidationError{
+						field:  fmt.Sprintf("InfrastructureTargets[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateEnvironmentRequestValidationError{
+					field:  fmt.Sprintf("InfrastructureTargets[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Labels
 
 	if len(errors) > 0 {
 		return CreateEnvironmentRequestMultiError(errors)

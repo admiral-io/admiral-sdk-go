@@ -61,7 +61,7 @@ type EnvironmentAPIClient interface {
 	// Scope: `env:read`
 	GetEnvironment(context.Context, *connect.Request[v1.GetEnvironmentRequest]) (*connect.Response[v1.GetEnvironmentResponse], error)
 	// ListEnvironments returns a paginated list of environments. Use the filter
-	// to scope by application, runtime type, or labels.
+	// to scope by application, target type, or labels.
 	//
 	// Scope: `env:read`
 	ListEnvironments(context.Context, *connect.Request[v1.ListEnvironmentsRequest]) (*connect.Response[v1.ListEnvironmentsResponse], error)
@@ -169,7 +169,7 @@ type EnvironmentAPIHandler interface {
 	// Scope: `env:read`
 	GetEnvironment(context.Context, *connect.Request[v1.GetEnvironmentRequest]) (*connect.Response[v1.GetEnvironmentResponse], error)
 	// ListEnvironments returns a paginated list of environments. Use the filter
-	// to scope by application, runtime type, or labels.
+	// to scope by application, target type, or labels.
 	//
 	// Scope: `env:read`
 	ListEnvironments(context.Context, *connect.Request[v1.ListEnvironmentsRequest]) (*connect.Response[v1.ListEnvironmentsResponse], error)
