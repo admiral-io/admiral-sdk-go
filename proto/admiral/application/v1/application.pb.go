@@ -46,8 +46,6 @@ type Application struct {
 	Labels map[string]string `protobuf:"bytes,4,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// The user or agent who created this application (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this application (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,8,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the application was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the application was last updated.
@@ -117,13 +115,6 @@ func (x *Application) GetLabels() map[string]string {
 func (x *Application) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *Application) GetUpdatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.UpdatedBy
 	}
 	return nil
 }
@@ -664,16 +655,14 @@ var File_admiral_application_v1_application_proto protoreflect.FileDescriptor
 
 const file_admiral_application_v1_application_proto_rawDesc = "" +
 	"\n" +
-	"(admiral/application/v1/application.proto\x12\x16admiral.application.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa0\x04\n" +
+	"(admiral/application/v1/application.proto\x12\x16admiral.application.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe4\x03\n" +
 	"\vApplication\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12`\n" +
 	"\x06labels\x18\x04 \x03(\v2/.admiral.application.v1.Application.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
 	"\n" +
-	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\b \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x129\n" +
+	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -766,31 +755,30 @@ var file_admiral_application_v1_application_proto_goTypes = []any{
 var file_admiral_application_v1_application_proto_depIdxs = []int32{
 	11, // 0: admiral.application.v1.Application.labels:type_name -> admiral.application.v1.Application.LabelsEntry
 	13, // 1: admiral.application.v1.Application.created_by:type_name -> admiral.common.v1.ActorRef
-	13, // 2: admiral.application.v1.Application.updated_by:type_name -> admiral.common.v1.ActorRef
-	14, // 3: admiral.application.v1.Application.created_at:type_name -> google.protobuf.Timestamp
-	14, // 4: admiral.application.v1.Application.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 5: admiral.application.v1.CreateApplicationRequest.labels:type_name -> admiral.application.v1.CreateApplicationRequest.LabelsEntry
-	0,  // 6: admiral.application.v1.CreateApplicationResponse.application:type_name -> admiral.application.v1.Application
-	0,  // 7: admiral.application.v1.GetApplicationResponse.application:type_name -> admiral.application.v1.Application
-	0,  // 8: admiral.application.v1.ListApplicationsResponse.applications:type_name -> admiral.application.v1.Application
-	0,  // 9: admiral.application.v1.UpdateApplicationRequest.application:type_name -> admiral.application.v1.Application
-	15, // 10: admiral.application.v1.UpdateApplicationRequest.update_mask:type_name -> google.protobuf.FieldMask
-	0,  // 11: admiral.application.v1.UpdateApplicationResponse.application:type_name -> admiral.application.v1.Application
-	1,  // 12: admiral.application.v1.ApplicationAPI.CreateApplication:input_type -> admiral.application.v1.CreateApplicationRequest
-	3,  // 13: admiral.application.v1.ApplicationAPI.GetApplication:input_type -> admiral.application.v1.GetApplicationRequest
-	5,  // 14: admiral.application.v1.ApplicationAPI.ListApplications:input_type -> admiral.application.v1.ListApplicationsRequest
-	7,  // 15: admiral.application.v1.ApplicationAPI.UpdateApplication:input_type -> admiral.application.v1.UpdateApplicationRequest
-	9,  // 16: admiral.application.v1.ApplicationAPI.DeleteApplication:input_type -> admiral.application.v1.DeleteApplicationRequest
-	2,  // 17: admiral.application.v1.ApplicationAPI.CreateApplication:output_type -> admiral.application.v1.CreateApplicationResponse
-	4,  // 18: admiral.application.v1.ApplicationAPI.GetApplication:output_type -> admiral.application.v1.GetApplicationResponse
-	6,  // 19: admiral.application.v1.ApplicationAPI.ListApplications:output_type -> admiral.application.v1.ListApplicationsResponse
-	8,  // 20: admiral.application.v1.ApplicationAPI.UpdateApplication:output_type -> admiral.application.v1.UpdateApplicationResponse
-	10, // 21: admiral.application.v1.ApplicationAPI.DeleteApplication:output_type -> admiral.application.v1.DeleteApplicationResponse
-	17, // [17:22] is the sub-list for method output_type
-	12, // [12:17] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	14, // 2: admiral.application.v1.Application.created_at:type_name -> google.protobuf.Timestamp
+	14, // 3: admiral.application.v1.Application.updated_at:type_name -> google.protobuf.Timestamp
+	12, // 4: admiral.application.v1.CreateApplicationRequest.labels:type_name -> admiral.application.v1.CreateApplicationRequest.LabelsEntry
+	0,  // 5: admiral.application.v1.CreateApplicationResponse.application:type_name -> admiral.application.v1.Application
+	0,  // 6: admiral.application.v1.GetApplicationResponse.application:type_name -> admiral.application.v1.Application
+	0,  // 7: admiral.application.v1.ListApplicationsResponse.applications:type_name -> admiral.application.v1.Application
+	0,  // 8: admiral.application.v1.UpdateApplicationRequest.application:type_name -> admiral.application.v1.Application
+	15, // 9: admiral.application.v1.UpdateApplicationRequest.update_mask:type_name -> google.protobuf.FieldMask
+	0,  // 10: admiral.application.v1.UpdateApplicationResponse.application:type_name -> admiral.application.v1.Application
+	1,  // 11: admiral.application.v1.ApplicationAPI.CreateApplication:input_type -> admiral.application.v1.CreateApplicationRequest
+	3,  // 12: admiral.application.v1.ApplicationAPI.GetApplication:input_type -> admiral.application.v1.GetApplicationRequest
+	5,  // 13: admiral.application.v1.ApplicationAPI.ListApplications:input_type -> admiral.application.v1.ListApplicationsRequest
+	7,  // 14: admiral.application.v1.ApplicationAPI.UpdateApplication:input_type -> admiral.application.v1.UpdateApplicationRequest
+	9,  // 15: admiral.application.v1.ApplicationAPI.DeleteApplication:input_type -> admiral.application.v1.DeleteApplicationRequest
+	2,  // 16: admiral.application.v1.ApplicationAPI.CreateApplication:output_type -> admiral.application.v1.CreateApplicationResponse
+	4,  // 17: admiral.application.v1.ApplicationAPI.GetApplication:output_type -> admiral.application.v1.GetApplicationResponse
+	6,  // 18: admiral.application.v1.ApplicationAPI.ListApplications:output_type -> admiral.application.v1.ListApplicationsResponse
+	8,  // 19: admiral.application.v1.ApplicationAPI.UpdateApplication:output_type -> admiral.application.v1.UpdateApplicationResponse
+	10, // 20: admiral.application.v1.ApplicationAPI.DeleteApplication:output_type -> admiral.application.v1.DeleteApplicationResponse
+	16, // [16:21] is the sub-list for method output_type
+	11, // [11:16] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_admiral_application_v1_application_proto_init() }

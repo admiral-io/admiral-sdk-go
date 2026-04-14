@@ -266,8 +266,6 @@ type Component struct {
 	HasOverride bool `protobuf:"varint,12,opt,name=has_override,json=hasOverride,proto3" json:"has_override,omitempty"`
 	// The user or agent who created this component (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,15,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this component (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,16,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the component was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the component was last updated.
@@ -397,13 +395,6 @@ func (x *Component) GetCreatedBy() *v1.ActorRef {
 	return nil
 }
 
-func (x *Component) GetUpdatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.UpdatedBy
-	}
-	return nil
-}
-
 func (x *Component) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -460,8 +451,6 @@ type ComponentOverride struct {
 	Outputs []*ComponentOutput `protobuf:"bytes,8,rep,name=outputs,proto3" json:"outputs,omitempty"`
 	// The user or agent who created this override (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,11,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this override (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,12,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the override was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the override was last updated.
@@ -559,13 +548,6 @@ func (x *ComponentOverride) GetOutputs() []*ComponentOutput {
 func (x *ComponentOverride) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *ComponentOverride) GetUpdatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.UpdatedBy
 	}
 	return nil
 }
@@ -1641,7 +1623,7 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
 	"\x0evalue_template\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xa3\x06\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xe7\x05\n" +
 	"\tComponent\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
@@ -1659,13 +1641,11 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\bdisabled\x18\v \x01(\bR\bdisabled\x12!\n" +
 	"\fhas_override\x18\f \x01(\bR\vhasOverride\x12:\n" +
 	"\n" +
-	"created_by\x18\x0f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\x10 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x129\n" +
+	"created_by\x18\x0f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
 	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x91\x05\n" +
+	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd5\x04\n" +
 	"\x11ComponentOverride\x12+\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
 	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1a\n" +
@@ -1678,9 +1658,7 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\tdependsOn\x12?\n" +
 	"\aoutputs\x18\b \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputs\x12:\n" +
 	"\n" +
-	"created_by\x18\v \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x129\n" +
+	"created_by\x18\v \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
 	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -1854,48 +1832,46 @@ var file_admiral_component_v1_component_proto_depIdxs = []int32{
 	0,  // 0: admiral.component.v1.Component.category:type_name -> admiral.component.v1.ComponentCategory
 	1,  // 1: admiral.component.v1.Component.outputs:type_name -> admiral.component.v1.ComponentOutput
 	22, // 2: admiral.component.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
-	22, // 3: admiral.component.v1.Component.updated_by:type_name -> admiral.common.v1.ActorRef
-	23, // 4: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp
-	23, // 5: admiral.component.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 6: admiral.component.v1.ComponentOverride.outputs:type_name -> admiral.component.v1.ComponentOutput
-	22, // 7: admiral.component.v1.ComponentOverride.created_by:type_name -> admiral.common.v1.ActorRef
-	22, // 8: admiral.component.v1.ComponentOverride.updated_by:type_name -> admiral.common.v1.ActorRef
-	23, // 9: admiral.component.v1.ComponentOverride.created_at:type_name -> google.protobuf.Timestamp
-	23, // 10: admiral.component.v1.ComponentOverride.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 11: admiral.component.v1.CreateComponentRequest.outputs:type_name -> admiral.component.v1.ComponentOutput
-	2,  // 12: admiral.component.v1.CreateComponentResponse.component:type_name -> admiral.component.v1.Component
-	2,  // 13: admiral.component.v1.GetComponentResponse.component:type_name -> admiral.component.v1.Component
-	2,  // 14: admiral.component.v1.ListComponentsResponse.components:type_name -> admiral.component.v1.Component
-	2,  // 15: admiral.component.v1.UpdateComponentRequest.component:type_name -> admiral.component.v1.Component
-	24, // 16: admiral.component.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	2,  // 17: admiral.component.v1.UpdateComponentResponse.component:type_name -> admiral.component.v1.Component
-	1,  // 18: admiral.component.v1.SetComponentOverrideRequest.outputs:type_name -> admiral.component.v1.ComponentOutput
-	3,  // 19: admiral.component.v1.SetComponentOverrideResponse.override:type_name -> admiral.component.v1.ComponentOverride
-	3,  // 20: admiral.component.v1.GetComponentOverrideResponse.override:type_name -> admiral.component.v1.ComponentOverride
-	3,  // 21: admiral.component.v1.ListComponentOverridesResponse.overrides:type_name -> admiral.component.v1.ComponentOverride
-	4,  // 22: admiral.component.v1.ComponentAPI.CreateComponent:input_type -> admiral.component.v1.CreateComponentRequest
-	6,  // 23: admiral.component.v1.ComponentAPI.GetComponent:input_type -> admiral.component.v1.GetComponentRequest
-	8,  // 24: admiral.component.v1.ComponentAPI.ListComponents:input_type -> admiral.component.v1.ListComponentsRequest
-	10, // 25: admiral.component.v1.ComponentAPI.UpdateComponent:input_type -> admiral.component.v1.UpdateComponentRequest
-	12, // 26: admiral.component.v1.ComponentAPI.DeleteComponent:input_type -> admiral.component.v1.DeleteComponentRequest
-	14, // 27: admiral.component.v1.ComponentAPI.SetComponentOverride:input_type -> admiral.component.v1.SetComponentOverrideRequest
-	16, // 28: admiral.component.v1.ComponentAPI.GetComponentOverride:input_type -> admiral.component.v1.GetComponentOverrideRequest
-	18, // 29: admiral.component.v1.ComponentAPI.ListComponentOverrides:input_type -> admiral.component.v1.ListComponentOverridesRequest
-	20, // 30: admiral.component.v1.ComponentAPI.DeleteComponentOverride:input_type -> admiral.component.v1.DeleteComponentOverrideRequest
-	5,  // 31: admiral.component.v1.ComponentAPI.CreateComponent:output_type -> admiral.component.v1.CreateComponentResponse
-	7,  // 32: admiral.component.v1.ComponentAPI.GetComponent:output_type -> admiral.component.v1.GetComponentResponse
-	9,  // 33: admiral.component.v1.ComponentAPI.ListComponents:output_type -> admiral.component.v1.ListComponentsResponse
-	11, // 34: admiral.component.v1.ComponentAPI.UpdateComponent:output_type -> admiral.component.v1.UpdateComponentResponse
-	13, // 35: admiral.component.v1.ComponentAPI.DeleteComponent:output_type -> admiral.component.v1.DeleteComponentResponse
-	15, // 36: admiral.component.v1.ComponentAPI.SetComponentOverride:output_type -> admiral.component.v1.SetComponentOverrideResponse
-	17, // 37: admiral.component.v1.ComponentAPI.GetComponentOverride:output_type -> admiral.component.v1.GetComponentOverrideResponse
-	19, // 38: admiral.component.v1.ComponentAPI.ListComponentOverrides:output_type -> admiral.component.v1.ListComponentOverridesResponse
-	21, // 39: admiral.component.v1.ComponentAPI.DeleteComponentOverride:output_type -> admiral.component.v1.DeleteComponentOverrideResponse
-	31, // [31:40] is the sub-list for method output_type
-	22, // [22:31] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	23, // 3: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp
+	23, // 4: admiral.component.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 5: admiral.component.v1.ComponentOverride.outputs:type_name -> admiral.component.v1.ComponentOutput
+	22, // 6: admiral.component.v1.ComponentOverride.created_by:type_name -> admiral.common.v1.ActorRef
+	23, // 7: admiral.component.v1.ComponentOverride.created_at:type_name -> google.protobuf.Timestamp
+	23, // 8: admiral.component.v1.ComponentOverride.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 9: admiral.component.v1.CreateComponentRequest.outputs:type_name -> admiral.component.v1.ComponentOutput
+	2,  // 10: admiral.component.v1.CreateComponentResponse.component:type_name -> admiral.component.v1.Component
+	2,  // 11: admiral.component.v1.GetComponentResponse.component:type_name -> admiral.component.v1.Component
+	2,  // 12: admiral.component.v1.ListComponentsResponse.components:type_name -> admiral.component.v1.Component
+	2,  // 13: admiral.component.v1.UpdateComponentRequest.component:type_name -> admiral.component.v1.Component
+	24, // 14: admiral.component.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	2,  // 15: admiral.component.v1.UpdateComponentResponse.component:type_name -> admiral.component.v1.Component
+	1,  // 16: admiral.component.v1.SetComponentOverrideRequest.outputs:type_name -> admiral.component.v1.ComponentOutput
+	3,  // 17: admiral.component.v1.SetComponentOverrideResponse.override:type_name -> admiral.component.v1.ComponentOverride
+	3,  // 18: admiral.component.v1.GetComponentOverrideResponse.override:type_name -> admiral.component.v1.ComponentOverride
+	3,  // 19: admiral.component.v1.ListComponentOverridesResponse.overrides:type_name -> admiral.component.v1.ComponentOverride
+	4,  // 20: admiral.component.v1.ComponentAPI.CreateComponent:input_type -> admiral.component.v1.CreateComponentRequest
+	6,  // 21: admiral.component.v1.ComponentAPI.GetComponent:input_type -> admiral.component.v1.GetComponentRequest
+	8,  // 22: admiral.component.v1.ComponentAPI.ListComponents:input_type -> admiral.component.v1.ListComponentsRequest
+	10, // 23: admiral.component.v1.ComponentAPI.UpdateComponent:input_type -> admiral.component.v1.UpdateComponentRequest
+	12, // 24: admiral.component.v1.ComponentAPI.DeleteComponent:input_type -> admiral.component.v1.DeleteComponentRequest
+	14, // 25: admiral.component.v1.ComponentAPI.SetComponentOverride:input_type -> admiral.component.v1.SetComponentOverrideRequest
+	16, // 26: admiral.component.v1.ComponentAPI.GetComponentOverride:input_type -> admiral.component.v1.GetComponentOverrideRequest
+	18, // 27: admiral.component.v1.ComponentAPI.ListComponentOverrides:input_type -> admiral.component.v1.ListComponentOverridesRequest
+	20, // 28: admiral.component.v1.ComponentAPI.DeleteComponentOverride:input_type -> admiral.component.v1.DeleteComponentOverrideRequest
+	5,  // 29: admiral.component.v1.ComponentAPI.CreateComponent:output_type -> admiral.component.v1.CreateComponentResponse
+	7,  // 30: admiral.component.v1.ComponentAPI.GetComponent:output_type -> admiral.component.v1.GetComponentResponse
+	9,  // 31: admiral.component.v1.ComponentAPI.ListComponents:output_type -> admiral.component.v1.ListComponentsResponse
+	11, // 32: admiral.component.v1.ComponentAPI.UpdateComponent:output_type -> admiral.component.v1.UpdateComponentResponse
+	13, // 33: admiral.component.v1.ComponentAPI.DeleteComponent:output_type -> admiral.component.v1.DeleteComponentResponse
+	15, // 34: admiral.component.v1.ComponentAPI.SetComponentOverride:output_type -> admiral.component.v1.SetComponentOverrideResponse
+	17, // 35: admiral.component.v1.ComponentAPI.GetComponentOverride:output_type -> admiral.component.v1.GetComponentOverrideResponse
+	19, // 36: admiral.component.v1.ComponentAPI.ListComponentOverrides:output_type -> admiral.component.v1.ListComponentOverridesResponse
+	21, // 37: admiral.component.v1.ComponentAPI.DeleteComponentOverride:output_type -> admiral.component.v1.DeleteComponentOverrideResponse
+	29, // [29:38] is the sub-list for method output_type
+	20, // [20:29] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_admiral_component_v1_component_proto_init() }

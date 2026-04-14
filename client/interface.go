@@ -6,6 +6,7 @@ import (
 	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
 	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
 	connectionv1 "go.admiral.io/sdk/proto/admiral/connection/v1"
+	credentialv1 "go.admiral.io/sdk/proto/admiral/credential/v1"
 	deploymentv1 "go.admiral.io/sdk/proto/admiral/deployment/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/healthcheck/v1"
@@ -28,6 +29,8 @@ type AdmiralClient interface {
 	Component() componentv1.ComponentAPIClient
 	// Connection returns the ConnectionAPI client.
 	Connection() connectionv1.ConnectionAPIClient
+	// Credential returns the CredentialAPI client.
+	Credential() credentialv1.CredentialAPIClient
 	// Deployment returns the DeploymentAPI client.
 	Deployment() deploymentv1.DeploymentAPIClient
 	// Environment returns the EnvironmentAPI client.

@@ -139,8 +139,6 @@ type Variable struct {
 	EnvironmentId *string `protobuf:"bytes,8,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
 	// The user or agent who created this variable (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this variable (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,12,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the variable was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the variable was last updated.
@@ -238,13 +236,6 @@ func (x *Variable) GetEnvironmentId() string {
 func (x *Variable) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *Variable) GetUpdatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.UpdatedBy
 	}
 	return nil
 }
@@ -836,7 +827,7 @@ var File_admiral_variable_v1_variable_proto protoreflect.FileDescriptor
 
 const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf7\x04\n" +
+	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbb\x04\n" +
 	"\bVariable\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12:\n" +
 	"\x03key\x18\x02 \x01(\tB(\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\x12\x14\n" +
@@ -847,9 +838,7 @@ const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\x0eapplication_id\x18\a \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationId\x88\x01\x01\x124\n" +
 	"\x0eenvironment_id\x18\b \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\renvironmentId\x88\x01\x01\x12:\n" +
 	"\n" +
-	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x129\n" +
+	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
 	"created_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
@@ -952,31 +941,30 @@ var file_admiral_variable_v1_variable_proto_goTypes = []any{
 var file_admiral_variable_v1_variable_proto_depIdxs = []int32{
 	0,  // 0: admiral.variable.v1.Variable.type:type_name -> admiral.variable.v1.VariableType
 	12, // 1: admiral.variable.v1.Variable.created_by:type_name -> admiral.common.v1.ActorRef
-	12, // 2: admiral.variable.v1.Variable.updated_by:type_name -> admiral.common.v1.ActorRef
-	13, // 3: admiral.variable.v1.Variable.created_at:type_name -> google.protobuf.Timestamp
-	13, // 4: admiral.variable.v1.Variable.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 5: admiral.variable.v1.CreateVariableRequest.type:type_name -> admiral.variable.v1.VariableType
-	1,  // 6: admiral.variable.v1.CreateVariableResponse.variable:type_name -> admiral.variable.v1.Variable
-	1,  // 7: admiral.variable.v1.GetVariableResponse.variable:type_name -> admiral.variable.v1.Variable
-	1,  // 8: admiral.variable.v1.ListVariablesResponse.variables:type_name -> admiral.variable.v1.Variable
-	1,  // 9: admiral.variable.v1.UpdateVariableRequest.variable:type_name -> admiral.variable.v1.Variable
-	14, // 10: admiral.variable.v1.UpdateVariableRequest.update_mask:type_name -> google.protobuf.FieldMask
-	1,  // 11: admiral.variable.v1.UpdateVariableResponse.variable:type_name -> admiral.variable.v1.Variable
-	2,  // 12: admiral.variable.v1.VariableAPI.CreateVariable:input_type -> admiral.variable.v1.CreateVariableRequest
-	4,  // 13: admiral.variable.v1.VariableAPI.GetVariable:input_type -> admiral.variable.v1.GetVariableRequest
-	6,  // 14: admiral.variable.v1.VariableAPI.ListVariables:input_type -> admiral.variable.v1.ListVariablesRequest
-	8,  // 15: admiral.variable.v1.VariableAPI.UpdateVariable:input_type -> admiral.variable.v1.UpdateVariableRequest
-	10, // 16: admiral.variable.v1.VariableAPI.DeleteVariable:input_type -> admiral.variable.v1.DeleteVariableRequest
-	3,  // 17: admiral.variable.v1.VariableAPI.CreateVariable:output_type -> admiral.variable.v1.CreateVariableResponse
-	5,  // 18: admiral.variable.v1.VariableAPI.GetVariable:output_type -> admiral.variable.v1.GetVariableResponse
-	7,  // 19: admiral.variable.v1.VariableAPI.ListVariables:output_type -> admiral.variable.v1.ListVariablesResponse
-	9,  // 20: admiral.variable.v1.VariableAPI.UpdateVariable:output_type -> admiral.variable.v1.UpdateVariableResponse
-	11, // 21: admiral.variable.v1.VariableAPI.DeleteVariable:output_type -> admiral.variable.v1.DeleteVariableResponse
-	17, // [17:22] is the sub-list for method output_type
-	12, // [12:17] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	13, // 2: admiral.variable.v1.Variable.created_at:type_name -> google.protobuf.Timestamp
+	13, // 3: admiral.variable.v1.Variable.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: admiral.variable.v1.CreateVariableRequest.type:type_name -> admiral.variable.v1.VariableType
+	1,  // 5: admiral.variable.v1.CreateVariableResponse.variable:type_name -> admiral.variable.v1.Variable
+	1,  // 6: admiral.variable.v1.GetVariableResponse.variable:type_name -> admiral.variable.v1.Variable
+	1,  // 7: admiral.variable.v1.ListVariablesResponse.variables:type_name -> admiral.variable.v1.Variable
+	1,  // 8: admiral.variable.v1.UpdateVariableRequest.variable:type_name -> admiral.variable.v1.Variable
+	14, // 9: admiral.variable.v1.UpdateVariableRequest.update_mask:type_name -> google.protobuf.FieldMask
+	1,  // 10: admiral.variable.v1.UpdateVariableResponse.variable:type_name -> admiral.variable.v1.Variable
+	2,  // 11: admiral.variable.v1.VariableAPI.CreateVariable:input_type -> admiral.variable.v1.CreateVariableRequest
+	4,  // 12: admiral.variable.v1.VariableAPI.GetVariable:input_type -> admiral.variable.v1.GetVariableRequest
+	6,  // 13: admiral.variable.v1.VariableAPI.ListVariables:input_type -> admiral.variable.v1.ListVariablesRequest
+	8,  // 14: admiral.variable.v1.VariableAPI.UpdateVariable:input_type -> admiral.variable.v1.UpdateVariableRequest
+	10, // 15: admiral.variable.v1.VariableAPI.DeleteVariable:input_type -> admiral.variable.v1.DeleteVariableRequest
+	3,  // 16: admiral.variable.v1.VariableAPI.CreateVariable:output_type -> admiral.variable.v1.CreateVariableResponse
+	5,  // 17: admiral.variable.v1.VariableAPI.GetVariable:output_type -> admiral.variable.v1.GetVariableResponse
+	7,  // 18: admiral.variable.v1.VariableAPI.ListVariables:output_type -> admiral.variable.v1.ListVariablesResponse
+	9,  // 19: admiral.variable.v1.VariableAPI.UpdateVariable:output_type -> admiral.variable.v1.UpdateVariableResponse
+	11, // 20: admiral.variable.v1.VariableAPI.DeleteVariable:output_type -> admiral.variable.v1.DeleteVariableResponse
+	16, // [16:21] is the sub-list for method output_type
+	11, // [11:16] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_admiral_variable_v1_variable_proto_init() }

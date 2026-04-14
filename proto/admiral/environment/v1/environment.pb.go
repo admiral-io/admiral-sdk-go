@@ -440,8 +440,6 @@ type Environment struct {
 	LastDeployedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=last_deployed_at,json=lastDeployedAt,proto3" json:"last_deployed_at,omitempty"`
 	// The user or agent who created this environment (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,10,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this environment (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,11,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the environment was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the environment was last updated.
@@ -546,13 +544,6 @@ func (x *Environment) GetLastDeployedAt() *timestamppb.Timestamp {
 func (x *Environment) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *Environment) GetUpdatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.UpdatedBy
 	}
 	return nil
 }
@@ -1145,7 +1136,7 @@ const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"\x06config\"i\n" +
 	"\x14InfrastructureTarget\x12G\n" +
 	"\tterraform\x18\x01 \x01(\v2'.admiral.environment.v1.TerraformConfigH\x00R\tterraformB\b\n" +
-	"\x06config\"\xff\x06\n" +
+	"\x06config\"\xc3\x06\n" +
 	"\vEnvironment\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
@@ -1158,9 +1149,7 @@ const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"\x10last_deployed_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x0elastDeployedAt\x12:\n" +
 	"\n" +
 	"created_by\x18\n" +
-	" \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\v \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x129\n" +
+	" \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
 	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -1273,33 +1262,32 @@ var file_admiral_environment_v1_environment_proto_depIdxs = []int32{
 	17, // 4: admiral.environment.v1.Environment.labels:type_name -> admiral.environment.v1.Environment.LabelsEntry
 	19, // 5: admiral.environment.v1.Environment.last_deployed_at:type_name -> google.protobuf.Timestamp
 	20, // 6: admiral.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
-	20, // 7: admiral.environment.v1.Environment.updated_by:type_name -> admiral.common.v1.ActorRef
-	19, // 8: admiral.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
-	19, // 9: admiral.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
-	4,  // 10: admiral.environment.v1.CreateEnvironmentRequest.workload_targets:type_name -> admiral.environment.v1.WorkloadTarget
-	5,  // 11: admiral.environment.v1.CreateEnvironmentRequest.infrastructure_targets:type_name -> admiral.environment.v1.InfrastructureTarget
-	18, // 12: admiral.environment.v1.CreateEnvironmentRequest.labels:type_name -> admiral.environment.v1.CreateEnvironmentRequest.LabelsEntry
-	6,  // 13: admiral.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
-	6,  // 14: admiral.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
-	6,  // 15: admiral.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.environment.v1.Environment
-	6,  // 16: admiral.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.environment.v1.Environment
-	21, // 17: admiral.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	6,  // 18: admiral.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
-	7,  // 19: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.environment.v1.CreateEnvironmentRequest
-	9,  // 20: admiral.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.environment.v1.GetEnvironmentRequest
-	11, // 21: admiral.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.environment.v1.ListEnvironmentsRequest
-	13, // 22: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.environment.v1.UpdateEnvironmentRequest
-	15, // 23: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.environment.v1.DeleteEnvironmentRequest
-	8,  // 24: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.environment.v1.CreateEnvironmentResponse
-	10, // 25: admiral.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.environment.v1.GetEnvironmentResponse
-	12, // 26: admiral.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.environment.v1.ListEnvironmentsResponse
-	14, // 27: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.environment.v1.UpdateEnvironmentResponse
-	16, // 28: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.environment.v1.DeleteEnvironmentResponse
-	24, // [24:29] is the sub-list for method output_type
-	19, // [19:24] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	19, // 7: admiral.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
+	19, // 8: admiral.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
+	4,  // 9: admiral.environment.v1.CreateEnvironmentRequest.workload_targets:type_name -> admiral.environment.v1.WorkloadTarget
+	5,  // 10: admiral.environment.v1.CreateEnvironmentRequest.infrastructure_targets:type_name -> admiral.environment.v1.InfrastructureTarget
+	18, // 11: admiral.environment.v1.CreateEnvironmentRequest.labels:type_name -> admiral.environment.v1.CreateEnvironmentRequest.LabelsEntry
+	6,  // 12: admiral.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
+	6,  // 13: admiral.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
+	6,  // 14: admiral.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.environment.v1.Environment
+	6,  // 15: admiral.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.environment.v1.Environment
+	21, // 16: admiral.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	6,  // 17: admiral.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
+	7,  // 18: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.environment.v1.CreateEnvironmentRequest
+	9,  // 19: admiral.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.environment.v1.GetEnvironmentRequest
+	11, // 20: admiral.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.environment.v1.ListEnvironmentsRequest
+	13, // 21: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.environment.v1.UpdateEnvironmentRequest
+	15, // 22: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.environment.v1.DeleteEnvironmentRequest
+	8,  // 23: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.environment.v1.CreateEnvironmentResponse
+	10, // 24: admiral.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.environment.v1.GetEnvironmentResponse
+	12, // 25: admiral.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.environment.v1.ListEnvironmentsResponse
+	14, // 26: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.environment.v1.UpdateEnvironmentResponse
+	16, // 27: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.environment.v1.DeleteEnvironmentResponse
+	23, // [23:28] is the sub-list for method output_type
+	18, // [18:23] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_admiral_environment_v1_environment_proto_init() }

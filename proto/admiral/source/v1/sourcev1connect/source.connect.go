@@ -43,6 +43,8 @@ const (
 	SourceAPIUpdateSourceProcedure = "/admiral.source.v1.SourceAPI/UpdateSource"
 	// SourceAPIDeleteSourceProcedure is the fully-qualified name of the SourceAPI's DeleteSource RPC.
 	SourceAPIDeleteSourceProcedure = "/admiral.source.v1.SourceAPI/DeleteSource"
+	// SourceAPITestSourceProcedure is the fully-qualified name of the SourceAPI's TestSource RPC.
+	SourceAPITestSourceProcedure = "/admiral.source.v1.SourceAPI/TestSource"
 	// SourceAPIListSourceVersionsProcedure is the fully-qualified name of the SourceAPI's
 	// ListSourceVersions RPC.
 	SourceAPIListSourceVersionsProcedure = "/admiral.source.v1.SourceAPI/ListSourceVersions"
@@ -61,7 +63,7 @@ type SourceAPIClient interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
 	// The source type and source_config must match -- for example, a
-	// TERRAFORM_REGISTRY source requires a TerraformRegistryConfig.
+	// TERRAFORM source requires a TerraformConfig.
 	//
 	// Scope: `source:write`
 	CreateSource(context.Context, *connect.Request[v1.CreateSourceRequest]) (*connect.Response[v1.CreateSourceResponse], error)
@@ -85,6 +87,19 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:write`
 	DeleteSource(context.Context, *connect.Request[v1.DeleteSourceRequest]) (*connect.Response[v1.DeleteSourceResponse], error)
+	// TestSource validates the attached credential against the source URL by
+	// performing an authenticated probe against the external system. Writes the
+	// outcome (success or failure) and timestamp to the source record.
+	//
+	// A credential in isolation cannot be meaningfully tested -- a GitHub PAT is
+	// just a string until a target URL is known. TestSource is where the
+	// "attach credential, verify it works" flow lives.
+	//
+	// This operation queries the external system in real time and may take
+	// several seconds.
+	//
+	// Scope: `source:write`
+	TestSource(context.Context, *connect.Request[v1.TestSourceRequest]) (*connect.Response[v1.TestSourceResponse], error)
 	// ListSourceVersions queries the external system for available versions of
 	// this source's artifact.
 	//
@@ -126,7 +141,7 @@ type SourceAPIClient interface {
 	// SyncSource triggers a refresh of the source's cached metadata -- version
 	// list, discovered inputs/outputs, and connectivity status.
 	//
-	// Use this after updating credentials on the referenced connection, or to
+	// Use this after updating the referenced credential, or to
 	// force a refresh when you know the upstream has changed.
 	//
 	// This operation queries the external system in real time and may take
@@ -177,6 +192,12 @@ func NewSourceAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(sourceAPIMethods.ByName("DeleteSource")),
 			connect.WithClientOptions(opts...),
 		),
+		testSource: connect.NewClient[v1.TestSourceRequest, v1.TestSourceResponse](
+			httpClient,
+			baseURL+SourceAPITestSourceProcedure,
+			connect.WithSchema(sourceAPIMethods.ByName("TestSource")),
+			connect.WithClientOptions(opts...),
+		),
 		listSourceVersions: connect.NewClient[v1.ListSourceVersionsRequest, v1.ListSourceVersionsResponse](
 			httpClient,
 			baseURL+SourceAPIListSourceVersionsProcedure,
@@ -211,6 +232,7 @@ type sourceAPIClient struct {
 	listSources        *connect.Client[v1.ListSourcesRequest, v1.ListSourcesResponse]
 	updateSource       *connect.Client[v1.UpdateSourceRequest, v1.UpdateSourceResponse]
 	deleteSource       *connect.Client[v1.DeleteSourceRequest, v1.DeleteSourceResponse]
+	testSource         *connect.Client[v1.TestSourceRequest, v1.TestSourceResponse]
 	listSourceVersions *connect.Client[v1.ListSourceVersionsRequest, v1.ListSourceVersionsResponse]
 	getSourceInputs    *connect.Client[v1.GetSourceInputsRequest, v1.GetSourceInputsResponse]
 	getSourceOutputs   *connect.Client[v1.GetSourceOutputsRequest, v1.GetSourceOutputsResponse]
@@ -242,6 +264,11 @@ func (c *sourceAPIClient) DeleteSource(ctx context.Context, req *connect.Request
 	return c.deleteSource.CallUnary(ctx, req)
 }
 
+// TestSource calls admiral.source.v1.SourceAPI.TestSource.
+func (c *sourceAPIClient) TestSource(ctx context.Context, req *connect.Request[v1.TestSourceRequest]) (*connect.Response[v1.TestSourceResponse], error) {
+	return c.testSource.CallUnary(ctx, req)
+}
+
 // ListSourceVersions calls admiral.source.v1.SourceAPI.ListSourceVersions.
 func (c *sourceAPIClient) ListSourceVersions(ctx context.Context, req *connect.Request[v1.ListSourceVersionsRequest]) (*connect.Response[v1.ListSourceVersionsResponse], error) {
 	return c.listSourceVersions.CallUnary(ctx, req)
@@ -267,7 +294,7 @@ type SourceAPIHandler interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
 	// The source type and source_config must match -- for example, a
-	// TERRAFORM_REGISTRY source requires a TerraformRegistryConfig.
+	// TERRAFORM source requires a TerraformConfig.
 	//
 	// Scope: `source:write`
 	CreateSource(context.Context, *connect.Request[v1.CreateSourceRequest]) (*connect.Response[v1.CreateSourceResponse], error)
@@ -291,6 +318,19 @@ type SourceAPIHandler interface {
 	//
 	// Scope: `source:write`
 	DeleteSource(context.Context, *connect.Request[v1.DeleteSourceRequest]) (*connect.Response[v1.DeleteSourceResponse], error)
+	// TestSource validates the attached credential against the source URL by
+	// performing an authenticated probe against the external system. Writes the
+	// outcome (success or failure) and timestamp to the source record.
+	//
+	// A credential in isolation cannot be meaningfully tested -- a GitHub PAT is
+	// just a string until a target URL is known. TestSource is where the
+	// "attach credential, verify it works" flow lives.
+	//
+	// This operation queries the external system in real time and may take
+	// several seconds.
+	//
+	// Scope: `source:write`
+	TestSource(context.Context, *connect.Request[v1.TestSourceRequest]) (*connect.Response[v1.TestSourceResponse], error)
 	// ListSourceVersions queries the external system for available versions of
 	// this source's artifact.
 	//
@@ -332,7 +372,7 @@ type SourceAPIHandler interface {
 	// SyncSource triggers a refresh of the source's cached metadata -- version
 	// list, discovered inputs/outputs, and connectivity status.
 	//
-	// Use this after updating credentials on the referenced connection, or to
+	// Use this after updating the referenced credential, or to
 	// force a refresh when you know the upstream has changed.
 	//
 	// This operation queries the external system in real time and may take
@@ -379,6 +419,12 @@ func NewSourceAPIHandler(svc SourceAPIHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(sourceAPIMethods.ByName("DeleteSource")),
 		connect.WithHandlerOptions(opts...),
 	)
+	sourceAPITestSourceHandler := connect.NewUnaryHandler(
+		SourceAPITestSourceProcedure,
+		svc.TestSource,
+		connect.WithSchema(sourceAPIMethods.ByName("TestSource")),
+		connect.WithHandlerOptions(opts...),
+	)
 	sourceAPIListSourceVersionsHandler := connect.NewUnaryHandler(
 		SourceAPIListSourceVersionsProcedure,
 		svc.ListSourceVersions,
@@ -415,6 +461,8 @@ func NewSourceAPIHandler(svc SourceAPIHandler, opts ...connect.HandlerOption) (s
 			sourceAPIUpdateSourceHandler.ServeHTTP(w, r)
 		case SourceAPIDeleteSourceProcedure:
 			sourceAPIDeleteSourceHandler.ServeHTTP(w, r)
+		case SourceAPITestSourceProcedure:
+			sourceAPITestSourceHandler.ServeHTTP(w, r)
 		case SourceAPIListSourceVersionsProcedure:
 			sourceAPIListSourceVersionsHandler.ServeHTTP(w, r)
 		case SourceAPIGetSourceInputsProcedure:
@@ -450,6 +498,10 @@ func (UnimplementedSourceAPIHandler) UpdateSource(context.Context, *connect.Requ
 
 func (UnimplementedSourceAPIHandler) DeleteSource(context.Context, *connect.Request[v1.DeleteSourceRequest]) (*connect.Response[v1.DeleteSourceResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.DeleteSource is not implemented"))
+}
+
+func (UnimplementedSourceAPIHandler) TestSource(context.Context, *connect.Request[v1.TestSourceRequest]) (*connect.Response[v1.TestSourceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.TestSource is not implemented"))
 }
 
 func (UnimplementedSourceAPIHandler) ListSourceVersions(context.Context, *connect.Request[v1.ListSourceVersionsRequest]) (*connect.Response[v1.ListSourceVersionsResponse], error) {

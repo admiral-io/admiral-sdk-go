@@ -220,6 +220,51 @@ func local_request_SourceAPI_DeleteSource_0(ctx context.Context, marshaler runti
 	return msg, metadata, err
 }
 
+func request_SourceAPI_TestSource_0(ctx context.Context, marshaler runtime.Marshaler, client SourceAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq TestSourceRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["source_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "source_id")
+	}
+	protoReq.SourceId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "source_id", err)
+	}
+	msg, err := client.TestSource(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_SourceAPI_TestSource_0(ctx context.Context, marshaler runtime.Marshaler, server SourceAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq TestSourceRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["source_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "source_id")
+	}
+	protoReq.SourceId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "source_id", err)
+	}
+	msg, err := server.TestSource(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 var filter_SourceAPI_ListSourceVersions_0 = &utilities.DoubleArray{Encoding: map[string]int{"source_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
 func request_SourceAPI_ListSourceVersions_0(ctx context.Context, marshaler runtime.Marshaler, client SourceAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -530,6 +575,26 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		}
 		forward_SourceAPI_DeleteSource_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_SourceAPI_TestSource_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.source.v1.SourceAPI/TestSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}/test"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_SourceAPI_TestSource_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_SourceAPI_TestSource_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_SourceAPI_ListSourceVersions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -735,6 +800,23 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		}
 		forward_SourceAPI_DeleteSource_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_SourceAPI_TestSource_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.source.v1.SourceAPI/TestSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}/test"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_SourceAPI_TestSource_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_SourceAPI_TestSource_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_SourceAPI_ListSourceVersions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -812,6 +894,7 @@ var (
 	pattern_SourceAPI_ListSources_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "sources"}, ""))
 	pattern_SourceAPI_UpdateSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "sources", "source.id"}, ""))
 	pattern_SourceAPI_DeleteSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "sources", "source_id"}, ""))
+	pattern_SourceAPI_TestSource_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "sources", "source_id", "test"}, ""))
 	pattern_SourceAPI_ListSourceVersions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "sources", "source_id", "versions"}, ""))
 	pattern_SourceAPI_GetSourceInputs_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "sources", "source_id", "inputs"}, ""))
 	pattern_SourceAPI_GetSourceOutputs_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "sources", "source_id", "outputs"}, ""))
@@ -824,6 +907,7 @@ var (
 	forward_SourceAPI_ListSources_0        = runtime.ForwardResponseMessage
 	forward_SourceAPI_UpdateSource_0       = runtime.ForwardResponseMessage
 	forward_SourceAPI_DeleteSource_0       = runtime.ForwardResponseMessage
+	forward_SourceAPI_TestSource_0         = runtime.ForwardResponseMessage
 	forward_SourceAPI_ListSourceVersions_0 = runtime.ForwardResponseMessage
 	forward_SourceAPI_GetSourceInputs_0    = runtime.ForwardResponseMessage
 	forward_SourceAPI_GetSourceOutputs_0   = runtime.ForwardResponseMessage

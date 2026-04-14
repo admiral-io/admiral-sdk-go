@@ -24,6 +24,7 @@ const (
 	SourceAPI_ListSources_FullMethodName        = "/admiral.source.v1.SourceAPI/ListSources"
 	SourceAPI_UpdateSource_FullMethodName       = "/admiral.source.v1.SourceAPI/UpdateSource"
 	SourceAPI_DeleteSource_FullMethodName       = "/admiral.source.v1.SourceAPI/DeleteSource"
+	SourceAPI_TestSource_FullMethodName         = "/admiral.source.v1.SourceAPI/TestSource"
 	SourceAPI_ListSourceVersions_FullMethodName = "/admiral.source.v1.SourceAPI/ListSourceVersions"
 	SourceAPI_GetSourceInputs_FullMethodName    = "/admiral.source.v1.SourceAPI/GetSourceInputs"
 	SourceAPI_GetSourceOutputs_FullMethodName   = "/admiral.source.v1.SourceAPI/GetSourceOutputs"
@@ -39,8 +40,8 @@ const (
 //
 // A source represents a fetchable artifact at a specific location: a Terraform
 // module in a registry, a Helm chart in an OCI registry, Kubernetes manifests
-// in a Git repository, etc. Sources reference a connection for credentials and
-// are referenced by application components for deployment.
+// in a Git repository, etc. Sources reference a credential for authentication
+// and are referenced by application components for deployment.
 //
 // Sources can be marked as catalog entries by platform engineers. Catalog
 // sources are curated, pre-approved artifacts (e.g., a corporate-standard RDS
@@ -57,7 +58,7 @@ type SourceAPIClient interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
 	// The source type and source_config must match -- for example, a
-	// TERRAFORM_REGISTRY source requires a TerraformRegistryConfig.
+	// TERRAFORM source requires a TerraformConfig.
 	//
 	// Scope: `source:write`
 	CreateSource(ctx context.Context, in *CreateSourceRequest, opts ...grpc.CallOption) (*CreateSourceResponse, error)
@@ -81,6 +82,19 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:write`
 	DeleteSource(ctx context.Context, in *DeleteSourceRequest, opts ...grpc.CallOption) (*DeleteSourceResponse, error)
+	// TestSource validates the attached credential against the source URL by
+	// performing an authenticated probe against the external system. Writes the
+	// outcome (success or failure) and timestamp to the source record.
+	//
+	// A credential in isolation cannot be meaningfully tested -- a GitHub PAT is
+	// just a string until a target URL is known. TestSource is where the
+	// "attach credential, verify it works" flow lives.
+	//
+	// This operation queries the external system in real time and may take
+	// several seconds.
+	//
+	// Scope: `source:write`
+	TestSource(ctx context.Context, in *TestSourceRequest, opts ...grpc.CallOption) (*TestSourceResponse, error)
 	// ListSourceVersions queries the external system for available versions of
 	// this source's artifact.
 	//
@@ -122,7 +136,7 @@ type SourceAPIClient interface {
 	// SyncSource triggers a refresh of the source's cached metadata -- version
 	// list, discovered inputs/outputs, and connectivity status.
 	//
-	// Use this after updating credentials on the referenced connection, or to
+	// Use this after updating the referenced credential, or to
 	// force a refresh when you know the upstream has changed.
 	//
 	// This operation queries the external system in real time and may take
@@ -190,6 +204,16 @@ func (c *sourceAPIClient) DeleteSource(ctx context.Context, in *DeleteSourceRequ
 	return out, nil
 }
 
+func (c *sourceAPIClient) TestSource(ctx context.Context, in *TestSourceRequest, opts ...grpc.CallOption) (*TestSourceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TestSourceResponse)
+	err := c.cc.Invoke(ctx, SourceAPI_TestSource_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sourceAPIClient) ListSourceVersions(ctx context.Context, in *ListSourceVersionsRequest, opts ...grpc.CallOption) (*ListSourceVersionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListSourceVersionsResponse)
@@ -239,8 +263,8 @@ func (c *sourceAPIClient) SyncSource(ctx context.Context, in *SyncSourceRequest,
 //
 // A source represents a fetchable artifact at a specific location: a Terraform
 // module in a registry, a Helm chart in an OCI registry, Kubernetes manifests
-// in a Git repository, etc. Sources reference a connection for credentials and
-// are referenced by application components for deployment.
+// in a Git repository, etc. Sources reference a credential for authentication
+// and are referenced by application components for deployment.
 //
 // Sources can be marked as catalog entries by platform engineers. Catalog
 // sources are curated, pre-approved artifacts (e.g., a corporate-standard RDS
@@ -257,7 +281,7 @@ type SourceAPIServer interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
 	// The source type and source_config must match -- for example, a
-	// TERRAFORM_REGISTRY source requires a TerraformRegistryConfig.
+	// TERRAFORM source requires a TerraformConfig.
 	//
 	// Scope: `source:write`
 	CreateSource(context.Context, *CreateSourceRequest) (*CreateSourceResponse, error)
@@ -281,6 +305,19 @@ type SourceAPIServer interface {
 	//
 	// Scope: `source:write`
 	DeleteSource(context.Context, *DeleteSourceRequest) (*DeleteSourceResponse, error)
+	// TestSource validates the attached credential against the source URL by
+	// performing an authenticated probe against the external system. Writes the
+	// outcome (success or failure) and timestamp to the source record.
+	//
+	// A credential in isolation cannot be meaningfully tested -- a GitHub PAT is
+	// just a string until a target URL is known. TestSource is where the
+	// "attach credential, verify it works" flow lives.
+	//
+	// This operation queries the external system in real time and may take
+	// several seconds.
+	//
+	// Scope: `source:write`
+	TestSource(context.Context, *TestSourceRequest) (*TestSourceResponse, error)
 	// ListSourceVersions queries the external system for available versions of
 	// this source's artifact.
 	//
@@ -322,7 +359,7 @@ type SourceAPIServer interface {
 	// SyncSource triggers a refresh of the source's cached metadata -- version
 	// list, discovered inputs/outputs, and connectivity status.
 	//
-	// Use this after updating credentials on the referenced connection, or to
+	// Use this after updating the referenced credential, or to
 	// force a refresh when you know the upstream has changed.
 	//
 	// This operation queries the external system in real time and may take
@@ -353,6 +390,9 @@ func (UnimplementedSourceAPIServer) UpdateSource(context.Context, *UpdateSourceR
 }
 func (UnimplementedSourceAPIServer) DeleteSource(context.Context, *DeleteSourceRequest) (*DeleteSourceResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteSource not implemented")
+}
+func (UnimplementedSourceAPIServer) TestSource(context.Context, *TestSourceRequest) (*TestSourceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method TestSource not implemented")
 }
 func (UnimplementedSourceAPIServer) ListSourceVersions(context.Context, *ListSourceVersionsRequest) (*ListSourceVersionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListSourceVersions not implemented")
@@ -476,6 +516,24 @@ func _SourceAPI_DeleteSource_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SourceAPI_TestSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TestSourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SourceAPIServer).TestSource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SourceAPI_TestSource_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SourceAPIServer).TestSource(ctx, req.(*TestSourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SourceAPI_ListSourceVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListSourceVersionsRequest)
 	if err := dec(in); err != nil {
@@ -574,6 +632,10 @@ var SourceAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteSource",
 			Handler:    _SourceAPI_DeleteSource_Handler,
+		},
+		{
+			MethodName: "TestSource",
+			Handler:    _SourceAPI_TestSource_Handler,
 		},
 		{
 			MethodName: "ListSourceVersions",

@@ -39,6 +39,7 @@ func main() {
 	// c.Cluster().MethodName(ctx, req)
 	// c.Component().MethodName(ctx, req)
 	// c.Connection().MethodName(ctx, req)
+	// c.Credential().MethodName(ctx, req)
 	// c.Deployment().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
@@ -59,6 +60,7 @@ func main() {
 | ClusterAPI | `Cluster()` | `go.admiral.io/sdk/proto/admiral/cluster/v1` |
 | ComponentAPI | `Component()` | `go.admiral.io/sdk/proto/admiral/component/v1` |
 | ConnectionAPI | `Connection()` | `go.admiral.io/sdk/proto/admiral/connection/v1` |
+| CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/credential/v1` |
 | DeploymentAPI | `Deployment()` | `go.admiral.io/sdk/proto/admiral/deployment/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/healthcheck/v1` |

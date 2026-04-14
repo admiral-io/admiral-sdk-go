@@ -35,22 +35,22 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on TerraformRegistryConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *TerraformRegistryConfig) Validate() error {
+// Validate checks the field values on TerraformConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *TerraformConfig) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on TerraformRegistryConfig with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on TerraformConfig with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// TerraformRegistryConfigMultiError, or nil if none found.
-func (m *TerraformRegistryConfig) ValidateAll() error {
+// TerraformConfigMultiError, or nil if none found.
+func (m *TerraformConfig) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *TerraformRegistryConfig) validate(all bool) error {
+func (m *TerraformConfig) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -64,125 +64,19 @@ func (m *TerraformRegistryConfig) validate(all bool) error {
 	// no validation rules for System
 
 	if len(errors) > 0 {
-		return TerraformRegistryConfigMultiError(errors)
+		return TerraformConfigMultiError(errors)
 	}
 
 	return nil
 }
 
-// TerraformRegistryConfigMultiError is an error wrapping multiple validation
-// errors returned by TerraformRegistryConfig.ValidateAll() if the designated
-// constraints aren't met.
-type TerraformRegistryConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m TerraformRegistryConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m TerraformRegistryConfigMultiError) AllErrors() []error { return m }
-
-// TerraformRegistryConfigValidationError is the validation error returned by
-// TerraformRegistryConfig.Validate if the designated constraints aren't met.
-type TerraformRegistryConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e TerraformRegistryConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e TerraformRegistryConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e TerraformRegistryConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e TerraformRegistryConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e TerraformRegistryConfigValidationError) ErrorName() string {
-	return "TerraformRegistryConfigValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e TerraformRegistryConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sTerraformRegistryConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = TerraformRegistryConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = TerraformRegistryConfigValidationError{}
-
-// Validate checks the field values on TerraformGitConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *TerraformGitConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on TerraformGitConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// TerraformGitConfigMultiError, or nil if none found.
-func (m *TerraformGitConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *TerraformGitConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Path
-
-	// no validation rules for DefaultRef
-
-	if len(errors) > 0 {
-		return TerraformGitConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// TerraformGitConfigMultiError is an error wrapping multiple validation errors
-// returned by TerraformGitConfig.ValidateAll() if the designated constraints
+// TerraformConfigMultiError is an error wrapping multiple validation errors
+// returned by TerraformConfig.ValidateAll() if the designated constraints
 // aren't met.
-type TerraformGitConfigMultiError []error
+type TerraformConfigMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m TerraformGitConfigMultiError) Error() string {
+func (m TerraformConfigMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -191,11 +85,11 @@ func (m TerraformGitConfigMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m TerraformGitConfigMultiError) AllErrors() []error { return m }
+func (m TerraformConfigMultiError) AllErrors() []error { return m }
 
-// TerraformGitConfigValidationError is the validation error returned by
-// TerraformGitConfig.Validate if the designated constraints aren't met.
-type TerraformGitConfigValidationError struct {
+// TerraformConfigValidationError is the validation error returned by
+// TerraformConfig.Validate if the designated constraints aren't met.
+type TerraformConfigValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -203,24 +97,22 @@ type TerraformGitConfigValidationError struct {
 }
 
 // Field function returns field value.
-func (e TerraformGitConfigValidationError) Field() string { return e.field }
+func (e TerraformConfigValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e TerraformGitConfigValidationError) Reason() string { return e.reason }
+func (e TerraformConfigValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e TerraformGitConfigValidationError) Cause() error { return e.cause }
+func (e TerraformConfigValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e TerraformGitConfigValidationError) Key() bool { return e.key }
+func (e TerraformConfigValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e TerraformGitConfigValidationError) ErrorName() string {
-	return "TerraformGitConfigValidationError"
-}
+func (e TerraformConfigValidationError) ErrorName() string { return "TerraformConfigValidationError" }
 
 // Error satisfies the builtin error interface
-func (e TerraformGitConfigValidationError) Error() string {
+func (e TerraformConfigValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -232,14 +124,14 @@ func (e TerraformGitConfigValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sTerraformGitConfig.%s: %s%s",
+		"invalid %sTerraformConfig.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = TerraformGitConfigValidationError{}
+var _ error = TerraformConfigValidationError{}
 
 var _ interface {
 	Field() string
@@ -247,24 +139,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = TerraformGitConfigValidationError{}
+} = TerraformConfigValidationError{}
 
-// Validate checks the field values on HelmRepositoryConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *HelmRepositoryConfig) Validate() error {
+// Validate checks the field values on HelmConfig with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *HelmConfig) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on HelmRepositoryConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// HelmRepositoryConfigMultiError, or nil if none found.
-func (m *HelmRepositoryConfig) ValidateAll() error {
+// ValidateAll checks the field values on HelmConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in HelmConfigMultiError, or
+// nil if none found.
+func (m *HelmConfig) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *HelmRepositoryConfig) validate(all bool) error {
+func (m *HelmConfig) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -274,19 +166,18 @@ func (m *HelmRepositoryConfig) validate(all bool) error {
 	// no validation rules for ChartName
 
 	if len(errors) > 0 {
-		return HelmRepositoryConfigMultiError(errors)
+		return HelmConfigMultiError(errors)
 	}
 
 	return nil
 }
 
-// HelmRepositoryConfigMultiError is an error wrapping multiple validation
-// errors returned by HelmRepositoryConfig.ValidateAll() if the designated
-// constraints aren't met.
-type HelmRepositoryConfigMultiError []error
+// HelmConfigMultiError is an error wrapping multiple validation errors
+// returned by HelmConfig.ValidateAll() if the designated constraints aren't met.
+type HelmConfigMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m HelmRepositoryConfigMultiError) Error() string {
+func (m HelmConfigMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -295,11 +186,11 @@ func (m HelmRepositoryConfigMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m HelmRepositoryConfigMultiError) AllErrors() []error { return m }
+func (m HelmConfigMultiError) AllErrors() []error { return m }
 
-// HelmRepositoryConfigValidationError is the validation error returned by
-// HelmRepositoryConfig.Validate if the designated constraints aren't met.
-type HelmRepositoryConfigValidationError struct {
+// HelmConfigValidationError is the validation error returned by
+// HelmConfig.Validate if the designated constraints aren't met.
+type HelmConfigValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -307,24 +198,22 @@ type HelmRepositoryConfigValidationError struct {
 }
 
 // Field function returns field value.
-func (e HelmRepositoryConfigValidationError) Field() string { return e.field }
+func (e HelmConfigValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e HelmRepositoryConfigValidationError) Reason() string { return e.reason }
+func (e HelmConfigValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e HelmRepositoryConfigValidationError) Cause() error { return e.cause }
+func (e HelmConfigValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e HelmRepositoryConfigValidationError) Key() bool { return e.key }
+func (e HelmConfigValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e HelmRepositoryConfigValidationError) ErrorName() string {
-	return "HelmRepositoryConfigValidationError"
-}
+func (e HelmConfigValidationError) ErrorName() string { return "HelmConfigValidationError" }
 
 // Error satisfies the builtin error interface
-func (e HelmRepositoryConfigValidationError) Error() string {
+func (e HelmConfigValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -336,14 +225,14 @@ func (e HelmRepositoryConfigValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sHelmRepositoryConfig.%s: %s%s",
+		"invalid %sHelmConfig.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = HelmRepositoryConfigValidationError{}
+var _ error = HelmConfigValidationError{}
 
 var _ interface {
 	Field() string
@@ -351,531 +240,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = HelmRepositoryConfigValidationError{}
-
-// Validate checks the field values on HelmOCIConfig with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *HelmOCIConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on HelmOCIConfig with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in HelmOCIConfigMultiError, or
-// nil if none found.
-func (m *HelmOCIConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *HelmOCIConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Repository
-
-	if len(errors) > 0 {
-		return HelmOCIConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// HelmOCIConfigMultiError is an error wrapping multiple validation errors
-// returned by HelmOCIConfig.ValidateAll() if the designated constraints
-// aren't met.
-type HelmOCIConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m HelmOCIConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m HelmOCIConfigMultiError) AllErrors() []error { return m }
-
-// HelmOCIConfigValidationError is the validation error returned by
-// HelmOCIConfig.Validate if the designated constraints aren't met.
-type HelmOCIConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e HelmOCIConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e HelmOCIConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e HelmOCIConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e HelmOCIConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e HelmOCIConfigValidationError) ErrorName() string { return "HelmOCIConfigValidationError" }
-
-// Error satisfies the builtin error interface
-func (e HelmOCIConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sHelmOCIConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = HelmOCIConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = HelmOCIConfigValidationError{}
-
-// Validate checks the field values on HelmGitConfig with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *HelmGitConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on HelmGitConfig with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in HelmGitConfigMultiError, or
-// nil if none found.
-func (m *HelmGitConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *HelmGitConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Path
-
-	// no validation rules for DefaultRef
-
-	if len(errors) > 0 {
-		return HelmGitConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// HelmGitConfigMultiError is an error wrapping multiple validation errors
-// returned by HelmGitConfig.ValidateAll() if the designated constraints
-// aren't met.
-type HelmGitConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m HelmGitConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m HelmGitConfigMultiError) AllErrors() []error { return m }
-
-// HelmGitConfigValidationError is the validation error returned by
-// HelmGitConfig.Validate if the designated constraints aren't met.
-type HelmGitConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e HelmGitConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e HelmGitConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e HelmGitConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e HelmGitConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e HelmGitConfigValidationError) ErrorName() string { return "HelmGitConfigValidationError" }
-
-// Error satisfies the builtin error interface
-func (e HelmGitConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sHelmGitConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = HelmGitConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = HelmGitConfigValidationError{}
-
-// Validate checks the field values on KustomizeGitConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *KustomizeGitConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on KustomizeGitConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// KustomizeGitConfigMultiError, or nil if none found.
-func (m *KustomizeGitConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *KustomizeGitConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Path
-
-	// no validation rules for DefaultRef
-
-	if len(errors) > 0 {
-		return KustomizeGitConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// KustomizeGitConfigMultiError is an error wrapping multiple validation errors
-// returned by KustomizeGitConfig.ValidateAll() if the designated constraints
-// aren't met.
-type KustomizeGitConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m KustomizeGitConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m KustomizeGitConfigMultiError) AllErrors() []error { return m }
-
-// KustomizeGitConfigValidationError is the validation error returned by
-// KustomizeGitConfig.Validate if the designated constraints aren't met.
-type KustomizeGitConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e KustomizeGitConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e KustomizeGitConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e KustomizeGitConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e KustomizeGitConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e KustomizeGitConfigValidationError) ErrorName() string {
-	return "KustomizeGitConfigValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e KustomizeGitConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sKustomizeGitConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = KustomizeGitConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = KustomizeGitConfigValidationError{}
-
-// Validate checks the field values on ManifestGitConfig with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *ManifestGitConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ManifestGitConfig with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// ManifestGitConfigMultiError, or nil if none found.
-func (m *ManifestGitConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ManifestGitConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Path
-
-	// no validation rules for Recursive
-
-	// no validation rules for DefaultRef
-
-	if len(errors) > 0 {
-		return ManifestGitConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// ManifestGitConfigMultiError is an error wrapping multiple validation errors
-// returned by ManifestGitConfig.ValidateAll() if the designated constraints
-// aren't met.
-type ManifestGitConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ManifestGitConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ManifestGitConfigMultiError) AllErrors() []error { return m }
-
-// ManifestGitConfigValidationError is the validation error returned by
-// ManifestGitConfig.Validate if the designated constraints aren't met.
-type ManifestGitConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ManifestGitConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ManifestGitConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ManifestGitConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ManifestGitConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ManifestGitConfigValidationError) ErrorName() string {
-	return "ManifestGitConfigValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ManifestGitConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sManifestGitConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ManifestGitConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ManifestGitConfigValidationError{}
-
-// Validate checks the field values on ArchiveConfig with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *ArchiveConfig) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ArchiveConfig with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in ArchiveConfigMultiError, or
-// nil if none found.
-func (m *ArchiveConfig) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ArchiveConfig) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Path
-
-	// no validation rules for Checksum
-
-	if len(errors) > 0 {
-		return ArchiveConfigMultiError(errors)
-	}
-
-	return nil
-}
-
-// ArchiveConfigMultiError is an error wrapping multiple validation errors
-// returned by ArchiveConfig.ValidateAll() if the designated constraints
-// aren't met.
-type ArchiveConfigMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ArchiveConfigMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ArchiveConfigMultiError) AllErrors() []error { return m }
-
-// ArchiveConfigValidationError is the validation error returned by
-// ArchiveConfig.Validate if the designated constraints aren't met.
-type ArchiveConfigValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ArchiveConfigValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ArchiveConfigValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ArchiveConfigValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ArchiveConfigValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ArchiveConfigValidationError) ErrorName() string { return "ArchiveConfigValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ArchiveConfigValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sArchiveConfig.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ArchiveConfigValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ArchiveConfigValidationError{}
+} = HelmConfigValidationError{}
 
 // Validate checks the field values on SourceVersion with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -1295,35 +660,6 @@ func (m *Source) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetUpdatedBy()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, SourceValidationError{
-					field:  "UpdatedBy",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, SourceValidationError{
-					field:  "UpdatedBy",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetUpdatedBy()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return SourceValidationError{
-				field:  "UpdatedBy",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
 		switch v := interface{}(m.GetLastSyncedAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -1346,6 +682,37 @@ func (m *Source) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return SourceValidationError{
 				field:  "LastSyncedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for LastTestError
+
+	if all {
+		switch v := interface{}(m.GetLastTestedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SourceValidationError{
+					field:  "LastTestedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SourceValidationError{
+					field:  "LastTestedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLastTestedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SourceValidationError{
+				field:  "LastTestedAt",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1411,7 +778,7 @@ func (m *Source) validate(all bool) error {
 	}
 
 	switch v := m.SourceConfig.(type) {
-	case *Source_TerraformRegistry:
+	case *Source_Terraform:
 		if v == nil {
 			err := SourceValidationError{
 				field:  "SourceConfig",
@@ -1424,11 +791,11 @@ func (m *Source) validate(all bool) error {
 		}
 
 		if all {
-			switch v := interface{}(m.GetTerraformRegistry()).(type) {
+			switch v := interface{}(m.GetTerraform()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, SourceValidationError{
-						field:  "TerraformRegistry",
+						field:  "Terraform",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1436,23 +803,23 @@ func (m *Source) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, SourceValidationError{
-						field:  "TerraformRegistry",
+						field:  "Terraform",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetTerraformRegistry()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return SourceValidationError{
-					field:  "TerraformRegistry",
+					field:  "Terraform",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
 			}
 		}
 
-	case *Source_TerraformGit:
+	case *Source_Helm:
 		if v == nil {
 			err := SourceValidationError{
 				field:  "SourceConfig",
@@ -1465,11 +832,11 @@ func (m *Source) validate(all bool) error {
 		}
 
 		if all {
-			switch v := interface{}(m.GetTerraformGit()).(type) {
+			switch v := interface{}(m.GetHelm()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, SourceValidationError{
-						field:  "TerraformGit",
+						field:  "Helm",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1477,262 +844,16 @@ func (m *Source) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, SourceValidationError{
-						field:  "TerraformGit",
+						field:  "Helm",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetTerraformGit()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetHelm()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return SourceValidationError{
-					field:  "TerraformGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_HelmRepository:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelmRepository()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "HelmRepository",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "HelmRepository",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelmRepository()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "HelmRepository",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_HelmOci:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelmOci()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "HelmOci",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "HelmOci",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelmOci()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "HelmOci",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_HelmGit:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelmGit()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "HelmGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "HelmGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelmGit()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "HelmGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_KustomizeGit:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetKustomizeGit()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "KustomizeGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "KustomizeGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetKustomizeGit()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "KustomizeGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_ManifestGit:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetManifestGit()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "ManifestGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "ManifestGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetManifestGit()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "ManifestGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_Archive:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetArchive()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "Archive",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "Archive",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetArchive()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "Archive",
+					field:  "Helm",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -1743,8 +864,12 @@ func (m *Source) validate(all bool) error {
 		_ = v // ensures v is used
 	}
 
-	if m.ConnectionId != nil {
-		// no validation rules for ConnectionId
+	if m.CredentialId != nil {
+		// no validation rules for CredentialId
+	}
+
+	if m.LastTestStatus != nil {
+		// no validation rules for LastTestStatus
 	}
 
 	if len(errors) > 0 {
@@ -1859,7 +984,7 @@ func (m *CreateSourceRequest) validate(all bool) error {
 	// no validation rules for Labels
 
 	switch v := m.SourceConfig.(type) {
-	case *CreateSourceRequest_TerraformRegistry:
+	case *CreateSourceRequest_Terraform:
 		if v == nil {
 			err := CreateSourceRequestValidationError{
 				field:  "SourceConfig",
@@ -1872,11 +997,11 @@ func (m *CreateSourceRequest) validate(all bool) error {
 		}
 
 		if all {
-			switch v := interface{}(m.GetTerraformRegistry()).(type) {
+			switch v := interface{}(m.GetTerraform()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "TerraformRegistry",
+						field:  "Terraform",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1884,23 +1009,23 @@ func (m *CreateSourceRequest) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "TerraformRegistry",
+						field:  "Terraform",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetTerraformRegistry()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return CreateSourceRequestValidationError{
-					field:  "TerraformRegistry",
+					field:  "Terraform",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
 			}
 		}
 
-	case *CreateSourceRequest_TerraformGit:
+	case *CreateSourceRequest_Helm:
 		if v == nil {
 			err := CreateSourceRequestValidationError{
 				field:  "SourceConfig",
@@ -1913,11 +1038,11 @@ func (m *CreateSourceRequest) validate(all bool) error {
 		}
 
 		if all {
-			switch v := interface{}(m.GetTerraformGit()).(type) {
+			switch v := interface{}(m.GetHelm()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "TerraformGit",
+						field:  "Helm",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1925,262 +1050,16 @@ func (m *CreateSourceRequest) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "TerraformGit",
+						field:  "Helm",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetTerraformGit()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetHelm()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return CreateSourceRequestValidationError{
-					field:  "TerraformGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *CreateSourceRequest_HelmRepository:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelmRepository()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "HelmRepository",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "HelmRepository",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelmRepository()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "HelmRepository",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *CreateSourceRequest_HelmOci:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelmOci()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "HelmOci",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "HelmOci",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelmOci()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "HelmOci",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *CreateSourceRequest_HelmGit:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelmGit()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "HelmGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "HelmGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelmGit()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "HelmGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *CreateSourceRequest_KustomizeGit:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetKustomizeGit()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "KustomizeGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "KustomizeGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetKustomizeGit()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "KustomizeGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *CreateSourceRequest_ManifestGit:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetManifestGit()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "ManifestGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "ManifestGit",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetManifestGit()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "ManifestGit",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *CreateSourceRequest_Archive:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetArchive()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "Archive",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "Archive",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetArchive()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "Archive",
+					field:  "Helm",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -2191,8 +1070,8 @@ func (m *CreateSourceRequest) validate(all bool) error {
 		_ = v // ensures v is used
 	}
 
-	if m.ConnectionId != nil {
-		// no validation rules for ConnectionId
+	if m.CredentialId != nil {
+		// no validation rules for CredentialId
 	}
 
 	if len(errors) > 0 {
@@ -3381,6 +2260,245 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteSourceResponseValidationError{}
+
+// Validate checks the field values on TestSourceRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *TestSourceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TestSourceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TestSourceRequestMultiError, or nil if none found.
+func (m *TestSourceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TestSourceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SourceId
+
+	if len(errors) > 0 {
+		return TestSourceRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// TestSourceRequestMultiError is an error wrapping multiple validation errors
+// returned by TestSourceRequest.ValidateAll() if the designated constraints
+// aren't met.
+type TestSourceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TestSourceRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TestSourceRequestMultiError) AllErrors() []error { return m }
+
+// TestSourceRequestValidationError is the validation error returned by
+// TestSourceRequest.Validate if the designated constraints aren't met.
+type TestSourceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TestSourceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TestSourceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TestSourceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TestSourceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TestSourceRequestValidationError) ErrorName() string {
+	return "TestSourceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TestSourceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTestSourceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TestSourceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TestSourceRequestValidationError{}
+
+// Validate checks the field values on TestSourceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TestSourceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TestSourceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TestSourceResponseMultiError, or nil if none found.
+func (m *TestSourceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TestSourceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Status
+
+	// no validation rules for Error
+
+	if all {
+		switch v := interface{}(m.GetSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, TestSourceResponseValidationError{
+					field:  "Source",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, TestSourceResponseValidationError{
+					field:  "Source",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TestSourceResponseValidationError{
+				field:  "Source",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return TestSourceResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// TestSourceResponseMultiError is an error wrapping multiple validation errors
+// returned by TestSourceResponse.ValidateAll() if the designated constraints
+// aren't met.
+type TestSourceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TestSourceResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TestSourceResponseMultiError) AllErrors() []error { return m }
+
+// TestSourceResponseValidationError is the validation error returned by
+// TestSourceResponse.Validate if the designated constraints aren't met.
+type TestSourceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TestSourceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TestSourceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TestSourceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TestSourceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TestSourceResponseValidationError) ErrorName() string {
+	return "TestSourceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TestSourceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTestSourceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TestSourceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TestSourceResponseValidationError{}
 
 // Validate checks the field values on ListSourceVersionsRequest with the rules
 // defined in the proto definition for this message. If any rules are

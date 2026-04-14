@@ -173,8 +173,6 @@ type Cluster struct {
 	HealthStatus ClusterHealthStatus `protobuf:"varint,6,opt,name=health_status,json=healthStatus,proto3,enum=admiral.cluster.v1.ClusterHealthStatus" json:"health_status,omitempty"`
 	// The user or agent who created this cluster (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this cluster (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,10,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the cluster record was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the cluster record was last updated.
@@ -258,13 +256,6 @@ func (x *Cluster) GetHealthStatus() ClusterHealthStatus {
 func (x *Cluster) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *Cluster) GetUpdatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.UpdatedBy
 	}
 	return nil
 }
@@ -2957,7 +2948,7 @@ var File_admiral_cluster_v1_cluster_proto protoreflect.FileDescriptor
 
 const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"\n" +
-	" admiral/cluster/v1/cluster.proto\x12\x12admiral.cluster.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x83\x05\n" +
+	" admiral/cluster/v1/cluster.proto\x12\x12admiral.cluster.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc7\x04\n" +
 	"\aCluster\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
@@ -2967,10 +2958,7 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"clusterUid\x12L\n" +
 	"\rhealth_status\x18\x06 \x01(\x0e2'.admiral.cluster.v1.ClusterHealthStatusR\fhealthStatus\x12:\n" +
 	"\n" +
-	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\n" +
-	" \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x129\n" +
+	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -3321,78 +3309,77 @@ var file_admiral_cluster_v1_cluster_proto_depIdxs = []int32{
 	41, // 0: admiral.cluster.v1.Cluster.labels:type_name -> admiral.cluster.v1.Cluster.LabelsEntry
 	0,  // 1: admiral.cluster.v1.Cluster.health_status:type_name -> admiral.cluster.v1.ClusterHealthStatus
 	45, // 2: admiral.cluster.v1.Cluster.created_by:type_name -> admiral.common.v1.ActorRef
-	45, // 3: admiral.cluster.v1.Cluster.updated_by:type_name -> admiral.common.v1.ActorRef
-	46, // 4: admiral.cluster.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
-	46, // 5: admiral.cluster.v1.Cluster.updated_at:type_name -> google.protobuf.Timestamp
-	42, // 6: admiral.cluster.v1.Workload.labels:type_name -> admiral.cluster.v1.Workload.LabelsEntry
-	1,  // 7: admiral.cluster.v1.Workload.health_status:type_name -> admiral.cluster.v1.WorkloadHealthStatus
-	5,  // 8: admiral.cluster.v1.Workload.containers:type_name -> admiral.cluster.v1.ContainerStatus
-	46, // 9: admiral.cluster.v1.Workload.last_updated_at:type_name -> google.protobuf.Timestamp
-	6,  // 10: admiral.cluster.v1.WorkloadEvent.regarding:type_name -> admiral.cluster.v1.ObjectReference
-	46, // 11: admiral.cluster.v1.WorkloadEvent.first_seen:type_name -> google.protobuf.Timestamp
-	46, // 12: admiral.cluster.v1.WorkloadEvent.last_seen:type_name -> google.protobuf.Timestamp
-	43, // 13: admiral.cluster.v1.CreateClusterRequest.labels:type_name -> admiral.cluster.v1.CreateClusterRequest.LabelsEntry
-	2,  // 14: admiral.cluster.v1.CreateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
-	2,  // 15: admiral.cluster.v1.GetClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
-	2,  // 16: admiral.cluster.v1.ListClustersResponse.clusters:type_name -> admiral.cluster.v1.Cluster
-	2,  // 17: admiral.cluster.v1.UpdateClusterRequest.cluster:type_name -> admiral.cluster.v1.Cluster
-	47, // 18: admiral.cluster.v1.UpdateClusterRequest.update_mask:type_name -> google.protobuf.FieldMask
-	2,  // 19: admiral.cluster.v1.UpdateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
-	0,  // 20: admiral.cluster.v1.GetClusterStatusResponse.health_status:type_name -> admiral.cluster.v1.ClusterHealthStatus
-	3,  // 21: admiral.cluster.v1.GetClusterStatusResponse.status:type_name -> admiral.cluster.v1.ClusterStatus
-	46, // 22: admiral.cluster.v1.GetClusterStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	3,  // 23: admiral.cluster.v1.ReportClusterStatusRequest.status:type_name -> admiral.cluster.v1.ClusterStatus
-	21, // 24: admiral.cluster.v1.ReportClusterStatusRequest.workloads:type_name -> admiral.cluster.v1.WorkloadStatus
-	7,  // 25: admiral.cluster.v1.ReportClusterStatusRequest.events:type_name -> admiral.cluster.v1.WorkloadEvent
-	46, // 26: admiral.cluster.v1.ReportClusterStatusRequest.reported_at:type_name -> google.protobuf.Timestamp
-	44, // 27: admiral.cluster.v1.WorkloadStatus.labels:type_name -> admiral.cluster.v1.WorkloadStatus.LabelsEntry
-	1,  // 28: admiral.cluster.v1.WorkloadStatus.health_status:type_name -> admiral.cluster.v1.WorkloadHealthStatus
-	5,  // 29: admiral.cluster.v1.WorkloadStatus.containers:type_name -> admiral.cluster.v1.ContainerStatus
-	4,  // 30: admiral.cluster.v1.ListWorkloadsResponse.workloads:type_name -> admiral.cluster.v1.Workload
-	21, // 31: admiral.cluster.v1.ReportWorkloadStatusRequest.workloads:type_name -> admiral.cluster.v1.WorkloadStatus
-	46, // 32: admiral.cluster.v1.ReportWorkloadStatusRequest.reported_at:type_name -> google.protobuf.Timestamp
-	46, // 33: admiral.cluster.v1.CreateClusterTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
-	48, // 34: admiral.cluster.v1.CreateClusterTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	48, // 35: admiral.cluster.v1.ListClusterTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
-	48, // 36: admiral.cluster.v1.GetClusterTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	48, // 37: admiral.cluster.v1.RevokeClusterTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	35, // 38: admiral.cluster.v1.GetRevisionBundleResponse.bundle:type_name -> admiral.cluster.v1.RevisionBundle
-	36, // 39: admiral.cluster.v1.ReportRevisionResultRequest.result:type_name -> admiral.cluster.v1.RevisionResult
-	8,  // 40: admiral.cluster.v1.ClusterAPI.CreateCluster:input_type -> admiral.cluster.v1.CreateClusterRequest
-	10, // 41: admiral.cluster.v1.ClusterAPI.GetCluster:input_type -> admiral.cluster.v1.GetClusterRequest
-	18, // 42: admiral.cluster.v1.ClusterAPI.GetClusterStatus:input_type -> admiral.cluster.v1.GetClusterStatusRequest
-	12, // 43: admiral.cluster.v1.ClusterAPI.ListClusters:input_type -> admiral.cluster.v1.ListClustersRequest
-	14, // 44: admiral.cluster.v1.ClusterAPI.UpdateCluster:input_type -> admiral.cluster.v1.UpdateClusterRequest
-	16, // 45: admiral.cluster.v1.ClusterAPI.DeleteCluster:input_type -> admiral.cluster.v1.DeleteClusterRequest
-	27, // 46: admiral.cluster.v1.ClusterAPI.CreateClusterToken:input_type -> admiral.cluster.v1.CreateClusterTokenRequest
-	29, // 47: admiral.cluster.v1.ClusterAPI.ListClusterTokens:input_type -> admiral.cluster.v1.ListClusterTokensRequest
-	31, // 48: admiral.cluster.v1.ClusterAPI.GetClusterToken:input_type -> admiral.cluster.v1.GetClusterTokenRequest
-	33, // 49: admiral.cluster.v1.ClusterAPI.RevokeClusterToken:input_type -> admiral.cluster.v1.RevokeClusterTokenRequest
-	20, // 50: admiral.cluster.v1.ClusterAPI.ReportClusterStatus:input_type -> admiral.cluster.v1.ReportClusterStatusRequest
-	23, // 51: admiral.cluster.v1.ClusterAPI.ListWorkloads:input_type -> admiral.cluster.v1.ListWorkloadsRequest
-	25, // 52: admiral.cluster.v1.ClusterAPI.ReportWorkloadStatus:input_type -> admiral.cluster.v1.ReportWorkloadStatusRequest
-	37, // 53: admiral.cluster.v1.ClusterAPI.GetRevisionBundle:input_type -> admiral.cluster.v1.GetRevisionBundleRequest
-	39, // 54: admiral.cluster.v1.ClusterAPI.ReportRevisionResult:input_type -> admiral.cluster.v1.ReportRevisionResultRequest
-	9,  // 55: admiral.cluster.v1.ClusterAPI.CreateCluster:output_type -> admiral.cluster.v1.CreateClusterResponse
-	11, // 56: admiral.cluster.v1.ClusterAPI.GetCluster:output_type -> admiral.cluster.v1.GetClusterResponse
-	19, // 57: admiral.cluster.v1.ClusterAPI.GetClusterStatus:output_type -> admiral.cluster.v1.GetClusterStatusResponse
-	13, // 58: admiral.cluster.v1.ClusterAPI.ListClusters:output_type -> admiral.cluster.v1.ListClustersResponse
-	15, // 59: admiral.cluster.v1.ClusterAPI.UpdateCluster:output_type -> admiral.cluster.v1.UpdateClusterResponse
-	17, // 60: admiral.cluster.v1.ClusterAPI.DeleteCluster:output_type -> admiral.cluster.v1.DeleteClusterResponse
-	28, // 61: admiral.cluster.v1.ClusterAPI.CreateClusterToken:output_type -> admiral.cluster.v1.CreateClusterTokenResponse
-	30, // 62: admiral.cluster.v1.ClusterAPI.ListClusterTokens:output_type -> admiral.cluster.v1.ListClusterTokensResponse
-	32, // 63: admiral.cluster.v1.ClusterAPI.GetClusterToken:output_type -> admiral.cluster.v1.GetClusterTokenResponse
-	34, // 64: admiral.cluster.v1.ClusterAPI.RevokeClusterToken:output_type -> admiral.cluster.v1.RevokeClusterTokenResponse
-	22, // 65: admiral.cluster.v1.ClusterAPI.ReportClusterStatus:output_type -> admiral.cluster.v1.ReportClusterStatusResponse
-	24, // 66: admiral.cluster.v1.ClusterAPI.ListWorkloads:output_type -> admiral.cluster.v1.ListWorkloadsResponse
-	26, // 67: admiral.cluster.v1.ClusterAPI.ReportWorkloadStatus:output_type -> admiral.cluster.v1.ReportWorkloadStatusResponse
-	38, // 68: admiral.cluster.v1.ClusterAPI.GetRevisionBundle:output_type -> admiral.cluster.v1.GetRevisionBundleResponse
-	40, // 69: admiral.cluster.v1.ClusterAPI.ReportRevisionResult:output_type -> admiral.cluster.v1.ReportRevisionResultResponse
-	55, // [55:70] is the sub-list for method output_type
-	40, // [40:55] is the sub-list for method input_type
-	40, // [40:40] is the sub-list for extension type_name
-	40, // [40:40] is the sub-list for extension extendee
-	0,  // [0:40] is the sub-list for field type_name
+	46, // 3: admiral.cluster.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
+	46, // 4: admiral.cluster.v1.Cluster.updated_at:type_name -> google.protobuf.Timestamp
+	42, // 5: admiral.cluster.v1.Workload.labels:type_name -> admiral.cluster.v1.Workload.LabelsEntry
+	1,  // 6: admiral.cluster.v1.Workload.health_status:type_name -> admiral.cluster.v1.WorkloadHealthStatus
+	5,  // 7: admiral.cluster.v1.Workload.containers:type_name -> admiral.cluster.v1.ContainerStatus
+	46, // 8: admiral.cluster.v1.Workload.last_updated_at:type_name -> google.protobuf.Timestamp
+	6,  // 9: admiral.cluster.v1.WorkloadEvent.regarding:type_name -> admiral.cluster.v1.ObjectReference
+	46, // 10: admiral.cluster.v1.WorkloadEvent.first_seen:type_name -> google.protobuf.Timestamp
+	46, // 11: admiral.cluster.v1.WorkloadEvent.last_seen:type_name -> google.protobuf.Timestamp
+	43, // 12: admiral.cluster.v1.CreateClusterRequest.labels:type_name -> admiral.cluster.v1.CreateClusterRequest.LabelsEntry
+	2,  // 13: admiral.cluster.v1.CreateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	2,  // 14: admiral.cluster.v1.GetClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	2,  // 15: admiral.cluster.v1.ListClustersResponse.clusters:type_name -> admiral.cluster.v1.Cluster
+	2,  // 16: admiral.cluster.v1.UpdateClusterRequest.cluster:type_name -> admiral.cluster.v1.Cluster
+	47, // 17: admiral.cluster.v1.UpdateClusterRequest.update_mask:type_name -> google.protobuf.FieldMask
+	2,  // 18: admiral.cluster.v1.UpdateClusterResponse.cluster:type_name -> admiral.cluster.v1.Cluster
+	0,  // 19: admiral.cluster.v1.GetClusterStatusResponse.health_status:type_name -> admiral.cluster.v1.ClusterHealthStatus
+	3,  // 20: admiral.cluster.v1.GetClusterStatusResponse.status:type_name -> admiral.cluster.v1.ClusterStatus
+	46, // 21: admiral.cluster.v1.GetClusterStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
+	3,  // 22: admiral.cluster.v1.ReportClusterStatusRequest.status:type_name -> admiral.cluster.v1.ClusterStatus
+	21, // 23: admiral.cluster.v1.ReportClusterStatusRequest.workloads:type_name -> admiral.cluster.v1.WorkloadStatus
+	7,  // 24: admiral.cluster.v1.ReportClusterStatusRequest.events:type_name -> admiral.cluster.v1.WorkloadEvent
+	46, // 25: admiral.cluster.v1.ReportClusterStatusRequest.reported_at:type_name -> google.protobuf.Timestamp
+	44, // 26: admiral.cluster.v1.WorkloadStatus.labels:type_name -> admiral.cluster.v1.WorkloadStatus.LabelsEntry
+	1,  // 27: admiral.cluster.v1.WorkloadStatus.health_status:type_name -> admiral.cluster.v1.WorkloadHealthStatus
+	5,  // 28: admiral.cluster.v1.WorkloadStatus.containers:type_name -> admiral.cluster.v1.ContainerStatus
+	4,  // 29: admiral.cluster.v1.ListWorkloadsResponse.workloads:type_name -> admiral.cluster.v1.Workload
+	21, // 30: admiral.cluster.v1.ReportWorkloadStatusRequest.workloads:type_name -> admiral.cluster.v1.WorkloadStatus
+	46, // 31: admiral.cluster.v1.ReportWorkloadStatusRequest.reported_at:type_name -> google.protobuf.Timestamp
+	46, // 32: admiral.cluster.v1.CreateClusterTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
+	48, // 33: admiral.cluster.v1.CreateClusterTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	48, // 34: admiral.cluster.v1.ListClusterTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
+	48, // 35: admiral.cluster.v1.GetClusterTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	48, // 36: admiral.cluster.v1.RevokeClusterTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	35, // 37: admiral.cluster.v1.GetRevisionBundleResponse.bundle:type_name -> admiral.cluster.v1.RevisionBundle
+	36, // 38: admiral.cluster.v1.ReportRevisionResultRequest.result:type_name -> admiral.cluster.v1.RevisionResult
+	8,  // 39: admiral.cluster.v1.ClusterAPI.CreateCluster:input_type -> admiral.cluster.v1.CreateClusterRequest
+	10, // 40: admiral.cluster.v1.ClusterAPI.GetCluster:input_type -> admiral.cluster.v1.GetClusterRequest
+	18, // 41: admiral.cluster.v1.ClusterAPI.GetClusterStatus:input_type -> admiral.cluster.v1.GetClusterStatusRequest
+	12, // 42: admiral.cluster.v1.ClusterAPI.ListClusters:input_type -> admiral.cluster.v1.ListClustersRequest
+	14, // 43: admiral.cluster.v1.ClusterAPI.UpdateCluster:input_type -> admiral.cluster.v1.UpdateClusterRequest
+	16, // 44: admiral.cluster.v1.ClusterAPI.DeleteCluster:input_type -> admiral.cluster.v1.DeleteClusterRequest
+	27, // 45: admiral.cluster.v1.ClusterAPI.CreateClusterToken:input_type -> admiral.cluster.v1.CreateClusterTokenRequest
+	29, // 46: admiral.cluster.v1.ClusterAPI.ListClusterTokens:input_type -> admiral.cluster.v1.ListClusterTokensRequest
+	31, // 47: admiral.cluster.v1.ClusterAPI.GetClusterToken:input_type -> admiral.cluster.v1.GetClusterTokenRequest
+	33, // 48: admiral.cluster.v1.ClusterAPI.RevokeClusterToken:input_type -> admiral.cluster.v1.RevokeClusterTokenRequest
+	20, // 49: admiral.cluster.v1.ClusterAPI.ReportClusterStatus:input_type -> admiral.cluster.v1.ReportClusterStatusRequest
+	23, // 50: admiral.cluster.v1.ClusterAPI.ListWorkloads:input_type -> admiral.cluster.v1.ListWorkloadsRequest
+	25, // 51: admiral.cluster.v1.ClusterAPI.ReportWorkloadStatus:input_type -> admiral.cluster.v1.ReportWorkloadStatusRequest
+	37, // 52: admiral.cluster.v1.ClusterAPI.GetRevisionBundle:input_type -> admiral.cluster.v1.GetRevisionBundleRequest
+	39, // 53: admiral.cluster.v1.ClusterAPI.ReportRevisionResult:input_type -> admiral.cluster.v1.ReportRevisionResultRequest
+	9,  // 54: admiral.cluster.v1.ClusterAPI.CreateCluster:output_type -> admiral.cluster.v1.CreateClusterResponse
+	11, // 55: admiral.cluster.v1.ClusterAPI.GetCluster:output_type -> admiral.cluster.v1.GetClusterResponse
+	19, // 56: admiral.cluster.v1.ClusterAPI.GetClusterStatus:output_type -> admiral.cluster.v1.GetClusterStatusResponse
+	13, // 57: admiral.cluster.v1.ClusterAPI.ListClusters:output_type -> admiral.cluster.v1.ListClustersResponse
+	15, // 58: admiral.cluster.v1.ClusterAPI.UpdateCluster:output_type -> admiral.cluster.v1.UpdateClusterResponse
+	17, // 59: admiral.cluster.v1.ClusterAPI.DeleteCluster:output_type -> admiral.cluster.v1.DeleteClusterResponse
+	28, // 60: admiral.cluster.v1.ClusterAPI.CreateClusterToken:output_type -> admiral.cluster.v1.CreateClusterTokenResponse
+	30, // 61: admiral.cluster.v1.ClusterAPI.ListClusterTokens:output_type -> admiral.cluster.v1.ListClusterTokensResponse
+	32, // 62: admiral.cluster.v1.ClusterAPI.GetClusterToken:output_type -> admiral.cluster.v1.GetClusterTokenResponse
+	34, // 63: admiral.cluster.v1.ClusterAPI.RevokeClusterToken:output_type -> admiral.cluster.v1.RevokeClusterTokenResponse
+	22, // 64: admiral.cluster.v1.ClusterAPI.ReportClusterStatus:output_type -> admiral.cluster.v1.ReportClusterStatusResponse
+	24, // 65: admiral.cluster.v1.ClusterAPI.ListWorkloads:output_type -> admiral.cluster.v1.ListWorkloadsResponse
+	26, // 66: admiral.cluster.v1.ClusterAPI.ReportWorkloadStatus:output_type -> admiral.cluster.v1.ReportWorkloadStatusResponse
+	38, // 67: admiral.cluster.v1.ClusterAPI.GetRevisionBundle:output_type -> admiral.cluster.v1.GetRevisionBundleResponse
+	40, // 68: admiral.cluster.v1.ClusterAPI.ReportRevisionResult:output_type -> admiral.cluster.v1.ReportRevisionResultResponse
+	54, // [54:69] is the sub-list for method output_type
+	39, // [39:54] is the sub-list for method input_type
+	39, // [39:39] is the sub-list for extension type_name
+	39, // [39:39] is the sub-list for extension extendee
+	0,  // [0:39] is the sub-list for field type_name
 }
 
 func init() { file_admiral_cluster_v1_cluster_proto_init() }

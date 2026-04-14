@@ -27,61 +27,53 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// SourceType identifies the kind of artifact and the protocol used to fetch it.
+// SourceType identifies the fetch protocol -- how Admiral's Fetcher layer
+// retrieves content from the source URL. Types are carved by wire protocol,
+// not by content semantics. "This is a Terraform module" vs "this is a Helm
+// chart" is a Module/Component concern, not a Source concern.
 type SourceType int32
 
 const (
 	// Default value. Must not be used.
 	SourceType_SOURCE_TYPE_UNSPECIFIED SourceType = 0
-	// Terraform module from a module registry (public registry.terraform.io or
-	// private registries like HCP Terraform). Uses the Terraform Module Registry
-	// Protocol for version discovery and download.
-	SourceType_SOURCE_TYPE_TERRAFORM_REGISTRY SourceType = 1
-	// Terraform module from a Git repository. Uses go-getter-compatible URL
-	// format with optional subdirectory (double-slash) and ref pinning.
-	SourceType_SOURCE_TYPE_TERRAFORM_GIT SourceType = 2
-	// Helm chart from a classic HTTP/S chart repository (index.yaml-based).
-	SourceType_SOURCE_TYPE_HELM_REPOSITORY SourceType = 3
-	// Helm chart from an OCI-compliant container registry. Uses the OCI
-	// Distribution Specification for pull operations.
-	SourceType_SOURCE_TYPE_HELM_OCI SourceType = 4
-	// Helm chart from a Git repository directory containing Chart.yaml.
-	SourceType_SOURCE_TYPE_HELM_GIT SourceType = 5
-	// Kustomize overlay from a Git repository. The path must contain a
-	// kustomization.yaml file.
-	SourceType_SOURCE_TYPE_KUSTOMIZE_GIT SourceType = 6
-	// Raw Kubernetes manifests from a Git repository directory. All YAML/JSON
-	// files in the path are collected and applied.
-	SourceType_SOURCE_TYPE_MANIFEST_GIT SourceType = 7
-	// Archive (tar.gz, zip) fetched via HTTP, S3, or GCS. Automatically
-	// extracted. Can contain Terraform modules, Helm charts, or raw manifests
-	// depending on the content.
-	SourceType_SOURCE_TYPE_ARCHIVE SourceType = 8
+	// Git repository over smart HTTP(S) or SSH. Any repo regardless of what
+	// it contains -- Terraform modules, Helm charts, Kustomize overlays, raw
+	// manifests, plain source code. Module/Component decides how to interpret.
+	SourceType_SOURCE_TYPE_GIT SourceType = 1
+	// Terraform Module/Provider Registry Protocol. A JSON HTTP API for version
+	// discovery and download (public registry.terraform.io, HCP Terraform,
+	// GitLab module registries, etc.).
+	SourceType_SOURCE_TYPE_TERRAFORM SourceType = 2
+	// Helm HTTP chart repository (index.yaml-based). Served over HTTP(S).
+	SourceType_SOURCE_TYPE_HELM SourceType = 3
+	// OCI Distribution Spec registry. Covers container images, OCI-wrapped Helm
+	// charts, and any other artifact pushed to an OCI registry. The content
+	// interpretation is a Component concern.
+	SourceType_SOURCE_TYPE_OCI SourceType = 4
+	// Bare HTTP(S) GET against a URL returning a tar/zip archive, which is
+	// extracted by the Fetcher. No discovery protocol on top; the URL is the
+	// artifact. Covers presigned S3/GCS/Azure Blob URLs as well as plain
+	// artifact hosts.
+	SourceType_SOURCE_TYPE_HTTP SourceType = 5
 )
 
 // Enum value maps for SourceType.
 var (
 	SourceType_name = map[int32]string{
 		0: "SOURCE_TYPE_UNSPECIFIED",
-		1: "SOURCE_TYPE_TERRAFORM_REGISTRY",
-		2: "SOURCE_TYPE_TERRAFORM_GIT",
-		3: "SOURCE_TYPE_HELM_REPOSITORY",
-		4: "SOURCE_TYPE_HELM_OCI",
-		5: "SOURCE_TYPE_HELM_GIT",
-		6: "SOURCE_TYPE_KUSTOMIZE_GIT",
-		7: "SOURCE_TYPE_MANIFEST_GIT",
-		8: "SOURCE_TYPE_ARCHIVE",
+		1: "SOURCE_TYPE_GIT",
+		2: "SOURCE_TYPE_TERRAFORM",
+		3: "SOURCE_TYPE_HELM",
+		4: "SOURCE_TYPE_OCI",
+		5: "SOURCE_TYPE_HTTP",
 	}
 	SourceType_value = map[string]int32{
-		"SOURCE_TYPE_UNSPECIFIED":        0,
-		"SOURCE_TYPE_TERRAFORM_REGISTRY": 1,
-		"SOURCE_TYPE_TERRAFORM_GIT":      2,
-		"SOURCE_TYPE_HELM_REPOSITORY":    3,
-		"SOURCE_TYPE_HELM_OCI":           4,
-		"SOURCE_TYPE_HELM_GIT":           5,
-		"SOURCE_TYPE_KUSTOMIZE_GIT":      6,
-		"SOURCE_TYPE_MANIFEST_GIT":       7,
-		"SOURCE_TYPE_ARCHIVE":            8,
+		"SOURCE_TYPE_UNSPECIFIED": 0,
+		"SOURCE_TYPE_GIT":         1,
+		"SOURCE_TYPE_TERRAFORM":   2,
+		"SOURCE_TYPE_HELM":        3,
+		"SOURCE_TYPE_OCI":         4,
+		"SOURCE_TYPE_HTTP":        5,
 	}
 )
 
@@ -112,9 +104,62 @@ func (SourceType) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{0}
 }
 
-// TerraformRegistryConfig provides additional parameters for Terraform module
-// registry sources.
-type TerraformRegistryConfig struct {
+// SourceTestStatus reports the outcome of the last TestSource invocation.
+type SourceTestStatus int32
+
+const (
+	// Default. Used when no test has been recorded.
+	SourceTestStatus_SOURCE_TEST_STATUS_UNSPECIFIED SourceTestStatus = 0
+	// The credential authenticated successfully against the source URL.
+	SourceTestStatus_SOURCE_TEST_STATUS_SUCCESS SourceTestStatus = 1
+	// The credential failed to authenticate or the URL was unreachable. See
+	// `last_test_error` for details.
+	SourceTestStatus_SOURCE_TEST_STATUS_FAILURE SourceTestStatus = 2
+)
+
+// Enum value maps for SourceTestStatus.
+var (
+	SourceTestStatus_name = map[int32]string{
+		0: "SOURCE_TEST_STATUS_UNSPECIFIED",
+		1: "SOURCE_TEST_STATUS_SUCCESS",
+		2: "SOURCE_TEST_STATUS_FAILURE",
+	}
+	SourceTestStatus_value = map[string]int32{
+		"SOURCE_TEST_STATUS_UNSPECIFIED": 0,
+		"SOURCE_TEST_STATUS_SUCCESS":     1,
+		"SOURCE_TEST_STATUS_FAILURE":     2,
+	}
+)
+
+func (x SourceTestStatus) Enum() *SourceTestStatus {
+	p := new(SourceTestStatus)
+	*p = x
+	return p
+}
+
+func (x SourceTestStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SourceTestStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_source_v1_source_proto_enumTypes[1].Descriptor()
+}
+
+func (SourceTestStatus) Type() protoreflect.EnumType {
+	return &file_admiral_source_v1_source_proto_enumTypes[1]
+}
+
+func (x SourceTestStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SourceTestStatus.Descriptor instead.
+func (SourceTestStatus) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{1}
+}
+
+// TerraformConfig identifies a module within a Terraform registry.
+type TerraformConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Module namespace in the registry (e.g., "hashicorp", "myorg").
 	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
@@ -126,20 +171,20 @@ type TerraformRegistryConfig struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TerraformRegistryConfig) Reset() {
-	*x = TerraformRegistryConfig{}
+func (x *TerraformConfig) Reset() {
+	*x = TerraformConfig{}
 	mi := &file_admiral_source_v1_source_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TerraformRegistryConfig) String() string {
+func (x *TerraformConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TerraformRegistryConfig) ProtoMessage() {}
+func (*TerraformConfig) ProtoMessage() {}
 
-func (x *TerraformRegistryConfig) ProtoReflect() protoreflect.Message {
+func (x *TerraformConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_source_v1_source_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -151,93 +196,36 @@ func (x *TerraformRegistryConfig) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TerraformRegistryConfig.ProtoReflect.Descriptor instead.
-func (*TerraformRegistryConfig) Descriptor() ([]byte, []int) {
+// Deprecated: Use TerraformConfig.ProtoReflect.Descriptor instead.
+func (*TerraformConfig) Descriptor() ([]byte, []int) {
 	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *TerraformRegistryConfig) GetNamespace() string {
+func (x *TerraformConfig) GetNamespace() string {
 	if x != nil {
 		return x.Namespace
 	}
 	return ""
 }
 
-func (x *TerraformRegistryConfig) GetModuleName() string {
+func (x *TerraformConfig) GetModuleName() string {
 	if x != nil {
 		return x.ModuleName
 	}
 	return ""
 }
 
-func (x *TerraformRegistryConfig) GetSystem() string {
+func (x *TerraformConfig) GetSystem() string {
 	if x != nil {
 		return x.System
 	}
 	return ""
 }
 
-// TerraformGitConfig provides additional parameters for Terraform modules
-// sourced from Git repositories.
-type TerraformGitConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Subdirectory within the repository containing the module root.
-	// Uses double-slash convention (e.g., "modules/vpc"). Empty means repo root.
-	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	// Default Git ref (branch, tag, or commit SHA) to use when no version is
-	// specified. Typically a branch name like "main" or a tag like "v1.0.0".
-	DefaultRef    string `protobuf:"bytes,2,opt,name=default_ref,json=defaultRef,proto3" json:"default_ref,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *TerraformGitConfig) Reset() {
-	*x = TerraformGitConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *TerraformGitConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TerraformGitConfig) ProtoMessage() {}
-
-func (x *TerraformGitConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TerraformGitConfig.ProtoReflect.Descriptor instead.
-func (*TerraformGitConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *TerraformGitConfig) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *TerraformGitConfig) GetDefaultRef() string {
-	if x != nil {
-		return x.DefaultRef
-	}
-	return ""
-}
-
-// HelmRepositoryConfig provides additional parameters for Helm charts from
-// classic HTTP/S chart repositories.
-type HelmRepositoryConfig struct {
+// HelmConfig identifies which chart within a Helm HTTP repository the source
+// points to. A single Helm repository hosts many charts; the chart name
+// selects one.
+type HelmConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The chart name within the repository (e.g., "nginx-ingress", "redis").
 	ChartName     string `protobuf:"bytes,1,opt,name=chart_name,json=chartName,proto3" json:"chart_name,omitempty"`
@@ -245,21 +233,21 @@ type HelmRepositoryConfig struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HelmRepositoryConfig) Reset() {
-	*x = HelmRepositoryConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[2]
+func (x *HelmConfig) Reset() {
+	*x = HelmConfig{}
+	mi := &file_admiral_source_v1_source_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HelmRepositoryConfig) String() string {
+func (x *HelmConfig) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HelmRepositoryConfig) ProtoMessage() {}
+func (*HelmConfig) ProtoMessage() {}
 
-func (x *HelmRepositoryConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[2]
+func (x *HelmConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_source_v1_source_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -270,300 +258,14 @@ func (x *HelmRepositoryConfig) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HelmRepositoryConfig.ProtoReflect.Descriptor instead.
-func (*HelmRepositoryConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{2}
+// Deprecated: Use HelmConfig.ProtoReflect.Descriptor instead.
+func (*HelmConfig) Descriptor() ([]byte, []int) {
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *HelmRepositoryConfig) GetChartName() string {
+func (x *HelmConfig) GetChartName() string {
 	if x != nil {
 		return x.ChartName
-	}
-	return ""
-}
-
-// HelmOCIConfig provides additional parameters for Helm charts stored in
-// OCI registries.
-type HelmOCIConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The full OCI repository path (e.g., "ghcr.io/myorg/charts/my-app").
-	// The url field on the Source message holds the registry host, while this
-	// field holds the full repository path.
-	Repository    string `protobuf:"bytes,1,opt,name=repository,proto3" json:"repository,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HelmOCIConfig) Reset() {
-	*x = HelmOCIConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HelmOCIConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HelmOCIConfig) ProtoMessage() {}
-
-func (x *HelmOCIConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HelmOCIConfig.ProtoReflect.Descriptor instead.
-func (*HelmOCIConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *HelmOCIConfig) GetRepository() string {
-	if x != nil {
-		return x.Repository
-	}
-	return ""
-}
-
-// HelmGitConfig provides additional parameters for Helm charts sourced from
-// Git repositories.
-type HelmGitConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Path within the repository to the chart directory (must contain Chart.yaml).
-	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	// Default Git ref (branch, tag, or commit SHA).
-	DefaultRef    string `protobuf:"bytes,2,opt,name=default_ref,json=defaultRef,proto3" json:"default_ref,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *HelmGitConfig) Reset() {
-	*x = HelmGitConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *HelmGitConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HelmGitConfig) ProtoMessage() {}
-
-func (x *HelmGitConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HelmGitConfig.ProtoReflect.Descriptor instead.
-func (*HelmGitConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *HelmGitConfig) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *HelmGitConfig) GetDefaultRef() string {
-	if x != nil {
-		return x.DefaultRef
-	}
-	return ""
-}
-
-// KustomizeGitConfig provides additional parameters for Kustomize overlays
-// sourced from Git repositories.
-type KustomizeGitConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Path within the repository to the overlay directory (must contain
-	// kustomization.yaml).
-	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	// Default Git ref (branch, tag, or commit SHA).
-	DefaultRef    string `protobuf:"bytes,2,opt,name=default_ref,json=defaultRef,proto3" json:"default_ref,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *KustomizeGitConfig) Reset() {
-	*x = KustomizeGitConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *KustomizeGitConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*KustomizeGitConfig) ProtoMessage() {}
-
-func (x *KustomizeGitConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use KustomizeGitConfig.ProtoReflect.Descriptor instead.
-func (*KustomizeGitConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *KustomizeGitConfig) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *KustomizeGitConfig) GetDefaultRef() string {
-	if x != nil {
-		return x.DefaultRef
-	}
-	return ""
-}
-
-// ManifestGitConfig provides additional parameters for raw Kubernetes manifests
-// sourced from Git repositories.
-type ManifestGitConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Path within the repository to the directory containing manifest files.
-	// All .yaml, .yml, and .json files in this directory are collected.
-	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	// Whether to recursively include files from subdirectories.
-	Recursive bool `protobuf:"varint,2,opt,name=recursive,proto3" json:"recursive,omitempty"`
-	// Default Git ref (branch, tag, or commit SHA).
-	DefaultRef    string `protobuf:"bytes,3,opt,name=default_ref,json=defaultRef,proto3" json:"default_ref,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ManifestGitConfig) Reset() {
-	*x = ManifestGitConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ManifestGitConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ManifestGitConfig) ProtoMessage() {}
-
-func (x *ManifestGitConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ManifestGitConfig.ProtoReflect.Descriptor instead.
-func (*ManifestGitConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ManifestGitConfig) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *ManifestGitConfig) GetRecursive() bool {
-	if x != nil {
-		return x.Recursive
-	}
-	return false
-}
-
-func (x *ManifestGitConfig) GetDefaultRef() string {
-	if x != nil {
-		return x.DefaultRef
-	}
-	return ""
-}
-
-// ArchiveConfig provides additional parameters for archive sources
-// (tar.gz, zip) fetched via HTTP, S3, or GCS.
-type ArchiveConfig struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Subdirectory within the extracted archive to use. Empty means archive root.
-	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	// Expected checksum for integrity verification (e.g., "sha256:abc123...").
-	// When set, the fetched archive is verified against this checksum before
-	// extraction.
-	Checksum      string `protobuf:"bytes,2,opt,name=checksum,proto3" json:"checksum,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ArchiveConfig) Reset() {
-	*x = ArchiveConfig{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ArchiveConfig) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ArchiveConfig) ProtoMessage() {}
-
-func (x *ArchiveConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ArchiveConfig.ProtoReflect.Descriptor instead.
-func (*ArchiveConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ArchiveConfig) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *ArchiveConfig) GetChecksum() string {
-	if x != nil {
-		return x.Checksum
 	}
 	return ""
 }
@@ -588,7 +290,7 @@ type SourceVersion struct {
 
 func (x *SourceVersion) Reset() {
 	*x = SourceVersion{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[8]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -600,7 +302,7 @@ func (x *SourceVersion) String() string {
 func (*SourceVersion) ProtoMessage() {}
 
 func (x *SourceVersion) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[8]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -613,7 +315,7 @@ func (x *SourceVersion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SourceVersion.ProtoReflect.Descriptor instead.
 func (*SourceVersion) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{8}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *SourceVersion) GetVersion() string {
@@ -671,7 +373,7 @@ type SourceInput struct {
 
 func (x *SourceInput) Reset() {
 	*x = SourceInput{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[9]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -683,7 +385,7 @@ func (x *SourceInput) String() string {
 func (*SourceInput) ProtoMessage() {}
 
 func (x *SourceInput) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[9]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -696,7 +398,7 @@ func (x *SourceInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SourceInput.ProtoReflect.Descriptor instead.
 func (*SourceInput) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{9}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *SourceInput) GetName() string {
@@ -762,7 +464,7 @@ type SourceOutput struct {
 
 func (x *SourceOutput) Reset() {
 	*x = SourceOutput{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[10]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -774,7 +476,7 @@ func (x *SourceOutput) String() string {
 func (*SourceOutput) ProtoMessage() {}
 
 func (x *SourceOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[10]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -787,7 +489,7 @@ func (x *SourceOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SourceOutput.ProtoReflect.Descriptor instead.
 func (*SourceOutput) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{10}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SourceOutput) GetName() string {
@@ -838,46 +540,51 @@ type Source struct {
 	// The kind of artifact and fetch protocol.
 	Type SourceType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.source.v1.SourceType" json:"type,omitempty"`
 	// Base URL for the source. The meaning varies by source type:
-	//   - TERRAFORM_REGISTRY: registry hostname (e.g., "registry.terraform.io")
-	//   - TERRAFORM_GIT, HELM_GIT, KUSTOMIZE_GIT, MANIFEST_GIT: Git repo URL
-	//   - HELM_REPOSITORY: Helm repo URL (e.g., "https://charts.bitnami.com/bitnami")
-	//   - HELM_OCI: OCI registry URL (e.g., "oci://ghcr.io")
-	//   - ARCHIVE: HTTP/S3/GCS URL to the archive
+	//   - GIT: Git repo URL (https:// or git@host:...)
+	//   - TERRAFORM: registry hostname (e.g., "registry.terraform.io")
+	//   - HELM: chart repo URL (e.g., "https://charts.bitnami.com/bitnami")
+	//   - OCI: OCI repository URL (e.g., "oci://ghcr.io/myorg/charts/my-app")
+	//   - HTTP: full HTTP(S) URL to the archive (tar/zip) -- covers plain
+	//     HTTP hosts and presigned S3/GCS/Azure Blob URLs.
 	Url string `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
-	// Reference to the connection providing credentials for this source (UUID).
+	// Reference to the credential providing authentication for this source (UUID).
 	// Optional -- null for public sources that require no authentication
 	// (e.g., public Terraform registry, public Helm repos).
-	ConnectionId *string `protobuf:"bytes,6,opt,name=connection_id,json=connectionId,proto3,oneof" json:"connection_id,omitempty"`
+	CredentialId *string `protobuf:"bytes,6,opt,name=credential_id,json=credentialId,proto3,oneof" json:"credential_id,omitempty"`
 	// Whether this source is a curated catalog entry. Catalog sources are managed
 	// by platform engineers and may be the only sources available to developers
 	// if the organization enforces catalog-only policy.
 	Catalog bool `protobuf:"varint,7,opt,name=catalog,proto3" json:"catalog,omitempty"`
-	// Type-specific configuration. The active field must correspond to the
-	// source type.
+	// Type-specific configuration. Only set for source types whose location is
+	// not fully expressed by `url` alone (currently TERRAFORM and HELM, which
+	// both host multiple artifacts and need a selector). Other source types
+	// (GIT, OCI, HTTP) carry all location information in `url`.
 	//
 	// Types that are valid to be assigned to SourceConfig:
 	//
-	//	*Source_TerraformRegistry
-	//	*Source_TerraformGit
-	//	*Source_HelmRepository
-	//	*Source_HelmOci
-	//	*Source_HelmGit
-	//	*Source_KustomizeGit
-	//	*Source_ManifestGit
-	//	*Source_Archive
+	//	*Source_Terraform
+	//	*Source_Helm
 	SourceConfig isSource_SourceConfig `protobuf_oneof:"source_config"`
 	// Arbitrary key-value labels for organizing and filtering sources
 	// (e.g., `{"team": "platform", "category": "database"}`).
 	Labels map[string]string `protobuf:"bytes,16,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// The user or agent who created this source (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,20,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// The user or agent who last updated this source (server-populated from token).
-	UpdatedBy *v1.ActorRef `protobuf:"bytes,21,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	// When the source metadata was last synced from the external system
 	// (registry, Git, Helm repo). Updated by SyncSource and by automatic
 	// background refresh when discovery RPCs encounter stale cached data.
 	// Absent if no sync has occurred yet.
 	LastSyncedAt *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=last_synced_at,json=lastSyncedAt,proto3" json:"last_synced_at,omitempty"`
+	// Outcome of the most recent TestSource invocation. Reflects whether the
+	// attached credential successfully authenticated against `url` the last time
+	// a test was run. Absent if the source has never been tested.
+	LastTestStatus *SourceTestStatus `protobuf:"varint,21,opt,name=last_test_status,json=lastTestStatus,proto3,enum=admiral.source.v1.SourceTestStatus,oneof" json:"last_test_status,omitempty"`
+	// Human-readable error message from the most recent failed TestSource.
+	// Empty when `last_test_status` is SUCCESS or unset.
+	LastTestError string `protobuf:"bytes,22,opt,name=last_test_error,json=lastTestError,proto3" json:"last_test_error,omitempty"`
+	// When TestSource was last invoked against this source. Absent if never
+	// tested.
+	LastTestedAt *timestamppb.Timestamp `protobuf:"bytes,23,opt,name=last_tested_at,json=lastTestedAt,proto3" json:"last_tested_at,omitempty"`
 	// When the source was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the source was last updated.
@@ -888,7 +595,7 @@ type Source struct {
 
 func (x *Source) Reset() {
 	*x = Source{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[11]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -900,7 +607,7 @@ func (x *Source) String() string {
 func (*Source) ProtoMessage() {}
 
 func (x *Source) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[11]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -913,7 +620,7 @@ func (x *Source) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Source.ProtoReflect.Descriptor instead.
 func (*Source) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{11}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Source) GetId() string {
@@ -951,9 +658,9 @@ func (x *Source) GetUrl() string {
 	return ""
 }
 
-func (x *Source) GetConnectionId() string {
-	if x != nil && x.ConnectionId != nil {
-		return *x.ConnectionId
+func (x *Source) GetCredentialId() string {
+	if x != nil && x.CredentialId != nil {
+		return *x.CredentialId
 	}
 	return ""
 }
@@ -972,73 +679,19 @@ func (x *Source) GetSourceConfig() isSource_SourceConfig {
 	return nil
 }
 
-func (x *Source) GetTerraformRegistry() *TerraformRegistryConfig {
+func (x *Source) GetTerraform() *TerraformConfig {
 	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_TerraformRegistry); ok {
-			return x.TerraformRegistry
+		if x, ok := x.SourceConfig.(*Source_Terraform); ok {
+			return x.Terraform
 		}
 	}
 	return nil
 }
 
-func (x *Source) GetTerraformGit() *TerraformGitConfig {
+func (x *Source) GetHelm() *HelmConfig {
 	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_TerraformGit); ok {
-			return x.TerraformGit
-		}
-	}
-	return nil
-}
-
-func (x *Source) GetHelmRepository() *HelmRepositoryConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_HelmRepository); ok {
-			return x.HelmRepository
-		}
-	}
-	return nil
-}
-
-func (x *Source) GetHelmOci() *HelmOCIConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_HelmOci); ok {
-			return x.HelmOci
-		}
-	}
-	return nil
-}
-
-func (x *Source) GetHelmGit() *HelmGitConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_HelmGit); ok {
-			return x.HelmGit
-		}
-	}
-	return nil
-}
-
-func (x *Source) GetKustomizeGit() *KustomizeGitConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_KustomizeGit); ok {
-			return x.KustomizeGit
-		}
-	}
-	return nil
-}
-
-func (x *Source) GetManifestGit() *ManifestGitConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_ManifestGit); ok {
-			return x.ManifestGit
-		}
-	}
-	return nil
-}
-
-func (x *Source) GetArchive() *ArchiveConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*Source_Archive); ok {
-			return x.Archive
+		if x, ok := x.SourceConfig.(*Source_Helm); ok {
+			return x.Helm
 		}
 	}
 	return nil
@@ -1058,16 +711,30 @@ func (x *Source) GetCreatedBy() *v1.ActorRef {
 	return nil
 }
 
-func (x *Source) GetUpdatedBy() *v1.ActorRef {
+func (x *Source) GetLastSyncedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.UpdatedBy
+		return x.LastSyncedAt
 	}
 	return nil
 }
 
-func (x *Source) GetLastSyncedAt() *timestamppb.Timestamp {
+func (x *Source) GetLastTestStatus() SourceTestStatus {
+	if x != nil && x.LastTestStatus != nil {
+		return *x.LastTestStatus
+	}
+	return SourceTestStatus_SOURCE_TEST_STATUS_UNSPECIFIED
+}
+
+func (x *Source) GetLastTestError() string {
 	if x != nil {
-		return x.LastSyncedAt
+		return x.LastTestError
+	}
+	return ""
+}
+
+func (x *Source) GetLastTestedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastTestedAt
 	}
 	return nil
 }
@@ -1090,61 +757,19 @@ type isSource_SourceConfig interface {
 	isSource_SourceConfig()
 }
 
-type Source_TerraformRegistry struct {
-	// Terraform Registry Protocol config (for SOURCE_TYPE_TERRAFORM_REGISTRY).
-	TerraformRegistry *TerraformRegistryConfig `protobuf:"bytes,8,opt,name=terraform_registry,json=terraformRegistry,proto3,oneof"`
+type Source_Terraform struct {
+	// Terraform Registry Protocol config (for SOURCE_TYPE_TERRAFORM).
+	Terraform *TerraformConfig `protobuf:"bytes,8,opt,name=terraform,proto3,oneof"`
 }
 
-type Source_TerraformGit struct {
-	// Terraform Git module config (for SOURCE_TYPE_TERRAFORM_GIT).
-	TerraformGit *TerraformGitConfig `protobuf:"bytes,9,opt,name=terraform_git,json=terraformGit,proto3,oneof"`
+type Source_Helm struct {
+	// Helm HTTP repository config (for SOURCE_TYPE_HELM).
+	Helm *HelmConfig `protobuf:"bytes,10,opt,name=helm,proto3,oneof"`
 }
 
-type Source_HelmRepository struct {
-	// Helm HTTP repository config (for SOURCE_TYPE_HELM_REPOSITORY).
-	HelmRepository *HelmRepositoryConfig `protobuf:"bytes,10,opt,name=helm_repository,json=helmRepository,proto3,oneof"`
-}
+func (*Source_Terraform) isSource_SourceConfig() {}
 
-type Source_HelmOci struct {
-	// Helm OCI config (for SOURCE_TYPE_HELM_OCI).
-	HelmOci *HelmOCIConfig `protobuf:"bytes,11,opt,name=helm_oci,json=helmOci,proto3,oneof"`
-}
-
-type Source_HelmGit struct {
-	// Helm Git config (for SOURCE_TYPE_HELM_GIT).
-	HelmGit *HelmGitConfig `protobuf:"bytes,12,opt,name=helm_git,json=helmGit,proto3,oneof"`
-}
-
-type Source_KustomizeGit struct {
-	// Kustomize Git config (for SOURCE_TYPE_KUSTOMIZE_GIT).
-	KustomizeGit *KustomizeGitConfig `protobuf:"bytes,13,opt,name=kustomize_git,json=kustomizeGit,proto3,oneof"`
-}
-
-type Source_ManifestGit struct {
-	// Raw manifest Git config (for SOURCE_TYPE_MANIFEST_GIT).
-	ManifestGit *ManifestGitConfig `protobuf:"bytes,14,opt,name=manifest_git,json=manifestGit,proto3,oneof"`
-}
-
-type Source_Archive struct {
-	// Archive config (for SOURCE_TYPE_ARCHIVE).
-	Archive *ArchiveConfig `protobuf:"bytes,15,opt,name=archive,proto3,oneof"`
-}
-
-func (*Source_TerraformRegistry) isSource_SourceConfig() {}
-
-func (*Source_TerraformGit) isSource_SourceConfig() {}
-
-func (*Source_HelmRepository) isSource_SourceConfig() {}
-
-func (*Source_HelmOci) isSource_SourceConfig() {}
-
-func (*Source_HelmGit) isSource_SourceConfig() {}
-
-func (*Source_KustomizeGit) isSource_SourceConfig() {}
-
-func (*Source_ManifestGit) isSource_SourceConfig() {}
-
-func (*Source_Archive) isSource_SourceConfig() {}
+func (*Source_Helm) isSource_SourceConfig() {}
 
 // CreateSourceRequest contains the parameters for creating a new source.
 type CreateSourceRequest struct {
@@ -1157,23 +782,18 @@ type CreateSourceRequest struct {
 	Type SourceType `protobuf:"varint,3,opt,name=type,proto3,enum=admiral.source.v1.SourceType" json:"type,omitempty"`
 	// Base URL for the source (see Source.url for per-type semantics).
 	Url string `protobuf:"bytes,4,opt,name=url,proto3" json:"url,omitempty"`
-	// Reference to the connection providing credentials (UUID). Optional for
+	// Reference to the credential providing authentication (UUID). Optional for
 	// public sources.
-	ConnectionId *string `protobuf:"bytes,5,opt,name=connection_id,json=connectionId,proto3,oneof" json:"connection_id,omitempty"`
+	CredentialId *string `protobuf:"bytes,5,opt,name=credential_id,json=credentialId,proto3,oneof" json:"credential_id,omitempty"`
 	// Whether this is a curated catalog entry.
 	Catalog bool `protobuf:"varint,6,opt,name=catalog,proto3" json:"catalog,omitempty"`
-	// Type-specific configuration. Must correspond to the source type.
+	// Type-specific configuration. Only required for TERRAFORM and HELM;
+	// omit for GIT, OCI, HTTP.
 	//
 	// Types that are valid to be assigned to SourceConfig:
 	//
-	//	*CreateSourceRequest_TerraformRegistry
-	//	*CreateSourceRequest_TerraformGit
-	//	*CreateSourceRequest_HelmRepository
-	//	*CreateSourceRequest_HelmOci
-	//	*CreateSourceRequest_HelmGit
-	//	*CreateSourceRequest_KustomizeGit
-	//	*CreateSourceRequest_ManifestGit
-	//	*CreateSourceRequest_Archive
+	//	*CreateSourceRequest_Terraform
+	//	*CreateSourceRequest_Helm
 	SourceConfig isCreateSourceRequest_SourceConfig `protobuf_oneof:"source_config"`
 	// Arbitrary key-value labels.
 	Labels        map[string]string `protobuf:"bytes,15,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -1183,7 +803,7 @@ type CreateSourceRequest struct {
 
 func (x *CreateSourceRequest) Reset() {
 	*x = CreateSourceRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[12]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1195,7 +815,7 @@ func (x *CreateSourceRequest) String() string {
 func (*CreateSourceRequest) ProtoMessage() {}
 
 func (x *CreateSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[12]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1208,7 +828,7 @@ func (x *CreateSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSourceRequest.ProtoReflect.Descriptor instead.
 func (*CreateSourceRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{12}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateSourceRequest) GetName() string {
@@ -1239,9 +859,9 @@ func (x *CreateSourceRequest) GetUrl() string {
 	return ""
 }
 
-func (x *CreateSourceRequest) GetConnectionId() string {
-	if x != nil && x.ConnectionId != nil {
-		return *x.ConnectionId
+func (x *CreateSourceRequest) GetCredentialId() string {
+	if x != nil && x.CredentialId != nil {
+		return *x.CredentialId
 	}
 	return ""
 }
@@ -1260,73 +880,19 @@ func (x *CreateSourceRequest) GetSourceConfig() isCreateSourceRequest_SourceConf
 	return nil
 }
 
-func (x *CreateSourceRequest) GetTerraformRegistry() *TerraformRegistryConfig {
+func (x *CreateSourceRequest) GetTerraform() *TerraformConfig {
 	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_TerraformRegistry); ok {
-			return x.TerraformRegistry
+		if x, ok := x.SourceConfig.(*CreateSourceRequest_Terraform); ok {
+			return x.Terraform
 		}
 	}
 	return nil
 }
 
-func (x *CreateSourceRequest) GetTerraformGit() *TerraformGitConfig {
+func (x *CreateSourceRequest) GetHelm() *HelmConfig {
 	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_TerraformGit); ok {
-			return x.TerraformGit
-		}
-	}
-	return nil
-}
-
-func (x *CreateSourceRequest) GetHelmRepository() *HelmRepositoryConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_HelmRepository); ok {
-			return x.HelmRepository
-		}
-	}
-	return nil
-}
-
-func (x *CreateSourceRequest) GetHelmOci() *HelmOCIConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_HelmOci); ok {
-			return x.HelmOci
-		}
-	}
-	return nil
-}
-
-func (x *CreateSourceRequest) GetHelmGit() *HelmGitConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_HelmGit); ok {
-			return x.HelmGit
-		}
-	}
-	return nil
-}
-
-func (x *CreateSourceRequest) GetKustomizeGit() *KustomizeGitConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_KustomizeGit); ok {
-			return x.KustomizeGit
-		}
-	}
-	return nil
-}
-
-func (x *CreateSourceRequest) GetManifestGit() *ManifestGitConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_ManifestGit); ok {
-			return x.ManifestGit
-		}
-	}
-	return nil
-}
-
-func (x *CreateSourceRequest) GetArchive() *ArchiveConfig {
-	if x != nil {
-		if x, ok := x.SourceConfig.(*CreateSourceRequest_Archive); ok {
-			return x.Archive
+		if x, ok := x.SourceConfig.(*CreateSourceRequest_Helm); ok {
+			return x.Helm
 		}
 	}
 	return nil
@@ -1343,53 +909,17 @@ type isCreateSourceRequest_SourceConfig interface {
 	isCreateSourceRequest_SourceConfig()
 }
 
-type CreateSourceRequest_TerraformRegistry struct {
-	TerraformRegistry *TerraformRegistryConfig `protobuf:"bytes,7,opt,name=terraform_registry,json=terraformRegistry,proto3,oneof"`
+type CreateSourceRequest_Terraform struct {
+	Terraform *TerraformConfig `protobuf:"bytes,7,opt,name=terraform,proto3,oneof"`
 }
 
-type CreateSourceRequest_TerraformGit struct {
-	TerraformGit *TerraformGitConfig `protobuf:"bytes,8,opt,name=terraform_git,json=terraformGit,proto3,oneof"`
+type CreateSourceRequest_Helm struct {
+	Helm *HelmConfig `protobuf:"bytes,9,opt,name=helm,proto3,oneof"`
 }
 
-type CreateSourceRequest_HelmRepository struct {
-	HelmRepository *HelmRepositoryConfig `protobuf:"bytes,9,opt,name=helm_repository,json=helmRepository,proto3,oneof"`
-}
+func (*CreateSourceRequest_Terraform) isCreateSourceRequest_SourceConfig() {}
 
-type CreateSourceRequest_HelmOci struct {
-	HelmOci *HelmOCIConfig `protobuf:"bytes,10,opt,name=helm_oci,json=helmOci,proto3,oneof"`
-}
-
-type CreateSourceRequest_HelmGit struct {
-	HelmGit *HelmGitConfig `protobuf:"bytes,11,opt,name=helm_git,json=helmGit,proto3,oneof"`
-}
-
-type CreateSourceRequest_KustomizeGit struct {
-	KustomizeGit *KustomizeGitConfig `protobuf:"bytes,12,opt,name=kustomize_git,json=kustomizeGit,proto3,oneof"`
-}
-
-type CreateSourceRequest_ManifestGit struct {
-	ManifestGit *ManifestGitConfig `protobuf:"bytes,13,opt,name=manifest_git,json=manifestGit,proto3,oneof"`
-}
-
-type CreateSourceRequest_Archive struct {
-	Archive *ArchiveConfig `protobuf:"bytes,14,opt,name=archive,proto3,oneof"`
-}
-
-func (*CreateSourceRequest_TerraformRegistry) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_TerraformGit) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_HelmRepository) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_HelmOci) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_HelmGit) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_KustomizeGit) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_ManifestGit) isCreateSourceRequest_SourceConfig() {}
-
-func (*CreateSourceRequest_Archive) isCreateSourceRequest_SourceConfig() {}
+func (*CreateSourceRequest_Helm) isCreateSourceRequest_SourceConfig() {}
 
 // CreateSourceResponse contains the newly created source.
 type CreateSourceResponse struct {
@@ -1402,7 +932,7 @@ type CreateSourceResponse struct {
 
 func (x *CreateSourceResponse) Reset() {
 	*x = CreateSourceResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[13]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1414,7 +944,7 @@ func (x *CreateSourceResponse) String() string {
 func (*CreateSourceResponse) ProtoMessage() {}
 
 func (x *CreateSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[13]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1427,7 +957,7 @@ func (x *CreateSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSourceResponse.ProtoReflect.Descriptor instead.
 func (*CreateSourceResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{13}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateSourceResponse) GetSource() *Source {
@@ -1448,7 +978,7 @@ type GetSourceRequest struct {
 
 func (x *GetSourceRequest) Reset() {
 	*x = GetSourceRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[14]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1460,7 +990,7 @@ func (x *GetSourceRequest) String() string {
 func (*GetSourceRequest) ProtoMessage() {}
 
 func (x *GetSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[14]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1473,7 +1003,7 @@ func (x *GetSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceRequest.ProtoReflect.Descriptor instead.
 func (*GetSourceRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{14}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetSourceRequest) GetSourceId() string {
@@ -1494,7 +1024,7 @@ type GetSourceResponse struct {
 
 func (x *GetSourceResponse) Reset() {
 	*x = GetSourceResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[15]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1506,7 +1036,7 @@ func (x *GetSourceResponse) String() string {
 func (*GetSourceResponse) ProtoMessage() {}
 
 func (x *GetSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[15]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1519,7 +1049,7 @@ func (x *GetSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceResponse.ProtoReflect.Descriptor instead.
 func (*GetSourceResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{15}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetSourceResponse) GetSource() *Source {
@@ -1540,11 +1070,11 @@ type ListSourcesRequest struct {
 	//
 	// Filterable fields:
 	//   - `name` -- filter by source name.
-	//   - `type` -- filter by source type (TERRAFORM_REGISTRY, HELM_OCI, etc.).
+	//   - `type` -- filter by source type (GIT, TERRAFORM, HELM, OCI, HTTP).
 	//   - `catalog` -- filter by catalog status (true/false).
 	//   - `labels.key` -- filter by label key.
 	//
-	// Example: `field['type'] = 'TERRAFORM_REGISTRY' AND field['catalog'] = 'true'`
+	// Example: `field['type'] = 'TERRAFORM' AND field['catalog'] = 'true'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of sources to return per page.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
@@ -1556,7 +1086,7 @@ type ListSourcesRequest struct {
 
 func (x *ListSourcesRequest) Reset() {
 	*x = ListSourcesRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[16]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1568,7 +1098,7 @@ func (x *ListSourcesRequest) String() string {
 func (*ListSourcesRequest) ProtoMessage() {}
 
 func (x *ListSourcesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[16]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1581,7 +1111,7 @@ func (x *ListSourcesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSourcesRequest.ProtoReflect.Descriptor instead.
 func (*ListSourcesRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{16}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListSourcesRequest) GetFilter() string {
@@ -1618,7 +1148,7 @@ type ListSourcesResponse struct {
 
 func (x *ListSourcesResponse) Reset() {
 	*x = ListSourcesResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[17]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1630,7 +1160,7 @@ func (x *ListSourcesResponse) String() string {
 func (*ListSourcesResponse) ProtoMessage() {}
 
 func (x *ListSourcesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[17]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1643,7 +1173,7 @@ func (x *ListSourcesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSourcesResponse.ProtoReflect.Descriptor instead.
 func (*ListSourcesResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{17}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListSourcesResponse) GetSources() []*Source {
@@ -1667,7 +1197,7 @@ type UpdateSourceRequest struct {
 	// are updated.
 	Source *Source `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
 	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `name`, `description`, `url`, `connection_id`, `catalog`,
+	// Supported fields: `name`, `description`, `url`, `credential_id`, `catalog`,
 	// `source_config`, `labels`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1676,7 +1206,7 @@ type UpdateSourceRequest struct {
 
 func (x *UpdateSourceRequest) Reset() {
 	*x = UpdateSourceRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[18]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1688,7 +1218,7 @@ func (x *UpdateSourceRequest) String() string {
 func (*UpdateSourceRequest) ProtoMessage() {}
 
 func (x *UpdateSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[18]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1701,7 +1231,7 @@ func (x *UpdateSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSourceRequest.ProtoReflect.Descriptor instead.
 func (*UpdateSourceRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{18}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateSourceRequest) GetSource() *Source {
@@ -1729,7 +1259,7 @@ type UpdateSourceResponse struct {
 
 func (x *UpdateSourceResponse) Reset() {
 	*x = UpdateSourceResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[19]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1741,7 +1271,7 @@ func (x *UpdateSourceResponse) String() string {
 func (*UpdateSourceResponse) ProtoMessage() {}
 
 func (x *UpdateSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[19]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1754,7 +1284,7 @@ func (x *UpdateSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSourceResponse.ProtoReflect.Descriptor instead.
 func (*UpdateSourceResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{19}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateSourceResponse) GetSource() *Source {
@@ -1776,7 +1306,7 @@ type DeleteSourceRequest struct {
 
 func (x *DeleteSourceRequest) Reset() {
 	*x = DeleteSourceRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[20]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1788,7 +1318,7 @@ func (x *DeleteSourceRequest) String() string {
 func (*DeleteSourceRequest) ProtoMessage() {}
 
 func (x *DeleteSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[20]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1801,7 +1331,7 @@ func (x *DeleteSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSourceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSourceRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{20}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *DeleteSourceRequest) GetSourceId() string {
@@ -1820,7 +1350,7 @@ type DeleteSourceResponse struct {
 
 func (x *DeleteSourceResponse) Reset() {
 	*x = DeleteSourceResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[21]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1832,7 +1362,7 @@ func (x *DeleteSourceResponse) String() string {
 func (*DeleteSourceResponse) ProtoMessage() {}
 
 func (x *DeleteSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[21]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1845,7 +1375,119 @@ func (x *DeleteSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSourceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteSourceResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{21}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{15}
+}
+
+// TestSourceRequest identifies a source to test.
+type TestSourceRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Unique identifier of the source to test (UUID).
+	SourceId      string `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TestSourceRequest) Reset() {
+	*x = TestSourceRequest{}
+	mi := &file_admiral_source_v1_source_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TestSourceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TestSourceRequest) ProtoMessage() {}
+
+func (x *TestSourceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_source_v1_source_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TestSourceRequest.ProtoReflect.Descriptor instead.
+func (*TestSourceRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *TestSourceRequest) GetSourceId() string {
+	if x != nil {
+		return x.SourceId
+	}
+	return ""
+}
+
+// TestSourceResponse reports the outcome of the test against the external
+// system. The same outcome is persisted on the Source (`last_test_status`,
+// `last_test_error`, `last_tested_at`).
+type TestSourceResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The outcome of the test.
+	Status SourceTestStatus `protobuf:"varint,1,opt,name=status,proto3,enum=admiral.source.v1.SourceTestStatus" json:"status,omitempty"`
+	// Human-readable error message when `status` is FAILURE. Empty on success.
+	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	// The source with test status fields refreshed.
+	Source        *Source `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TestSourceResponse) Reset() {
+	*x = TestSourceResponse{}
+	mi := &file_admiral_source_v1_source_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TestSourceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TestSourceResponse) ProtoMessage() {}
+
+func (x *TestSourceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_source_v1_source_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TestSourceResponse.ProtoReflect.Descriptor instead.
+func (*TestSourceResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *TestSourceResponse) GetStatus() SourceTestStatus {
+	if x != nil {
+		return x.Status
+	}
+	return SourceTestStatus_SOURCE_TEST_STATUS_UNSPECIFIED
+}
+
+func (x *TestSourceResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *TestSourceResponse) GetSource() *Source {
+	if x != nil {
+		return x.Source
+	}
+	return nil
 }
 
 // ListSourceVersionsRequest queries available versions for a source.
@@ -1863,7 +1505,7 @@ type ListSourceVersionsRequest struct {
 
 func (x *ListSourceVersionsRequest) Reset() {
 	*x = ListSourceVersionsRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[22]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1875,7 +1517,7 @@ func (x *ListSourceVersionsRequest) String() string {
 func (*ListSourceVersionsRequest) ProtoMessage() {}
 
 func (x *ListSourceVersionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[22]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1888,7 +1530,7 @@ func (x *ListSourceVersionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSourceVersionsRequest.ProtoReflect.Descriptor instead.
 func (*ListSourceVersionsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{22}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListSourceVersionsRequest) GetSourceId() string {
@@ -1925,7 +1567,7 @@ type ListSourceVersionsResponse struct {
 
 func (x *ListSourceVersionsResponse) Reset() {
 	*x = ListSourceVersionsResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[23]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1937,7 +1579,7 @@ func (x *ListSourceVersionsResponse) String() string {
 func (*ListSourceVersionsResponse) ProtoMessage() {}
 
 func (x *ListSourceVersionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[23]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1950,7 +1592,7 @@ func (x *ListSourceVersionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSourceVersionsResponse.ProtoReflect.Descriptor instead.
 func (*ListSourceVersionsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{23}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListSourceVersionsResponse) GetVersions() []*SourceVersion {
@@ -1982,7 +1624,7 @@ type GetSourceInputsRequest struct {
 
 func (x *GetSourceInputsRequest) Reset() {
 	*x = GetSourceInputsRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[24]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1994,7 +1636,7 @@ func (x *GetSourceInputsRequest) String() string {
 func (*GetSourceInputsRequest) ProtoMessage() {}
 
 func (x *GetSourceInputsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[24]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2007,7 +1649,7 @@ func (x *GetSourceInputsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceInputsRequest.ProtoReflect.Descriptor instead.
 func (*GetSourceInputsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{24}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetSourceInputsRequest) GetSourceId() string {
@@ -2040,7 +1682,7 @@ type GetSourceInputsResponse struct {
 
 func (x *GetSourceInputsResponse) Reset() {
 	*x = GetSourceInputsResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[25]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2052,7 +1694,7 @@ func (x *GetSourceInputsResponse) String() string {
 func (*GetSourceInputsResponse) ProtoMessage() {}
 
 func (x *GetSourceInputsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[25]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2065,7 +1707,7 @@ func (x *GetSourceInputsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceInputsResponse.ProtoReflect.Descriptor instead.
 func (*GetSourceInputsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{25}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetSourceInputsResponse) GetInputs() []*SourceInput {
@@ -2096,7 +1738,7 @@ type GetSourceOutputsRequest struct {
 
 func (x *GetSourceOutputsRequest) Reset() {
 	*x = GetSourceOutputsRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[26]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2108,7 +1750,7 @@ func (x *GetSourceOutputsRequest) String() string {
 func (*GetSourceOutputsRequest) ProtoMessage() {}
 
 func (x *GetSourceOutputsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[26]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2121,7 +1763,7 @@ func (x *GetSourceOutputsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceOutputsRequest.ProtoReflect.Descriptor instead.
 func (*GetSourceOutputsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{26}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetSourceOutputsRequest) GetSourceId() string {
@@ -2154,7 +1796,7 @@ type GetSourceOutputsResponse struct {
 
 func (x *GetSourceOutputsResponse) Reset() {
 	*x = GetSourceOutputsResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[27]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2166,7 +1808,7 @@ func (x *GetSourceOutputsResponse) String() string {
 func (*GetSourceOutputsResponse) ProtoMessage() {}
 
 func (x *GetSourceOutputsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[27]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2179,7 +1821,7 @@ func (x *GetSourceOutputsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceOutputsResponse.ProtoReflect.Descriptor instead.
 func (*GetSourceOutputsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{27}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetSourceOutputsResponse) GetOutputs() []*SourceOutput {
@@ -2207,7 +1849,7 @@ type SyncSourceRequest struct {
 
 func (x *SyncSourceRequest) Reset() {
 	*x = SyncSourceRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[28]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2219,7 +1861,7 @@ func (x *SyncSourceRequest) String() string {
 func (*SyncSourceRequest) ProtoMessage() {}
 
 func (x *SyncSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[28]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2232,7 +1874,7 @@ func (x *SyncSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncSourceRequest.ProtoReflect.Descriptor instead.
 func (*SyncSourceRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{28}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SyncSourceRequest) GetSourceId() string {
@@ -2253,7 +1895,7 @@ type SyncSourceResponse struct {
 
 func (x *SyncSourceResponse) Reset() {
 	*x = SyncSourceResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[29]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2265,7 +1907,7 @@ func (x *SyncSourceResponse) String() string {
 func (*SyncSourceResponse) ProtoMessage() {}
 
 func (x *SyncSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[29]
+	mi := &file_admiral_source_v1_source_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2278,7 +1920,7 @@ func (x *SyncSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncSourceResponse.ProtoReflect.Descriptor instead.
 func (*SyncSourceResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{29}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *SyncSourceResponse) GetSource() *Source {
@@ -2292,39 +1934,16 @@ var File_admiral_source_v1_source_proto protoreflect.FileDescriptor
 
 const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\n" +
-	"\x1eadmiral/source/v1/source.proto\x12\x11admiral.source.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x01\n" +
-	"\x17TerraformRegistryConfig\x12%\n" +
+	"\x1eadmiral/source/v1/source.proto\x12\x11admiral.source.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x83\x01\n" +
+	"\x0fTerraformConfig\x12%\n" +
 	"\tnamespace\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\tnamespace\x12(\n" +
 	"\vmodule_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
 	"moduleName\x12\x1f\n" +
-	"\x06system\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06system\"I\n" +
-	"\x12TerraformGitConfig\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1f\n" +
-	"\vdefault_ref\x18\x02 \x01(\tR\n" +
-	"defaultRef\">\n" +
-	"\x14HelmRepositoryConfig\x12&\n" +
+	"\x06system\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06system\"4\n" +
 	"\n" +
-	"chart_name\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\tchartName\"8\n" +
-	"\rHelmOCIConfig\x12'\n" +
+	"HelmConfig\x12&\n" +
 	"\n" +
-	"repository\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
-	"repository\"M\n" +
-	"\rHelmGitConfig\x12\x1b\n" +
-	"\x04path\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04path\x12\x1f\n" +
-	"\vdefault_ref\x18\x02 \x01(\tR\n" +
-	"defaultRef\"R\n" +
-	"\x12KustomizeGitConfig\x12\x1b\n" +
-	"\x04path\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04path\x12\x1f\n" +
-	"\vdefault_ref\x18\x02 \x01(\tR\n" +
-	"defaultRef\"o\n" +
-	"\x11ManifestGitConfig\x12\x1b\n" +
-	"\x04path\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x04path\x12\x1c\n" +
-	"\trecursive\x18\x02 \x01(\bR\trecursive\x12\x1f\n" +
-	"\vdefault_ref\x18\x03 \x01(\tR\n" +
-	"defaultRef\"?\n" +
-	"\rArchiveConfig\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1a\n" +
-	"\bchecksum\x18\x02 \x01(\tR\bchecksum\"\x8a\x01\n" +
+	"chart_name\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\tchartName\"\x8a\x01\n" +
 	"\rSourceVersion\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12=\n" +
 	"\fpublished_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\x12 \n" +
@@ -2341,31 +1960,25 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1c\n" +
-	"\tsensitive\x18\x04 \x01(\bR\tsensitive\"\xe6\n" +
-	"\n" +
+	"\tsensitive\x18\x04 \x01(\bR\tsensitive\"\xa2\b\n" +
 	"\x06Source\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x121\n" +
 	"\x04type\x18\x04 \x01(\x0e2\x1d.admiral.source.v1.SourceTypeR\x04type\x12\x19\n" +
 	"\x03url\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x03url\x122\n" +
-	"\rconnection_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\fconnectionId\x88\x01\x01\x12\x18\n" +
-	"\acatalog\x18\a \x01(\bR\acatalog\x12[\n" +
-	"\x12terraform_registry\x18\b \x01(\v2*.admiral.source.v1.TerraformRegistryConfigH\x00R\x11terraformRegistry\x12L\n" +
-	"\rterraform_git\x18\t \x01(\v2%.admiral.source.v1.TerraformGitConfigH\x00R\fterraformGit\x12R\n" +
-	"\x0fhelm_repository\x18\n" +
-	" \x01(\v2'.admiral.source.v1.HelmRepositoryConfigH\x00R\x0ehelmRepository\x12=\n" +
-	"\bhelm_oci\x18\v \x01(\v2 .admiral.source.v1.HelmOCIConfigH\x00R\ahelmOci\x12=\n" +
-	"\bhelm_git\x18\f \x01(\v2 .admiral.source.v1.HelmGitConfigH\x00R\ahelmGit\x12L\n" +
-	"\rkustomize_git\x18\r \x01(\v2%.admiral.source.v1.KustomizeGitConfigH\x00R\fkustomizeGit\x12I\n" +
-	"\fmanifest_git\x18\x0e \x01(\v2$.admiral.source.v1.ManifestGitConfigH\x00R\vmanifestGit\x12<\n" +
-	"\aarchive\x18\x0f \x01(\v2 .admiral.source.v1.ArchiveConfigH\x00R\aarchive\x12V\n" +
+	"\rcredential_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\fcredentialId\x88\x01\x01\x12\x18\n" +
+	"\acatalog\x18\a \x01(\bR\acatalog\x12B\n" +
+	"\tterraform\x18\b \x01(\v2\".admiral.source.v1.TerraformConfigH\x00R\tterraform\x123\n" +
+	"\x04helm\x18\n" +
+	" \x01(\v2\x1d.admiral.source.v1.HelmConfigH\x00R\x04helm\x12V\n" +
 	"\x06labels\x18\x10 \x03(\v2%.admiral.source.v1.Source.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
 	"\n" +
-	"created_by\x18\x14 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12:\n" +
-	"\n" +
-	"updated_by\x18\x15 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tupdatedBy\x12@\n" +
-	"\x0elast_synced_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\flastSyncedAt\x129\n" +
+	"created_by\x18\x14 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12@\n" +
+	"\x0elast_synced_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\flastSyncedAt\x12R\n" +
+	"\x10last_test_status\x18\x15 \x01(\x0e2#.admiral.source.v1.SourceTestStatusH\x02R\x0elastTestStatus\x88\x01\x01\x12&\n" +
+	"\x0flast_test_error\x18\x16 \x01(\tR\rlastTestError\x12@\n" +
+	"\x0elast_tested_at\x18\x17 \x01(\v2\x1a.google.protobuf.TimestampR\flastTestedAt\x129\n" +
 	"\n" +
 	"created_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
@@ -2374,30 +1987,24 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x0f\n" +
 	"\rsource_configB\x10\n" +
-	"\x0e_connection_id\"\xc2\b\n" +
+	"\x0e_credential_idB\x13\n" +
+	"\x11_last_test_status\"\xe7\x04\n" +
 	"\x13CreateSourceRequest\x12@\n" +
 	"\x04name\x18\x01 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12=\n" +
 	"\x04type\x18\x03 \x01(\x0e2\x1d.admiral.source.v1.SourceTypeB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12\x19\n" +
 	"\x03url\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x03url\x122\n" +
-	"\rconnection_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\fconnectionId\x88\x01\x01\x12\x18\n" +
-	"\acatalog\x18\x06 \x01(\bR\acatalog\x12[\n" +
-	"\x12terraform_registry\x18\a \x01(\v2*.admiral.source.v1.TerraformRegistryConfigH\x00R\x11terraformRegistry\x12L\n" +
-	"\rterraform_git\x18\b \x01(\v2%.admiral.source.v1.TerraformGitConfigH\x00R\fterraformGit\x12R\n" +
-	"\x0fhelm_repository\x18\t \x01(\v2'.admiral.source.v1.HelmRepositoryConfigH\x00R\x0ehelmRepository\x12=\n" +
-	"\bhelm_oci\x18\n" +
-	" \x01(\v2 .admiral.source.v1.HelmOCIConfigH\x00R\ahelmOci\x12=\n" +
-	"\bhelm_git\x18\v \x01(\v2 .admiral.source.v1.HelmGitConfigH\x00R\ahelmGit\x12L\n" +
-	"\rkustomize_git\x18\f \x01(\v2%.admiral.source.v1.KustomizeGitConfigH\x00R\fkustomizeGit\x12I\n" +
-	"\fmanifest_git\x18\r \x01(\v2$.admiral.source.v1.ManifestGitConfigH\x00R\vmanifestGit\x12<\n" +
-	"\aarchive\x18\x0e \x01(\v2 .admiral.source.v1.ArchiveConfigH\x00R\aarchive\x12c\n" +
+	"\rcredential_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\fcredentialId\x88\x01\x01\x12\x18\n" +
+	"\acatalog\x18\x06 \x01(\bR\acatalog\x12B\n" +
+	"\tterraform\x18\a \x01(\v2\".admiral.source.v1.TerraformConfigH\x00R\tterraform\x123\n" +
+	"\x04helm\x18\t \x01(\v2\x1d.admiral.source.v1.HelmConfigH\x00R\x04helm\x12c\n" +
 	"\x06labels\x18\x0f \x03(\v22.admiral.source.v1.CreateSourceRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x0f\n" +
 	"\rsource_configB\x10\n" +
-	"\x0e_connection_id\"I\n" +
+	"\x0e_credential_id\"I\n" +
 	"\x14CreateSourceResponse\x121\n" +
 	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"9\n" +
 	"\x10GetSourceRequest\x12%\n" +
@@ -2420,7 +2027,13 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"<\n" +
 	"\x13DeleteSourceRequest\x12%\n" +
 	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"\x16\n" +
-	"\x14DeleteSourceResponse\"\x89\x01\n" +
+	"\x14DeleteSourceResponse\":\n" +
+	"\x11TestSourceRequest\x12%\n" +
+	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"\x9a\x01\n" +
+	"\x12TestSourceResponse\x12;\n" +
+	"\x06status\x18\x01 \x01(\x0e2#.admiral.source.v1.SourceTestStatusR\x06status\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\x121\n" +
+	"\x06source\x18\x03 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"\x89\x01\n" +
 	"\x19ListSourceVersionsRequest\x12%\n" +
 	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
@@ -2444,18 +2057,19 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x11SyncSourceRequest\x12%\n" +
 	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"G\n" +
 	"\x12SyncSourceResponse\x121\n" +
-	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source*\x97\x02\n" +
+	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source*\x9a\x01\n" +
 	"\n" +
 	"SourceType\x12\x1b\n" +
-	"\x17SOURCE_TYPE_UNSPECIFIED\x10\x00\x12\"\n" +
-	"\x1eSOURCE_TYPE_TERRAFORM_REGISTRY\x10\x01\x12\x1d\n" +
-	"\x19SOURCE_TYPE_TERRAFORM_GIT\x10\x02\x12\x1f\n" +
-	"\x1bSOURCE_TYPE_HELM_REPOSITORY\x10\x03\x12\x18\n" +
-	"\x14SOURCE_TYPE_HELM_OCI\x10\x04\x12\x18\n" +
-	"\x14SOURCE_TYPE_HELM_GIT\x10\x05\x12\x1d\n" +
-	"\x19SOURCE_TYPE_KUSTOMIZE_GIT\x10\x06\x12\x1c\n" +
-	"\x18SOURCE_TYPE_MANIFEST_GIT\x10\a\x12\x17\n" +
-	"\x13SOURCE_TYPE_ARCHIVE\x10\b2\xa0\r\n" +
+	"\x17SOURCE_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fSOURCE_TYPE_GIT\x10\x01\x12\x19\n" +
+	"\x15SOURCE_TYPE_TERRAFORM\x10\x02\x12\x14\n" +
+	"\x10SOURCE_TYPE_HELM\x10\x03\x12\x13\n" +
+	"\x0fSOURCE_TYPE_OCI\x10\x04\x12\x14\n" +
+	"\x10SOURCE_TYPE_HTTP\x10\x05*v\n" +
+	"\x10SourceTestStatus\x12\"\n" +
+	"\x1eSOURCE_TEST_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aSOURCE_TEST_STATUS_SUCCESS\x10\x01\x12\x1e\n" +
+	"\x1aSOURCE_TEST_STATUS_FAILURE\x10\x022\xd6\x0e\n" +
 	"\tSourceAPI\x12\xaa\x01\n" +
 	"\fCreateSource\x12&.admiral.source.v1.CreateSourceRequest\x1a'.admiral.source.v1.CreateSourceResponse\"I\xbaG\x1a\n" +
 	"\aSources\x12\x0fCreate a source\xa2\x97$\x0e\n" +
@@ -2471,7 +2085,11 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\fsource:write\x82\xd3\xe4\x93\x02 :\x01*2\x1b/api/v1/sources/{source.id}\x12\xb3\x01\n" +
 	"\fDeleteSource\x12&.admiral.source.v1.DeleteSourceRequest\x1a'.admiral.source.v1.DeleteSourceResponse\"R\xbaG\x1a\n" +
 	"\aSources\x12\x0fDelete a source\xa2\x97$\x0e\n" +
-	"\fsource:write\x82\xd3\xe4\x93\x02\x1d*\x1b/api/v1/sources/{source_id}\x12\xd2\x01\n" +
+	"\fsource:write\x82\xd3\xe4\x93\x02\x1d*\x1b/api/v1/sources/{source_id}\x12\xb3\x01\n" +
+	"\n" +
+	"TestSource\x12$.admiral.source.v1.TestSourceRequest\x1a%.admiral.source.v1.TestSourceResponse\"X\xbaG\x18\n" +
+	"\aSources\x12\rTest a source\xa2\x97$\x0e\n" +
+	"\fsource:write\x82\xd3\xe4\x93\x02%:\x01*\" /api/v1/sources/{source_id}/test\x12\xd2\x01\n" +
 	"\x12ListSourceVersions\x12,.admiral.source.v1.ListSourceVersionsRequest\x1a-.admiral.source.v1.ListSourceVersionsResponse\"_\xbaG\x1f\n" +
 	"\aSources\x12\x14List source versions\xa2\x97$\r\n" +
 	"\vsource:read\x82\xd3\xe4\x93\x02&\x12$/api/v1/sources/{source_id}/versions\x12\xc9\x01\n" +
@@ -2499,106 +2117,96 @@ func file_admiral_source_v1_source_proto_rawDescGZIP() []byte {
 	return file_admiral_source_v1_source_proto_rawDescData
 }
 
-var file_admiral_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_admiral_source_v1_source_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_admiral_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_admiral_source_v1_source_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_admiral_source_v1_source_proto_goTypes = []any{
 	(SourceType)(0),                    // 0: admiral.source.v1.SourceType
-	(*TerraformRegistryConfig)(nil),    // 1: admiral.source.v1.TerraformRegistryConfig
-	(*TerraformGitConfig)(nil),         // 2: admiral.source.v1.TerraformGitConfig
-	(*HelmRepositoryConfig)(nil),       // 3: admiral.source.v1.HelmRepositoryConfig
-	(*HelmOCIConfig)(nil),              // 4: admiral.source.v1.HelmOCIConfig
-	(*HelmGitConfig)(nil),              // 5: admiral.source.v1.HelmGitConfig
-	(*KustomizeGitConfig)(nil),         // 6: admiral.source.v1.KustomizeGitConfig
-	(*ManifestGitConfig)(nil),          // 7: admiral.source.v1.ManifestGitConfig
-	(*ArchiveConfig)(nil),              // 8: admiral.source.v1.ArchiveConfig
-	(*SourceVersion)(nil),              // 9: admiral.source.v1.SourceVersion
-	(*SourceInput)(nil),                // 10: admiral.source.v1.SourceInput
-	(*SourceOutput)(nil),               // 11: admiral.source.v1.SourceOutput
-	(*Source)(nil),                     // 12: admiral.source.v1.Source
-	(*CreateSourceRequest)(nil),        // 13: admiral.source.v1.CreateSourceRequest
-	(*CreateSourceResponse)(nil),       // 14: admiral.source.v1.CreateSourceResponse
-	(*GetSourceRequest)(nil),           // 15: admiral.source.v1.GetSourceRequest
-	(*GetSourceResponse)(nil),          // 16: admiral.source.v1.GetSourceResponse
-	(*ListSourcesRequest)(nil),         // 17: admiral.source.v1.ListSourcesRequest
-	(*ListSourcesResponse)(nil),        // 18: admiral.source.v1.ListSourcesResponse
-	(*UpdateSourceRequest)(nil),        // 19: admiral.source.v1.UpdateSourceRequest
-	(*UpdateSourceResponse)(nil),       // 20: admiral.source.v1.UpdateSourceResponse
-	(*DeleteSourceRequest)(nil),        // 21: admiral.source.v1.DeleteSourceRequest
-	(*DeleteSourceResponse)(nil),       // 22: admiral.source.v1.DeleteSourceResponse
-	(*ListSourceVersionsRequest)(nil),  // 23: admiral.source.v1.ListSourceVersionsRequest
-	(*ListSourceVersionsResponse)(nil), // 24: admiral.source.v1.ListSourceVersionsResponse
-	(*GetSourceInputsRequest)(nil),     // 25: admiral.source.v1.GetSourceInputsRequest
-	(*GetSourceInputsResponse)(nil),    // 26: admiral.source.v1.GetSourceInputsResponse
-	(*GetSourceOutputsRequest)(nil),    // 27: admiral.source.v1.GetSourceOutputsRequest
-	(*GetSourceOutputsResponse)(nil),   // 28: admiral.source.v1.GetSourceOutputsResponse
-	(*SyncSourceRequest)(nil),          // 29: admiral.source.v1.SyncSourceRequest
-	(*SyncSourceResponse)(nil),         // 30: admiral.source.v1.SyncSourceResponse
-	nil,                                // 31: admiral.source.v1.Source.LabelsEntry
-	nil,                                // 32: admiral.source.v1.CreateSourceRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),      // 33: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),                // 34: admiral.common.v1.ActorRef
-	(*fieldmaskpb.FieldMask)(nil),      // 35: google.protobuf.FieldMask
+	(SourceTestStatus)(0),              // 1: admiral.source.v1.SourceTestStatus
+	(*TerraformConfig)(nil),            // 2: admiral.source.v1.TerraformConfig
+	(*HelmConfig)(nil),                 // 3: admiral.source.v1.HelmConfig
+	(*SourceVersion)(nil),              // 4: admiral.source.v1.SourceVersion
+	(*SourceInput)(nil),                // 5: admiral.source.v1.SourceInput
+	(*SourceOutput)(nil),               // 6: admiral.source.v1.SourceOutput
+	(*Source)(nil),                     // 7: admiral.source.v1.Source
+	(*CreateSourceRequest)(nil),        // 8: admiral.source.v1.CreateSourceRequest
+	(*CreateSourceResponse)(nil),       // 9: admiral.source.v1.CreateSourceResponse
+	(*GetSourceRequest)(nil),           // 10: admiral.source.v1.GetSourceRequest
+	(*GetSourceResponse)(nil),          // 11: admiral.source.v1.GetSourceResponse
+	(*ListSourcesRequest)(nil),         // 12: admiral.source.v1.ListSourcesRequest
+	(*ListSourcesResponse)(nil),        // 13: admiral.source.v1.ListSourcesResponse
+	(*UpdateSourceRequest)(nil),        // 14: admiral.source.v1.UpdateSourceRequest
+	(*UpdateSourceResponse)(nil),       // 15: admiral.source.v1.UpdateSourceResponse
+	(*DeleteSourceRequest)(nil),        // 16: admiral.source.v1.DeleteSourceRequest
+	(*DeleteSourceResponse)(nil),       // 17: admiral.source.v1.DeleteSourceResponse
+	(*TestSourceRequest)(nil),          // 18: admiral.source.v1.TestSourceRequest
+	(*TestSourceResponse)(nil),         // 19: admiral.source.v1.TestSourceResponse
+	(*ListSourceVersionsRequest)(nil),  // 20: admiral.source.v1.ListSourceVersionsRequest
+	(*ListSourceVersionsResponse)(nil), // 21: admiral.source.v1.ListSourceVersionsResponse
+	(*GetSourceInputsRequest)(nil),     // 22: admiral.source.v1.GetSourceInputsRequest
+	(*GetSourceInputsResponse)(nil),    // 23: admiral.source.v1.GetSourceInputsResponse
+	(*GetSourceOutputsRequest)(nil),    // 24: admiral.source.v1.GetSourceOutputsRequest
+	(*GetSourceOutputsResponse)(nil),   // 25: admiral.source.v1.GetSourceOutputsResponse
+	(*SyncSourceRequest)(nil),          // 26: admiral.source.v1.SyncSourceRequest
+	(*SyncSourceResponse)(nil),         // 27: admiral.source.v1.SyncSourceResponse
+	nil,                                // 28: admiral.source.v1.Source.LabelsEntry
+	nil,                                // 29: admiral.source.v1.CreateSourceRequest.LabelsEntry
+	(*timestamppb.Timestamp)(nil),      // 30: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                // 31: admiral.common.v1.ActorRef
+	(*fieldmaskpb.FieldMask)(nil),      // 32: google.protobuf.FieldMask
 }
 var file_admiral_source_v1_source_proto_depIdxs = []int32{
-	33, // 0: admiral.source.v1.SourceVersion.published_at:type_name -> google.protobuf.Timestamp
+	30, // 0: admiral.source.v1.SourceVersion.published_at:type_name -> google.protobuf.Timestamp
 	0,  // 1: admiral.source.v1.Source.type:type_name -> admiral.source.v1.SourceType
-	1,  // 2: admiral.source.v1.Source.terraform_registry:type_name -> admiral.source.v1.TerraformRegistryConfig
-	2,  // 3: admiral.source.v1.Source.terraform_git:type_name -> admiral.source.v1.TerraformGitConfig
-	3,  // 4: admiral.source.v1.Source.helm_repository:type_name -> admiral.source.v1.HelmRepositoryConfig
-	4,  // 5: admiral.source.v1.Source.helm_oci:type_name -> admiral.source.v1.HelmOCIConfig
-	5,  // 6: admiral.source.v1.Source.helm_git:type_name -> admiral.source.v1.HelmGitConfig
-	6,  // 7: admiral.source.v1.Source.kustomize_git:type_name -> admiral.source.v1.KustomizeGitConfig
-	7,  // 8: admiral.source.v1.Source.manifest_git:type_name -> admiral.source.v1.ManifestGitConfig
-	8,  // 9: admiral.source.v1.Source.archive:type_name -> admiral.source.v1.ArchiveConfig
-	31, // 10: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
-	34, // 11: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
-	34, // 12: admiral.source.v1.Source.updated_by:type_name -> admiral.common.v1.ActorRef
-	33, // 13: admiral.source.v1.Source.last_synced_at:type_name -> google.protobuf.Timestamp
-	33, // 14: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
-	33, // 15: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 16: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType
-	1,  // 17: admiral.source.v1.CreateSourceRequest.terraform_registry:type_name -> admiral.source.v1.TerraformRegistryConfig
-	2,  // 18: admiral.source.v1.CreateSourceRequest.terraform_git:type_name -> admiral.source.v1.TerraformGitConfig
-	3,  // 19: admiral.source.v1.CreateSourceRequest.helm_repository:type_name -> admiral.source.v1.HelmRepositoryConfig
-	4,  // 20: admiral.source.v1.CreateSourceRequest.helm_oci:type_name -> admiral.source.v1.HelmOCIConfig
-	5,  // 21: admiral.source.v1.CreateSourceRequest.helm_git:type_name -> admiral.source.v1.HelmGitConfig
-	6,  // 22: admiral.source.v1.CreateSourceRequest.kustomize_git:type_name -> admiral.source.v1.KustomizeGitConfig
-	7,  // 23: admiral.source.v1.CreateSourceRequest.manifest_git:type_name -> admiral.source.v1.ManifestGitConfig
-	8,  // 24: admiral.source.v1.CreateSourceRequest.archive:type_name -> admiral.source.v1.ArchiveConfig
-	32, // 25: admiral.source.v1.CreateSourceRequest.labels:type_name -> admiral.source.v1.CreateSourceRequest.LabelsEntry
-	12, // 26: admiral.source.v1.CreateSourceResponse.source:type_name -> admiral.source.v1.Source
-	12, // 27: admiral.source.v1.GetSourceResponse.source:type_name -> admiral.source.v1.Source
-	12, // 28: admiral.source.v1.ListSourcesResponse.sources:type_name -> admiral.source.v1.Source
-	12, // 29: admiral.source.v1.UpdateSourceRequest.source:type_name -> admiral.source.v1.Source
-	35, // 30: admiral.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
-	12, // 31: admiral.source.v1.UpdateSourceResponse.source:type_name -> admiral.source.v1.Source
-	9,  // 32: admiral.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.source.v1.SourceVersion
-	10, // 33: admiral.source.v1.GetSourceInputsResponse.inputs:type_name -> admiral.source.v1.SourceInput
-	11, // 34: admiral.source.v1.GetSourceOutputsResponse.outputs:type_name -> admiral.source.v1.SourceOutput
-	12, // 35: admiral.source.v1.SyncSourceResponse.source:type_name -> admiral.source.v1.Source
-	13, // 36: admiral.source.v1.SourceAPI.CreateSource:input_type -> admiral.source.v1.CreateSourceRequest
-	15, // 37: admiral.source.v1.SourceAPI.GetSource:input_type -> admiral.source.v1.GetSourceRequest
-	17, // 38: admiral.source.v1.SourceAPI.ListSources:input_type -> admiral.source.v1.ListSourcesRequest
-	19, // 39: admiral.source.v1.SourceAPI.UpdateSource:input_type -> admiral.source.v1.UpdateSourceRequest
-	21, // 40: admiral.source.v1.SourceAPI.DeleteSource:input_type -> admiral.source.v1.DeleteSourceRequest
-	23, // 41: admiral.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.source.v1.ListSourceVersionsRequest
-	25, // 42: admiral.source.v1.SourceAPI.GetSourceInputs:input_type -> admiral.source.v1.GetSourceInputsRequest
-	27, // 43: admiral.source.v1.SourceAPI.GetSourceOutputs:input_type -> admiral.source.v1.GetSourceOutputsRequest
-	29, // 44: admiral.source.v1.SourceAPI.SyncSource:input_type -> admiral.source.v1.SyncSourceRequest
-	14, // 45: admiral.source.v1.SourceAPI.CreateSource:output_type -> admiral.source.v1.CreateSourceResponse
-	16, // 46: admiral.source.v1.SourceAPI.GetSource:output_type -> admiral.source.v1.GetSourceResponse
-	18, // 47: admiral.source.v1.SourceAPI.ListSources:output_type -> admiral.source.v1.ListSourcesResponse
-	20, // 48: admiral.source.v1.SourceAPI.UpdateSource:output_type -> admiral.source.v1.UpdateSourceResponse
-	22, // 49: admiral.source.v1.SourceAPI.DeleteSource:output_type -> admiral.source.v1.DeleteSourceResponse
-	24, // 50: admiral.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.source.v1.ListSourceVersionsResponse
-	26, // 51: admiral.source.v1.SourceAPI.GetSourceInputs:output_type -> admiral.source.v1.GetSourceInputsResponse
-	28, // 52: admiral.source.v1.SourceAPI.GetSourceOutputs:output_type -> admiral.source.v1.GetSourceOutputsResponse
-	30, // 53: admiral.source.v1.SourceAPI.SyncSource:output_type -> admiral.source.v1.SyncSourceResponse
-	45, // [45:54] is the sub-list for method output_type
-	36, // [36:45] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	2,  // 2: admiral.source.v1.Source.terraform:type_name -> admiral.source.v1.TerraformConfig
+	3,  // 3: admiral.source.v1.Source.helm:type_name -> admiral.source.v1.HelmConfig
+	28, // 4: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
+	31, // 5: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
+	30, // 6: admiral.source.v1.Source.last_synced_at:type_name -> google.protobuf.Timestamp
+	1,  // 7: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
+	30, // 8: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
+	30, // 9: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
+	30, // 10: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 11: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType
+	2,  // 12: admiral.source.v1.CreateSourceRequest.terraform:type_name -> admiral.source.v1.TerraformConfig
+	3,  // 13: admiral.source.v1.CreateSourceRequest.helm:type_name -> admiral.source.v1.HelmConfig
+	29, // 14: admiral.source.v1.CreateSourceRequest.labels:type_name -> admiral.source.v1.CreateSourceRequest.LabelsEntry
+	7,  // 15: admiral.source.v1.CreateSourceResponse.source:type_name -> admiral.source.v1.Source
+	7,  // 16: admiral.source.v1.GetSourceResponse.source:type_name -> admiral.source.v1.Source
+	7,  // 17: admiral.source.v1.ListSourcesResponse.sources:type_name -> admiral.source.v1.Source
+	7,  // 18: admiral.source.v1.UpdateSourceRequest.source:type_name -> admiral.source.v1.Source
+	32, // 19: admiral.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
+	7,  // 20: admiral.source.v1.UpdateSourceResponse.source:type_name -> admiral.source.v1.Source
+	1,  // 21: admiral.source.v1.TestSourceResponse.status:type_name -> admiral.source.v1.SourceTestStatus
+	7,  // 22: admiral.source.v1.TestSourceResponse.source:type_name -> admiral.source.v1.Source
+	4,  // 23: admiral.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.source.v1.SourceVersion
+	5,  // 24: admiral.source.v1.GetSourceInputsResponse.inputs:type_name -> admiral.source.v1.SourceInput
+	6,  // 25: admiral.source.v1.GetSourceOutputsResponse.outputs:type_name -> admiral.source.v1.SourceOutput
+	7,  // 26: admiral.source.v1.SyncSourceResponse.source:type_name -> admiral.source.v1.Source
+	8,  // 27: admiral.source.v1.SourceAPI.CreateSource:input_type -> admiral.source.v1.CreateSourceRequest
+	10, // 28: admiral.source.v1.SourceAPI.GetSource:input_type -> admiral.source.v1.GetSourceRequest
+	12, // 29: admiral.source.v1.SourceAPI.ListSources:input_type -> admiral.source.v1.ListSourcesRequest
+	14, // 30: admiral.source.v1.SourceAPI.UpdateSource:input_type -> admiral.source.v1.UpdateSourceRequest
+	16, // 31: admiral.source.v1.SourceAPI.DeleteSource:input_type -> admiral.source.v1.DeleteSourceRequest
+	18, // 32: admiral.source.v1.SourceAPI.TestSource:input_type -> admiral.source.v1.TestSourceRequest
+	20, // 33: admiral.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.source.v1.ListSourceVersionsRequest
+	22, // 34: admiral.source.v1.SourceAPI.GetSourceInputs:input_type -> admiral.source.v1.GetSourceInputsRequest
+	24, // 35: admiral.source.v1.SourceAPI.GetSourceOutputs:input_type -> admiral.source.v1.GetSourceOutputsRequest
+	26, // 36: admiral.source.v1.SourceAPI.SyncSource:input_type -> admiral.source.v1.SyncSourceRequest
+	9,  // 37: admiral.source.v1.SourceAPI.CreateSource:output_type -> admiral.source.v1.CreateSourceResponse
+	11, // 38: admiral.source.v1.SourceAPI.GetSource:output_type -> admiral.source.v1.GetSourceResponse
+	13, // 39: admiral.source.v1.SourceAPI.ListSources:output_type -> admiral.source.v1.ListSourcesResponse
+	15, // 40: admiral.source.v1.SourceAPI.UpdateSource:output_type -> admiral.source.v1.UpdateSourceResponse
+	17, // 41: admiral.source.v1.SourceAPI.DeleteSource:output_type -> admiral.source.v1.DeleteSourceResponse
+	19, // 42: admiral.source.v1.SourceAPI.TestSource:output_type -> admiral.source.v1.TestSourceResponse
+	21, // 43: admiral.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.source.v1.ListSourceVersionsResponse
+	23, // 44: admiral.source.v1.SourceAPI.GetSourceInputs:output_type -> admiral.source.v1.GetSourceInputsResponse
+	25, // 45: admiral.source.v1.SourceAPI.GetSourceOutputs:output_type -> admiral.source.v1.GetSourceOutputsResponse
+	27, // 46: admiral.source.v1.SourceAPI.SyncSource:output_type -> admiral.source.v1.SyncSourceResponse
+	37, // [37:47] is the sub-list for method output_type
+	27, // [27:37] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_admiral_source_v1_source_proto_init() }
@@ -2606,34 +2214,22 @@ func file_admiral_source_v1_source_proto_init() {
 	if File_admiral_source_v1_source_proto != nil {
 		return
 	}
-	file_admiral_source_v1_source_proto_msgTypes[9].OneofWrappers = []any{}
-	file_admiral_source_v1_source_proto_msgTypes[11].OneofWrappers = []any{
-		(*Source_TerraformRegistry)(nil),
-		(*Source_TerraformGit)(nil),
-		(*Source_HelmRepository)(nil),
-		(*Source_HelmOci)(nil),
-		(*Source_HelmGit)(nil),
-		(*Source_KustomizeGit)(nil),
-		(*Source_ManifestGit)(nil),
-		(*Source_Archive)(nil),
+	file_admiral_source_v1_source_proto_msgTypes[3].OneofWrappers = []any{}
+	file_admiral_source_v1_source_proto_msgTypes[5].OneofWrappers = []any{
+		(*Source_Terraform)(nil),
+		(*Source_Helm)(nil),
 	}
-	file_admiral_source_v1_source_proto_msgTypes[12].OneofWrappers = []any{
-		(*CreateSourceRequest_TerraformRegistry)(nil),
-		(*CreateSourceRequest_TerraformGit)(nil),
-		(*CreateSourceRequest_HelmRepository)(nil),
-		(*CreateSourceRequest_HelmOci)(nil),
-		(*CreateSourceRequest_HelmGit)(nil),
-		(*CreateSourceRequest_KustomizeGit)(nil),
-		(*CreateSourceRequest_ManifestGit)(nil),
-		(*CreateSourceRequest_Archive)(nil),
+	file_admiral_source_v1_source_proto_msgTypes[6].OneofWrappers = []any{
+		(*CreateSourceRequest_Terraform)(nil),
+		(*CreateSourceRequest_Helm)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_source_v1_source_proto_rawDesc), len(file_admiral_source_v1_source_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   32,
+			NumEnums:      2,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
