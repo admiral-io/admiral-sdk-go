@@ -54,8 +54,6 @@ const (
 	// SourceAPIGetSourceOutputsProcedure is the fully-qualified name of the SourceAPI's
 	// GetSourceOutputs RPC.
 	SourceAPIGetSourceOutputsProcedure = "/admiral.source.v1.SourceAPI/GetSourceOutputs"
-	// SourceAPISyncSourceProcedure is the fully-qualified name of the SourceAPI's SyncSource RPC.
-	SourceAPISyncSourceProcedure = "/admiral.source.v1.SourceAPI/SyncSource"
 )
 
 // SourceAPIClient is a client for the admiral.source.v1.SourceAPI service.
@@ -138,17 +136,6 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:read`
 	GetSourceOutputs(context.Context, *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error)
-	// SyncSource triggers a refresh of the source's cached metadata -- version
-	// list, discovered inputs/outputs, and connectivity status.
-	//
-	// Use this after updating the referenced credential, or to
-	// force a refresh when you know the upstream has changed.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:write`
-	SyncSource(context.Context, *connect.Request[v1.SyncSourceRequest]) (*connect.Response[v1.SyncSourceResponse], error)
 }
 
 // NewSourceAPIClient constructs a client for the admiral.source.v1.SourceAPI service. By default,
@@ -216,12 +203,6 @@ func NewSourceAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(sourceAPIMethods.ByName("GetSourceOutputs")),
 			connect.WithClientOptions(opts...),
 		),
-		syncSource: connect.NewClient[v1.SyncSourceRequest, v1.SyncSourceResponse](
-			httpClient,
-			baseURL+SourceAPISyncSourceProcedure,
-			connect.WithSchema(sourceAPIMethods.ByName("SyncSource")),
-			connect.WithClientOptions(opts...),
-		),
 	}
 }
 
@@ -236,7 +217,6 @@ type sourceAPIClient struct {
 	listSourceVersions *connect.Client[v1.ListSourceVersionsRequest, v1.ListSourceVersionsResponse]
 	getSourceInputs    *connect.Client[v1.GetSourceInputsRequest, v1.GetSourceInputsResponse]
 	getSourceOutputs   *connect.Client[v1.GetSourceOutputsRequest, v1.GetSourceOutputsResponse]
-	syncSource         *connect.Client[v1.SyncSourceRequest, v1.SyncSourceResponse]
 }
 
 // CreateSource calls admiral.source.v1.SourceAPI.CreateSource.
@@ -282,11 +262,6 @@ func (c *sourceAPIClient) GetSourceInputs(ctx context.Context, req *connect.Requ
 // GetSourceOutputs calls admiral.source.v1.SourceAPI.GetSourceOutputs.
 func (c *sourceAPIClient) GetSourceOutputs(ctx context.Context, req *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error) {
 	return c.getSourceOutputs.CallUnary(ctx, req)
-}
-
-// SyncSource calls admiral.source.v1.SourceAPI.SyncSource.
-func (c *sourceAPIClient) SyncSource(ctx context.Context, req *connect.Request[v1.SyncSourceRequest]) (*connect.Response[v1.SyncSourceResponse], error) {
-	return c.syncSource.CallUnary(ctx, req)
 }
 
 // SourceAPIHandler is an implementation of the admiral.source.v1.SourceAPI service.
@@ -369,17 +344,6 @@ type SourceAPIHandler interface {
 	//
 	// Scope: `source:read`
 	GetSourceOutputs(context.Context, *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error)
-	// SyncSource triggers a refresh of the source's cached metadata -- version
-	// list, discovered inputs/outputs, and connectivity status.
-	//
-	// Use this after updating the referenced credential, or to
-	// force a refresh when you know the upstream has changed.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:write`
-	SyncSource(context.Context, *connect.Request[v1.SyncSourceRequest]) (*connect.Response[v1.SyncSourceResponse], error)
 }
 
 // NewSourceAPIHandler builds an HTTP handler from the service implementation. It returns the path
@@ -443,12 +407,6 @@ func NewSourceAPIHandler(svc SourceAPIHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(sourceAPIMethods.ByName("GetSourceOutputs")),
 		connect.WithHandlerOptions(opts...),
 	)
-	sourceAPISyncSourceHandler := connect.NewUnaryHandler(
-		SourceAPISyncSourceProcedure,
-		svc.SyncSource,
-		connect.WithSchema(sourceAPIMethods.ByName("SyncSource")),
-		connect.WithHandlerOptions(opts...),
-	)
 	return "/admiral.source.v1.SourceAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SourceAPICreateSourceProcedure:
@@ -469,8 +427,6 @@ func NewSourceAPIHandler(svc SourceAPIHandler, opts ...connect.HandlerOption) (s
 			sourceAPIGetSourceInputsHandler.ServeHTTP(w, r)
 		case SourceAPIGetSourceOutputsProcedure:
 			sourceAPIGetSourceOutputsHandler.ServeHTTP(w, r)
-		case SourceAPISyncSourceProcedure:
-			sourceAPISyncSourceHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -514,8 +470,4 @@ func (UnimplementedSourceAPIHandler) GetSourceInputs(context.Context, *connect.R
 
 func (UnimplementedSourceAPIHandler) GetSourceOutputs(context.Context, *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.GetSourceOutputs is not implemented"))
-}
-
-func (UnimplementedSourceAPIHandler) SyncSource(context.Context, *connect.Request[v1.SyncSourceRequest]) (*connect.Response[v1.SyncSourceResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.SyncSource is not implemented"))
 }

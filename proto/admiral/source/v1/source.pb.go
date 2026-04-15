@@ -570,11 +570,6 @@ type Source struct {
 	Labels map[string]string `protobuf:"bytes,16,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// The user or agent who created this source (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,20,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// When the source metadata was last synced from the external system
-	// (registry, Git, Helm repo). Updated by SyncSource and by automatic
-	// background refresh when discovery RPCs encounter stale cached data.
-	// Absent if no sync has occurred yet.
-	LastSyncedAt *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=last_synced_at,json=lastSyncedAt,proto3" json:"last_synced_at,omitempty"`
 	// Outcome of the most recent TestSource invocation. Reflects whether the
 	// attached credential successfully authenticated against `url` the last time
 	// a test was run. Absent if the source has never been tested.
@@ -707,13 +702,6 @@ func (x *Source) GetLabels() map[string]string {
 func (x *Source) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *Source) GetLastSyncedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastSyncedAt
 	}
 	return nil
 }
@@ -1838,98 +1826,6 @@ func (x *GetSourceOutputsResponse) GetResolvedVersion() string {
 	return ""
 }
 
-// SyncSourceRequest triggers a metadata refresh for a source.
-type SyncSourceRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier of the source to sync (UUID).
-	SourceId      string `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncSourceRequest) Reset() {
-	*x = SyncSourceRequest{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[24]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncSourceRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncSourceRequest) ProtoMessage() {}
-
-func (x *SyncSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[24]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncSourceRequest.ProtoReflect.Descriptor instead.
-func (*SyncSourceRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *SyncSourceRequest) GetSourceId() string {
-	if x != nil {
-		return x.SourceId
-	}
-	return ""
-}
-
-// SyncSourceResponse confirms the sync was triggered.
-type SyncSourceResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The source with refreshed metadata.
-	Source        *Source `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncSourceResponse) Reset() {
-	*x = SyncSourceResponse{}
-	mi := &file_admiral_source_v1_source_proto_msgTypes[25]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncSourceResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncSourceResponse) ProtoMessage() {}
-
-func (x *SyncSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_source_v1_source_proto_msgTypes[25]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncSourceResponse.ProtoReflect.Descriptor instead.
-func (*SyncSourceResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{25}
-}
-
-func (x *SyncSourceResponse) GetSource() *Source {
-	if x != nil {
-		return x.Source
-	}
-	return nil
-}
-
 var File_admiral_source_v1_source_proto protoreflect.FileDescriptor
 
 const file_admiral_source_v1_source_proto_rawDesc = "" +
@@ -1960,7 +1856,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1c\n" +
-	"\tsensitive\x18\x04 \x01(\bR\tsensitive\"\xa2\b\n" +
+	"\tsensitive\x18\x04 \x01(\bR\tsensitive\"\xe0\a\n" +
 	"\x06Source\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
@@ -1974,8 +1870,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	" \x01(\v2\x1d.admiral.source.v1.HelmConfigH\x00R\x04helm\x12V\n" +
 	"\x06labels\x18\x10 \x03(\v2%.admiral.source.v1.Source.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
 	"\n" +
-	"created_by\x18\x14 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12@\n" +
-	"\x0elast_synced_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\flastSyncedAt\x12R\n" +
+	"created_by\x18\x14 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12R\n" +
 	"\x10last_test_status\x18\x15 \x01(\x0e2#.admiral.source.v1.SourceTestStatusH\x02R\x0elastTestStatus\x88\x01\x01\x12&\n" +
 	"\x0flast_test_error\x18\x16 \x01(\tR\rlastTestError\x12@\n" +
 	"\x0elast_tested_at\x18\x17 \x01(\v2\x1a.google.protobuf.TimestampR\flastTestedAt\x129\n" +
@@ -2053,11 +1948,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\aversion\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\aversion\"\x80\x01\n" +
 	"\x18GetSourceOutputsResponse\x129\n" +
 	"\aoutputs\x18\x01 \x03(\v2\x1f.admiral.source.v1.SourceOutputR\aoutputs\x12)\n" +
-	"\x10resolved_version\x18\x02 \x01(\tR\x0fresolvedVersion\":\n" +
-	"\x11SyncSourceRequest\x12%\n" +
-	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"G\n" +
-	"\x12SyncSourceResponse\x121\n" +
-	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source*\x9a\x01\n" +
+	"\x10resolved_version\x18\x02 \x01(\tR\x0fresolvedVersion*\x9a\x01\n" +
 	"\n" +
 	"SourceType\x12\x1b\n" +
 	"\x17SOURCE_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
@@ -2069,7 +1960,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x10SourceTestStatus\x12\"\n" +
 	"\x1eSOURCE_TEST_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aSOURCE_TEST_STATUS_SUCCESS\x10\x01\x12\x1e\n" +
-	"\x1aSOURCE_TEST_STATUS_FAILURE\x10\x022\xd6\x0e\n" +
+	"\x1aSOURCE_TEST_STATUS_FAILURE\x10\x022\xa0\r\n" +
 	"\tSourceAPI\x12\xaa\x01\n" +
 	"\fCreateSource\x12&.admiral.source.v1.CreateSourceRequest\x1a'.admiral.source.v1.CreateSourceResponse\"I\xbaG\x1a\n" +
 	"\aSources\x12\x0fCreate a source\xa2\x97$\x0e\n" +
@@ -2098,11 +1989,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\vsource:read\x82\xd3\xe4\x93\x02$\x12\"/api/v1/sources/{source_id}/inputs\x12\xce\x01\n" +
 	"\x10GetSourceOutputs\x12*.admiral.source.v1.GetSourceOutputsRequest\x1a+.admiral.source.v1.GetSourceOutputsResponse\"a\xbaG\"\n" +
 	"\aSources\x12\x17Retrieve source outputs\xa2\x97$\r\n" +
-	"\vsource:read\x82\xd3\xe4\x93\x02%\x12#/api/v1/sources/{source_id}/outputs\x12\xb3\x01\n" +
-	"\n" +
-	"SyncSource\x12$.admiral.source.v1.SyncSourceRequest\x1a%.admiral.source.v1.SyncSourceResponse\"X\xbaG\x18\n" +
-	"\aSources\x12\rSync a source\xa2\x97$\x0e\n" +
-	"\fsource:write\x82\xd3\xe4\x93\x02%:\x01*\" /api/v1/sources/{source_id}/syncB\xbe\x01\n" +
+	"\vsource:read\x82\xd3\xe4\x93\x02%\x12#/api/v1/sources/{source_id}/outputsB\xbe\x01\n" +
 	"\x15com.admiral.source.v1B\vSourceProtoP\x01Z2go.admiral.io/sdk/proto/admiral/source/v1;sourcev1\xa2\x02\x03ASX\xaa\x02\x11Admiral.Source.V1\xca\x02\x11Admiral\\Source\\V1\xe2\x02\x1dAdmiral\\Source\\V1\\GPBMetadata\xea\x02\x13Admiral::Source::V1b\x06proto3"
 
 var (
@@ -2118,7 +2005,7 @@ func file_admiral_source_v1_source_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_admiral_source_v1_source_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_admiral_source_v1_source_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_admiral_source_v1_source_proto_goTypes = []any{
 	(SourceType)(0),                    // 0: admiral.source.v1.SourceType
 	(SourceTestStatus)(0),              // 1: admiral.source.v1.SourceTestStatus
@@ -2146,67 +2033,61 @@ var file_admiral_source_v1_source_proto_goTypes = []any{
 	(*GetSourceInputsResponse)(nil),    // 23: admiral.source.v1.GetSourceInputsResponse
 	(*GetSourceOutputsRequest)(nil),    // 24: admiral.source.v1.GetSourceOutputsRequest
 	(*GetSourceOutputsResponse)(nil),   // 25: admiral.source.v1.GetSourceOutputsResponse
-	(*SyncSourceRequest)(nil),          // 26: admiral.source.v1.SyncSourceRequest
-	(*SyncSourceResponse)(nil),         // 27: admiral.source.v1.SyncSourceResponse
-	nil,                                // 28: admiral.source.v1.Source.LabelsEntry
-	nil,                                // 29: admiral.source.v1.CreateSourceRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),      // 30: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),                // 31: admiral.common.v1.ActorRef
-	(*fieldmaskpb.FieldMask)(nil),      // 32: google.protobuf.FieldMask
+	nil,                                // 26: admiral.source.v1.Source.LabelsEntry
+	nil,                                // 27: admiral.source.v1.CreateSourceRequest.LabelsEntry
+	(*timestamppb.Timestamp)(nil),      // 28: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                // 29: admiral.common.v1.ActorRef
+	(*fieldmaskpb.FieldMask)(nil),      // 30: google.protobuf.FieldMask
 }
 var file_admiral_source_v1_source_proto_depIdxs = []int32{
-	30, // 0: admiral.source.v1.SourceVersion.published_at:type_name -> google.protobuf.Timestamp
+	28, // 0: admiral.source.v1.SourceVersion.published_at:type_name -> google.protobuf.Timestamp
 	0,  // 1: admiral.source.v1.Source.type:type_name -> admiral.source.v1.SourceType
 	2,  // 2: admiral.source.v1.Source.terraform:type_name -> admiral.source.v1.TerraformConfig
 	3,  // 3: admiral.source.v1.Source.helm:type_name -> admiral.source.v1.HelmConfig
-	28, // 4: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
-	31, // 5: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
-	30, // 6: admiral.source.v1.Source.last_synced_at:type_name -> google.protobuf.Timestamp
-	1,  // 7: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
-	30, // 8: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
-	30, // 9: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
-	30, // 10: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 11: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType
-	2,  // 12: admiral.source.v1.CreateSourceRequest.terraform:type_name -> admiral.source.v1.TerraformConfig
-	3,  // 13: admiral.source.v1.CreateSourceRequest.helm:type_name -> admiral.source.v1.HelmConfig
-	29, // 14: admiral.source.v1.CreateSourceRequest.labels:type_name -> admiral.source.v1.CreateSourceRequest.LabelsEntry
-	7,  // 15: admiral.source.v1.CreateSourceResponse.source:type_name -> admiral.source.v1.Source
-	7,  // 16: admiral.source.v1.GetSourceResponse.source:type_name -> admiral.source.v1.Source
-	7,  // 17: admiral.source.v1.ListSourcesResponse.sources:type_name -> admiral.source.v1.Source
-	7,  // 18: admiral.source.v1.UpdateSourceRequest.source:type_name -> admiral.source.v1.Source
-	32, // 19: admiral.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
-	7,  // 20: admiral.source.v1.UpdateSourceResponse.source:type_name -> admiral.source.v1.Source
-	1,  // 21: admiral.source.v1.TestSourceResponse.status:type_name -> admiral.source.v1.SourceTestStatus
-	7,  // 22: admiral.source.v1.TestSourceResponse.source:type_name -> admiral.source.v1.Source
-	4,  // 23: admiral.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.source.v1.SourceVersion
-	5,  // 24: admiral.source.v1.GetSourceInputsResponse.inputs:type_name -> admiral.source.v1.SourceInput
-	6,  // 25: admiral.source.v1.GetSourceOutputsResponse.outputs:type_name -> admiral.source.v1.SourceOutput
-	7,  // 26: admiral.source.v1.SyncSourceResponse.source:type_name -> admiral.source.v1.Source
-	8,  // 27: admiral.source.v1.SourceAPI.CreateSource:input_type -> admiral.source.v1.CreateSourceRequest
-	10, // 28: admiral.source.v1.SourceAPI.GetSource:input_type -> admiral.source.v1.GetSourceRequest
-	12, // 29: admiral.source.v1.SourceAPI.ListSources:input_type -> admiral.source.v1.ListSourcesRequest
-	14, // 30: admiral.source.v1.SourceAPI.UpdateSource:input_type -> admiral.source.v1.UpdateSourceRequest
-	16, // 31: admiral.source.v1.SourceAPI.DeleteSource:input_type -> admiral.source.v1.DeleteSourceRequest
-	18, // 32: admiral.source.v1.SourceAPI.TestSource:input_type -> admiral.source.v1.TestSourceRequest
-	20, // 33: admiral.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.source.v1.ListSourceVersionsRequest
-	22, // 34: admiral.source.v1.SourceAPI.GetSourceInputs:input_type -> admiral.source.v1.GetSourceInputsRequest
-	24, // 35: admiral.source.v1.SourceAPI.GetSourceOutputs:input_type -> admiral.source.v1.GetSourceOutputsRequest
-	26, // 36: admiral.source.v1.SourceAPI.SyncSource:input_type -> admiral.source.v1.SyncSourceRequest
-	9,  // 37: admiral.source.v1.SourceAPI.CreateSource:output_type -> admiral.source.v1.CreateSourceResponse
-	11, // 38: admiral.source.v1.SourceAPI.GetSource:output_type -> admiral.source.v1.GetSourceResponse
-	13, // 39: admiral.source.v1.SourceAPI.ListSources:output_type -> admiral.source.v1.ListSourcesResponse
-	15, // 40: admiral.source.v1.SourceAPI.UpdateSource:output_type -> admiral.source.v1.UpdateSourceResponse
-	17, // 41: admiral.source.v1.SourceAPI.DeleteSource:output_type -> admiral.source.v1.DeleteSourceResponse
-	19, // 42: admiral.source.v1.SourceAPI.TestSource:output_type -> admiral.source.v1.TestSourceResponse
-	21, // 43: admiral.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.source.v1.ListSourceVersionsResponse
-	23, // 44: admiral.source.v1.SourceAPI.GetSourceInputs:output_type -> admiral.source.v1.GetSourceInputsResponse
-	25, // 45: admiral.source.v1.SourceAPI.GetSourceOutputs:output_type -> admiral.source.v1.GetSourceOutputsResponse
-	27, // 46: admiral.source.v1.SourceAPI.SyncSource:output_type -> admiral.source.v1.SyncSourceResponse
-	37, // [37:47] is the sub-list for method output_type
-	27, // [27:37] is the sub-list for method input_type
-	27, // [27:27] is the sub-list for extension type_name
-	27, // [27:27] is the sub-list for extension extendee
-	0,  // [0:27] is the sub-list for field type_name
+	26, // 4: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
+	29, // 5: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
+	1,  // 6: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
+	28, // 7: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
+	28, // 8: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
+	28, // 9: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 10: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType
+	2,  // 11: admiral.source.v1.CreateSourceRequest.terraform:type_name -> admiral.source.v1.TerraformConfig
+	3,  // 12: admiral.source.v1.CreateSourceRequest.helm:type_name -> admiral.source.v1.HelmConfig
+	27, // 13: admiral.source.v1.CreateSourceRequest.labels:type_name -> admiral.source.v1.CreateSourceRequest.LabelsEntry
+	7,  // 14: admiral.source.v1.CreateSourceResponse.source:type_name -> admiral.source.v1.Source
+	7,  // 15: admiral.source.v1.GetSourceResponse.source:type_name -> admiral.source.v1.Source
+	7,  // 16: admiral.source.v1.ListSourcesResponse.sources:type_name -> admiral.source.v1.Source
+	7,  // 17: admiral.source.v1.UpdateSourceRequest.source:type_name -> admiral.source.v1.Source
+	30, // 18: admiral.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
+	7,  // 19: admiral.source.v1.UpdateSourceResponse.source:type_name -> admiral.source.v1.Source
+	1,  // 20: admiral.source.v1.TestSourceResponse.status:type_name -> admiral.source.v1.SourceTestStatus
+	7,  // 21: admiral.source.v1.TestSourceResponse.source:type_name -> admiral.source.v1.Source
+	4,  // 22: admiral.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.source.v1.SourceVersion
+	5,  // 23: admiral.source.v1.GetSourceInputsResponse.inputs:type_name -> admiral.source.v1.SourceInput
+	6,  // 24: admiral.source.v1.GetSourceOutputsResponse.outputs:type_name -> admiral.source.v1.SourceOutput
+	8,  // 25: admiral.source.v1.SourceAPI.CreateSource:input_type -> admiral.source.v1.CreateSourceRequest
+	10, // 26: admiral.source.v1.SourceAPI.GetSource:input_type -> admiral.source.v1.GetSourceRequest
+	12, // 27: admiral.source.v1.SourceAPI.ListSources:input_type -> admiral.source.v1.ListSourcesRequest
+	14, // 28: admiral.source.v1.SourceAPI.UpdateSource:input_type -> admiral.source.v1.UpdateSourceRequest
+	16, // 29: admiral.source.v1.SourceAPI.DeleteSource:input_type -> admiral.source.v1.DeleteSourceRequest
+	18, // 30: admiral.source.v1.SourceAPI.TestSource:input_type -> admiral.source.v1.TestSourceRequest
+	20, // 31: admiral.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.source.v1.ListSourceVersionsRequest
+	22, // 32: admiral.source.v1.SourceAPI.GetSourceInputs:input_type -> admiral.source.v1.GetSourceInputsRequest
+	24, // 33: admiral.source.v1.SourceAPI.GetSourceOutputs:input_type -> admiral.source.v1.GetSourceOutputsRequest
+	9,  // 34: admiral.source.v1.SourceAPI.CreateSource:output_type -> admiral.source.v1.CreateSourceResponse
+	11, // 35: admiral.source.v1.SourceAPI.GetSource:output_type -> admiral.source.v1.GetSourceResponse
+	13, // 36: admiral.source.v1.SourceAPI.ListSources:output_type -> admiral.source.v1.ListSourcesResponse
+	15, // 37: admiral.source.v1.SourceAPI.UpdateSource:output_type -> admiral.source.v1.UpdateSourceResponse
+	17, // 38: admiral.source.v1.SourceAPI.DeleteSource:output_type -> admiral.source.v1.DeleteSourceResponse
+	19, // 39: admiral.source.v1.SourceAPI.TestSource:output_type -> admiral.source.v1.TestSourceResponse
+	21, // 40: admiral.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.source.v1.ListSourceVersionsResponse
+	23, // 41: admiral.source.v1.SourceAPI.GetSourceInputs:output_type -> admiral.source.v1.GetSourceInputsResponse
+	25, // 42: admiral.source.v1.SourceAPI.GetSourceOutputs:output_type -> admiral.source.v1.GetSourceOutputsResponse
+	34, // [34:43] is the sub-list for method output_type
+	25, // [25:34] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_admiral_source_v1_source_proto_init() }
@@ -2229,7 +2110,7 @@ func file_admiral_source_v1_source_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_source_v1_source_proto_rawDesc), len(file_admiral_source_v1_source_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   28,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

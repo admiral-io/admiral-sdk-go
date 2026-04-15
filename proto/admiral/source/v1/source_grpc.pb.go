@@ -28,7 +28,6 @@ const (
 	SourceAPI_ListSourceVersions_FullMethodName = "/admiral.source.v1.SourceAPI/ListSourceVersions"
 	SourceAPI_GetSourceInputs_FullMethodName    = "/admiral.source.v1.SourceAPI/GetSourceInputs"
 	SourceAPI_GetSourceOutputs_FullMethodName   = "/admiral.source.v1.SourceAPI/GetSourceOutputs"
-	SourceAPI_SyncSource_FullMethodName         = "/admiral.source.v1.SourceAPI/SyncSource"
 )
 
 // SourceAPIClient is the client API for SourceAPI service.
@@ -133,17 +132,6 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:read`
 	GetSourceOutputs(ctx context.Context, in *GetSourceOutputsRequest, opts ...grpc.CallOption) (*GetSourceOutputsResponse, error)
-	// SyncSource triggers a refresh of the source's cached metadata -- version
-	// list, discovered inputs/outputs, and connectivity status.
-	//
-	// Use this after updating the referenced credential, or to
-	// force a refresh when you know the upstream has changed.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:write`
-	SyncSource(ctx context.Context, in *SyncSourceRequest, opts ...grpc.CallOption) (*SyncSourceResponse, error)
 }
 
 type sourceAPIClient struct {
@@ -238,16 +226,6 @@ func (c *sourceAPIClient) GetSourceOutputs(ctx context.Context, in *GetSourceOut
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetSourceOutputsResponse)
 	err := c.cc.Invoke(ctx, SourceAPI_GetSourceOutputs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sourceAPIClient) SyncSource(ctx context.Context, in *SyncSourceRequest, opts ...grpc.CallOption) (*SyncSourceResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SyncSourceResponse)
-	err := c.cc.Invoke(ctx, SourceAPI_SyncSource_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -356,17 +334,6 @@ type SourceAPIServer interface {
 	//
 	// Scope: `source:read`
 	GetSourceOutputs(context.Context, *GetSourceOutputsRequest) (*GetSourceOutputsResponse, error)
-	// SyncSource triggers a refresh of the source's cached metadata -- version
-	// list, discovered inputs/outputs, and connectivity status.
-	//
-	// Use this after updating the referenced credential, or to
-	// force a refresh when you know the upstream has changed.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:write`
-	SyncSource(context.Context, *SyncSourceRequest) (*SyncSourceResponse, error)
 }
 
 // UnimplementedSourceAPIServer should be embedded to have
@@ -402,9 +369,6 @@ func (UnimplementedSourceAPIServer) GetSourceInputs(context.Context, *GetSourceI
 }
 func (UnimplementedSourceAPIServer) GetSourceOutputs(context.Context, *GetSourceOutputsRequest) (*GetSourceOutputsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetSourceOutputs not implemented")
-}
-func (UnimplementedSourceAPIServer) SyncSource(context.Context, *SyncSourceRequest) (*SyncSourceResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SyncSource not implemented")
 }
 func (UnimplementedSourceAPIServer) testEmbeddedByValue() {}
 
@@ -588,24 +552,6 @@ func _SourceAPI_GetSourceOutputs_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SourceAPI_SyncSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SyncSourceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SourceAPIServer).SyncSource(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SourceAPI_SyncSource_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SourceAPIServer).SyncSource(ctx, req.(*SyncSourceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // SourceAPI_ServiceDesc is the grpc.ServiceDesc for SourceAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -648,10 +594,6 @@ var SourceAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSourceOutputs",
 			Handler:    _SourceAPI_GetSourceOutputs_Handler,
-		},
-		{
-			MethodName: "SyncSource",
-			Handler:    _SourceAPI_SyncSource_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
