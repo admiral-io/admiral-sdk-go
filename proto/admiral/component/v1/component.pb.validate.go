@@ -1158,6 +1158,10 @@ func (m *ListComponentsRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for ApplicationId
+
+	// no validation rules for EnvironmentId
+
 	// no validation rules for Filter
 
 	// no validation rules for PageSize
