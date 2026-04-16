@@ -26,8 +26,6 @@ const (
 	SourceAPI_DeleteSource_FullMethodName       = "/admiral.source.v1.SourceAPI/DeleteSource"
 	SourceAPI_TestSource_FullMethodName         = "/admiral.source.v1.SourceAPI/TestSource"
 	SourceAPI_ListSourceVersions_FullMethodName = "/admiral.source.v1.SourceAPI/ListSourceVersions"
-	SourceAPI_GetSourceInputs_FullMethodName    = "/admiral.source.v1.SourceAPI/GetSourceInputs"
-	SourceAPI_GetSourceOutputs_FullMethodName   = "/admiral.source.v1.SourceAPI/GetSourceOutputs"
 )
 
 // SourceAPIClient is the client API for SourceAPI service.
@@ -47,12 +45,10 @@ const (
 // module with backups and encryption pre-configured). Organizations can
 // optionally restrict applications to catalog-only sources.
 //
-// The API includes discovery operations (ListSourceVersions, GetSourceInputs,
-// GetSourceOutputs) that query external systems in real time. These are
-// primarily used by the UI for interactive workflows (version dropdowns, input
-// forms) but are exposed in the public API for CLI and automation use. The
-// facade delegates discovery to the platform SourceAPI, which handles
-// credential resolution and external fetching centrally.
+// The API includes a discovery operation (ListSourceVersions) that queries
+// external systems in real time. Input/output discovery lives on the Module
+// API, since for Git sources inputs and outputs are a property of a specific
+// (subpath, ref) and not of the repo as a whole.
 type SourceAPIClient interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
@@ -107,31 +103,6 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:read`
 	ListSourceVersions(ctx context.Context, in *ListSourceVersionsRequest, opts ...grpc.CallOption) (*ListSourceVersionsResponse, error)
-	// GetSourceInputs fetches the source artifact at a specific version and
-	// parses its inputs (configurable parameters).
-	//
-	// For Terraform modules, this parses HCL variable blocks using
-	// terraform-config-inspect. For Helm charts, this extracts values.yaml and
-	// optionally values.schema.json. For Kustomize and raw manifests, inputs
-	// are not discoverable and the response will be empty.
-	//
-	// This operation fetches and parses the external artifact in real time and
-	// may take several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceInputs(ctx context.Context, in *GetSourceInputsRequest, opts ...grpc.CallOption) (*GetSourceInputsResponse, error)
-	// GetSourceOutputs fetches the source artifact at a specific version and
-	// parses its outputs (values produced after apply).
-	//
-	// Only meaningful for Terraform modules, which declare formal output blocks.
-	// Helm charts, Kustomize, and raw manifests do not have formal outputs --
-	// workload component outputs are user-declared, not discovered.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceOutputs(ctx context.Context, in *GetSourceOutputsRequest, opts ...grpc.CallOption) (*GetSourceOutputsResponse, error)
 }
 
 type sourceAPIClient struct {
@@ -212,26 +183,6 @@ func (c *sourceAPIClient) ListSourceVersions(ctx context.Context, in *ListSource
 	return out, nil
 }
 
-func (c *sourceAPIClient) GetSourceInputs(ctx context.Context, in *GetSourceInputsRequest, opts ...grpc.CallOption) (*GetSourceInputsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetSourceInputsResponse)
-	err := c.cc.Invoke(ctx, SourceAPI_GetSourceInputs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sourceAPIClient) GetSourceOutputs(ctx context.Context, in *GetSourceOutputsRequest, opts ...grpc.CallOption) (*GetSourceOutputsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetSourceOutputsResponse)
-	err := c.cc.Invoke(ctx, SourceAPI_GetSourceOutputs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // SourceAPIServer is the server API for SourceAPI service.
 // All implementations should embed UnimplementedSourceAPIServer
 // for forward compatibility.
@@ -249,12 +200,10 @@ func (c *sourceAPIClient) GetSourceOutputs(ctx context.Context, in *GetSourceOut
 // module with backups and encryption pre-configured). Organizations can
 // optionally restrict applications to catalog-only sources.
 //
-// The API includes discovery operations (ListSourceVersions, GetSourceInputs,
-// GetSourceOutputs) that query external systems in real time. These are
-// primarily used by the UI for interactive workflows (version dropdowns, input
-// forms) but are exposed in the public API for CLI and automation use. The
-// facade delegates discovery to the platform SourceAPI, which handles
-// credential resolution and external fetching centrally.
+// The API includes a discovery operation (ListSourceVersions) that queries
+// external systems in real time. Input/output discovery lives on the Module
+// API, since for Git sources inputs and outputs are a property of a specific
+// (subpath, ref) and not of the repo as a whole.
 type SourceAPIServer interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
@@ -309,31 +258,6 @@ type SourceAPIServer interface {
 	//
 	// Scope: `source:read`
 	ListSourceVersions(context.Context, *ListSourceVersionsRequest) (*ListSourceVersionsResponse, error)
-	// GetSourceInputs fetches the source artifact at a specific version and
-	// parses its inputs (configurable parameters).
-	//
-	// For Terraform modules, this parses HCL variable blocks using
-	// terraform-config-inspect. For Helm charts, this extracts values.yaml and
-	// optionally values.schema.json. For Kustomize and raw manifests, inputs
-	// are not discoverable and the response will be empty.
-	//
-	// This operation fetches and parses the external artifact in real time and
-	// may take several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceInputs(context.Context, *GetSourceInputsRequest) (*GetSourceInputsResponse, error)
-	// GetSourceOutputs fetches the source artifact at a specific version and
-	// parses its outputs (values produced after apply).
-	//
-	// Only meaningful for Terraform modules, which declare formal output blocks.
-	// Helm charts, Kustomize, and raw manifests do not have formal outputs --
-	// workload component outputs are user-declared, not discovered.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceOutputs(context.Context, *GetSourceOutputsRequest) (*GetSourceOutputsResponse, error)
 }
 
 // UnimplementedSourceAPIServer should be embedded to have
@@ -363,12 +287,6 @@ func (UnimplementedSourceAPIServer) TestSource(context.Context, *TestSourceReque
 }
 func (UnimplementedSourceAPIServer) ListSourceVersions(context.Context, *ListSourceVersionsRequest) (*ListSourceVersionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListSourceVersions not implemented")
-}
-func (UnimplementedSourceAPIServer) GetSourceInputs(context.Context, *GetSourceInputsRequest) (*GetSourceInputsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetSourceInputs not implemented")
-}
-func (UnimplementedSourceAPIServer) GetSourceOutputs(context.Context, *GetSourceOutputsRequest) (*GetSourceOutputsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetSourceOutputs not implemented")
 }
 func (UnimplementedSourceAPIServer) testEmbeddedByValue() {}
 
@@ -516,42 +434,6 @@ func _SourceAPI_ListSourceVersions_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SourceAPI_GetSourceInputs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSourceInputsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SourceAPIServer).GetSourceInputs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SourceAPI_GetSourceInputs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SourceAPIServer).GetSourceInputs(ctx, req.(*GetSourceInputsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SourceAPI_GetSourceOutputs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSourceOutputsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SourceAPIServer).GetSourceOutputs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SourceAPI_GetSourceOutputs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SourceAPIServer).GetSourceOutputs(ctx, req.(*GetSourceOutputsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // SourceAPI_ServiceDesc is the grpc.ServiceDesc for SourceAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -586,14 +468,6 @@ var SourceAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListSourceVersions",
 			Handler:    _SourceAPI_ListSourceVersions_Handler,
-		},
-		{
-			MethodName: "GetSourceInputs",
-			Handler:    _SourceAPI_GetSourceInputs_Handler,
-		},
-		{
-			MethodName: "GetSourceOutputs",
-			Handler:    _SourceAPI_GetSourceOutputs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

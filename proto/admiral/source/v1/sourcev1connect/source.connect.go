@@ -48,12 +48,6 @@ const (
 	// SourceAPIListSourceVersionsProcedure is the fully-qualified name of the SourceAPI's
 	// ListSourceVersions RPC.
 	SourceAPIListSourceVersionsProcedure = "/admiral.source.v1.SourceAPI/ListSourceVersions"
-	// SourceAPIGetSourceInputsProcedure is the fully-qualified name of the SourceAPI's GetSourceInputs
-	// RPC.
-	SourceAPIGetSourceInputsProcedure = "/admiral.source.v1.SourceAPI/GetSourceInputs"
-	// SourceAPIGetSourceOutputsProcedure is the fully-qualified name of the SourceAPI's
-	// GetSourceOutputs RPC.
-	SourceAPIGetSourceOutputsProcedure = "/admiral.source.v1.SourceAPI/GetSourceOutputs"
 )
 
 // SourceAPIClient is a client for the admiral.source.v1.SourceAPI service.
@@ -111,31 +105,6 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:read`
 	ListSourceVersions(context.Context, *connect.Request[v1.ListSourceVersionsRequest]) (*connect.Response[v1.ListSourceVersionsResponse], error)
-	// GetSourceInputs fetches the source artifact at a specific version and
-	// parses its inputs (configurable parameters).
-	//
-	// For Terraform modules, this parses HCL variable blocks using
-	// terraform-config-inspect. For Helm charts, this extracts values.yaml and
-	// optionally values.schema.json. For Kustomize and raw manifests, inputs
-	// are not discoverable and the response will be empty.
-	//
-	// This operation fetches and parses the external artifact in real time and
-	// may take several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceInputs(context.Context, *connect.Request[v1.GetSourceInputsRequest]) (*connect.Response[v1.GetSourceInputsResponse], error)
-	// GetSourceOutputs fetches the source artifact at a specific version and
-	// parses its outputs (values produced after apply).
-	//
-	// Only meaningful for Terraform modules, which declare formal output blocks.
-	// Helm charts, Kustomize, and raw manifests do not have formal outputs --
-	// workload component outputs are user-declared, not discovered.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceOutputs(context.Context, *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error)
 }
 
 // NewSourceAPIClient constructs a client for the admiral.source.v1.SourceAPI service. By default,
@@ -191,18 +160,6 @@ func NewSourceAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(sourceAPIMethods.ByName("ListSourceVersions")),
 			connect.WithClientOptions(opts...),
 		),
-		getSourceInputs: connect.NewClient[v1.GetSourceInputsRequest, v1.GetSourceInputsResponse](
-			httpClient,
-			baseURL+SourceAPIGetSourceInputsProcedure,
-			connect.WithSchema(sourceAPIMethods.ByName("GetSourceInputs")),
-			connect.WithClientOptions(opts...),
-		),
-		getSourceOutputs: connect.NewClient[v1.GetSourceOutputsRequest, v1.GetSourceOutputsResponse](
-			httpClient,
-			baseURL+SourceAPIGetSourceOutputsProcedure,
-			connect.WithSchema(sourceAPIMethods.ByName("GetSourceOutputs")),
-			connect.WithClientOptions(opts...),
-		),
 	}
 }
 
@@ -215,8 +172,6 @@ type sourceAPIClient struct {
 	deleteSource       *connect.Client[v1.DeleteSourceRequest, v1.DeleteSourceResponse]
 	testSource         *connect.Client[v1.TestSourceRequest, v1.TestSourceResponse]
 	listSourceVersions *connect.Client[v1.ListSourceVersionsRequest, v1.ListSourceVersionsResponse]
-	getSourceInputs    *connect.Client[v1.GetSourceInputsRequest, v1.GetSourceInputsResponse]
-	getSourceOutputs   *connect.Client[v1.GetSourceOutputsRequest, v1.GetSourceOutputsResponse]
 }
 
 // CreateSource calls admiral.source.v1.SourceAPI.CreateSource.
@@ -252,16 +207,6 @@ func (c *sourceAPIClient) TestSource(ctx context.Context, req *connect.Request[v
 // ListSourceVersions calls admiral.source.v1.SourceAPI.ListSourceVersions.
 func (c *sourceAPIClient) ListSourceVersions(ctx context.Context, req *connect.Request[v1.ListSourceVersionsRequest]) (*connect.Response[v1.ListSourceVersionsResponse], error) {
 	return c.listSourceVersions.CallUnary(ctx, req)
-}
-
-// GetSourceInputs calls admiral.source.v1.SourceAPI.GetSourceInputs.
-func (c *sourceAPIClient) GetSourceInputs(ctx context.Context, req *connect.Request[v1.GetSourceInputsRequest]) (*connect.Response[v1.GetSourceInputsResponse], error) {
-	return c.getSourceInputs.CallUnary(ctx, req)
-}
-
-// GetSourceOutputs calls admiral.source.v1.SourceAPI.GetSourceOutputs.
-func (c *sourceAPIClient) GetSourceOutputs(ctx context.Context, req *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error) {
-	return c.getSourceOutputs.CallUnary(ctx, req)
 }
 
 // SourceAPIHandler is an implementation of the admiral.source.v1.SourceAPI service.
@@ -319,31 +264,6 @@ type SourceAPIHandler interface {
 	//
 	// Scope: `source:read`
 	ListSourceVersions(context.Context, *connect.Request[v1.ListSourceVersionsRequest]) (*connect.Response[v1.ListSourceVersionsResponse], error)
-	// GetSourceInputs fetches the source artifact at a specific version and
-	// parses its inputs (configurable parameters).
-	//
-	// For Terraform modules, this parses HCL variable blocks using
-	// terraform-config-inspect. For Helm charts, this extracts values.yaml and
-	// optionally values.schema.json. For Kustomize and raw manifests, inputs
-	// are not discoverable and the response will be empty.
-	//
-	// This operation fetches and parses the external artifact in real time and
-	// may take several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceInputs(context.Context, *connect.Request[v1.GetSourceInputsRequest]) (*connect.Response[v1.GetSourceInputsResponse], error)
-	// GetSourceOutputs fetches the source artifact at a specific version and
-	// parses its outputs (values produced after apply).
-	//
-	// Only meaningful for Terraform modules, which declare formal output blocks.
-	// Helm charts, Kustomize, and raw manifests do not have formal outputs --
-	// workload component outputs are user-declared, not discovered.
-	//
-	// This operation queries the external system in real time and may take
-	// several seconds.
-	//
-	// Scope: `source:read`
-	GetSourceOutputs(context.Context, *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error)
 }
 
 // NewSourceAPIHandler builds an HTTP handler from the service implementation. It returns the path
@@ -395,18 +315,6 @@ func NewSourceAPIHandler(svc SourceAPIHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(sourceAPIMethods.ByName("ListSourceVersions")),
 		connect.WithHandlerOptions(opts...),
 	)
-	sourceAPIGetSourceInputsHandler := connect.NewUnaryHandler(
-		SourceAPIGetSourceInputsProcedure,
-		svc.GetSourceInputs,
-		connect.WithSchema(sourceAPIMethods.ByName("GetSourceInputs")),
-		connect.WithHandlerOptions(opts...),
-	)
-	sourceAPIGetSourceOutputsHandler := connect.NewUnaryHandler(
-		SourceAPIGetSourceOutputsProcedure,
-		svc.GetSourceOutputs,
-		connect.WithSchema(sourceAPIMethods.ByName("GetSourceOutputs")),
-		connect.WithHandlerOptions(opts...),
-	)
 	return "/admiral.source.v1.SourceAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SourceAPICreateSourceProcedure:
@@ -423,10 +331,6 @@ func NewSourceAPIHandler(svc SourceAPIHandler, opts ...connect.HandlerOption) (s
 			sourceAPITestSourceHandler.ServeHTTP(w, r)
 		case SourceAPIListSourceVersionsProcedure:
 			sourceAPIListSourceVersionsHandler.ServeHTTP(w, r)
-		case SourceAPIGetSourceInputsProcedure:
-			sourceAPIGetSourceInputsHandler.ServeHTTP(w, r)
-		case SourceAPIGetSourceOutputsProcedure:
-			sourceAPIGetSourceOutputsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -462,12 +366,4 @@ func (UnimplementedSourceAPIHandler) TestSource(context.Context, *connect.Reques
 
 func (UnimplementedSourceAPIHandler) ListSourceVersions(context.Context, *connect.Request[v1.ListSourceVersionsRequest]) (*connect.Response[v1.ListSourceVersionsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.ListSourceVersions is not implemented"))
-}
-
-func (UnimplementedSourceAPIHandler) GetSourceInputs(context.Context, *connect.Request[v1.GetSourceInputsRequest]) (*connect.Response[v1.GetSourceInputsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.GetSourceInputs is not implemented"))
-}
-
-func (UnimplementedSourceAPIHandler) GetSourceOutputs(context.Context, *connect.Request[v1.GetSourceOutputsRequest]) (*connect.Response[v1.GetSourceOutputsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.source.v1.SourceAPI.GetSourceOutputs is not implemented"))
 }
