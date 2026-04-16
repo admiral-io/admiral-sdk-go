@@ -54,6 +54,9 @@ const (
 	// DeploymentAPIRetryRevisionProcedure is the fully-qualified name of the DeploymentAPI's
 	// RetryRevision RPC.
 	DeploymentAPIRetryRevisionProcedure = "/admiral.deployment.v1.DeploymentAPI/RetryRevision"
+	// DeploymentAPIApplyDeploymentProcedure is the fully-qualified name of the DeploymentAPI's
+	// ApplyDeployment RPC.
+	DeploymentAPIApplyDeploymentProcedure = "/admiral.deployment.v1.DeploymentAPI/ApplyDeployment"
 )
 
 // DeploymentAPIClient is a client for the admiral.deployment.v1.DeploymentAPI service.
@@ -108,6 +111,13 @@ type DeploymentAPIClient interface {
 	//
 	// Scope: `deploy:write`
 	RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error)
+	// ApplyDeployment transitions a deployment from plan phase to apply phase.
+	// All revisions currently in AWAITING_APPROVAL status get an APPLY job
+	// dispatched to their assigned runner. This is the explicit human approval
+	// gate between plan output and infrastructure mutation.
+	//
+	// Scope: `deploy:write`
+	ApplyDeployment(context.Context, *connect.Request[v1.ApplyDeploymentRequest]) (*connect.Response[v1.ApplyDeploymentResponse], error)
 }
 
 // NewDeploymentAPIClient constructs a client for the admiral.deployment.v1.DeploymentAPI service.
@@ -163,6 +173,12 @@ func NewDeploymentAPIClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(deploymentAPIMethods.ByName("RetryRevision")),
 			connect.WithClientOptions(opts...),
 		),
+		applyDeployment: connect.NewClient[v1.ApplyDeploymentRequest, v1.ApplyDeploymentResponse](
+			httpClient,
+			baseURL+DeploymentAPIApplyDeploymentProcedure,
+			connect.WithSchema(deploymentAPIMethods.ByName("ApplyDeployment")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -175,6 +191,7 @@ type deploymentAPIClient struct {
 	getRevision      *connect.Client[v1.GetRevisionRequest, v1.GetRevisionResponse]
 	listRevisions    *connect.Client[v1.ListRevisionsRequest, v1.ListRevisionsResponse]
 	retryRevision    *connect.Client[v1.RetryRevisionRequest, v1.RetryRevisionResponse]
+	applyDeployment  *connect.Client[v1.ApplyDeploymentRequest, v1.ApplyDeploymentResponse]
 }
 
 // CreateDeployment calls admiral.deployment.v1.DeploymentAPI.CreateDeployment.
@@ -210,6 +227,11 @@ func (c *deploymentAPIClient) ListRevisions(ctx context.Context, req *connect.Re
 // RetryRevision calls admiral.deployment.v1.DeploymentAPI.RetryRevision.
 func (c *deploymentAPIClient) RetryRevision(ctx context.Context, req *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error) {
 	return c.retryRevision.CallUnary(ctx, req)
+}
+
+// ApplyDeployment calls admiral.deployment.v1.DeploymentAPI.ApplyDeployment.
+func (c *deploymentAPIClient) ApplyDeployment(ctx context.Context, req *connect.Request[v1.ApplyDeploymentRequest]) (*connect.Response[v1.ApplyDeploymentResponse], error) {
+	return c.applyDeployment.CallUnary(ctx, req)
 }
 
 // DeploymentAPIHandler is an implementation of the admiral.deployment.v1.DeploymentAPI service.
@@ -264,6 +286,13 @@ type DeploymentAPIHandler interface {
 	//
 	// Scope: `deploy:write`
 	RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error)
+	// ApplyDeployment transitions a deployment from plan phase to apply phase.
+	// All revisions currently in AWAITING_APPROVAL status get an APPLY job
+	// dispatched to their assigned runner. This is the explicit human approval
+	// gate between plan output and infrastructure mutation.
+	//
+	// Scope: `deploy:write`
+	ApplyDeployment(context.Context, *connect.Request[v1.ApplyDeploymentRequest]) (*connect.Response[v1.ApplyDeploymentResponse], error)
 }
 
 // NewDeploymentAPIHandler builds an HTTP handler from the service implementation. It returns the
@@ -315,6 +344,12 @@ func NewDeploymentAPIHandler(svc DeploymentAPIHandler, opts ...connect.HandlerOp
 		connect.WithSchema(deploymentAPIMethods.ByName("RetryRevision")),
 		connect.WithHandlerOptions(opts...),
 	)
+	deploymentAPIApplyDeploymentHandler := connect.NewUnaryHandler(
+		DeploymentAPIApplyDeploymentProcedure,
+		svc.ApplyDeployment,
+		connect.WithSchema(deploymentAPIMethods.ByName("ApplyDeployment")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.deployment.v1.DeploymentAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case DeploymentAPICreateDeploymentProcedure:
@@ -331,6 +366,8 @@ func NewDeploymentAPIHandler(svc DeploymentAPIHandler, opts ...connect.HandlerOp
 			deploymentAPIListRevisionsHandler.ServeHTTP(w, r)
 		case DeploymentAPIRetryRevisionProcedure:
 			deploymentAPIRetryRevisionHandler.ServeHTTP(w, r)
+		case DeploymentAPIApplyDeploymentProcedure:
+			deploymentAPIApplyDeploymentHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -366,4 +403,8 @@ func (UnimplementedDeploymentAPIHandler) ListRevisions(context.Context, *connect
 
 func (UnimplementedDeploymentAPIHandler) RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.deployment.v1.DeploymentAPI.RetryRevision is not implemented"))
+}
+
+func (UnimplementedDeploymentAPIHandler) ApplyDeployment(context.Context, *connect.Request[v1.ApplyDeploymentRequest]) (*connect.Response[v1.ApplyDeploymentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.deployment.v1.DeploymentAPI.ApplyDeployment is not implemented"))
 }

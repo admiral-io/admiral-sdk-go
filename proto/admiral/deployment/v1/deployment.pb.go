@@ -120,8 +120,12 @@ const (
 	// completed and it will begin shortly.
 	RevisionStatus_REVISION_STATUS_QUEUED RevisionStatus = 2
 	// (Infrastructure only) Terraform plan is being generated. Transitions
-	// to APPLYING once the plan is complete.
+	// to AWAITING_APPROVAL on success or FAILED on error.
 	RevisionStatus_REVISION_STATUS_PLANNING RevisionStatus = 3
+	// (Infrastructure only) Plan completed successfully and is awaiting an
+	// explicit apply (via ApplyDeployment). The plan output is available on
+	// the revision for review.
+	RevisionStatus_REVISION_STATUS_AWAITING_APPROVAL RevisionStatus = 4
 	// The revision is being applied. For infrastructure, this is
 	// `terraform apply`. For workloads, this is applying manifests to the
 	// target cluster.
@@ -147,6 +151,7 @@ var (
 		1:  "REVISION_STATUS_PENDING",
 		2:  "REVISION_STATUS_QUEUED",
 		3:  "REVISION_STATUS_PLANNING",
+		4:  "REVISION_STATUS_AWAITING_APPROVAL",
 		6:  "REVISION_STATUS_APPLYING",
 		7:  "REVISION_STATUS_SUCCEEDED",
 		8:  "REVISION_STATUS_FAILED",
@@ -154,15 +159,16 @@ var (
 		10: "REVISION_STATUS_CANCELLED",
 	}
 	RevisionStatus_value = map[string]int32{
-		"REVISION_STATUS_UNSPECIFIED": 0,
-		"REVISION_STATUS_PENDING":     1,
-		"REVISION_STATUS_QUEUED":      2,
-		"REVISION_STATUS_PLANNING":    3,
-		"REVISION_STATUS_APPLYING":    6,
-		"REVISION_STATUS_SUCCEEDED":   7,
-		"REVISION_STATUS_FAILED":      8,
-		"REVISION_STATUS_BLOCKED":     9,
-		"REVISION_STATUS_CANCELLED":   10,
+		"REVISION_STATUS_UNSPECIFIED":       0,
+		"REVISION_STATUS_PENDING":           1,
+		"REVISION_STATUS_QUEUED":            2,
+		"REVISION_STATUS_PLANNING":          3,
+		"REVISION_STATUS_AWAITING_APPROVAL": 4,
+		"REVISION_STATUS_APPLYING":          6,
+		"REVISION_STATUS_SUCCEEDED":         7,
+		"REVISION_STATUS_FAILED":            8,
+		"REVISION_STATUS_BLOCKED":           9,
+		"REVISION_STATUS_CANCELLED":         10,
 	}
 )
 
@@ -1619,6 +1625,109 @@ func (x *RetryRevisionResponse) GetRevision() *Revision {
 	return nil
 }
 
+// ApplyDeploymentRequest transitions a planned deployment to apply phase.
+type ApplyDeploymentRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Unique identifier of the deployment to apply (UUID).
+	DeploymentId string `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
+	// Optional message describing the apply (e.g., "Approved by @martin").
+	Message       string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApplyDeploymentRequest) Reset() {
+	*x = ApplyDeploymentRequest{}
+	mi := &file_admiral_deployment_v1_deployment_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApplyDeploymentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApplyDeploymentRequest) ProtoMessage() {}
+
+func (x *ApplyDeploymentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_deployment_v1_deployment_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApplyDeploymentRequest.ProtoReflect.Descriptor instead.
+func (*ApplyDeploymentRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_deployment_v1_deployment_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ApplyDeploymentRequest) GetDeploymentId() string {
+	if x != nil {
+		return x.DeploymentId
+	}
+	return ""
+}
+
+func (x *ApplyDeploymentRequest) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+// ApplyDeploymentResponse contains the deployment after apply jobs are
+// dispatched.
+type ApplyDeploymentResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The deployment with status advanced to RUNNING. Revisions that were
+	// AWAITING_APPROVAL are now APPLYING.
+	Deployment    *Deployment `protobuf:"bytes,1,opt,name=deployment,proto3" json:"deployment,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApplyDeploymentResponse) Reset() {
+	*x = ApplyDeploymentResponse{}
+	mi := &file_admiral_deployment_v1_deployment_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApplyDeploymentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApplyDeploymentResponse) ProtoMessage() {}
+
+func (x *ApplyDeploymentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_deployment_v1_deployment_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApplyDeploymentResponse.ProtoReflect.Descriptor instead.
+func (*ApplyDeploymentResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_deployment_v1_deployment_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ApplyDeploymentResponse) GetDeployment() *Deployment {
+	if x != nil {
+		return x.Deployment
+	}
+	return nil
+}
+
 var File_admiral_deployment_v1_deployment_proto protoreflect.FileDescriptor
 
 const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
@@ -1728,7 +1837,14 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\vrevision_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
 	"revisionId\"T\n" +
 	"\x15RetryRevisionResponse\x12;\n" +
-	"\brevision\x18\x01 \x01(\v2\x1f.admiral.deployment.v1.RevisionR\brevision*\x99\x02\n" +
+	"\brevision\x18\x01 \x01(\v2\x1f.admiral.deployment.v1.RevisionR\brevision\"k\n" +
+	"\x16ApplyDeploymentRequest\x12-\n" +
+	"\rdeployment_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x12\"\n" +
+	"\amessage\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\"\\\n" +
+	"\x17ApplyDeploymentResponse\x12A\n" +
+	"\n" +
+	"deployment\x18\x01 \x01(\v2!.admiral.deployment.v1.DeploymentR\n" +
+	"deployment*\x99\x02\n" +
 	"\x10DeploymentStatus\x12!\n" +
 	"\x1dDEPLOYMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19DEPLOYMENT_STATUS_PENDING\x10\x01\x12\x1c\n" +
@@ -1737,12 +1853,13 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\x1bDEPLOYMENT_STATUS_SUCCEEDED\x10\x04\x12&\n" +
 	"\"DEPLOYMENT_STATUS_PARTIALLY_FAILED\x10\x05\x12\x1c\n" +
 	"\x18DEPLOYMENT_STATUS_FAILED\x10\x06\x12\x1f\n" +
-	"\x1bDEPLOYMENT_STATUS_CANCELLED\x10\a*\x9d\x02\n" +
+	"\x1bDEPLOYMENT_STATUS_CANCELLED\x10\a*\xc4\x02\n" +
 	"\x0eRevisionStatus\x12\x1f\n" +
 	"\x1bREVISION_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17REVISION_STATUS_PENDING\x10\x01\x12\x1a\n" +
 	"\x16REVISION_STATUS_QUEUED\x10\x02\x12\x1c\n" +
-	"\x18REVISION_STATUS_PLANNING\x10\x03\x12\x1c\n" +
+	"\x18REVISION_STATUS_PLANNING\x10\x03\x12%\n" +
+	"!REVISION_STATUS_AWAITING_APPROVAL\x10\x04\x12\x1c\n" +
 	"\x18REVISION_STATUS_APPLYING\x10\x06\x12\x1d\n" +
 	"\x19REVISION_STATUS_SUCCEEDED\x10\a\x12\x1a\n" +
 	"\x16REVISION_STATUS_FAILED\x10\b\x12\x1b\n" +
@@ -1757,7 +1874,7 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\fRevisionKind\x12\x1d\n" +
 	"\x19REVISION_KIND_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cREVISION_KIND_INFRASTRUCTURE\x10\x01\x12\x1a\n" +
-	"\x16REVISION_KIND_WORKLOAD\x10\x022\xfc\v\n" +
+	"\x16REVISION_KIND_WORKLOAD\x10\x022\xe3\r\n" +
 	"\rDeploymentAPI\x12\xca\x01\n" +
 	"\x10CreateDeployment\x12..admiral.deployment.v1.CreateDeploymentRequest\x1a/.admiral.deployment.v1.CreateDeploymentResponse\"U\xbaG\"\n" +
 	"\vDeployments\x12\x13Create a deployment\xa2\x97$\x0e\n" +
@@ -1779,7 +1896,10 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\vdeploy:read\x82\xd3\xe4\x93\x02/\x12-/api/v1/deployments/{deployment_id}/revisions\x12\xed\x01\n" +
 	"\rRetryRevision\x12+.admiral.deployment.v1.RetryRevisionRequest\x1a,.admiral.deployment.v1.RetryRevisionResponse\"\x80\x01\xbaG\x1f\n" +
 	"\vDeployments\x12\x10Retry a revision\xa2\x97$\x0e\n" +
-	"\fdeploy:write\x82\xd3\xe4\x93\x02F:\x01*\"A/api/v1/deployments/{deployment_id}/revisions/{revision_id}/retryB\xde\x01\n" +
+	"\fdeploy:write\x82\xd3\xe4\x93\x02F:\x01*\"A/api/v1/deployments/{deployment_id}/revisions/{revision_id}/retry\x12\xe4\x01\n" +
+	"\x0fApplyDeployment\x12-.admiral.deployment.v1.ApplyDeploymentRequest\x1a..admiral.deployment.v1.ApplyDeploymentResponse\"r\xbaG)\n" +
+	"\vDeployments\x12\x1aApply a planned deployment\xa2\x97$\x0e\n" +
+	"\fdeploy:write\x82\xd3\xe4\x93\x02.:\x01*\")/api/v1/deployments/{deployment_id}/applyB\xde\x01\n" +
 	"\x19com.admiral.deployment.v1B\x0fDeploymentProtoP\x01Z:go.admiral.io/sdk/proto/admiral/deployment/v1;deploymentv1\xa2\x02\x03ADX\xaa\x02\x15Admiral.Deployment.V1\xca\x02\x15Admiral\\Deployment\\V1\xe2\x02!Admiral\\Deployment\\V1\\GPBMetadata\xea\x02\x17Admiral::Deployment::V1b\x06proto3"
 
 var (
@@ -1795,7 +1915,7 @@ func file_admiral_deployment_v1_deployment_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_deployment_v1_deployment_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_admiral_deployment_v1_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_admiral_deployment_v1_deployment_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_admiral_deployment_v1_deployment_proto_goTypes = []any{
 	(DeploymentStatus)(0),            // 0: admiral.deployment.v1.DeploymentStatus
 	(RevisionStatus)(0),              // 1: admiral.deployment.v1.RevisionStatus
@@ -1819,20 +1939,22 @@ var file_admiral_deployment_v1_deployment_proto_goTypes = []any{
 	(*ListRevisionsResponse)(nil),    // 19: admiral.deployment.v1.ListRevisionsResponse
 	(*RetryRevisionRequest)(nil),     // 20: admiral.deployment.v1.RetryRevisionRequest
 	(*RetryRevisionResponse)(nil),    // 21: admiral.deployment.v1.RetryRevisionResponse
-	(*timestamppb.Timestamp)(nil),    // 22: google.protobuf.Timestamp
+	(*ApplyDeploymentRequest)(nil),   // 22: admiral.deployment.v1.ApplyDeploymentRequest
+	(*ApplyDeploymentResponse)(nil),  // 23: admiral.deployment.v1.ApplyDeploymentResponse
+	(*timestamppb.Timestamp)(nil),    // 24: google.protobuf.Timestamp
 }
 var file_admiral_deployment_v1_deployment_proto_depIdxs = []int32{
 	0,  // 0: admiral.deployment.v1.Deployment.status:type_name -> admiral.deployment.v1.DeploymentStatus
 	2,  // 1: admiral.deployment.v1.Deployment.trigger_type:type_name -> admiral.deployment.v1.DeploymentTriggerType
 	5,  // 2: admiral.deployment.v1.Deployment.revision_summary:type_name -> admiral.deployment.v1.RevisionSummary
-	22, // 3: admiral.deployment.v1.Deployment.created_at:type_name -> google.protobuf.Timestamp
-	22, // 4: admiral.deployment.v1.Deployment.completed_at:type_name -> google.protobuf.Timestamp
+	24, // 3: admiral.deployment.v1.Deployment.created_at:type_name -> google.protobuf.Timestamp
+	24, // 4: admiral.deployment.v1.Deployment.completed_at:type_name -> google.protobuf.Timestamp
 	3,  // 5: admiral.deployment.v1.Revision.kind:type_name -> admiral.deployment.v1.RevisionKind
 	1,  // 6: admiral.deployment.v1.Revision.status:type_name -> admiral.deployment.v1.RevisionStatus
 	7,  // 7: admiral.deployment.v1.Revision.plan_summary:type_name -> admiral.deployment.v1.TerraformPlanSummary
-	22, // 8: admiral.deployment.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
-	22, // 9: admiral.deployment.v1.Revision.started_at:type_name -> google.protobuf.Timestamp
-	22, // 10: admiral.deployment.v1.Revision.completed_at:type_name -> google.protobuf.Timestamp
+	24, // 8: admiral.deployment.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
+	24, // 9: admiral.deployment.v1.Revision.started_at:type_name -> google.protobuf.Timestamp
+	24, // 10: admiral.deployment.v1.Revision.completed_at:type_name -> google.protobuf.Timestamp
 	4,  // 11: admiral.deployment.v1.CreateDeploymentResponse.deployment:type_name -> admiral.deployment.v1.Deployment
 	4,  // 12: admiral.deployment.v1.GetDeploymentResponse.deployment:type_name -> admiral.deployment.v1.Deployment
 	4,  // 13: admiral.deployment.v1.ListDeploymentsResponse.deployments:type_name -> admiral.deployment.v1.Deployment
@@ -1840,25 +1962,28 @@ var file_admiral_deployment_v1_deployment_proto_depIdxs = []int32{
 	6,  // 15: admiral.deployment.v1.GetRevisionResponse.revision:type_name -> admiral.deployment.v1.Revision
 	6,  // 16: admiral.deployment.v1.ListRevisionsResponse.revisions:type_name -> admiral.deployment.v1.Revision
 	6,  // 17: admiral.deployment.v1.RetryRevisionResponse.revision:type_name -> admiral.deployment.v1.Revision
-	8,  // 18: admiral.deployment.v1.DeploymentAPI.CreateDeployment:input_type -> admiral.deployment.v1.CreateDeploymentRequest
-	10, // 19: admiral.deployment.v1.DeploymentAPI.GetDeployment:input_type -> admiral.deployment.v1.GetDeploymentRequest
-	12, // 20: admiral.deployment.v1.DeploymentAPI.ListDeployments:input_type -> admiral.deployment.v1.ListDeploymentsRequest
-	14, // 21: admiral.deployment.v1.DeploymentAPI.CancelDeployment:input_type -> admiral.deployment.v1.CancelDeploymentRequest
-	16, // 22: admiral.deployment.v1.DeploymentAPI.GetRevision:input_type -> admiral.deployment.v1.GetRevisionRequest
-	18, // 23: admiral.deployment.v1.DeploymentAPI.ListRevisions:input_type -> admiral.deployment.v1.ListRevisionsRequest
-	20, // 24: admiral.deployment.v1.DeploymentAPI.RetryRevision:input_type -> admiral.deployment.v1.RetryRevisionRequest
-	9,  // 25: admiral.deployment.v1.DeploymentAPI.CreateDeployment:output_type -> admiral.deployment.v1.CreateDeploymentResponse
-	11, // 26: admiral.deployment.v1.DeploymentAPI.GetDeployment:output_type -> admiral.deployment.v1.GetDeploymentResponse
-	13, // 27: admiral.deployment.v1.DeploymentAPI.ListDeployments:output_type -> admiral.deployment.v1.ListDeploymentsResponse
-	15, // 28: admiral.deployment.v1.DeploymentAPI.CancelDeployment:output_type -> admiral.deployment.v1.CancelDeploymentResponse
-	17, // 29: admiral.deployment.v1.DeploymentAPI.GetRevision:output_type -> admiral.deployment.v1.GetRevisionResponse
-	19, // 30: admiral.deployment.v1.DeploymentAPI.ListRevisions:output_type -> admiral.deployment.v1.ListRevisionsResponse
-	21, // 31: admiral.deployment.v1.DeploymentAPI.RetryRevision:output_type -> admiral.deployment.v1.RetryRevisionResponse
-	25, // [25:32] is the sub-list for method output_type
-	18, // [18:25] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	4,  // 18: admiral.deployment.v1.ApplyDeploymentResponse.deployment:type_name -> admiral.deployment.v1.Deployment
+	8,  // 19: admiral.deployment.v1.DeploymentAPI.CreateDeployment:input_type -> admiral.deployment.v1.CreateDeploymentRequest
+	10, // 20: admiral.deployment.v1.DeploymentAPI.GetDeployment:input_type -> admiral.deployment.v1.GetDeploymentRequest
+	12, // 21: admiral.deployment.v1.DeploymentAPI.ListDeployments:input_type -> admiral.deployment.v1.ListDeploymentsRequest
+	14, // 22: admiral.deployment.v1.DeploymentAPI.CancelDeployment:input_type -> admiral.deployment.v1.CancelDeploymentRequest
+	16, // 23: admiral.deployment.v1.DeploymentAPI.GetRevision:input_type -> admiral.deployment.v1.GetRevisionRequest
+	18, // 24: admiral.deployment.v1.DeploymentAPI.ListRevisions:input_type -> admiral.deployment.v1.ListRevisionsRequest
+	20, // 25: admiral.deployment.v1.DeploymentAPI.RetryRevision:input_type -> admiral.deployment.v1.RetryRevisionRequest
+	22, // 26: admiral.deployment.v1.DeploymentAPI.ApplyDeployment:input_type -> admiral.deployment.v1.ApplyDeploymentRequest
+	9,  // 27: admiral.deployment.v1.DeploymentAPI.CreateDeployment:output_type -> admiral.deployment.v1.CreateDeploymentResponse
+	11, // 28: admiral.deployment.v1.DeploymentAPI.GetDeployment:output_type -> admiral.deployment.v1.GetDeploymentResponse
+	13, // 29: admiral.deployment.v1.DeploymentAPI.ListDeployments:output_type -> admiral.deployment.v1.ListDeploymentsResponse
+	15, // 30: admiral.deployment.v1.DeploymentAPI.CancelDeployment:output_type -> admiral.deployment.v1.CancelDeploymentResponse
+	17, // 31: admiral.deployment.v1.DeploymentAPI.GetRevision:output_type -> admiral.deployment.v1.GetRevisionResponse
+	19, // 32: admiral.deployment.v1.DeploymentAPI.ListRevisions:output_type -> admiral.deployment.v1.ListRevisionsResponse
+	21, // 33: admiral.deployment.v1.DeploymentAPI.RetryRevision:output_type -> admiral.deployment.v1.RetryRevisionResponse
+	23, // 34: admiral.deployment.v1.DeploymentAPI.ApplyDeployment:output_type -> admiral.deployment.v1.ApplyDeploymentResponse
+	27, // [27:35] is the sub-list for method output_type
+	19, // [19:27] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_admiral_deployment_v1_deployment_proto_init() }
@@ -1872,7 +1997,7 @@ func file_admiral_deployment_v1_deployment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_deployment_v1_deployment_proto_rawDesc), len(file_admiral_deployment_v1_deployment_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   18,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

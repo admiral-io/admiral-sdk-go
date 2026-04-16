@@ -26,6 +26,7 @@ const (
 	DeploymentAPI_GetRevision_FullMethodName      = "/admiral.deployment.v1.DeploymentAPI/GetRevision"
 	DeploymentAPI_ListRevisions_FullMethodName    = "/admiral.deployment.v1.DeploymentAPI/ListRevisions"
 	DeploymentAPI_RetryRevision_FullMethodName    = "/admiral.deployment.v1.DeploymentAPI/RetryRevision"
+	DeploymentAPI_ApplyDeployment_FullMethodName  = "/admiral.deployment.v1.DeploymentAPI/ApplyDeployment"
 )
 
 // DeploymentAPIClient is the client API for DeploymentAPI service.
@@ -100,6 +101,13 @@ type DeploymentAPIClient interface {
 	//
 	// Scope: `deploy:write`
 	RetryRevision(ctx context.Context, in *RetryRevisionRequest, opts ...grpc.CallOption) (*RetryRevisionResponse, error)
+	// ApplyDeployment transitions a deployment from plan phase to apply phase.
+	// All revisions currently in AWAITING_APPROVAL status get an APPLY job
+	// dispatched to their assigned runner. This is the explicit human approval
+	// gate between plan output and infrastructure mutation.
+	//
+	// Scope: `deploy:write`
+	ApplyDeployment(ctx context.Context, in *ApplyDeploymentRequest, opts ...grpc.CallOption) (*ApplyDeploymentResponse, error)
 }
 
 type deploymentAPIClient struct {
@@ -180,6 +188,16 @@ func (c *deploymentAPIClient) RetryRevision(ctx context.Context, in *RetryRevisi
 	return out, nil
 }
 
+func (c *deploymentAPIClient) ApplyDeployment(ctx context.Context, in *ApplyDeploymentRequest, opts ...grpc.CallOption) (*ApplyDeploymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApplyDeploymentResponse)
+	err := c.cc.Invoke(ctx, DeploymentAPI_ApplyDeployment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DeploymentAPIServer is the server API for DeploymentAPI service.
 // All implementations should embed UnimplementedDeploymentAPIServer
 // for forward compatibility.
@@ -252,6 +270,13 @@ type DeploymentAPIServer interface {
 	//
 	// Scope: `deploy:write`
 	RetryRevision(context.Context, *RetryRevisionRequest) (*RetryRevisionResponse, error)
+	// ApplyDeployment transitions a deployment from plan phase to apply phase.
+	// All revisions currently in AWAITING_APPROVAL status get an APPLY job
+	// dispatched to their assigned runner. This is the explicit human approval
+	// gate between plan output and infrastructure mutation.
+	//
+	// Scope: `deploy:write`
+	ApplyDeployment(context.Context, *ApplyDeploymentRequest) (*ApplyDeploymentResponse, error)
 }
 
 // UnimplementedDeploymentAPIServer should be embedded to have
@@ -281,6 +306,9 @@ func (UnimplementedDeploymentAPIServer) ListRevisions(context.Context, *ListRevi
 }
 func (UnimplementedDeploymentAPIServer) RetryRevision(context.Context, *RetryRevisionRequest) (*RetryRevisionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RetryRevision not implemented")
+}
+func (UnimplementedDeploymentAPIServer) ApplyDeployment(context.Context, *ApplyDeploymentRequest) (*ApplyDeploymentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ApplyDeployment not implemented")
 }
 func (UnimplementedDeploymentAPIServer) testEmbeddedByValue() {}
 
@@ -428,6 +456,24 @@ func _DeploymentAPI_RetryRevision_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeploymentAPI_ApplyDeployment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApplyDeploymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeploymentAPIServer).ApplyDeployment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeploymentAPI_ApplyDeployment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeploymentAPIServer).ApplyDeployment(ctx, req.(*ApplyDeploymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DeploymentAPI_ServiceDesc is the grpc.ServiceDesc for DeploymentAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -462,6 +508,10 @@ var DeploymentAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RetryRevision",
 			Handler:    _DeploymentAPI_RetryRevision_Handler,
+		},
+		{
+			MethodName: "ApplyDeployment",
+			Handler:    _DeploymentAPI_ApplyDeployment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -2380,3 +2380,240 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RetryRevisionResponseValidationError{}
+
+// Validate checks the field values on ApplyDeploymentRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ApplyDeploymentRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ApplyDeploymentRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ApplyDeploymentRequestMultiError, or nil if none found.
+func (m *ApplyDeploymentRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ApplyDeploymentRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for DeploymentId
+
+	// no validation rules for Message
+
+	if len(errors) > 0 {
+		return ApplyDeploymentRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ApplyDeploymentRequestMultiError is an error wrapping multiple validation
+// errors returned by ApplyDeploymentRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ApplyDeploymentRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ApplyDeploymentRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ApplyDeploymentRequestMultiError) AllErrors() []error { return m }
+
+// ApplyDeploymentRequestValidationError is the validation error returned by
+// ApplyDeploymentRequest.Validate if the designated constraints aren't met.
+type ApplyDeploymentRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ApplyDeploymentRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ApplyDeploymentRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ApplyDeploymentRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ApplyDeploymentRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ApplyDeploymentRequestValidationError) ErrorName() string {
+	return "ApplyDeploymentRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ApplyDeploymentRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sApplyDeploymentRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ApplyDeploymentRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ApplyDeploymentRequestValidationError{}
+
+// Validate checks the field values on ApplyDeploymentResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ApplyDeploymentResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ApplyDeploymentResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ApplyDeploymentResponseMultiError, or nil if none found.
+func (m *ApplyDeploymentResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ApplyDeploymentResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetDeployment()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ApplyDeploymentResponseValidationError{
+					field:  "Deployment",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ApplyDeploymentResponseValidationError{
+					field:  "Deployment",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDeployment()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ApplyDeploymentResponseValidationError{
+				field:  "Deployment",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ApplyDeploymentResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ApplyDeploymentResponseMultiError is an error wrapping multiple validation
+// errors returned by ApplyDeploymentResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ApplyDeploymentResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ApplyDeploymentResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ApplyDeploymentResponseMultiError) AllErrors() []error { return m }
+
+// ApplyDeploymentResponseValidationError is the validation error returned by
+// ApplyDeploymentResponse.Validate if the designated constraints aren't met.
+type ApplyDeploymentResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ApplyDeploymentResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ApplyDeploymentResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ApplyDeploymentResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ApplyDeploymentResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ApplyDeploymentResponseValidationError) ErrorName() string {
+	return "ApplyDeploymentResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ApplyDeploymentResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sApplyDeploymentResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ApplyDeploymentResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ApplyDeploymentResponseValidationError{}

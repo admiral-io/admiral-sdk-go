@@ -350,6 +350,51 @@ func local_request_DeploymentAPI_RetryRevision_0(ctx context.Context, marshaler 
 	return msg, metadata, err
 }
 
+func request_DeploymentAPI_ApplyDeployment_0(ctx context.Context, marshaler runtime.Marshaler, client DeploymentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ApplyDeploymentRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["deployment_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "deployment_id")
+	}
+	protoReq.DeploymentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "deployment_id", err)
+	}
+	msg, err := client.ApplyDeployment(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_DeploymentAPI_ApplyDeployment_0(ctx context.Context, marshaler runtime.Marshaler, server DeploymentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ApplyDeploymentRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["deployment_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "deployment_id")
+	}
+	protoReq.DeploymentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "deployment_id", err)
+	}
+	msg, err := server.ApplyDeployment(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterDeploymentAPIHandlerServer registers the http handlers for service DeploymentAPI to "mux".
 // UnaryRPC     :call DeploymentAPIServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -495,6 +540,26 @@ func RegisterDeploymentAPIHandlerServer(ctx context.Context, mux *runtime.ServeM
 			return
 		}
 		forward_DeploymentAPI_RetryRevision_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_DeploymentAPI_ApplyDeployment_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.deployment.v1.DeploymentAPI/ApplyDeployment", runtime.WithHTTPPathPattern("/api/v1/deployments/{deployment_id}/apply"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_DeploymentAPI_ApplyDeployment_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_DeploymentAPI_ApplyDeployment_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -655,6 +720,23 @@ func RegisterDeploymentAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 		}
 		forward_DeploymentAPI_RetryRevision_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_DeploymentAPI_ApplyDeployment_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.deployment.v1.DeploymentAPI/ApplyDeployment", runtime.WithHTTPPathPattern("/api/v1/deployments/{deployment_id}/apply"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_DeploymentAPI_ApplyDeployment_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_DeploymentAPI_ApplyDeployment_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
@@ -666,6 +748,7 @@ var (
 	pattern_DeploymentAPI_GetRevision_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "deployments", "deployment_id", "revisions", "revision_id"}, ""))
 	pattern_DeploymentAPI_ListRevisions_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "deployments", "deployment_id", "revisions"}, ""))
 	pattern_DeploymentAPI_RetryRevision_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "deployments", "deployment_id", "revisions", "revision_id", "retry"}, ""))
+	pattern_DeploymentAPI_ApplyDeployment_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "deployments", "deployment_id", "apply"}, ""))
 )
 
 var (
@@ -676,4 +759,5 @@ var (
 	forward_DeploymentAPI_GetRevision_0      = runtime.ForwardResponseMessage
 	forward_DeploymentAPI_ListRevisions_0    = runtime.ForwardResponseMessage
 	forward_DeploymentAPI_RetryRevision_0    = runtime.ForwardResponseMessage
+	forward_DeploymentAPI_ApplyDeployment_0  = runtime.ForwardResponseMessage
 )
