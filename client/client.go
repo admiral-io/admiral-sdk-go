@@ -17,6 +17,7 @@ import (
 	deploymentv1 "go.admiral.io/sdk/proto/admiral/deployment/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/healthcheck/v1"
+	modulev1 "go.admiral.io/sdk/proto/admiral/module/v1"
 	runnerv1 "go.admiral.io/sdk/proto/admiral/runner/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/source/v1"
 	statev1 "go.admiral.io/sdk/proto/admiral/state/v1"
@@ -42,6 +43,7 @@ type Client struct {
 	deployment deploymentv1.DeploymentAPIClient
 	environment environmentv1.EnvironmentAPIClient
 	healthcheck healthcheckv1.HealthcheckAPIClient
+	module modulev1.ModuleAPIClient
 	runner runnerv1.RunnerAPIClient
 	source sourcev1.SourceAPIClient
 	state statev1.StateAPIClient
@@ -96,6 +98,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		deployment: deploymentv1.NewDeploymentAPIClient(conn),
 		environment: environmentv1.NewEnvironmentAPIClient(conn),
 		healthcheck: healthcheckv1.NewHealthcheckAPIClient(conn),
+		module: modulev1.NewModuleAPIClient(conn),
 		runner: runnerv1.NewRunnerAPIClient(conn),
 		source: sourcev1.NewSourceAPIClient(conn),
 		state: statev1.NewStateAPIClient(conn),
@@ -147,6 +150,11 @@ func (c *Client) Environment() environmentv1.EnvironmentAPIClient {
 // Healthcheck returns the HealthcheckAPI client.
 func (c *Client) Healthcheck() healthcheckv1.HealthcheckAPIClient {
 	return c.healthcheck
+}
+
+// Module returns the ModuleAPI client.
+func (c *Client) Module() modulev1.ModuleAPIClient {
+	return c.module
 }
 
 // Runner returns the RunnerAPI client.

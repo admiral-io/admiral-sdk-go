@@ -43,6 +43,7 @@ func main() {
 	// c.Deployment().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
+	// c.Module().MethodName(ctx, req)
 	// c.Runner().MethodName(ctx, req)
 	// c.Source().MethodName(ctx, req)
 	// c.State().MethodName(ctx, req)
@@ -64,6 +65,7 @@ func main() {
 | DeploymentAPI | `Deployment()` | `go.admiral.io/sdk/proto/admiral/deployment/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/healthcheck/v1` |
+| ModuleAPI | `Module()` | `go.admiral.io/sdk/proto/admiral/module/v1` |
 | RunnerAPI | `Runner()` | `go.admiral.io/sdk/proto/admiral/runner/v1` |
 | SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/source/v1` |
 | StateAPI | `State()` | `go.admiral.io/sdk/proto/admiral/state/v1` |

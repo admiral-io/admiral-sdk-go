@@ -10,6 +10,7 @@ import (
 	deploymentv1 "go.admiral.io/sdk/proto/admiral/deployment/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/healthcheck/v1"
+	modulev1 "go.admiral.io/sdk/proto/admiral/module/v1"
 	runnerv1 "go.admiral.io/sdk/proto/admiral/runner/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/source/v1"
 	statev1 "go.admiral.io/sdk/proto/admiral/state/v1"
@@ -37,6 +38,8 @@ type AdmiralClient interface {
 	Environment() environmentv1.EnvironmentAPIClient
 	// Healthcheck returns the HealthcheckAPI client.
 	Healthcheck() healthcheckv1.HealthcheckAPIClient
+	// Module returns the ModuleAPI client.
+	Module() modulev1.ModuleAPIClient
 	// Runner returns the RunnerAPI client.
 	Runner() runnerv1.RunnerAPIClient
 	// Source returns the SourceAPI client.
