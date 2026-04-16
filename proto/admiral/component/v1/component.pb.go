@@ -27,65 +27,65 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ComponentCategory indicates whether the component provisions infrastructure
+// ComponentKind indicates whether the component provisions infrastructure
 // or deploys workloads. This is derived from the referenced module's type but
 // stored explicitly for filtering and to determine rendering and execution
 // behavior.
-type ComponentCategory int32
+type ComponentKind int32
 
 const (
 	// Default value. Must not be used.
-	ComponentCategory_COMPONENT_CATEGORY_UNSPECIFIED ComponentCategory = 0
-	// Infrastructure component backed by a Terraform module. Follows the
-	// plan → approve → apply lifecycle. Produces outputs that are
-	// auto-discovered from the Terraform module's output blocks. Each
-	// component gets its own Terraform state.
-	ComponentCategory_COMPONENT_CATEGORY_INFRASTRUCTURE ComponentCategory = 1
+	ComponentKind_COMPONENT_KIND_UNSPECIFIED ComponentKind = 0
+	// Infrastructure component backed by an IaC module (Terraform, OpenTofu,
+	// etc.). Follows the plan → approve → apply lifecycle. Produces outputs
+	// that are auto-discovered from the module's output declarations. Each
+	// component gets its own state file.
+	ComponentKind_COMPONENT_KIND_INFRASTRUCTURE ComponentKind = 1
 	// Workload component backed by a Kubernetes module (Helm, Kustomize, raw
 	// manifests). Applied to the target cluster via the K8s agent. CRD ordering
 	// is handled within the rendered bundle. Outputs must be declared explicitly
 	// via the component's `outputs` field.
-	ComponentCategory_COMPONENT_CATEGORY_WORKLOAD ComponentCategory = 2
+	ComponentKind_COMPONENT_KIND_WORKLOAD ComponentKind = 2
 )
 
-// Enum value maps for ComponentCategory.
+// Enum value maps for ComponentKind.
 var (
-	ComponentCategory_name = map[int32]string{
-		0: "COMPONENT_CATEGORY_UNSPECIFIED",
-		1: "COMPONENT_CATEGORY_INFRASTRUCTURE",
-		2: "COMPONENT_CATEGORY_WORKLOAD",
+	ComponentKind_name = map[int32]string{
+		0: "COMPONENT_KIND_UNSPECIFIED",
+		1: "COMPONENT_KIND_INFRASTRUCTURE",
+		2: "COMPONENT_KIND_WORKLOAD",
 	}
-	ComponentCategory_value = map[string]int32{
-		"COMPONENT_CATEGORY_UNSPECIFIED":    0,
-		"COMPONENT_CATEGORY_INFRASTRUCTURE": 1,
-		"COMPONENT_CATEGORY_WORKLOAD":       2,
+	ComponentKind_value = map[string]int32{
+		"COMPONENT_KIND_UNSPECIFIED":    0,
+		"COMPONENT_KIND_INFRASTRUCTURE": 1,
+		"COMPONENT_KIND_WORKLOAD":       2,
 	}
 )
 
-func (x ComponentCategory) Enum() *ComponentCategory {
-	p := new(ComponentCategory)
+func (x ComponentKind) Enum() *ComponentKind {
+	p := new(ComponentKind)
 	*p = x
 	return p
 }
 
-func (x ComponentCategory) String() string {
+func (x ComponentKind) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (ComponentCategory) Descriptor() protoreflect.EnumDescriptor {
+func (ComponentKind) Descriptor() protoreflect.EnumDescriptor {
 	return file_admiral_component_v1_component_proto_enumTypes[0].Descriptor()
 }
 
-func (ComponentCategory) Type() protoreflect.EnumType {
+func (ComponentKind) Type() protoreflect.EnumType {
 	return &file_admiral_component_v1_component_proto_enumTypes[0]
 }
 
-func (x ComponentCategory) Number() protoreflect.EnumNumber {
+func (x ComponentKind) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use ComponentCategory.Descriptor instead.
-func (ComponentCategory) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ComponentKind.Descriptor instead.
+func (ComponentKind) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{0}
 }
 
@@ -202,7 +202,7 @@ type Component struct {
 	// Whether this is an infrastructure or workload component. Derived from
 	// the referenced module's type when the component is created, but stored
 	// explicitly for filtering and to determine execution behavior.
-	Category ComponentCategory `protobuf:"varint,5,opt,name=category,proto3,enum=admiral.component.v1.ComponentCategory" json:"category,omitempty"`
+	Kind ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.component.v1.ComponentKind" json:"kind,omitempty"`
 	// The module this component deploys (UUID). References a Module defined
 	// via the ModuleAPI. The module's source, ref, root, and path are inherited.
 	ModuleId string `protobuf:"bytes,6,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
@@ -332,11 +332,11 @@ func (x *Component) GetDescription() string {
 	return ""
 }
 
-func (x *Component) GetCategory() ComponentCategory {
+func (x *Component) GetKind() ComponentKind {
 	if x != nil {
-		return x.Category
+		return x.Kind
 	}
-	return ComponentCategory_COMPONENT_CATEGORY_UNSPECIFIED
+	return ComponentKind_COMPONENT_KIND_UNSPECIFIED
 }
 
 func (x *Component) GetModuleId() string {
@@ -1625,13 +1625,13 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
 	"\x0evalue_template\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xe8\x05\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xdc\x05\n" +
 	"\tComponent\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
 	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12C\n" +
-	"\bcategory\x18\x05 \x01(\x0e2'.admiral.component.v1.ComponentCategoryR\bcategory\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x127\n" +
+	"\x04kind\x18\x05 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12%\n" +
 	"\tmodule_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
 	"\aversion\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
 	"\x0fvalues_template\x18\b \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12,\n" +
@@ -1741,11 +1741,11 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x1eDeleteComponentOverrideRequest\x12+\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
 	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"!\n" +
-	"\x1fDeleteComponentOverrideResponse*\x7f\n" +
-	"\x11ComponentCategory\x12\"\n" +
-	"\x1eCOMPONENT_CATEGORY_UNSPECIFIED\x10\x00\x12%\n" +
-	"!COMPONENT_CATEGORY_INFRASTRUCTURE\x10\x01\x12\x1f\n" +
-	"\x1bCOMPONENT_CATEGORY_WORKLOAD\x10\x022\xed\x0f\n" +
+	"\x1fDeleteComponentOverrideResponse*o\n" +
+	"\rComponentKind\x12\x1e\n" +
+	"\x1aCOMPONENT_KIND_UNSPECIFIED\x10\x00\x12!\n" +
+	"\x1dCOMPONENT_KIND_INFRASTRUCTURE\x10\x01\x12\x1b\n" +
+	"\x17COMPONENT_KIND_WORKLOAD\x10\x022\xed\x0f\n" +
 	"\fComponentAPI\x12\xbf\x01\n" +
 	"\x0fCreateComponent\x12,.admiral.component.v1.CreateComponentRequest\x1a-.admiral.component.v1.CreateComponentResponse\"O\xbaG \n" +
 	"\n" +
@@ -1804,7 +1804,7 @@ func file_admiral_component_v1_component_proto_rawDescGZIP() []byte {
 var file_admiral_component_v1_component_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_admiral_component_v1_component_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_admiral_component_v1_component_proto_goTypes = []any{
-	(ComponentCategory)(0),                  // 0: admiral.component.v1.ComponentCategory
+	(ComponentKind)(0),                      // 0: admiral.component.v1.ComponentKind
 	(*ComponentOutput)(nil),                 // 1: admiral.component.v1.ComponentOutput
 	(*Component)(nil),                       // 2: admiral.component.v1.Component
 	(*ComponentOverride)(nil),               // 3: admiral.component.v1.ComponentOverride
@@ -1831,7 +1831,7 @@ var file_admiral_component_v1_component_proto_goTypes = []any{
 	(*fieldmaskpb.FieldMask)(nil),           // 24: google.protobuf.FieldMask
 }
 var file_admiral_component_v1_component_proto_depIdxs = []int32{
-	0,  // 0: admiral.component.v1.Component.category:type_name -> admiral.component.v1.ComponentCategory
+	0,  // 0: admiral.component.v1.Component.kind:type_name -> admiral.component.v1.ComponentKind
 	1,  // 1: admiral.component.v1.Component.outputs:type_name -> admiral.component.v1.ComponentOutput
 	22, // 2: admiral.component.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
 	23, // 3: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp

@@ -171,7 +171,7 @@ func (m *Component) validate(all bool) error {
 
 	// no validation rules for Description
 
-	// no validation rules for Category
+	// no validation rules for Kind
 
 	// no validation rules for ModuleId
 

@@ -381,7 +381,7 @@ func (m *Revision) validate(all bool) error {
 
 	// no validation rules for ComponentName
 
-	// no validation rules for Category
+	// no validation rules for Kind
 
 	// no validation rules for Status
 

@@ -29,14 +29,18 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// RunnerKind identifies the type of operations a runner executes.
+// RunnerKind identifies the category of operations a runner executes. The
+// specific tool (Terraform, OpenTofu, Pulumi, ...) is reported per-runner via
+// RunnerStatus.tool_versions and is used for job-to-runner matching; the kind
+// itself is product-agnostic.
 type RunnerKind int32
 
 const (
 	// Default value. Must not be used.
 	RunnerKind_RUNNER_KIND_UNSPECIFIED RunnerKind = 0
-	// Executes Terraform plan, apply, and destroy operations.
-	RunnerKind_RUNNER_KIND_TERRAFORM RunnerKind = 1
+	// Provisions infrastructure via IaC tooling (Terraform, OpenTofu, Pulumi,
+	// and similar). Follows plan → apply lifecycle.
+	RunnerKind_RUNNER_KIND_INFRASTRUCTURE RunnerKind = 1
 	// Executes workflow operations (CI/CD pipelines, custom scripts).
 	RunnerKind_RUNNER_KIND_WORKFLOW RunnerKind = 2
 )
@@ -45,13 +49,13 @@ const (
 var (
 	RunnerKind_name = map[int32]string{
 		0: "RUNNER_KIND_UNSPECIFIED",
-		1: "RUNNER_KIND_TERRAFORM",
+		1: "RUNNER_KIND_INFRASTRUCTURE",
 		2: "RUNNER_KIND_WORKFLOW",
 	}
 	RunnerKind_value = map[string]int32{
-		"RUNNER_KIND_UNSPECIFIED": 0,
-		"RUNNER_KIND_TERRAFORM":   1,
-		"RUNNER_KIND_WORKFLOW":    2,
+		"RUNNER_KIND_UNSPECIFIED":    0,
+		"RUNNER_KIND_INFRASTRUCTURE": 1,
+		"RUNNER_KIND_WORKFLOW":       2,
 	}
 )
 
@@ -2751,11 +2755,11 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"l\n" +
 	"\x16ListRunnerJobsResponse\x12*\n" +
 	"\x04jobs\x18\x01 \x03(\v2\x16.admiral.runner.v1.JobR\x04jobs\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*^\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*c\n" +
 	"\n" +
 	"RunnerKind\x12\x1b\n" +
-	"\x17RUNNER_KIND_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15RUNNER_KIND_TERRAFORM\x10\x01\x12\x18\n" +
+	"\x17RUNNER_KIND_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aRUNNER_KIND_INFRASTRUCTURE\x10\x01\x12\x18\n" +
 	"\x14RUNNER_KIND_WORKFLOW\x10\x02*\xc7\x01\n" +
 	"\x12RunnerHealthStatus\x12$\n" +
 	" RUNNER_HEALTH_STATUS_UNSPECIFIED\x10\x00\x12 \n" +

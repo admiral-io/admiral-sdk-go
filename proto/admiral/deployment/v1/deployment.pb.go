@@ -252,58 +252,58 @@ func (DeploymentTriggerType) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_deployment_v1_deployment_proto_rawDescGZIP(), []int{2}
 }
 
-// RevisionCategory mirrors ComponentCategory but is stored on the revision
-// to capture the effective category at deployment time (may differ from
-// the component default if an environment override changed the source type).
-type RevisionCategory int32
+// RevisionKind mirrors ComponentKind but is stored on the revision to capture
+// the effective kind at deployment time (may differ from the component default
+// if an environment override changed the source type).
+type RevisionKind int32
 
 const (
 	// Default value. Must not be used.
-	RevisionCategory_REVISION_CATEGORY_UNSPECIFIED RevisionCategory = 0
-	// Infrastructure revision (Terraform). Plan → apply lifecycle.
-	RevisionCategory_REVISION_CATEGORY_INFRASTRUCTURE RevisionCategory = 1
+	RevisionKind_REVISION_KIND_UNSPECIFIED RevisionKind = 0
+	// Infrastructure revision (IaC). Plan → apply lifecycle.
+	RevisionKind_REVISION_KIND_INFRASTRUCTURE RevisionKind = 1
 	// Workload revision (Helm, Kustomize, manifests). Direct apply lifecycle.
-	RevisionCategory_REVISION_CATEGORY_WORKLOAD RevisionCategory = 2
+	RevisionKind_REVISION_KIND_WORKLOAD RevisionKind = 2
 )
 
-// Enum value maps for RevisionCategory.
+// Enum value maps for RevisionKind.
 var (
-	RevisionCategory_name = map[int32]string{
-		0: "REVISION_CATEGORY_UNSPECIFIED",
-		1: "REVISION_CATEGORY_INFRASTRUCTURE",
-		2: "REVISION_CATEGORY_WORKLOAD",
+	RevisionKind_name = map[int32]string{
+		0: "REVISION_KIND_UNSPECIFIED",
+		1: "REVISION_KIND_INFRASTRUCTURE",
+		2: "REVISION_KIND_WORKLOAD",
 	}
-	RevisionCategory_value = map[string]int32{
-		"REVISION_CATEGORY_UNSPECIFIED":    0,
-		"REVISION_CATEGORY_INFRASTRUCTURE": 1,
-		"REVISION_CATEGORY_WORKLOAD":       2,
+	RevisionKind_value = map[string]int32{
+		"REVISION_KIND_UNSPECIFIED":    0,
+		"REVISION_KIND_INFRASTRUCTURE": 1,
+		"REVISION_KIND_WORKLOAD":       2,
 	}
 )
 
-func (x RevisionCategory) Enum() *RevisionCategory {
-	p := new(RevisionCategory)
+func (x RevisionKind) Enum() *RevisionKind {
+	p := new(RevisionKind)
 	*p = x
 	return p
 }
 
-func (x RevisionCategory) String() string {
+func (x RevisionKind) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (RevisionCategory) Descriptor() protoreflect.EnumDescriptor {
+func (RevisionKind) Descriptor() protoreflect.EnumDescriptor {
 	return file_admiral_deployment_v1_deployment_proto_enumTypes[3].Descriptor()
 }
 
-func (RevisionCategory) Type() protoreflect.EnumType {
+func (RevisionKind) Type() protoreflect.EnumType {
 	return &file_admiral_deployment_v1_deployment_proto_enumTypes[3]
 }
 
-func (x RevisionCategory) Number() protoreflect.EnumNumber {
+func (x RevisionKind) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use RevisionCategory.Descriptor instead.
-func (RevisionCategory) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use RevisionKind.Descriptor instead.
+func (RevisionKind) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_deployment_v1_deployment_proto_rawDescGZIP(), []int{3}
 }
 
@@ -578,8 +578,8 @@ type Revision struct {
 	ComponentId string `protobuf:"bytes,3,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
 	// Component name at the time of deployment (denormalized for display).
 	ComponentName string `protobuf:"bytes,4,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
-	// Component category at the time of deployment (after override resolution).
-	Category RevisionCategory `protobuf:"varint,5,opt,name=category,proto3,enum=admiral.deployment.v1.RevisionCategory" json:"category,omitempty"`
+	// Component kind at the time of deployment (after override resolution).
+	Kind RevisionKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.deployment.v1.RevisionKind" json:"kind,omitempty"`
 	// Lifecycle status of this revision.
 	Status RevisionStatus `protobuf:"varint,6,opt,name=status,proto3,enum=admiral.deployment.v1.RevisionStatus" json:"status,omitempty"`
 	// The source used for this revision (UUID, after override resolution).
@@ -680,11 +680,11 @@ func (x *Revision) GetComponentName() string {
 	return ""
 }
 
-func (x *Revision) GetCategory() RevisionCategory {
+func (x *Revision) GetKind() RevisionKind {
 	if x != nil {
-		return x.Category
+		return x.Kind
 	}
-	return RevisionCategory_REVISION_CATEGORY_UNSPECIFIED
+	return RevisionKind_REVISION_KIND_UNSPECIFIED
 }
 
 func (x *Revision) GetStatus() RevisionStatus {
@@ -1646,13 +1646,13 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ablocked\x18\x04 \x01(\x05R\ablocked\x12\x18\n" +
 	"\arunning\x18\x05 \x01(\x05R\arunning\x12\x1c\n" +
 	"\tcancelled\x18\a \x01(\x05R\tcancelled\x12\x18\n" +
-	"\apending\x18\b \x01(\x05R\apending\"\x85\a\n" +
+	"\apending\x18\b \x01(\x05R\apending\"\xf9\x06\n" +
 	"\bRevision\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12-\n" +
 	"\rdeployment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x12+\n" +
 	"\fcomponent_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12%\n" +
-	"\x0ecomponent_name\x18\x04 \x01(\tR\rcomponentName\x12C\n" +
-	"\bcategory\x18\x05 \x01(\x0e2'.admiral.deployment.v1.RevisionCategoryR\bcategory\x12=\n" +
+	"\x0ecomponent_name\x18\x04 \x01(\tR\rcomponentName\x127\n" +
+	"\x04kind\x18\x05 \x01(\x0e2#.admiral.deployment.v1.RevisionKindR\x04kind\x12=\n" +
 	"\x06status\x18\x06 \x01(\x0e2%.admiral.deployment.v1.RevisionStatusR\x06status\x12\x1b\n" +
 	"\tsource_id\x18\a \x01(\tR\bsourceId\x12\x18\n" +
 	"\aversion\x18\b \x01(\tR\aversion\x12'\n" +
@@ -1753,11 +1753,11 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"#DEPLOYMENT_TRIGGER_TYPE_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eDEPLOYMENT_TRIGGER_TYPE_MANUAL\x10\x01\x12\x1e\n" +
 	"\x1aDEPLOYMENT_TRIGGER_TYPE_CI\x10\x02\x12#\n" +
-	"\x1fDEPLOYMENT_TRIGGER_TYPE_DESTROY\x10\x03*{\n" +
-	"\x10RevisionCategory\x12!\n" +
-	"\x1dREVISION_CATEGORY_UNSPECIFIED\x10\x00\x12$\n" +
-	" REVISION_CATEGORY_INFRASTRUCTURE\x10\x01\x12\x1e\n" +
-	"\x1aREVISION_CATEGORY_WORKLOAD\x10\x022\xfc\v\n" +
+	"\x1fDEPLOYMENT_TRIGGER_TYPE_DESTROY\x10\x03*k\n" +
+	"\fRevisionKind\x12\x1d\n" +
+	"\x19REVISION_KIND_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cREVISION_KIND_INFRASTRUCTURE\x10\x01\x12\x1a\n" +
+	"\x16REVISION_KIND_WORKLOAD\x10\x022\xfc\v\n" +
 	"\rDeploymentAPI\x12\xca\x01\n" +
 	"\x10CreateDeployment\x12..admiral.deployment.v1.CreateDeploymentRequest\x1a/.admiral.deployment.v1.CreateDeploymentResponse\"U\xbaG\"\n" +
 	"\vDeployments\x12\x13Create a deployment\xa2\x97$\x0e\n" +
@@ -1800,7 +1800,7 @@ var file_admiral_deployment_v1_deployment_proto_goTypes = []any{
 	(DeploymentStatus)(0),            // 0: admiral.deployment.v1.DeploymentStatus
 	(RevisionStatus)(0),              // 1: admiral.deployment.v1.RevisionStatus
 	(DeploymentTriggerType)(0),       // 2: admiral.deployment.v1.DeploymentTriggerType
-	(RevisionCategory)(0),            // 3: admiral.deployment.v1.RevisionCategory
+	(RevisionKind)(0),                // 3: admiral.deployment.v1.RevisionKind
 	(*Deployment)(nil),               // 4: admiral.deployment.v1.Deployment
 	(*RevisionSummary)(nil),          // 5: admiral.deployment.v1.RevisionSummary
 	(*Revision)(nil),                 // 6: admiral.deployment.v1.Revision
@@ -1827,7 +1827,7 @@ var file_admiral_deployment_v1_deployment_proto_depIdxs = []int32{
 	5,  // 2: admiral.deployment.v1.Deployment.revision_summary:type_name -> admiral.deployment.v1.RevisionSummary
 	22, // 3: admiral.deployment.v1.Deployment.created_at:type_name -> google.protobuf.Timestamp
 	22, // 4: admiral.deployment.v1.Deployment.completed_at:type_name -> google.protobuf.Timestamp
-	3,  // 5: admiral.deployment.v1.Revision.category:type_name -> admiral.deployment.v1.RevisionCategory
+	3,  // 5: admiral.deployment.v1.Revision.kind:type_name -> admiral.deployment.v1.RevisionKind
 	1,  // 6: admiral.deployment.v1.Revision.status:type_name -> admiral.deployment.v1.RevisionStatus
 	7,  // 7: admiral.deployment.v1.Revision.plan_summary:type_name -> admiral.deployment.v1.TerraformPlanSummary
 	22, // 8: admiral.deployment.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
