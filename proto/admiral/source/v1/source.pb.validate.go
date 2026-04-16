@@ -242,6 +242,192 @@ var _ interface {
 	ErrorName() string
 } = HelmConfigValidationError{}
 
+// Validate checks the field values on SourceConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SourceConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SourceConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SourceConfigMultiError, or
+// nil if none found.
+func (m *SourceConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SourceConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	switch v := m.Variant.(type) {
+	case *SourceConfig_Terraform:
+		if v == nil {
+			err := SourceConfigValidationError{
+				field:  "Variant",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetTerraform()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SourceConfigValidationError{
+						field:  "Terraform",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SourceConfigValidationError{
+						field:  "Terraform",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SourceConfigValidationError{
+					field:  "Terraform",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *SourceConfig_Helm:
+		if v == nil {
+			err := SourceConfigValidationError{
+				field:  "Variant",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetHelm()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SourceConfigValidationError{
+						field:  "Helm",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SourceConfigValidationError{
+						field:  "Helm",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetHelm()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SourceConfigValidationError{
+					field:  "Helm",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
+	if len(errors) > 0 {
+		return SourceConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// SourceConfigMultiError is an error wrapping multiple validation errors
+// returned by SourceConfig.ValidateAll() if the designated constraints aren't met.
+type SourceConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SourceConfigMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SourceConfigMultiError) AllErrors() []error { return m }
+
+// SourceConfigValidationError is the validation error returned by
+// SourceConfig.Validate if the designated constraints aren't met.
+type SourceConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SourceConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SourceConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SourceConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SourceConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SourceConfigValidationError) ErrorName() string { return "SourceConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SourceConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSourceConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SourceConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SourceConfigValidationError{}
+
 // Validate checks the field values on SourceVersion with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -408,6 +594,35 @@ func (m *Source) validate(all bool) error {
 
 	// no validation rules for Catalog
 
+	if all {
+		switch v := interface{}(m.GetSourceConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SourceValidationError{
+					field:  "SourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SourceValidationError{
+					field:  "SourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSourceConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SourceValidationError{
+				field:  "SourceConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	// no validation rules for Labels
 
 	if all {
@@ -528,93 +743,6 @@ func (m *Source) validate(all bool) error {
 		}
 	}
 
-	switch v := m.SourceConfig.(type) {
-	case *Source_Terraform:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetTerraform()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "Terraform",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "Terraform",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "Terraform",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Source_Helm:
-		if v == nil {
-			err := SourceValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelm()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "Helm",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SourceValidationError{
-						field:  "Helm",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelm()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SourceValidationError{
-					field:  "Helm",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	default:
-		_ = v // ensures v is used
-	}
-
 	if m.CredentialId != nil {
 		// no validation rules for CredentialId
 	}
@@ -732,94 +860,36 @@ func (m *CreateSourceRequest) validate(all bool) error {
 
 	// no validation rules for Catalog
 
-	// no validation rules for Labels
-
-	switch v := m.SourceConfig.(type) {
-	case *CreateSourceRequest_Terraform:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetTerraform()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "Terraform",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "Terraform",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "Terraform",
+	if all {
+		switch v := interface{}(m.GetSourceConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateSourceRequestValidationError{
+					field:  "SourceConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
 			}
-		}
-
-	case *CreateSourceRequest_Helm:
-		if v == nil {
-			err := CreateSourceRequestValidationError{
-				field:  "SourceConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetHelm()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "Helm",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateSourceRequestValidationError{
-						field:  "Helm",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetHelm()).(interface{ Validate() error }); ok {
+		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				return CreateSourceRequestValidationError{
-					field:  "Helm",
+				errors = append(errors, CreateSourceRequestValidationError{
+					field:  "SourceConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
 			}
 		}
-
-	default:
-		_ = v // ensures v is used
+	} else if v, ok := interface{}(m.GetSourceConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateSourceRequestValidationError{
+				field:  "SourceConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
+
+	// no validation rules for Labels
 
 	if m.CredentialId != nil {
 		// no validation rules for CredentialId
