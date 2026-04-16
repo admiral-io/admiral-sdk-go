@@ -343,6 +343,233 @@ var _ interface {
 	ErrorName() string
 } = BearerTokenAuthValidationError{}
 
+// Validate checks the field values on AuthConfig with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *AuthConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AuthConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in AuthConfigMultiError, or
+// nil if none found.
+func (m *AuthConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AuthConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	switch v := m.Variant.(type) {
+	case *AuthConfig_SshKey:
+		if v == nil {
+			err := AuthConfigValidationError{
+				field:  "Variant",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetSshKey()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "SshKey",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "SshKey",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetSshKey()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AuthConfigValidationError{
+					field:  "SshKey",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AuthConfig_BasicAuth:
+		if v == nil {
+			err := AuthConfigValidationError{
+				field:  "Variant",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetBasicAuth()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "BasicAuth",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "BasicAuth",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetBasicAuth()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AuthConfigValidationError{
+					field:  "BasicAuth",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AuthConfig_BearerToken:
+		if v == nil {
+			err := AuthConfigValidationError{
+				field:  "Variant",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetBearerToken()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "BearerToken",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "BearerToken",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetBearerToken()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AuthConfigValidationError{
+					field:  "BearerToken",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
+	if len(errors) > 0 {
+		return AuthConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// AuthConfigMultiError is an error wrapping multiple validation errors
+// returned by AuthConfig.ValidateAll() if the designated constraints aren't met.
+type AuthConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AuthConfigMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AuthConfigMultiError) AllErrors() []error { return m }
+
+// AuthConfigValidationError is the validation error returned by
+// AuthConfig.Validate if the designated constraints aren't met.
+type AuthConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AuthConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AuthConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AuthConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AuthConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AuthConfigValidationError) ErrorName() string { return "AuthConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AuthConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAuthConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AuthConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AuthConfigValidationError{}
+
 // Validate checks the field values on Credential with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -372,6 +599,35 @@ func (m *Credential) validate(all bool) error {
 	// no validation rules for Description
 
 	// no validation rules for Type
+
+	if all {
+		switch v := interface{}(m.GetAuthConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CredentialValidationError{
+					field:  "AuthConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CredentialValidationError{
+					field:  "AuthConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAuthConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CredentialValidationError{
+				field:  "AuthConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	// no validation rules for Labels
 
@@ -460,134 +716,6 @@ func (m *Credential) validate(all bool) error {
 				cause:  err,
 			}
 		}
-	}
-
-	switch v := m.AuthConfig.(type) {
-	case *Credential_SshKey:
-		if v == nil {
-			err := CredentialValidationError{
-				field:  "AuthConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetSshKey()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CredentialValidationError{
-						field:  "SshKey",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CredentialValidationError{
-						field:  "SshKey",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetSshKey()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CredentialValidationError{
-					field:  "SshKey",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Credential_BasicAuth:
-		if v == nil {
-			err := CredentialValidationError{
-				field:  "AuthConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetBasicAuth()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CredentialValidationError{
-						field:  "BasicAuth",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CredentialValidationError{
-						field:  "BasicAuth",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetBasicAuth()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CredentialValidationError{
-					field:  "BasicAuth",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *Credential_BearerToken:
-		if v == nil {
-			err := CredentialValidationError{
-				field:  "AuthConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetBearerToken()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CredentialValidationError{
-						field:  "BearerToken",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CredentialValidationError{
-						field:  "BearerToken",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetBearerToken()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CredentialValidationError{
-					field:  "BearerToken",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	default:
-		_ = v // ensures v is used
 	}
 
 	if len(errors) > 0 {
@@ -695,135 +823,36 @@ func (m *CreateCredentialRequest) validate(all bool) error {
 
 	// no validation rules for Type
 
-	// no validation rules for Labels
-
-	switch v := m.AuthConfig.(type) {
-	case *CreateCredentialRequest_SshKey:
-		if v == nil {
-			err := CreateCredentialRequestValidationError{
-				field:  "AuthConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetSshKey()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateCredentialRequestValidationError{
-						field:  "SshKey",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateCredentialRequestValidationError{
-						field:  "SshKey",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetSshKey()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateCredentialRequestValidationError{
-					field:  "SshKey",
+	if all {
+		switch v := interface{}(m.GetAuthConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateCredentialRequestValidationError{
+					field:  "AuthConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
 			}
-		}
-
-	case *CreateCredentialRequest_BasicAuth:
-		if v == nil {
-			err := CreateCredentialRequestValidationError{
-				field:  "AuthConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetBasicAuth()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateCredentialRequestValidationError{
-						field:  "BasicAuth",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateCredentialRequestValidationError{
-						field:  "BasicAuth",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetBasicAuth()).(interface{ Validate() error }); ok {
+		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				return CreateCredentialRequestValidationError{
-					field:  "BasicAuth",
+				errors = append(errors, CreateCredentialRequestValidationError{
+					field:  "AuthConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
 			}
 		}
-
-	case *CreateCredentialRequest_BearerToken:
-		if v == nil {
-			err := CreateCredentialRequestValidationError{
+	} else if v, ok := interface{}(m.GetAuthConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateCredentialRequestValidationError{
 				field:  "AuthConfig",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetBearerToken()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateCredentialRequestValidationError{
-						field:  "BearerToken",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateCredentialRequestValidationError{
-						field:  "BearerToken",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetBearerToken()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateCredentialRequestValidationError{
-					field:  "BearerToken",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
+				reason: "embedded message failed validation",
+				cause:  err,
 			}
 		}
-
-	default:
-		_ = v // ensures v is used
 	}
+
+	// no validation rules for Labels
 
 	if len(errors) > 0 {
 		return CreateCredentialRequestMultiError(errors)
