@@ -173,7 +173,7 @@ func (m *Component) validate(all bool) error {
 
 	// no validation rules for Category
 
-	// no validation rules for SourceId
+	// no validation rules for ModuleId
 
 	// no validation rules for Version
 
@@ -530,8 +530,8 @@ func (m *ComponentOverride) validate(all bool) error {
 		}
 	}
 
-	if m.SourceId != nil {
-		// no validation rules for SourceId
+	if m.ModuleId != nil {
+		// no validation rules for ModuleId
 	}
 
 	if m.Version != nil {
@@ -650,7 +650,7 @@ func (m *CreateComponentRequest) validate(all bool) error {
 
 	// no validation rules for Description
 
-	// no validation rules for SourceId
+	// no validation rules for ModuleId
 
 	// no validation rules for Version
 
@@ -1941,8 +1941,8 @@ func (m *SetComponentOverrideRequest) validate(all bool) error {
 
 	}
 
-	if m.SourceId != nil {
-		// no validation rules for SourceId
+	if m.ModuleId != nil {
+		// no validation rules for ModuleId
 	}
 
 	if m.Version != nil {

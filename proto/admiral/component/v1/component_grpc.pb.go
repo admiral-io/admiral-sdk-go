@@ -36,18 +36,18 @@ const (
 //
 // ComponentAPI manages components within an application.
 //
-// A component binds an application to a source -- it defines what artifact
+// A component binds an application to a module -- it defines what artifact
 // (Terraform module, Helm chart, Kustomize overlay, etc.) to deploy and how
 // to configure it. Each component has a name (unique within the application),
-// a source reference, a pinned version, and a values template that maps
-// variables and component outputs into the source's expected inputs.
+// a module reference, an optional version override, and a values template
+// that maps variables and component outputs into the module's expected inputs.
 //
 // Components are defined at the application level and apply to all
-// environments by default. Environments can override a component's source,
+// environments by default. Environments can override a component's module,
 // version, values, or disable it entirely via ComponentOverride.
 //
 // Components form a dependency graph: infrastructure components produce
-// outputs that are auto-discovered from the source (e.g., Terraform outputs).
+// outputs that are auto-discovered from the module (e.g., Terraform outputs).
 // Workload components declare their outputs explicitly. Other components
 // consume these outputs via template expressions
 // (e.g., `{{ .component.vpc.vpc_id }}`). Admiral resolves this DAG at
@@ -55,7 +55,7 @@ const (
 type ComponentAPIClient interface {
 	// CreateComponent adds a new component to an application.
 	//
-	// The component name must be unique within the application. The source must
+	// The component name must be unique within the application. The module must
 	// exist and be accessible to the caller's tenant.
 	//
 	// Scope: `app:write`
@@ -94,10 +94,10 @@ type ComponentAPIClient interface {
 	// Scope: `app:write`
 	DeleteComponent(ctx context.Context, in *DeleteComponentRequest, opts ...grpc.CallOption) (*DeleteComponentResponse, error)
 	// SetComponentOverride creates or replaces an environment-level override for
-	// a component. Overrides allow an environment to use a different source,
+	// a component. Overrides allow an environment to use a different module,
 	// version, values template, or to disable the component entirely.
 	//
-	// For example, a "redis" component might use a Helm chart source in dev but
+	// For example, a "redis" component might use a Helm chart module in dev but
 	// a Terraform ElastiCache module in prod.
 	//
 	// This is an upsert -- if an override already exists for this component +
@@ -226,18 +226,18 @@ func (c *componentAPIClient) DeleteComponentOverride(ctx context.Context, in *De
 //
 // ComponentAPI manages components within an application.
 //
-// A component binds an application to a source -- it defines what artifact
+// A component binds an application to a module -- it defines what artifact
 // (Terraform module, Helm chart, Kustomize overlay, etc.) to deploy and how
 // to configure it. Each component has a name (unique within the application),
-// a source reference, a pinned version, and a values template that maps
-// variables and component outputs into the source's expected inputs.
+// a module reference, an optional version override, and a values template
+// that maps variables and component outputs into the module's expected inputs.
 //
 // Components are defined at the application level and apply to all
-// environments by default. Environments can override a component's source,
+// environments by default. Environments can override a component's module,
 // version, values, or disable it entirely via ComponentOverride.
 //
 // Components form a dependency graph: infrastructure components produce
-// outputs that are auto-discovered from the source (e.g., Terraform outputs).
+// outputs that are auto-discovered from the module (e.g., Terraform outputs).
 // Workload components declare their outputs explicitly. Other components
 // consume these outputs via template expressions
 // (e.g., `{{ .component.vpc.vpc_id }}`). Admiral resolves this DAG at
@@ -245,7 +245,7 @@ func (c *componentAPIClient) DeleteComponentOverride(ctx context.Context, in *De
 type ComponentAPIServer interface {
 	// CreateComponent adds a new component to an application.
 	//
-	// The component name must be unique within the application. The source must
+	// The component name must be unique within the application. The module must
 	// exist and be accessible to the caller's tenant.
 	//
 	// Scope: `app:write`
@@ -284,10 +284,10 @@ type ComponentAPIServer interface {
 	// Scope: `app:write`
 	DeleteComponent(context.Context, *DeleteComponentRequest) (*DeleteComponentResponse, error)
 	// SetComponentOverride creates or replaces an environment-level override for
-	// a component. Overrides allow an environment to use a different source,
+	// a component. Overrides allow an environment to use a different module,
 	// version, values template, or to disable the component entirely.
 	//
-	// For example, a "redis" component might use a Helm chart source in dev but
+	// For example, a "redis" component might use a Helm chart module in dev but
 	// a Terraform ElastiCache module in prod.
 	//
 	// This is an upsert -- if an override already exists for this component +

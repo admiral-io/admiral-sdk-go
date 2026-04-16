@@ -28,19 +28,20 @@ const (
 )
 
 // ComponentCategory indicates whether the component provisions infrastructure
-// or deploys workloads. This is derived from the source type but stored
-// explicitly for filtering and to determine rendering and execution behavior.
+// or deploys workloads. This is derived from the referenced module's type but
+// stored explicitly for filtering and to determine rendering and execution
+// behavior.
 type ComponentCategory int32
 
 const (
 	// Default value. Must not be used.
 	ComponentCategory_COMPONENT_CATEGORY_UNSPECIFIED ComponentCategory = 0
-	// Infrastructure component backed by a Terraform source. Follows the
+	// Infrastructure component backed by a Terraform module. Follows the
 	// plan → approve → apply lifecycle. Produces outputs that are
 	// auto-discovered from the Terraform module's output blocks. Each
 	// component gets its own Terraform state.
 	ComponentCategory_COMPONENT_CATEGORY_INFRASTRUCTURE ComponentCategory = 1
-	// Workload component backed by a Kubernetes source (Helm, Kustomize, raw
+	// Workload component backed by a Kubernetes module (Helm, Kustomize, raw
 	// manifests). Applied to the target cluster via the K8s agent. CRD ordering
 	// is handled within the rendered bundle. Outputs must be declared explicitly
 	// via the component's `outputs` field.
@@ -175,9 +176,9 @@ func (x *ComponentOutput) GetDescription() string {
 }
 
 // Component represents a named, deployable unit within an application. It
-// binds a source artifact to an application with configuration (values
-// template) that maps variables and other component outputs into the source's
-// expected inputs.
+// binds a module to an application with configuration (values template) that
+// maps variables and other component outputs into the module's expected
+// inputs.
 //
 // Components are the nodes in Admiral's dependency graph. Infrastructure
 // components produce auto-discovered outputs (Terraform outputs). Workload
@@ -199,19 +200,18 @@ type Component struct {
 	// (e.g., "Primary VPC for all environments" or "Redis cache layer").
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	// Whether this is an infrastructure or workload component. Derived from
-	// the source type when the component is created, but stored explicitly
-	// for filtering and to determine execution behavior.
+	// the referenced module's type when the component is created, but stored
+	// explicitly for filtering and to determine execution behavior.
 	Category ComponentCategory `protobuf:"varint,5,opt,name=category,proto3,enum=admiral.component.v1.ComponentCategory" json:"category,omitempty"`
-	// The source artifact this component deploys (UUID). References a Source
-	// defined via the SourceAPI.
-	SourceId string `protobuf:"bytes,6,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
-	// Pinned version of the source artifact. For registry sources, a semver
-	// string (e.g., "1.2.3"). For Git sources, a tag, branch, or commit SHA.
-	// Required -- components always pin a version. Use UpdateComponent to
-	// change the version (rolling update).
+	// The module this component deploys (UUID). References a Module defined
+	// via the ModuleAPI. The module's source, ref, root, and path are inherited.
+	ModuleId string `protobuf:"bytes,6,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
+	// Optional ref override for the module's default ref. When empty, the
+	// module's ref is used. When set, overrides the module's ref at deploy time
+	// (e.g., pin a specific tag, branch, or commit SHA for this component).
 	Version string `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
-	// Values template that maps configuration into the source's expected inputs.
-	// This is a JSON-encoded object where keys are the source input names and
+	// Values template that maps configuration into the module's expected inputs.
+	// This is a JSON-encoded object where keys are the module input names and
 	// values are either literal values or template expressions.
 	//
 	// Template expressions can reference:
@@ -339,9 +339,9 @@ func (x *Component) GetCategory() ComponentCategory {
 	return ComponentCategory_COMPONENT_CATEGORY_UNSPECIFIED
 }
 
-func (x *Component) GetSourceId() string {
+func (x *Component) GetModuleId() string {
 	if x != nil {
-		return x.SourceId
+		return x.ModuleId
 	}
 	return ""
 }
@@ -415,7 +415,7 @@ func (x *Component) GetUpdatedAt() *timestamppb.Timestamp {
 // defaults during deployment.
 //
 // This enables patterns like:
-//   - Different sources per environment (Helm Redis in dev, Terraform
+//   - Different modules per environment (Helm Redis in dev, Terraform
 //     ElastiCache in prod)
 //   - Different versions per environment (canary version in staging)
 //   - Different values per environment (smaller instance in dev)
@@ -429,12 +429,12 @@ type ComponentOverride struct {
 	// When true, the component is not deployed in this environment.
 	// All other override fields are ignored when disabled.
 	Disabled bool `protobuf:"varint,3,opt,name=disabled,proto3" json:"disabled,omitempty"`
-	// Override source for this environment (UUID). When set, this source is
-	// used instead of the component's default source. This may also change the
-	// component's effective category (e.g., switching from a Helm source to a
-	// Terraform source changes the component from workload to infrastructure
+	// Override module for this environment (UUID). When set, this module is
+	// used instead of the component's default module. This may also change the
+	// component's effective category (e.g., switching from a Helm module to a
+	// Terraform module changes the component from workload to infrastructure
 	// in this environment).
-	SourceId *string `protobuf:"bytes,4,opt,name=source_id,json=sourceId,proto3,oneof" json:"source_id,omitempty"`
+	ModuleId *string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3,oneof" json:"module_id,omitempty"`
 	// Override version for this environment. When set, this version is used
 	// instead of the component's default version.
 	Version *string `protobuf:"bytes,5,opt,name=version,proto3,oneof" json:"version,omitempty"`
@@ -446,7 +446,7 @@ type ComponentOverride struct {
 	// replaces the component's default depends_on list for this environment.
 	DependsOn []string `protobuf:"bytes,7,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
 	// Override outputs for this environment. When set, replaces the component's
-	// declared outputs. Useful when an override changes the source type
+	// declared outputs. Useful when an override changes the module type
 	// (e.g., Helm → Terraform) and the output templates need to change.
 	Outputs []*ComponentOutput `protobuf:"bytes,8,rep,name=outputs,proto3" json:"outputs,omitempty"`
 	// The user or agent who created this override (server-populated from token).
@@ -510,9 +510,9 @@ func (x *ComponentOverride) GetDisabled() bool {
 	return false
 }
 
-func (x *ComponentOverride) GetSourceId() string {
-	if x != nil && x.SourceId != nil {
-		return *x.SourceId
+func (x *ComponentOverride) GetModuleId() string {
+	if x != nil && x.ModuleId != nil {
+		return *x.ModuleId
 	}
 	return ""
 }
@@ -577,11 +577,12 @@ type CreateComponentRequest struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional description of the component's purpose.
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// The source artifact for this component (UUID).
-	SourceId string `protobuf:"bytes,4,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
-	// Pinned version of the source artifact.
+	// The module this component deploys (UUID).
+	ModuleId string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
+	// Optional ref override for the module's default ref. When empty, the
+	// module's default ref is used.
 	Version string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
-	// Values template mapping configuration into the source's inputs.
+	// Values template mapping configuration into the module's inputs.
 	// See Component.values_template for template expression syntax.
 	ValuesTemplate string `protobuf:"bytes,6,opt,name=values_template,json=valuesTemplate,proto3" json:"values_template,omitempty"`
 	// Explicit deployment-order dependencies (component UUIDs).
@@ -645,9 +646,9 @@ func (x *CreateComponentRequest) GetDescription() string {
 	return ""
 }
 
-func (x *CreateComponentRequest) GetSourceId() string {
+func (x *CreateComponentRequest) GetModuleId() string {
 	if x != nil {
-		return x.SourceId
+		return x.ModuleId
 	}
 	return ""
 }
@@ -839,6 +840,7 @@ type ListComponentsRequest struct {
 	//     environment overrides applied to each component.
 	//   - `category` -- filter by component category (INFRASTRUCTURE, WORKLOAD).
 	//   - `name` -- filter by component name.
+	//   - `module_id` -- filter by module reference.
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of components to return per page.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
@@ -962,7 +964,7 @@ type UpdateComponentRequest struct {
 	// `update_mask` are updated.
 	Component *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
 	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `name`, `description`, `source_id`, `version`,
+	// Supported fields: `name`, `description`, `module_id`, `version`,
 	// `values_template`, `depends_on`, `outputs`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1153,8 +1155,8 @@ type SetComponentOverrideRequest struct {
 	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	// When true, the component is not deployed in this environment.
 	Disabled bool `protobuf:"varint,3,opt,name=disabled,proto3" json:"disabled,omitempty"`
-	// Override source (UUID). When set, replaces the component's default source.
-	SourceId *string `protobuf:"bytes,4,opt,name=source_id,json=sourceId,proto3,oneof" json:"source_id,omitempty"`
+	// Override module (UUID). When set, replaces the component's default module.
+	ModuleId *string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3,oneof" json:"module_id,omitempty"`
 	// Override version. When set, replaces the component's default version.
 	Version *string `protobuf:"bytes,5,opt,name=version,proto3,oneof" json:"version,omitempty"`
 	// Override values template. When set, completely replaces the component's
@@ -1220,9 +1222,9 @@ func (x *SetComponentOverrideRequest) GetDisabled() bool {
 	return false
 }
 
-func (x *SetComponentOverrideRequest) GetSourceId() string {
-	if x != nil && x.SourceId != nil {
-		return *x.SourceId
+func (x *SetComponentOverrideRequest) GetModuleId() string {
+	if x != nil && x.ModuleId != nil {
+		return *x.ModuleId
 	}
 	return ""
 }
@@ -1623,15 +1625,15 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
 	"\x0evalue_template\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xe7\x05\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xe8\x05\n" +
 	"\tComponent\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
 	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12C\n" +
 	"\bcategory\x18\x05 \x01(\x0e2'.admiral.component.v1.ComponentCategoryR\bcategory\x12%\n" +
-	"\tsource_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\x12!\n" +
-	"\aversion\x18\a \x01(\tB\a\xbaH\x04r\x02\x10\x01R\aversion\x122\n" +
+	"\tmodule_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
+	"\aversion\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
 	"\x0fvalues_template\x18\b \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12,\n" +
 	"\n" +
 	"depends_on\x18\t \x03(\tB\r\xbaH\n" +
@@ -1650,7 +1652,7 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
 	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1a\n" +
 	"\bdisabled\x18\x03 \x01(\bR\bdisabled\x12*\n" +
-	"\tsource_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bsourceId\x88\x01\x01\x12\x1d\n" +
+	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bmoduleId\x88\x01\x01\x12\x1d\n" +
 	"\aversion\x18\x05 \x01(\tH\x01R\aversion\x88\x01\x01\x12,\n" +
 	"\x0fvalues_template\x18\x06 \x01(\tH\x02R\x0evaluesTemplate\x88\x01\x01\x12,\n" +
 	"\n" +
@@ -1665,16 +1667,16 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"updated_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\f\n" +
 	"\n" +
-	"_source_idB\n" +
+	"_module_idB\n" +
 	"\n" +
 	"\b_versionB\x12\n" +
-	"\x10_values_template\"\xa4\x03\n" +
+	"\x10_values_template\"\xa5\x03\n" +
 	"\x16CreateComponentRequest\x12/\n" +
 	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12%\n" +
-	"\tsource_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\x12!\n" +
-	"\aversion\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\aversion\x122\n" +
+	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
+	"\aversion\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
 	"\x0fvalues_template\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12,\n" +
 	"\n" +
 	"depends_on\x18\a \x03(\tB\r\xbaH\n" +
@@ -1704,20 +1706,20 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentR\tcomponent\"E\n" +
 	"\x16DeleteComponentRequest\x12+\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\"\x19\n" +
-	"\x17DeleteComponentResponse\"\xb8\x03\n" +
+	"\x17DeleteComponentResponse\"\xc2\x03\n" +
 	"\x1bSetComponentOverrideRequest\x12+\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
 	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1a\n" +
 	"\bdisabled\x18\x03 \x01(\bR\bdisabled\x12*\n" +
-	"\tsource_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bsourceId\x88\x01\x01\x12\x1d\n" +
-	"\aversion\x18\x05 \x01(\tH\x01R\aversion\x88\x01\x01\x127\n" +
+	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bmoduleId\x88\x01\x01\x12'\n" +
+	"\aversion\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x01R\aversion\x88\x01\x01\x127\n" +
 	"\x0fvalues_template\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04H\x02R\x0evaluesTemplate\x88\x01\x01\x12,\n" +
 	"\n" +
 	"depends_on\x18\a \x03(\tB\r\xbaH\n" +
 	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\tdependsOn\x12?\n" +
 	"\aoutputs\x18\b \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputsB\f\n" +
 	"\n" +
-	"_source_idB\n" +
+	"_module_idB\n" +
 	"\n" +
 	"\b_versionB\x12\n" +
 	"\x10_values_template\"c\n" +

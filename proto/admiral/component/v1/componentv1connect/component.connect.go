@@ -66,7 +66,7 @@ const (
 type ComponentAPIClient interface {
 	// CreateComponent adds a new component to an application.
 	//
-	// The component name must be unique within the application. The source must
+	// The component name must be unique within the application. The module must
 	// exist and be accessible to the caller's tenant.
 	//
 	// Scope: `app:write`
@@ -105,10 +105,10 @@ type ComponentAPIClient interface {
 	// Scope: `app:write`
 	DeleteComponent(context.Context, *connect.Request[v1.DeleteComponentRequest]) (*connect.Response[v1.DeleteComponentResponse], error)
 	// SetComponentOverride creates or replaces an environment-level override for
-	// a component. Overrides allow an environment to use a different source,
+	// a component. Overrides allow an environment to use a different module,
 	// version, values template, or to disable the component entirely.
 	//
-	// For example, a "redis" component might use a Helm chart source in dev but
+	// For example, a "redis" component might use a Helm chart module in dev but
 	// a Terraform ElastiCache module in prod.
 	//
 	// This is an upsert -- if an override already exists for this component +
@@ -263,7 +263,7 @@ func (c *componentAPIClient) DeleteComponentOverride(ctx context.Context, req *c
 type ComponentAPIHandler interface {
 	// CreateComponent adds a new component to an application.
 	//
-	// The component name must be unique within the application. The source must
+	// The component name must be unique within the application. The module must
 	// exist and be accessible to the caller's tenant.
 	//
 	// Scope: `app:write`
@@ -302,10 +302,10 @@ type ComponentAPIHandler interface {
 	// Scope: `app:write`
 	DeleteComponent(context.Context, *connect.Request[v1.DeleteComponentRequest]) (*connect.Response[v1.DeleteComponentResponse], error)
 	// SetComponentOverride creates or replaces an environment-level override for
-	// a component. Overrides allow an environment to use a different source,
+	// a component. Overrides allow an environment to use a different module,
 	// version, values template, or to disable the component entirely.
 	//
-	// For example, a "redis" component might use a Helm chart source in dev but
+	// For example, a "redis" component might use a Helm chart module in dev but
 	// a Terraform ElastiCache module in prod.
 	//
 	// This is an upsert -- if an override already exists for this component +
