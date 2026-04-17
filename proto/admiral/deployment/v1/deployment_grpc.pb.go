@@ -46,10 +46,10 @@ const (
 // in order: independent components run in parallel, dependent components
 // wait for their upstream to succeed.
 //
-// There is no special rollback mechanism -- to revert a change, update the
-// configuration (variables, component settings) and create a new deployment.
-// Every deployment is always rendered against the current state, ensuring
-// consistency between infrastructure outputs and workload inputs.
+// To roll back to a prior known-good state, create a new deployment with
+// `source_deployment_id` set to a previous successful deployment. This
+// re-plans and re-applies the prior configuration against the current
+// infrastructure state, going through the same plan/approve/apply cycle.
 type DeploymentAPIClient interface {
 	// CreateDeployment triggers a new deployment of an application to an
 	// environment.
@@ -215,10 +215,10 @@ func (c *deploymentAPIClient) ApplyDeployment(ctx context.Context, in *ApplyDepl
 // in order: independent components run in parallel, dependent components
 // wait for their upstream to succeed.
 //
-// There is no special rollback mechanism -- to revert a change, update the
-// configuration (variables, component settings) and create a new deployment.
-// Every deployment is always rendered against the current state, ensuring
-// consistency between infrastructure outputs and workload inputs.
+// To roll back to a prior known-good state, create a new deployment with
+// `source_deployment_id` set to a previous successful deployment. This
+// re-plans and re-applies the prior configuration against the current
+// infrastructure state, going through the same plan/approve/apply cycle.
 type DeploymentAPIServer interface {
 	// CreateDeployment triggers a new deployment of an application to an
 	// environment.

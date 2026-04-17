@@ -339,6 +339,10 @@ type Deployment struct {
 	// resource deletion for workload components. Executed in reverse dependency
 	// order. Required before an environment with active resources can be deleted.
 	Destroy bool `protobuf:"varint,8,opt,name=destroy,proto3" json:"destroy,omitempty"`
+	// If this deployment was created as a rollback from a prior deployment,
+	// this field contains the source deployment's UUID. Empty for normal
+	// deployments.
+	SourceDeploymentId string `protobuf:"bytes,9,opt,name=source_deployment_id,json=sourceDeploymentId,proto3" json:"source_deployment_id,omitempty"`
 	// Summary counts for quick status display.
 	RevisionSummary *RevisionSummary `protobuf:"bytes,10,opt,name=revision_summary,json=revisionSummary,proto3" json:"revision_summary,omitempty"`
 	// When the deployment was created.
@@ -434,6 +438,13 @@ func (x *Deployment) GetDestroy() bool {
 		return x.Destroy
 	}
 	return false
+}
+
+func (x *Deployment) GetSourceDeploymentId() string {
+	if x != nil {
+		return x.SourceDeploymentId
+	}
+	return ""
 }
 
 func (x *Deployment) GetRevisionSummary() *RevisionSummary {
@@ -897,9 +908,16 @@ type CreateDeploymentRequest struct {
 	// infra components and deletes workload resources from the cluster, in
 	// reverse dependency order. Required before deleting an environment that
 	// has active resources.
-	Destroy       bool `protobuf:"varint,4,opt,name=destroy,proto3" json:"destroy,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Destroy bool `protobuf:"varint,4,opt,name=destroy,proto3" json:"destroy,omitempty"`
+	// Optional: deploy from a prior deployment's configuration snapshots
+	// instead of from the current component HEAD. When set, each revision is
+	// seeded from the source deployment's revision for the same component
+	// (module_id, version, resolved_values, source_id, working_directory).
+	// This is the rollback mechanism: re-plan and re-apply a known-good
+	// configuration against the current infrastructure state.
+	SourceDeploymentId string `protobuf:"bytes,5,opt,name=source_deployment_id,json=sourceDeploymentId,proto3" json:"source_deployment_id,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *CreateDeploymentRequest) Reset() {
@@ -958,6 +976,13 @@ func (x *CreateDeploymentRequest) GetDestroy() bool {
 		return x.Destroy
 	}
 	return false
+}
+
+func (x *CreateDeploymentRequest) GetSourceDeploymentId() string {
+	if x != nil {
+		return x.SourceDeploymentId
+	}
+	return ""
 }
 
 // CreateDeploymentResponse contains the newly created deployment.
@@ -1754,7 +1779,7 @@ var File_admiral_deployment_v1_deployment_proto protoreflect.FileDescriptor
 
 const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\n" +
-	"&admiral/deployment/v1/deployment.proto\x12\x15admiral.deployment.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd2\x04\n" +
+	"&admiral/deployment/v1/deployment.proto\x12\x15admiral.deployment.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x84\x05\n" +
 	"\n" +
 	"Deployment\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
@@ -1764,7 +1789,8 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ftrigger_type\x18\x05 \x01(\x0e2,.admiral.deployment.v1.DeploymentTriggerTypeR\vtriggerType\x12+\n" +
 	"\ftriggered_by\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vtriggeredBy\x12\"\n" +
 	"\amessage\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\x18\n" +
-	"\adestroy\x18\b \x01(\bR\adestroy\x12Q\n" +
+	"\adestroy\x18\b \x01(\bR\adestroy\x120\n" +
+	"\x14source_deployment_id\x18\t \x01(\tR\x12sourceDeploymentId\x12Q\n" +
 	"\x10revision_summary\x18\n" +
 	" \x01(\v2&.admiral.deployment.v1.RevisionSummaryR\x0frevisionSummary\x129\n" +
 	"\n" +
@@ -1810,12 +1836,13 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\x14TerraformPlanSummary\x12\x1c\n" +
 	"\tadditions\x18\x01 \x01(\x05R\tadditions\x12\x18\n" +
 	"\achanges\x18\x02 \x01(\x05R\achanges\x12\"\n" +
-	"\fdestructions\x18\x03 \x01(\x05R\fdestructions\"\xb9\x01\n" +
+	"\fdestructions\x18\x03 \x01(\x05R\fdestructions\"\xeb\x01\n" +
 	"\x17CreateDeploymentRequest\x12/\n" +
 	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
 	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\"\n" +
 	"\amessage\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\x18\n" +
-	"\adestroy\x18\x04 \x01(\bR\adestroy\"]\n" +
+	"\adestroy\x18\x04 \x01(\bR\adestroy\x120\n" +
+	"\x14source_deployment_id\x18\x05 \x01(\tR\x12sourceDeploymentId\"]\n" +
 	"\x18CreateDeploymentResponse\x12A\n" +
 	"\n" +
 	"deployment\x18\x01 \x01(\v2!.admiral.deployment.v1.DeploymentR\n" +

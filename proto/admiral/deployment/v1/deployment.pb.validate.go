@@ -73,6 +73,8 @@ func (m *Deployment) validate(all bool) error {
 
 	// no validation rules for Destroy
 
+	// no validation rules for SourceDeploymentId
+
 	if all {
 		switch v := interface{}(m.GetRevisionSummary()).(type) {
 		case interface{ ValidateAll() error }:
@@ -735,6 +737,8 @@ func (m *CreateDeploymentRequest) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for Destroy
+
+	// no validation rules for SourceDeploymentId
 
 	if len(errors) > 0 {
 		return CreateDeploymentRequestMultiError(errors)
