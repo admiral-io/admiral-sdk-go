@@ -818,6 +818,112 @@ var _ interface {
 	ErrorName() string
 } = JobBundleValidationError{}
 
+// Validate checks the field values on TerraformOutput with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *TerraformOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TerraformOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TerraformOutputMultiError, or nil if none found.
+func (m *TerraformOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TerraformOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Value
+
+	// no validation rules for Type
+
+	// no validation rules for Sensitive
+
+	if len(errors) > 0 {
+		return TerraformOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// TerraformOutputMultiError is an error wrapping multiple validation errors
+// returned by TerraformOutput.ValidateAll() if the designated constraints
+// aren't met.
+type TerraformOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TerraformOutputMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TerraformOutputMultiError) AllErrors() []error { return m }
+
+// TerraformOutputValidationError is the validation error returned by
+// TerraformOutput.Validate if the designated constraints aren't met.
+type TerraformOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TerraformOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TerraformOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TerraformOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TerraformOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TerraformOutputValidationError) ErrorName() string { return "TerraformOutputValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TerraformOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTerraformOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TerraformOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TerraformOutputValidationError{}
+
 // Validate checks the field values on JobResult with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -903,6 +1009,52 @@ func (m *JobResult) validate(all bool) error {
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
+		}
+	}
+
+	{
+		sorted_keys := make([]string, len(m.GetOutputs()))
+		i := 0
+		for key := range m.GetOutputs() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetOutputs()[key]
+			_ = val
+
+			// no validation rules for Outputs[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, JobResultValidationError{
+							field:  fmt.Sprintf("Outputs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, JobResultValidationError{
+							field:  fmt.Sprintf("Outputs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return JobResultValidationError{
+						field:  fmt.Sprintf("Outputs[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
 		}
 	}
 
