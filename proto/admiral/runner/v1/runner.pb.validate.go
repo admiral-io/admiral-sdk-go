@@ -737,6 +737,8 @@ func (m *JobBundle) validate(all bool) error {
 
 	// no validation rules for TerraformVersion
 
+	// no validation rules for WorkingDirectory
+
 	if len(errors) > 0 {
 		return JobBundleMultiError(errors)
 	}

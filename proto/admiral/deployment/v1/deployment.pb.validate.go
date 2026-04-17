@@ -395,8 +395,6 @@ func (m *Revision) validate(all bool) error {
 
 	// no validation rules for ArtifactUrl
 
-	// no validation rules for PlanOutput
-
 	if all {
 		switch v := interface{}(m.GetPlanSummary()).(type) {
 		case interface{ ValidateAll() error }:
@@ -425,6 +423,8 @@ func (m *Revision) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for HasPlanOutput
 
 	// no validation rules for ErrorMessage
 
@@ -516,6 +516,10 @@ func (m *Revision) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for ModuleId
+
+	// no validation rules for WorkingDirectory
 
 	if len(errors) > 0 {
 		return RevisionMultiError(errors)

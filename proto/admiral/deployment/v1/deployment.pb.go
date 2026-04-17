@@ -608,12 +608,12 @@ type Revision struct {
 	// Storage location of the rendered artifact bundle. Internal reference
 	// used by agents/runners to fetch the bundle.
 	ArtifactUrl string `protobuf:"bytes,13,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
-	// (Infrastructure only) The Terraform plan output in human-readable format.
-	// Populated after planning completes. Used for visibility and audit.
-	PlanOutput string `protobuf:"bytes,14,opt,name=plan_output,json=planOutput,proto3" json:"plan_output,omitempty"`
 	// (Infrastructure only) The number of resources Terraform plans to add,
 	// change, and destroy. Populated after planning completes.
 	PlanSummary *TerraformPlanSummary `protobuf:"bytes,15,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
+	// True when plan output is available in object storage.
+	// Fetch via GET /api/v1/deployments/{id}/revisions/{id}/plan.
+	HasPlanOutput bool `protobuf:"varint,23,opt,name=has_plan_output,json=hasPlanOutput,proto3" json:"has_plan_output,omitempty"`
 	// Error message if the revision failed. Empty on success.
 	ErrorMessage string `protobuf:"bytes,16,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	// Number of retry attempts. Starts at 0 for the initial attempt.
@@ -623,9 +623,17 @@ type Revision struct {
 	// When the revision started execution (transitioned from PENDING/QUEUED).
 	StartedAt *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	// When the revision finished (succeeded, failed, or cancelled).
-	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	CompletedAt *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	// The module used for this revision (UUID, after override resolution).
+	// Captures which module produced the source_id and version, needed for
+	// rollback (re-deploying from a prior revision's snapshot).
+	ModuleId string `protobuf:"bytes,21,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
+	// Subdirectory within the delivered archive where the executor runs.
+	// Empty means the archive root. Populated from the module's path field
+	// at snapshot time so that relative module references resolve correctly.
+	WorkingDirectory string `protobuf:"bytes,22,opt,name=working_directory,json=workingDirectory,proto3" json:"working_directory,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Revision) Reset() {
@@ -749,18 +757,18 @@ func (x *Revision) GetArtifactUrl() string {
 	return ""
 }
 
-func (x *Revision) GetPlanOutput() string {
-	if x != nil {
-		return x.PlanOutput
-	}
-	return ""
-}
-
 func (x *Revision) GetPlanSummary() *TerraformPlanSummary {
 	if x != nil {
 		return x.PlanSummary
 	}
 	return nil
+}
+
+func (x *Revision) GetHasPlanOutput() bool {
+	if x != nil {
+		return x.HasPlanOutput
+	}
+	return false
 }
 
 func (x *Revision) GetErrorMessage() string {
@@ -796,6 +804,20 @@ func (x *Revision) GetCompletedAt() *timestamppb.Timestamp {
 		return x.CompletedAt
 	}
 	return nil
+}
+
+func (x *Revision) GetModuleId() string {
+	if x != nil {
+		return x.ModuleId
+	}
+	return ""
+}
+
+func (x *Revision) GetWorkingDirectory() string {
+	if x != nil {
+		return x.WorkingDirectory
+	}
+	return ""
 }
 
 // TerraformPlanSummary provides resource change counts from a Terraform plan.
@@ -1755,7 +1777,7 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ablocked\x18\x04 \x01(\x05R\ablocked\x12\x18\n" +
 	"\arunning\x18\x05 \x01(\x05R\arunning\x12\x1c\n" +
 	"\tcancelled\x18\a \x01(\x05R\tcancelled\x12\x18\n" +
-	"\apending\x18\b \x01(\x05R\apending\"\xf9\x06\n" +
+	"\apending\x18\b \x01(\x05R\apending\"\xd0\a\n" +
 	"\bRevision\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12-\n" +
 	"\rdeployment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x12+\n" +
@@ -1772,10 +1794,9 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\n" +
 	"blocked_by\x18\v \x03(\tR\tblockedBy\x12+\n" +
 	"\x11artifact_checksum\x18\f \x01(\tR\x10artifactChecksum\x12!\n" +
-	"\fartifact_url\x18\r \x01(\tR\vartifactUrl\x12\x1f\n" +
-	"\vplan_output\x18\x0e \x01(\tR\n" +
-	"planOutput\x12N\n" +
-	"\fplan_summary\x18\x0f \x01(\v2+.admiral.deployment.v1.TerraformPlanSummaryR\vplanSummary\x12#\n" +
+	"\fartifact_url\x18\r \x01(\tR\vartifactUrl\x12N\n" +
+	"\fplan_summary\x18\x0f \x01(\v2+.admiral.deployment.v1.TerraformPlanSummaryR\vplanSummary\x12&\n" +
+	"\x0fhas_plan_output\x18\x17 \x01(\bR\rhasPlanOutput\x12#\n" +
 	"\rerror_message\x18\x10 \x01(\tR\ferrorMessage\x12\x1f\n" +
 	"\vretry_count\x18\x11 \x01(\x05R\n" +
 	"retryCount\x129\n" +
@@ -1783,7 +1804,9 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"created_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"started_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"r\n" +
+	"\fcompleted_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12\x1b\n" +
+	"\tmodule_id\x18\x15 \x01(\tR\bmoduleId\x12+\n" +
+	"\x11working_directory\x18\x16 \x01(\tR\x10workingDirectoryJ\x04\b\x0e\x10\x0f\"r\n" +
 	"\x14TerraformPlanSummary\x12\x1c\n" +
 	"\tadditions\x18\x01 \x01(\x05R\tadditions\x12\x18\n" +
 	"\achanges\x18\x02 \x01(\x05R\achanges\x12\"\n" +

@@ -776,6 +776,10 @@ type JobBundle struct {
 	BackendConfig string `protobuf:"bytes,5,opt,name=backend_config,json=backendConfig,proto3" json:"backend_config,omitempty"`
 	// The Terraform version to use for this operation (e.g., "1.7.5").
 	TerraformVersion string `protobuf:"bytes,6,opt,name=terraform_version,json=terraformVersion,proto3" json:"terraform_version,omitempty"`
+	// Subdirectory within the extracted archive where the executor should run
+	// (e.g., "modules/cloudsql"). Empty means the archive root. Preserves
+	// the broader directory tree so that relative module references resolve.
+	WorkingDirectory string `protobuf:"bytes,7,opt,name=working_directory,json=workingDirectory,proto3" json:"working_directory,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -848,6 +852,13 @@ func (x *JobBundle) GetBackendConfig() string {
 func (x *JobBundle) GetTerraformVersion() string {
 	if x != nil {
 		return x.TerraformVersion
+	}
+	return ""
+}
+
+func (x *JobBundle) GetWorkingDirectory() string {
+	if x != nil {
+		return x.WorkingDirectory
 	}
 	return ""
 }
@@ -2640,14 +2651,15 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"started_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\xda\x03\n" +
+	"\fcompleted_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\x87\x04\n" +
 	"\tJobBundle\x12!\n" +
 	"\fartifact_url\x18\x01 \x01(\tR\vartifactUrl\x12+\n" +
 	"\x11artifact_checksum\x18\x02 \x01(\tR\x10artifactChecksum\x12I\n" +
 	"\tvariables\x18\x03 \x03(\v2+.admiral.runner.v1.JobBundle.VariablesEntryR\tvariables\x12\\\n" +
 	"\x10provider_configs\x18\x04 \x03(\v21.admiral.runner.v1.JobBundle.ProviderConfigsEntryR\x0fproviderConfigs\x12%\n" +
 	"\x0ebackend_config\x18\x05 \x01(\tR\rbackendConfig\x12+\n" +
-	"\x11terraform_version\x18\x06 \x01(\tR\x10terraformVersion\x1a<\n" +
+	"\x11terraform_version\x18\x06 \x01(\tR\x10terraformVersion\x12+\n" +
+	"\x11working_directory\x18\a \x01(\tR\x10workingDirectory\x1a<\n" +
 	"\x0eVariablesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aB\n" +

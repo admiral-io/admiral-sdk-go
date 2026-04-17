@@ -156,6 +156,8 @@ func (m *Variable) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Source
+
 	if m.ApplicationId != nil {
 		// no validation rules for ApplicationId
 	}
