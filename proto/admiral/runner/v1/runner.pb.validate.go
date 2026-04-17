@@ -739,6 +739,8 @@ func (m *JobBundle) validate(all bool) error {
 
 	// no validation rules for WorkingDirectory
 
+	// no validation rules for PlanFileUrl
+
 	if len(errors) > 0 {
 		return JobBundleMultiError(errors)
 	}
