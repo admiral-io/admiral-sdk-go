@@ -657,7 +657,7 @@ type Job struct {
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the runner started executing the job.
 	StartedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
-	// When the job finished (succeeded, failed, or cancelled).
+	// When the job finished (succeeded, failed, or canceled).
 	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1282,11 +1282,11 @@ type ListRunnersRequest struct {
 	//
 	// Filterable fields:
 	//   - `name` -- filter by runner name.
-	//   - `kind` -- filter by runner kind (TERRAFORM, WORKFLOW).
+	//   - `kind` -- filter by runner kind (INFRASTRUCTURE, WORKFLOW).
 	//   - `health_status` -- filter by health status.
 	//   - `labels.key` -- filter by label key.
 	//
-	// Example: `field['kind'] = 'TERRAFORM' AND field['health_status'] = 'HEALTHY'`
+	// Example: `field['kind'] = 'INFRASTRUCTURE' AND field['health_status'] = 'HEALTHY'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of runners to return per page.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`

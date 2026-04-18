@@ -82,7 +82,7 @@ type StateAPIClient interface {
 	//
 	// The server validates that the SAT's runner binding matches the runner
 	// assigned to this job. Returns PERMISSION_DENIED if they do not match.
-	// Returns NOT_FOUND if the job does not exist or has been cancelled.
+	// Returns NOT_FOUND if the job does not exist or has been canceled.
 	//
 	// Maps to Terraform HTTP backend GET on the state address.
 	//
@@ -338,7 +338,7 @@ type StateAPIServer interface {
 	//
 	// The server validates that the SAT's runner binding matches the runner
 	// assigned to this job. Returns PERMISSION_DENIED if they do not match.
-	// Returns NOT_FOUND if the job does not exist or has been cancelled.
+	// Returns NOT_FOUND if the job does not exist or has been canceled.
 	//
 	// Maps to Terraform HTTP backend GET on the state address.
 	//

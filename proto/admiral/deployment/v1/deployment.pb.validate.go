@@ -67,7 +67,34 @@ func (m *Deployment) validate(all bool) error {
 
 	// no validation rules for TriggerType
 
-	// no validation rules for TriggeredBy
+	if all {
+		switch v := interface{}(m.GetTriggeredBy()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DeploymentValidationError{
+					field:  "TriggeredBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DeploymentValidationError{
+					field:  "TriggeredBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTriggeredBy()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeploymentValidationError{
+				field:  "TriggeredBy",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	// no validation rules for Message
 
@@ -271,7 +298,7 @@ func (m *RevisionSummary) validate(all bool) error {
 
 	// no validation rules for Running
 
-	// no validation rules for Cancelled
+	// no validation rules for Canceled
 
 	// no validation rules for Pending
 

@@ -75,7 +75,7 @@ type DeploymentAPIClient interface {
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),
 	// the new deployment is queued and will start automatically when the
-	// current deployment completes or is cancelled.
+	// current deployment completes or is canceled.
 	//
 	// Scope: `deploy:write`
 	CreateDeployment(context.Context, *connect.Request[v1.CreateDeploymentRequest]) (*connect.Response[v1.CreateDeploymentResponse], error)
@@ -93,7 +93,7 @@ type DeploymentAPIClient interface {
 	ListDeployments(context.Context, *connect.Request[v1.ListDeploymentsRequest]) (*connect.Response[v1.ListDeploymentsResponse], error)
 	// CancelDeployment cancels an in-progress deployment. Revisions that are
 	// already SUCCEEDED remain applied -- cancellation only stops pending and
-	// queued revisions from proceeding. The deployment status becomes CANCELLED.
+	// queued revisions from proceeding. The deployment status becomes CANCELED.
 	//
 	// Scope: `deploy:write`
 	CancelDeployment(context.Context, *connect.Request[v1.CancelDeploymentRequest]) (*connect.Response[v1.CancelDeploymentResponse], error)
@@ -250,7 +250,7 @@ type DeploymentAPIHandler interface {
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),
 	// the new deployment is queued and will start automatically when the
-	// current deployment completes or is cancelled.
+	// current deployment completes or is canceled.
 	//
 	// Scope: `deploy:write`
 	CreateDeployment(context.Context, *connect.Request[v1.CreateDeploymentRequest]) (*connect.Response[v1.CreateDeploymentResponse], error)
@@ -268,7 +268,7 @@ type DeploymentAPIHandler interface {
 	ListDeployments(context.Context, *connect.Request[v1.ListDeploymentsRequest]) (*connect.Response[v1.ListDeploymentsResponse], error)
 	// CancelDeployment cancels an in-progress deployment. Revisions that are
 	// already SUCCEEDED remain applied -- cancellation only stops pending and
-	// queued revisions from proceeding. The deployment status becomes CANCELLED.
+	// queued revisions from proceeding. The deployment status becomes CANCELED.
 	//
 	// Scope: `deploy:write`
 	CancelDeployment(context.Context, *connect.Request[v1.CancelDeploymentRequest]) (*connect.Response[v1.CancelDeploymentResponse], error)

@@ -26,7 +26,7 @@ var File_admiral_openapi_proto protoreflect.FileDescriptor
 const file_admiral_openapi_proto_rawDesc = "" +
 	"\n" +
 	"\x15admiral/openapi.proto\x12\n" +
-	"admiral.v1\x1a$gnostic/openapi/v3/annotations.protoB\xa1\r\xbaG\x8b\f\x12\x98\x01\n" +
+	"admiral.v1\x1a$gnostic/openapi/v3/annotations.protoB\xa7\x0e\xbaG\x91\r\x12\x98\x01\n" +
 	"\vAdmiral API\x12\x88\x01The Admiral REST API for managing applications, infrastructure, and deployments. See https://admiral.io/docs for complete documentation.:?\n" +
 	"\fApplications\x12/Manage application lifecycle and configuration.:V\n" +
 	"\bClusters\x12JManage Kubernetes clusters, service access tokens, and workload telemetry.:B\n" +
@@ -35,7 +35,9 @@ const file_admiral_openapi_proto_rawDesc = "" +
 	"\rCluster Agent\x12[Agent-facing endpoints for cluster telemetry and revision delivery. Requires a cluster SAT.:F\n" +
 	"\n" +
 	"Components\x128Manage application components and environment overrides.:A\n" +
-	"\vConnections\x122Manage credentials for accessing external systems.:@\n" +
+	"\vCredentials\x122Manage credentials for accessing external systems.:@\n" +
+	"\aModules\x125Manage module definitions and resolve module content.:B\n" +
+	"\x0eAuthentication\x120OAuth2/OIDC authentication for browser sessions.:@\n" +
 	"\vDeployments\x121Manage deployments and track component revisions.:6\n" +
 	"\fEnvironments\x12&Manage deployment target environments.:%\n" +
 	"\x06Health\x12\x1bCheck service availability.:D\n" +

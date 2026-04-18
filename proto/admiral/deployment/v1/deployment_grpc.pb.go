@@ -65,7 +65,7 @@ type DeploymentAPIClient interface {
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),
 	// the new deployment is queued and will start automatically when the
-	// current deployment completes or is cancelled.
+	// current deployment completes or is canceled.
 	//
 	// Scope: `deploy:write`
 	CreateDeployment(ctx context.Context, in *CreateDeploymentRequest, opts ...grpc.CallOption) (*CreateDeploymentResponse, error)
@@ -83,7 +83,7 @@ type DeploymentAPIClient interface {
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
 	// CancelDeployment cancels an in-progress deployment. Revisions that are
 	// already SUCCEEDED remain applied -- cancellation only stops pending and
-	// queued revisions from proceeding. The deployment status becomes CANCELLED.
+	// queued revisions from proceeding. The deployment status becomes CANCELED.
 	//
 	// Scope: `deploy:write`
 	CancelDeployment(ctx context.Context, in *CancelDeploymentRequest, opts ...grpc.CallOption) (*CancelDeploymentResponse, error)
@@ -234,7 +234,7 @@ type DeploymentAPIServer interface {
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),
 	// the new deployment is queued and will start automatically when the
-	// current deployment completes or is cancelled.
+	// current deployment completes or is canceled.
 	//
 	// Scope: `deploy:write`
 	CreateDeployment(context.Context, *CreateDeploymentRequest) (*CreateDeploymentResponse, error)
@@ -252,7 +252,7 @@ type DeploymentAPIServer interface {
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
 	// CancelDeployment cancels an in-progress deployment. Revisions that are
 	// already SUCCEEDED remain applied -- cancellation only stops pending and
-	// queued revisions from proceeding. The deployment status becomes CANCELLED.
+	// queued revisions from proceeding. The deployment status becomes CANCELED.
 	//
 	// Scope: `deploy:write`
 	CancelDeployment(context.Context, *CancelDeploymentRequest) (*CancelDeploymentResponse, error)

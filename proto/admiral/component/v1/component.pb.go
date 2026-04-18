@@ -838,7 +838,7 @@ type ListComponentsRequest struct {
 	ApplicationId string `protobuf:"bytes,4,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
 	// When set alongside `application_id`, returns the resolved view with
 	// environment overrides applied (UUID). Optional.
-	EnvironmentId string `protobuf:"bytes,5,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	EnvironmentId *string `protobuf:"bytes,5,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
 	// Filter expression using the PEG filter DSL. Filterable fields:
 	//   - `kind` -- filter by component kind (INFRASTRUCTURE, WORKLOAD).
 	//   - `name` -- filter by component name.
@@ -890,8 +890,8 @@ func (x *ListComponentsRequest) GetApplicationId() string {
 }
 
 func (x *ListComponentsRequest) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
+	if x != nil && x.EnvironmentId != nil {
+		return *x.EnvironmentId
 	}
 	return ""
 }
@@ -1703,15 +1703,15 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x13GetComponentRequest\x12+\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\"U\n" +
 	"\x14GetComponentResponse\x12=\n" +
-	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentR\tcomponent\"\xe4\x01\n" +
+	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentR\tcomponent\"\xfa\x01\n" +
 	"\x15ListComponentsRequest\x12/\n" +
-	"\x0eapplication_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x121\n" +
-	"\x0eenvironment_id\x18\x05 \x01(\tB\n" +
-	"\xbaH\ar\x05\x10\x00\xb0\x01\x01R\renvironmentId\x12 \n" +
+	"\x0eapplication_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x124\n" +
+	"\x0eenvironment_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\renvironmentId\x88\x01\x01\x12 \n" +
 	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"\x81\x01\n" +
+	"page_token\x18\x03 \x01(\tR\tpageTokenB\x11\n" +
+	"\x0f_environment_id\"\x81\x01\n" +
 	"\x16ListComponentsResponse\x12?\n" +
 	"\n" +
 	"components\x18\x01 \x03(\v2\x1f.admiral.component.v1.ComponentR\n" +
@@ -1901,6 +1901,7 @@ func file_admiral_component_v1_component_proto_init() {
 		return
 	}
 	file_admiral_component_v1_component_proto_msgTypes[2].OneofWrappers = []any{}
+	file_admiral_component_v1_component_proto_msgTypes[7].OneofWrappers = []any{}
 	file_admiral_component_v1_component_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

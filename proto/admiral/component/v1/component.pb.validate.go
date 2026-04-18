@@ -1160,13 +1160,15 @@ func (m *ListComponentsRequest) validate(all bool) error {
 
 	// no validation rules for ApplicationId
 
-	// no validation rules for EnvironmentId
-
 	// no validation rules for Filter
 
 	// no validation rules for PageSize
 
 	// no validation rules for PageToken
+
+	if m.EnvironmentId != nil {
+		// no validation rules for EnvironmentId
+	}
 
 	if len(errors) > 0 {
 		return ListComponentsRequestMultiError(errors)

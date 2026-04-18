@@ -1113,7 +1113,7 @@ func (x *UpdateSourceResponse) GetSource() *Source {
 type DeleteSourceRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier of the source to delete (UUID).
-	// Fails if any application components still reference this source.
+	// Fails if any modules still reference this source.
 	SourceId      string `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

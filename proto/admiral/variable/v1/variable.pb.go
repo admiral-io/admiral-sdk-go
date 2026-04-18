@@ -163,10 +163,10 @@ type Variable struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the variable (UUID).
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The variable name. Must be a valid environment variable identifier
-	// (e.g., "DATABASE_URL", "API_KEY"). Alphanumeric and underscores
-	// (uppercase conventional but lowercase accepted), must start with a letter
-	// or underscore (max 255 chars).
+	// The variable name. For user-created variables, must be a valid
+	// environment variable identifier (e.g., "DATABASE_URL", "API_KEY").
+	// Infrastructure output variables use dot-namespaced keys
+	// (e.g., "vpc.vpc_id", "database.endpoint") and are system-managed.
 	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 	// The variable value. Always stored as a string -- use `type` to indicate
 	// how to interpret it. Masked or empty for sensitive variables in responses.
@@ -893,10 +893,10 @@ var File_admiral_variable_v1_variable_proto protoreflect.FileDescriptor
 
 const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf8\x04\n" +
+	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x04\n" +
 	"\bVariable\x12\x18\n" +
-	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12:\n" +
-	"\x03key\x18\x02 \x01(\tB(\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12;\n" +
+	"\x03key\x18\x02 \x01(\tB)\xbaH&r$\x10\x01\x18?2\x1e^[A-Za-z_][A-Za-z0-9_.]{0,62}$R\x03key\x12\x14\n" +
 	"\x05value\x18\x03 \x01(\tR\x05value\x12\x1c\n" +
 	"\tsensitive\x18\x04 \x01(\bR\tsensitive\x125\n" +
 	"\x04type\x18\x05 \x01(\x0e2!.admiral.variable.v1.VariableTypeR\x04type\x12*\n" +

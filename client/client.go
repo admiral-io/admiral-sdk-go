@@ -12,7 +12,6 @@ import (
 	authenticationv1 "go.admiral.io/sdk/proto/admiral/authentication/v1"
 	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
 	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
-	connectionv1 "go.admiral.io/sdk/proto/admiral/connection/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/credential/v1"
 	deploymentv1 "go.admiral.io/sdk/proto/admiral/deployment/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
@@ -38,7 +37,6 @@ type Client struct {
 	authentication authenticationv1.AuthenticationAPIClient
 	cluster clusterv1.ClusterAPIClient
 	component componentv1.ComponentAPIClient
-	connection connectionv1.ConnectionAPIClient
 	credential credentialv1.CredentialAPIClient
 	deployment deploymentv1.DeploymentAPIClient
 	environment environmentv1.EnvironmentAPIClient
@@ -93,7 +91,6 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
 		cluster: clusterv1.NewClusterAPIClient(conn),
 		component: componentv1.NewComponentAPIClient(conn),
-		connection: connectionv1.NewConnectionAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
 		deployment: deploymentv1.NewDeploymentAPIClient(conn),
 		environment: environmentv1.NewEnvironmentAPIClient(conn),
@@ -125,11 +122,6 @@ func (c *Client) Cluster() clusterv1.ClusterAPIClient {
 // Component returns the ComponentAPI client.
 func (c *Client) Component() componentv1.ComponentAPIClient {
 	return c.component
-}
-
-// Connection returns the ConnectionAPI client.
-func (c *Client) Connection() connectionv1.ConnectionAPIClient {
-	return c.connection
 }
 
 // Credential returns the CredentialAPI client.
