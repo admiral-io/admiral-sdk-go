@@ -621,10 +621,10 @@ type Revision struct {
 	ArtifactUrl string `protobuf:"bytes,13,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
 	// (Infrastructure only) The number of resources Terraform plans to add,
 	// change, and destroy. Populated after planning completes.
-	PlanSummary *TerraformPlanSummary `protobuf:"bytes,15,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
+	PlanSummary *TerraformPlanSummary `protobuf:"bytes,14,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
 	// True when plan output is available in object storage.
 	// Fetch via GET /api/v1/deployments/{id}/revisions/{id}/plan.
-	HasPlanOutput bool `protobuf:"varint,23,opt,name=has_plan_output,json=hasPlanOutput,proto3" json:"has_plan_output,omitempty"`
+	HasPlanOutput bool `protobuf:"varint,15,opt,name=has_plan_output,json=hasPlanOutput,proto3" json:"has_plan_output,omitempty"`
 	// Error message if the revision failed. Empty on success.
 	ErrorMessage string `protobuf:"bytes,16,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	// Number of retry attempts. Starts at 0 for the initial attempt.
@@ -1803,7 +1803,7 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ablocked\x18\x04 \x01(\x05R\ablocked\x12\x18\n" +
 	"\arunning\x18\x05 \x01(\x05R\arunning\x12\x1a\n" +
 	"\bcanceled\x18\a \x01(\x05R\bcanceled\x12\x18\n" +
-	"\apending\x18\b \x01(\x05R\apending\"\xd0\a\n" +
+	"\apending\x18\b \x01(\x05R\apending\"\xca\a\n" +
 	"\bRevision\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12-\n" +
 	"\rdeployment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x12+\n" +
@@ -1821,8 +1821,8 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"blocked_by\x18\v \x03(\tR\tblockedBy\x12+\n" +
 	"\x11artifact_checksum\x18\f \x01(\tR\x10artifactChecksum\x12!\n" +
 	"\fartifact_url\x18\r \x01(\tR\vartifactUrl\x12N\n" +
-	"\fplan_summary\x18\x0f \x01(\v2+.admiral.deployment.v1.TerraformPlanSummaryR\vplanSummary\x12&\n" +
-	"\x0fhas_plan_output\x18\x17 \x01(\bR\rhasPlanOutput\x12#\n" +
+	"\fplan_summary\x18\x0e \x01(\v2+.admiral.deployment.v1.TerraformPlanSummaryR\vplanSummary\x12&\n" +
+	"\x0fhas_plan_output\x18\x0f \x01(\bR\rhasPlanOutput\x12#\n" +
 	"\rerror_message\x18\x10 \x01(\tR\ferrorMessage\x12\x1f\n" +
 	"\vretry_count\x18\x11 \x01(\x05R\n" +
 	"retryCount\x129\n" +
@@ -1832,7 +1832,7 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"started_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
 	"\fcompleted_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12\x1b\n" +
 	"\tmodule_id\x18\x15 \x01(\tR\bmoduleId\x12+\n" +
-	"\x11working_directory\x18\x16 \x01(\tR\x10workingDirectoryJ\x04\b\x0e\x10\x0f\"r\n" +
+	"\x11working_directory\x18\x16 \x01(\tR\x10workingDirectory\"r\n" +
 	"\x14TerraformPlanSummary\x12\x1c\n" +
 	"\tadditions\x18\x01 \x01(\x05R\tadditions\x12\x18\n" +
 	"\achanges\x18\x02 \x01(\x05R\achanges\x12\"\n" +

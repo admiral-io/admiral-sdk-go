@@ -366,15 +366,7 @@ func request_RunnerAPI_GetRunnerToken_0(ctx context.Context, marshaler runtime.M
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	val, ok := pathParams["runner_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "runner_id")
-	}
-	protoReq.RunnerId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "runner_id", err)
-	}
-	val, ok = pathParams["token_id"]
+	val, ok := pathParams["token_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "token_id")
 	}
@@ -392,15 +384,7 @@ func local_request_RunnerAPI_GetRunnerToken_0(ctx context.Context, marshaler run
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["runner_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "runner_id")
-	}
-	protoReq.RunnerId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "runner_id", err)
-	}
-	val, ok = pathParams["token_id"]
+	val, ok := pathParams["token_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "token_id")
 	}
@@ -424,15 +408,7 @@ func request_RunnerAPI_RevokeRunnerToken_0(ctx context.Context, marshaler runtim
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	val, ok := pathParams["runner_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "runner_id")
-	}
-	protoReq.RunnerId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "runner_id", err)
-	}
-	val, ok = pathParams["token_id"]
+	val, ok := pathParams["token_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "token_id")
 	}
@@ -453,15 +429,7 @@ func local_request_RunnerAPI_RevokeRunnerToken_0(ctx context.Context, marshaler 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["runner_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "runner_id")
-	}
-	protoReq.RunnerId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "runner_id", err)
-	}
-	val, ok = pathParams["token_id"]
+	val, ok := pathParams["token_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "token_id")
 	}
@@ -836,7 +804,7 @@ func RegisterRunnerAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/GetRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/{runner_id}/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/GetRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -856,7 +824,7 @@ func RegisterRunnerAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/RevokeRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/{runner_id}/tokens/{token_id}/revoke"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/RevokeRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/tokens/{token_id}/revoke"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1150,7 +1118,7 @@ func RegisterRunnerAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/GetRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/{runner_id}/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/GetRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1167,7 +1135,7 @@ func RegisterRunnerAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/RevokeRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/{runner_id}/tokens/{token_id}/revoke"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.runner.v1.RunnerAPI/RevokeRunnerToken", runtime.WithHTTPPathPattern("/api/v1/runners/tokens/{token_id}/revoke"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1277,8 +1245,8 @@ var (
 	pattern_RunnerAPI_GetRunnerStatus_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "runners", "runner_id", "status"}, ""))
 	pattern_RunnerAPI_CreateRunnerToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "runners", "runner_id", "tokens"}, ""))
 	pattern_RunnerAPI_ListRunnerTokens_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "runners", "runner_id", "tokens"}, ""))
-	pattern_RunnerAPI_GetRunnerToken_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "runners", "runner_id", "tokens", "token_id"}, ""))
-	pattern_RunnerAPI_RevokeRunnerToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "runners", "runner_id", "tokens", "token_id", "revoke"}, ""))
+	pattern_RunnerAPI_GetRunnerToken_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "runners", "tokens", "token_id"}, ""))
+	pattern_RunnerAPI_RevokeRunnerToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "runners", "tokens", "token_id", "revoke"}, ""))
 	pattern_RunnerAPI_Heartbeat_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "runner", "heartbeat"}, ""))
 	pattern_RunnerAPI_ClaimJob_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "runner", "jobs", "claim"}, ""))
 	pattern_RunnerAPI_GetJobBundle_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "runner", "jobs", "job_id", "bundle"}, ""))

@@ -62,8 +62,6 @@ func (m *Runner) validate(all bool) error {
 
 	// no validation rules for Description
 
-	// no validation rules for Kind
-
 	// no validation rules for Labels
 
 	// no validation rules for HealthStatus
@@ -1160,8 +1158,6 @@ func (m *CreateRunnerRequest) validate(all bool) error {
 	// no validation rules for Name
 
 	// no validation rules for Description
-
-	// no validation rules for Kind
 
 	// no validation rules for Labels
 
@@ -3158,8 +3154,6 @@ func (m *GetRunnerTokenRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for RunnerId
-
 	// no validation rules for TokenId
 
 	if len(errors) > 0 {
@@ -3394,8 +3388,6 @@ func (m *RevokeRunnerTokenRequest) validate(all bool) error {
 	}
 
 	var errors []error
-
-	// no validation rules for RunnerId
 
 	// no validation rules for TokenId
 
