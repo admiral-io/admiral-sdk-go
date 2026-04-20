@@ -304,12 +304,12 @@ type Runner struct {
 	Labels map[string]string `protobuf:"bytes,4,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Derived health status based on heartbeat recency and capacity.
 	HealthStatus RunnerHealthStatus `protobuf:"varint,5,opt,name=health_status,json=healthStatus,proto3,enum=admiral.runner.v1.RunnerHealthStatus" json:"health_status,omitempty"`
-	// The user or agent who created this runner (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the runner record was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the runner record was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// The user or agent who created this runner (server-populated from token).
+	CreatedBy     *v1.ActorRef `protobuf:"bytes,8,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -379,13 +379,6 @@ func (x *Runner) GetHealthStatus() RunnerHealthStatus {
 	return RunnerHealthStatus_RUNNER_HEALTH_STATUS_UNSPECIFIED
 }
 
-func (x *Runner) GetCreatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return nil
-}
-
 func (x *Runner) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -396,6 +389,13 @@ func (x *Runner) GetCreatedAt() *timestamppb.Timestamp {
 func (x *Runner) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *Runner) GetCreatedBy() *v1.ActorRef {
+	if x != nil {
+		return x.CreatedBy
 	}
 	return nil
 }
@@ -2611,13 +2611,13 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12V\n" +
 	"\x06labels\x18\x04 \x03(\v2%.admiral.runner.v1.Runner.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12J\n" +
-	"\rhealth_status\x18\x05 \x01(\x0e2%.admiral.runner.v1.RunnerHealthStatusR\fhealthStatus\x12:\n" +
+	"\rhealth_status\x18\x05 \x01(\x0e2%.admiral.runner.v1.RunnerHealthStatusR\fhealthStatus\x129\n" +
 	"\n" +
-	"created_by\x18\x06 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12:\n" +
 	"\n" +
-	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"created_by\x18\b \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xad\x03\n" +
@@ -2908,8 +2908,8 @@ var file_admiral_runner_v1_runner_proto_goTypes = []any{
 	nil,                               // 44: admiral.runner.v1.JobBundle.ProviderConfigsEntry
 	nil,                               // 45: admiral.runner.v1.JobResult.OutputsEntry
 	nil,                               // 46: admiral.runner.v1.CreateRunnerRequest.LabelsEntry
-	(*v1.ActorRef)(nil),               // 47: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),     // 48: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil),     // 47: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),               // 48: admiral.common.v1.ActorRef
 	(*v11.TerraformPlanSummary)(nil),  // 49: admiral.deployment.v1.TerraformPlanSummary
 	(*durationpb.Duration)(nil),       // 50: google.protobuf.Duration
 	(*fieldmaskpb.FieldMask)(nil),     // 51: google.protobuf.FieldMask
@@ -2918,18 +2918,18 @@ var file_admiral_runner_v1_runner_proto_goTypes = []any{
 var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
 	41, // 0: admiral.runner.v1.Runner.labels:type_name -> admiral.runner.v1.Runner.LabelsEntry
 	0,  // 1: admiral.runner.v1.Runner.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
-	47, // 2: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
-	48, // 3: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
-	48, // 4: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
+	47, // 2: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
+	47, // 3: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
+	48, // 4: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
 	42, // 5: admiral.runner.v1.RunnerStatus.tool_versions:type_name -> admiral.runner.v1.RunnerStatus.ToolVersionsEntry
 	6,  // 6: admiral.runner.v1.RunnerStatus.active_job_details:type_name -> admiral.runner.v1.ActiveJobInfo
 	3,  // 7: admiral.runner.v1.ActiveJobInfo.phase:type_name -> admiral.runner.v1.JobPhase
-	48, // 8: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
+	47, // 8: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
 	2,  // 9: admiral.runner.v1.Job.job_type:type_name -> admiral.runner.v1.JobType
 	1,  // 10: admiral.runner.v1.Job.status:type_name -> admiral.runner.v1.JobStatus
-	48, // 11: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	48, // 12: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	48, // 13: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
+	47, // 11: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	47, // 12: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	47, // 13: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
 	43, // 14: admiral.runner.v1.JobBundle.variables:type_name -> admiral.runner.v1.JobBundle.VariablesEntry
 	44, // 15: admiral.runner.v1.JobBundle.provider_configs:type_name -> admiral.runner.v1.JobBundle.ProviderConfigsEntry
 	1,  // 16: admiral.runner.v1.JobResult.status:type_name -> admiral.runner.v1.JobStatus
@@ -2945,8 +2945,8 @@ var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
 	4,  // 26: admiral.runner.v1.UpdateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
 	0,  // 27: admiral.runner.v1.GetRunnerStatusResponse.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
 	5,  // 28: admiral.runner.v1.GetRunnerStatusResponse.status:type_name -> admiral.runner.v1.RunnerStatus
-	48, // 29: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	48, // 30: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
+	47, // 29: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
+	47, // 30: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
 	52, // 31: admiral.runner.v1.CreateRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
 	52, // 32: admiral.runner.v1.ListRunnerTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
 	52, // 33: admiral.runner.v1.GetRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken

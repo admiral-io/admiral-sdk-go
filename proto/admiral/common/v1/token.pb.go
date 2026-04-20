@@ -210,6 +210,9 @@ type AccessToken struct {
 	// Unique within the parent resource. Lowercase alphanumeric and hyphens only,
 	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// Non-secret prefix of the token value (e.g., "adms_pL2m"). Useful for
+	// identifying a token during incident response without exposing the secret.
+	TokenPrefix string `protobuf:"bytes,3,opt,name=token_prefix,json=tokenPrefix,proto3" json:"token_prefix,omitempty"`
 	// The category of this token.
 	TokenType TokenType `protobuf:"varint,4,opt,name=token_type,json=tokenType,proto3,enum=admiral.common.v1.TokenType" json:"token_type,omitempty"`
 	// The scopes granted to this token. For PATs, these are user-selected.
@@ -276,6 +279,13 @@ func (x *AccessToken) GetId() string {
 func (x *AccessToken) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *AccessToken) GetTokenPrefix() string {
+	if x != nil {
+		return x.TokenPrefix
 	}
 	return ""
 }
@@ -354,10 +364,11 @@ var File_admiral_common_v1_token_proto protoreflect.FileDescriptor
 
 const file_admiral_common_v1_token_proto_rawDesc = "" +
 	"\n" +
-	"\x1dadmiral/common/v1/token.proto\x12\x11admiral.common.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x89\x05\n" +
+	"\x1dadmiral/common/v1/token.proto\x12\x11admiral.common.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xac\x05\n" +
 	"\vAccessToken\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
-	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12;\n" +
+	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12!\n" +
+	"\ftoken_prefix\x18\x03 \x01(\tR\vtokenPrefix\x12;\n" +
 	"\n" +
 	"token_type\x18\x04 \x01(\x0e2\x1c.admiral.common.v1.TokenTypeR\ttokenType\x12\x16\n" +
 	"\x06scopes\x18\x05 \x03(\tR\x06scopes\x12<\n" +

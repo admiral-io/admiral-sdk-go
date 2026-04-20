@@ -61,6 +61,8 @@ func (m *AccessToken) validate(all bool) error {
 
 	// no validation rules for Name
 
+	// no validation rules for TokenPrefix
+
 	// no validation rules for TokenType
 
 	// no validation rules for Status
