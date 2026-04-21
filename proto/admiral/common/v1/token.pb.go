@@ -194,14 +194,30 @@ func (AccessTokenStatus) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_common_v1_token_proto_rawDescGZIP(), []int{2}
 }
 
-// AccessToken contains token metadata common to all token types (PAT, SAT).
-// The raw token secret is never included in this message — it is only returned
-// once at creation time via the `plain_text_token` field in Create responses.
+// AccessToken contains metadata for an opaque access token issued by Admiral.
+//
+// Admiral issues two kinds of tokens, distinguished by `token_type`:
+//
+//   - **Personal Access Tokens (PATs)** -- bound to a user, created by that
+//     user via UserAPI. Scopes are user-selected at creation time. Intended
+//     for CLI, CI, and human-driven automation.
+//   - **Service Access Tokens (SATs)** -- bound to a cluster or runner,
+//     created by administrators via ClusterAPI / RunnerAPI. Scopes are
+//     auto-assigned from the resource type. Intended for long-lived agents
+//     that authenticate as the cluster or runner itself.
+//
+// The raw token secret is returned exactly once, in the `plain_text_token`
+// field of the Create response. This message carries only metadata; the
+// original secret is never retrievable after creation. The non-secret
+// `token_prefix` is safe to log and display.
 //
 // Token CRUD is managed by each parent resource's API:
 //   - PATs:         UserAPI    (/v1/user/tokens)
 //   - Cluster SATs: ClusterAPI (/v1/clusters/{id}/tokens)
 //   - Runner SATs:  RunnerAPI  (/v1/runners/{id}/tokens)
+//
+// IDP-issued JWTs (OAuth2/OIDC sessions) are not represented here; they are
+// resolved by separate middleware.
 type AccessToken struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the token (UUID).
