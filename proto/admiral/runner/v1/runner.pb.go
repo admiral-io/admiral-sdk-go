@@ -343,6 +343,59 @@ func (Engine) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{4}
 }
 
+// HookInterpreter selects which language the runner uses to execute a hook's
+// script body. Deliberately narrow today -- the enum exists primarily as
+// forward plumbing so non-shell interpreters (Python, Node, etc.) can be
+// added without a breaking change if real demand emerges.
+type HookInterpreter int32
+
+const (
+	// Default. The runner treats this as HOOK_INTERPRETER_BASH.
+	HookInterpreter_HOOK_INTERPRETER_UNSPECIFIED HookInterpreter = 0
+	// Script is executed via `bash -c`. Requires bash to be present in the
+	// agent image (the official base image ships it).
+	HookInterpreter_HOOK_INTERPRETER_BASH HookInterpreter = 1
+)
+
+// Enum value maps for HookInterpreter.
+var (
+	HookInterpreter_name = map[int32]string{
+		0: "HOOK_INTERPRETER_UNSPECIFIED",
+		1: "HOOK_INTERPRETER_BASH",
+	}
+	HookInterpreter_value = map[string]int32{
+		"HOOK_INTERPRETER_UNSPECIFIED": 0,
+		"HOOK_INTERPRETER_BASH":        1,
+	}
+)
+
+func (x HookInterpreter) Enum() *HookInterpreter {
+	p := new(HookInterpreter)
+	*p = x
+	return p
+}
+
+func (x HookInterpreter) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (HookInterpreter) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_runner_v1_runner_proto_enumTypes[5].Descriptor()
+}
+
+func (HookInterpreter) Type() protoreflect.EnumType {
+	return &file_admiral_runner_v1_runner_proto_enumTypes[5]
+}
+
+func (x HookInterpreter) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use HookInterpreter.Descriptor instead.
+func (HookInterpreter) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{5}
+}
+
 // Runner represents a registered infrastructure execution runner within a
 // tenant. Runners claim and execute Terraform operations (plan, apply, destroy)
 // dispatched by the deployment engine.
@@ -878,20 +931,25 @@ func (x *JobBundle) GetHooks() *Hooks {
 	return nil
 }
 
-// Hook is a single shell-script hook delivered with a JobBundle. Scripts are
+// Hook is a single script hook delivered with a JobBundle. Scripts are
 // inlined by the server -- the runner never fetches them from elsewhere.
 type Hook struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The shell script to execute. Passed to `sh -c`. The runner closes stdin
-	// (/dev/null) so interactive prompts cannot block execution.
+	// The script body to execute. Passed to the selected interpreter (see
+	// `interpreter`). The runner closes stdin (/dev/null) so interactive
+	// prompts cannot block execution.
 	Script string `protobuf:"bytes,1,opt,name=script,proto3" json:"script,omitempty"`
 	// Per-script timeout in seconds. If 0, the runner applies its built-in
 	// default (currently 300s). A hook that exceeds its timeout is killed
-	// (SIGKILL after grace period) and treated as a failure.
+	// and treated as a failure.
 	TimeoutSeconds int32 `protobuf:"varint,2,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
 	// Optional human-friendly name used in log lines and error messages
 	// (e.g., "vault-login"). Not required to be unique.
-	Name          string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// Which interpreter runs `script`. UNSPECIFIED falls back to the runner's
+	// default (currently bash). Unknown / unsupported values at runtime are
+	// treated as a hook failure.
+	Interpreter   HookInterpreter `protobuf:"varint,4,opt,name=interpreter,proto3,enum=admiral.runner.v1.HookInterpreter" json:"interpreter,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -945,6 +1003,13 @@ func (x *Hook) GetName() string {
 		return x.Name
 	}
 	return ""
+}
+
+func (x *Hook) GetInterpreter() HookInterpreter {
+	if x != nil {
+		return x.Interpreter
+	}
+	return HookInterpreter_HOOK_INTERPRETER_UNSPECIFIED
 }
 
 // Hooks groups the seven lifecycle extension points. Scripts within a list
@@ -2915,12 +2980,13 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aB\n" +
 	"\x14ProviderConfigsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"~\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc4\x01\n" +
 	"\x04Hook\x12#\n" +
 	"\x06script\x18\x01 \x01(\tB\v\xbaH\br\x06\x10\x01\x18\x80\x80\x04R\x06script\x123\n" +
 	"\x0ftimeout_seconds\x18\x02 \x01(\x05B\n" +
 	"\xbaH\a\x1a\x05\x18\x90\x1c(\x00R\x0etimeoutSeconds\x12\x1c\n" +
-	"\x04name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x01R\x04name\"\x97\x03\n" +
+	"\x04name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x01R\x04name\x12D\n" +
+	"\vinterpreter\x18\x04 \x01(\x0e2\".admiral.runner.v1.HookInterpreterR\vinterpreter\"\x97\x03\n" +
 	"\x05Hooks\x128\n" +
 	"\vbefore_init\x18\x01 \x03(\v2\x17.admiral.runner.v1.HookR\n" +
 	"beforeInit\x126\n" +
@@ -3070,7 +3136,10 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x06Engine\x12\x16\n" +
 	"\x12ENGINE_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10ENGINE_TERRAFORM\x10\x01\x12\x0f\n" +
-	"\vENGINE_TOFU\x10\x022\x83\x17\n" +
+	"\vENGINE_TOFU\x10\x02*N\n" +
+	"\x0fHookInterpreter\x12 \n" +
+	"\x1cHOOK_INTERPRETER_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15HOOK_INTERPRETER_BASH\x10\x012\x83\x17\n" +
 	"\tRunnerAPI\x12\xaa\x01\n" +
 	"\fCreateRunner\x12&.admiral.runner.v1.CreateRunnerRequest\x1a'.admiral.runner.v1.CreateRunnerResponse\"I\xbaG\x1a\n" +
 	"\aRunners\x12\x0fCreate a runner\xa2\x97$\x0e\n" +
@@ -3131,7 +3200,7 @@ func file_admiral_runner_v1_runner_proto_rawDescGZIP() []byte {
 	return file_admiral_runner_v1_runner_proto_rawDescData
 }
 
-var file_admiral_runner_v1_runner_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_admiral_runner_v1_runner_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_admiral_runner_v1_runner_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_admiral_runner_v1_runner_proto_goTypes = []any{
 	(RunnerHealthStatus)(0),           // 0: admiral.runner.v1.RunnerHealthStatus
@@ -3139,142 +3208,144 @@ var file_admiral_runner_v1_runner_proto_goTypes = []any{
 	(JobType)(0),                      // 2: admiral.runner.v1.JobType
 	(JobPhase)(0),                     // 3: admiral.runner.v1.JobPhase
 	(Engine)(0),                       // 4: admiral.runner.v1.Engine
-	(*Runner)(nil),                    // 5: admiral.runner.v1.Runner
-	(*RunnerStatus)(nil),              // 6: admiral.runner.v1.RunnerStatus
-	(*ActiveJobInfo)(nil),             // 7: admiral.runner.v1.ActiveJobInfo
-	(*Job)(nil),                       // 8: admiral.runner.v1.Job
-	(*JobBundle)(nil),                 // 9: admiral.runner.v1.JobBundle
-	(*Hook)(nil),                      // 10: admiral.runner.v1.Hook
-	(*Hooks)(nil),                     // 11: admiral.runner.v1.Hooks
-	(*EngineOutput)(nil),              // 12: admiral.runner.v1.EngineOutput
-	(*JobResult)(nil),                 // 13: admiral.runner.v1.JobResult
-	(*CreateRunnerRequest)(nil),       // 14: admiral.runner.v1.CreateRunnerRequest
-	(*CreateRunnerResponse)(nil),      // 15: admiral.runner.v1.CreateRunnerResponse
-	(*GetRunnerRequest)(nil),          // 16: admiral.runner.v1.GetRunnerRequest
-	(*GetRunnerResponse)(nil),         // 17: admiral.runner.v1.GetRunnerResponse
-	(*ListRunnersRequest)(nil),        // 18: admiral.runner.v1.ListRunnersRequest
-	(*ListRunnersResponse)(nil),       // 19: admiral.runner.v1.ListRunnersResponse
-	(*UpdateRunnerRequest)(nil),       // 20: admiral.runner.v1.UpdateRunnerRequest
-	(*UpdateRunnerResponse)(nil),      // 21: admiral.runner.v1.UpdateRunnerResponse
-	(*DeleteRunnerRequest)(nil),       // 22: admiral.runner.v1.DeleteRunnerRequest
-	(*DeleteRunnerResponse)(nil),      // 23: admiral.runner.v1.DeleteRunnerResponse
-	(*GetRunnerStatusRequest)(nil),    // 24: admiral.runner.v1.GetRunnerStatusRequest
-	(*GetRunnerStatusResponse)(nil),   // 25: admiral.runner.v1.GetRunnerStatusResponse
-	(*CreateRunnerTokenRequest)(nil),  // 26: admiral.runner.v1.CreateRunnerTokenRequest
-	(*CreateRunnerTokenResponse)(nil), // 27: admiral.runner.v1.CreateRunnerTokenResponse
-	(*ListRunnerTokensRequest)(nil),   // 28: admiral.runner.v1.ListRunnerTokensRequest
-	(*ListRunnerTokensResponse)(nil),  // 29: admiral.runner.v1.ListRunnerTokensResponse
-	(*GetRunnerTokenRequest)(nil),     // 30: admiral.runner.v1.GetRunnerTokenRequest
-	(*GetRunnerTokenResponse)(nil),    // 31: admiral.runner.v1.GetRunnerTokenResponse
-	(*RevokeRunnerTokenRequest)(nil),  // 32: admiral.runner.v1.RevokeRunnerTokenRequest
-	(*RevokeRunnerTokenResponse)(nil), // 33: admiral.runner.v1.RevokeRunnerTokenResponse
-	(*HeartbeatRequest)(nil),          // 34: admiral.runner.v1.HeartbeatRequest
-	(*HeartbeatResponse)(nil),         // 35: admiral.runner.v1.HeartbeatResponse
-	(*ClaimJobRequest)(nil),           // 36: admiral.runner.v1.ClaimJobRequest
-	(*ClaimJobResponse)(nil),          // 37: admiral.runner.v1.ClaimJobResponse
-	(*GetJobBundleRequest)(nil),       // 38: admiral.runner.v1.GetJobBundleRequest
-	(*GetJobBundleResponse)(nil),      // 39: admiral.runner.v1.GetJobBundleResponse
-	(*ReportJobResultRequest)(nil),    // 40: admiral.runner.v1.ReportJobResultRequest
-	(*ReportJobResultResponse)(nil),   // 41: admiral.runner.v1.ReportJobResultResponse
-	(*ListRunnerJobsRequest)(nil),     // 42: admiral.runner.v1.ListRunnerJobsRequest
-	(*ListRunnerJobsResponse)(nil),    // 43: admiral.runner.v1.ListRunnerJobsResponse
-	nil,                               // 44: admiral.runner.v1.Runner.LabelsEntry
-	nil,                               // 45: admiral.runner.v1.JobBundle.VariablesEntry
-	nil,                               // 46: admiral.runner.v1.JobBundle.ProviderConfigsEntry
-	nil,                               // 47: admiral.runner.v1.JobResult.OutputsEntry
-	nil,                               // 48: admiral.runner.v1.CreateRunnerRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),     // 49: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),               // 50: admiral.common.v1.ActorRef
-	(*v11.ChangeSummary)(nil),         // 51: admiral.deployment.v1.ChangeSummary
-	(*durationpb.Duration)(nil),       // 52: google.protobuf.Duration
-	(*fieldmaskpb.FieldMask)(nil),     // 53: google.protobuf.FieldMask
-	(*v1.AccessToken)(nil),            // 54: admiral.common.v1.AccessToken
+	(HookInterpreter)(0),              // 5: admiral.runner.v1.HookInterpreter
+	(*Runner)(nil),                    // 6: admiral.runner.v1.Runner
+	(*RunnerStatus)(nil),              // 7: admiral.runner.v1.RunnerStatus
+	(*ActiveJobInfo)(nil),             // 8: admiral.runner.v1.ActiveJobInfo
+	(*Job)(nil),                       // 9: admiral.runner.v1.Job
+	(*JobBundle)(nil),                 // 10: admiral.runner.v1.JobBundle
+	(*Hook)(nil),                      // 11: admiral.runner.v1.Hook
+	(*Hooks)(nil),                     // 12: admiral.runner.v1.Hooks
+	(*EngineOutput)(nil),              // 13: admiral.runner.v1.EngineOutput
+	(*JobResult)(nil),                 // 14: admiral.runner.v1.JobResult
+	(*CreateRunnerRequest)(nil),       // 15: admiral.runner.v1.CreateRunnerRequest
+	(*CreateRunnerResponse)(nil),      // 16: admiral.runner.v1.CreateRunnerResponse
+	(*GetRunnerRequest)(nil),          // 17: admiral.runner.v1.GetRunnerRequest
+	(*GetRunnerResponse)(nil),         // 18: admiral.runner.v1.GetRunnerResponse
+	(*ListRunnersRequest)(nil),        // 19: admiral.runner.v1.ListRunnersRequest
+	(*ListRunnersResponse)(nil),       // 20: admiral.runner.v1.ListRunnersResponse
+	(*UpdateRunnerRequest)(nil),       // 21: admiral.runner.v1.UpdateRunnerRequest
+	(*UpdateRunnerResponse)(nil),      // 22: admiral.runner.v1.UpdateRunnerResponse
+	(*DeleteRunnerRequest)(nil),       // 23: admiral.runner.v1.DeleteRunnerRequest
+	(*DeleteRunnerResponse)(nil),      // 24: admiral.runner.v1.DeleteRunnerResponse
+	(*GetRunnerStatusRequest)(nil),    // 25: admiral.runner.v1.GetRunnerStatusRequest
+	(*GetRunnerStatusResponse)(nil),   // 26: admiral.runner.v1.GetRunnerStatusResponse
+	(*CreateRunnerTokenRequest)(nil),  // 27: admiral.runner.v1.CreateRunnerTokenRequest
+	(*CreateRunnerTokenResponse)(nil), // 28: admiral.runner.v1.CreateRunnerTokenResponse
+	(*ListRunnerTokensRequest)(nil),   // 29: admiral.runner.v1.ListRunnerTokensRequest
+	(*ListRunnerTokensResponse)(nil),  // 30: admiral.runner.v1.ListRunnerTokensResponse
+	(*GetRunnerTokenRequest)(nil),     // 31: admiral.runner.v1.GetRunnerTokenRequest
+	(*GetRunnerTokenResponse)(nil),    // 32: admiral.runner.v1.GetRunnerTokenResponse
+	(*RevokeRunnerTokenRequest)(nil),  // 33: admiral.runner.v1.RevokeRunnerTokenRequest
+	(*RevokeRunnerTokenResponse)(nil), // 34: admiral.runner.v1.RevokeRunnerTokenResponse
+	(*HeartbeatRequest)(nil),          // 35: admiral.runner.v1.HeartbeatRequest
+	(*HeartbeatResponse)(nil),         // 36: admiral.runner.v1.HeartbeatResponse
+	(*ClaimJobRequest)(nil),           // 37: admiral.runner.v1.ClaimJobRequest
+	(*ClaimJobResponse)(nil),          // 38: admiral.runner.v1.ClaimJobResponse
+	(*GetJobBundleRequest)(nil),       // 39: admiral.runner.v1.GetJobBundleRequest
+	(*GetJobBundleResponse)(nil),      // 40: admiral.runner.v1.GetJobBundleResponse
+	(*ReportJobResultRequest)(nil),    // 41: admiral.runner.v1.ReportJobResultRequest
+	(*ReportJobResultResponse)(nil),   // 42: admiral.runner.v1.ReportJobResultResponse
+	(*ListRunnerJobsRequest)(nil),     // 43: admiral.runner.v1.ListRunnerJobsRequest
+	(*ListRunnerJobsResponse)(nil),    // 44: admiral.runner.v1.ListRunnerJobsResponse
+	nil,                               // 45: admiral.runner.v1.Runner.LabelsEntry
+	nil,                               // 46: admiral.runner.v1.JobBundle.VariablesEntry
+	nil,                               // 47: admiral.runner.v1.JobBundle.ProviderConfigsEntry
+	nil,                               // 48: admiral.runner.v1.JobResult.OutputsEntry
+	nil,                               // 49: admiral.runner.v1.CreateRunnerRequest.LabelsEntry
+	(*timestamppb.Timestamp)(nil),     // 50: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),               // 51: admiral.common.v1.ActorRef
+	(*v11.ChangeSummary)(nil),         // 52: admiral.deployment.v1.ChangeSummary
+	(*durationpb.Duration)(nil),       // 53: google.protobuf.Duration
+	(*fieldmaskpb.FieldMask)(nil),     // 54: google.protobuf.FieldMask
+	(*v1.AccessToken)(nil),            // 55: admiral.common.v1.AccessToken
 }
 var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
-	44, // 0: admiral.runner.v1.Runner.labels:type_name -> admiral.runner.v1.Runner.LabelsEntry
+	45, // 0: admiral.runner.v1.Runner.labels:type_name -> admiral.runner.v1.Runner.LabelsEntry
 	0,  // 1: admiral.runner.v1.Runner.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
-	49, // 2: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
-	49, // 3: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
-	50, // 4: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
-	7,  // 5: admiral.runner.v1.RunnerStatus.active_job_details:type_name -> admiral.runner.v1.ActiveJobInfo
+	50, // 2: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
+	50, // 3: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
+	51, // 4: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
+	8,  // 5: admiral.runner.v1.RunnerStatus.active_job_details:type_name -> admiral.runner.v1.ActiveJobInfo
 	3,  // 6: admiral.runner.v1.ActiveJobInfo.phase:type_name -> admiral.runner.v1.JobPhase
-	49, // 7: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
+	50, // 7: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
 	2,  // 8: admiral.runner.v1.Job.job_type:type_name -> admiral.runner.v1.JobType
 	1,  // 9: admiral.runner.v1.Job.status:type_name -> admiral.runner.v1.JobStatus
-	49, // 10: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	49, // 11: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	49, // 12: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
-	45, // 13: admiral.runner.v1.JobBundle.variables:type_name -> admiral.runner.v1.JobBundle.VariablesEntry
-	46, // 14: admiral.runner.v1.JobBundle.provider_configs:type_name -> admiral.runner.v1.JobBundle.ProviderConfigsEntry
+	50, // 10: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	50, // 11: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	50, // 12: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
+	46, // 13: admiral.runner.v1.JobBundle.variables:type_name -> admiral.runner.v1.JobBundle.VariablesEntry
+	47, // 14: admiral.runner.v1.JobBundle.provider_configs:type_name -> admiral.runner.v1.JobBundle.ProviderConfigsEntry
 	4,  // 15: admiral.runner.v1.JobBundle.engine:type_name -> admiral.runner.v1.Engine
-	11, // 16: admiral.runner.v1.JobBundle.hooks:type_name -> admiral.runner.v1.Hooks
-	10, // 17: admiral.runner.v1.Hooks.before_init:type_name -> admiral.runner.v1.Hook
-	10, // 18: admiral.runner.v1.Hooks.after_init:type_name -> admiral.runner.v1.Hook
-	10, // 19: admiral.runner.v1.Hooks.before_plan:type_name -> admiral.runner.v1.Hook
-	10, // 20: admiral.runner.v1.Hooks.after_plan:type_name -> admiral.runner.v1.Hook
-	10, // 21: admiral.runner.v1.Hooks.before_apply:type_name -> admiral.runner.v1.Hook
-	10, // 22: admiral.runner.v1.Hooks.after_apply:type_name -> admiral.runner.v1.Hook
-	10, // 23: admiral.runner.v1.Hooks.after_run:type_name -> admiral.runner.v1.Hook
-	1,  // 24: admiral.runner.v1.JobResult.status:type_name -> admiral.runner.v1.JobStatus
-	51, // 25: admiral.runner.v1.JobResult.plan_summary:type_name -> admiral.deployment.v1.ChangeSummary
-	52, // 26: admiral.runner.v1.JobResult.duration:type_name -> google.protobuf.Duration
-	47, // 27: admiral.runner.v1.JobResult.outputs:type_name -> admiral.runner.v1.JobResult.OutputsEntry
-	48, // 28: admiral.runner.v1.CreateRunnerRequest.labels:type_name -> admiral.runner.v1.CreateRunnerRequest.LabelsEntry
-	5,  // 29: admiral.runner.v1.CreateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
-	5,  // 30: admiral.runner.v1.GetRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
-	5,  // 31: admiral.runner.v1.ListRunnersResponse.runners:type_name -> admiral.runner.v1.Runner
-	5,  // 32: admiral.runner.v1.UpdateRunnerRequest.runner:type_name -> admiral.runner.v1.Runner
-	53, // 33: admiral.runner.v1.UpdateRunnerRequest.update_mask:type_name -> google.protobuf.FieldMask
-	5,  // 34: admiral.runner.v1.UpdateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
-	0,  // 35: admiral.runner.v1.GetRunnerStatusResponse.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
-	6,  // 36: admiral.runner.v1.GetRunnerStatusResponse.status:type_name -> admiral.runner.v1.RunnerStatus
-	49, // 37: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	49, // 38: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
-	54, // 39: admiral.runner.v1.CreateRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	54, // 40: admiral.runner.v1.ListRunnerTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
-	54, // 41: admiral.runner.v1.GetRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	54, // 42: admiral.runner.v1.RevokeRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	6,  // 43: admiral.runner.v1.HeartbeatRequest.status:type_name -> admiral.runner.v1.RunnerStatus
-	8,  // 44: admiral.runner.v1.ClaimJobResponse.job:type_name -> admiral.runner.v1.Job
-	9,  // 45: admiral.runner.v1.GetJobBundleResponse.bundle:type_name -> admiral.runner.v1.JobBundle
-	13, // 46: admiral.runner.v1.ReportJobResultRequest.result:type_name -> admiral.runner.v1.JobResult
-	8,  // 47: admiral.runner.v1.ListRunnerJobsResponse.jobs:type_name -> admiral.runner.v1.Job
-	12, // 48: admiral.runner.v1.JobResult.OutputsEntry.value:type_name -> admiral.runner.v1.EngineOutput
-	14, // 49: admiral.runner.v1.RunnerAPI.CreateRunner:input_type -> admiral.runner.v1.CreateRunnerRequest
-	16, // 50: admiral.runner.v1.RunnerAPI.GetRunner:input_type -> admiral.runner.v1.GetRunnerRequest
-	18, // 51: admiral.runner.v1.RunnerAPI.ListRunners:input_type -> admiral.runner.v1.ListRunnersRequest
-	20, // 52: admiral.runner.v1.RunnerAPI.UpdateRunner:input_type -> admiral.runner.v1.UpdateRunnerRequest
-	22, // 53: admiral.runner.v1.RunnerAPI.DeleteRunner:input_type -> admiral.runner.v1.DeleteRunnerRequest
-	24, // 54: admiral.runner.v1.RunnerAPI.GetRunnerStatus:input_type -> admiral.runner.v1.GetRunnerStatusRequest
-	26, // 55: admiral.runner.v1.RunnerAPI.CreateRunnerToken:input_type -> admiral.runner.v1.CreateRunnerTokenRequest
-	28, // 56: admiral.runner.v1.RunnerAPI.ListRunnerTokens:input_type -> admiral.runner.v1.ListRunnerTokensRequest
-	30, // 57: admiral.runner.v1.RunnerAPI.GetRunnerToken:input_type -> admiral.runner.v1.GetRunnerTokenRequest
-	32, // 58: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:input_type -> admiral.runner.v1.RevokeRunnerTokenRequest
-	34, // 59: admiral.runner.v1.RunnerAPI.Heartbeat:input_type -> admiral.runner.v1.HeartbeatRequest
-	36, // 60: admiral.runner.v1.RunnerAPI.ClaimJob:input_type -> admiral.runner.v1.ClaimJobRequest
-	38, // 61: admiral.runner.v1.RunnerAPI.GetJobBundle:input_type -> admiral.runner.v1.GetJobBundleRequest
-	40, // 62: admiral.runner.v1.RunnerAPI.ReportJobResult:input_type -> admiral.runner.v1.ReportJobResultRequest
-	42, // 63: admiral.runner.v1.RunnerAPI.ListRunnerJobs:input_type -> admiral.runner.v1.ListRunnerJobsRequest
-	15, // 64: admiral.runner.v1.RunnerAPI.CreateRunner:output_type -> admiral.runner.v1.CreateRunnerResponse
-	17, // 65: admiral.runner.v1.RunnerAPI.GetRunner:output_type -> admiral.runner.v1.GetRunnerResponse
-	19, // 66: admiral.runner.v1.RunnerAPI.ListRunners:output_type -> admiral.runner.v1.ListRunnersResponse
-	21, // 67: admiral.runner.v1.RunnerAPI.UpdateRunner:output_type -> admiral.runner.v1.UpdateRunnerResponse
-	23, // 68: admiral.runner.v1.RunnerAPI.DeleteRunner:output_type -> admiral.runner.v1.DeleteRunnerResponse
-	25, // 69: admiral.runner.v1.RunnerAPI.GetRunnerStatus:output_type -> admiral.runner.v1.GetRunnerStatusResponse
-	27, // 70: admiral.runner.v1.RunnerAPI.CreateRunnerToken:output_type -> admiral.runner.v1.CreateRunnerTokenResponse
-	29, // 71: admiral.runner.v1.RunnerAPI.ListRunnerTokens:output_type -> admiral.runner.v1.ListRunnerTokensResponse
-	31, // 72: admiral.runner.v1.RunnerAPI.GetRunnerToken:output_type -> admiral.runner.v1.GetRunnerTokenResponse
-	33, // 73: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:output_type -> admiral.runner.v1.RevokeRunnerTokenResponse
-	35, // 74: admiral.runner.v1.RunnerAPI.Heartbeat:output_type -> admiral.runner.v1.HeartbeatResponse
-	37, // 75: admiral.runner.v1.RunnerAPI.ClaimJob:output_type -> admiral.runner.v1.ClaimJobResponse
-	39, // 76: admiral.runner.v1.RunnerAPI.GetJobBundle:output_type -> admiral.runner.v1.GetJobBundleResponse
-	41, // 77: admiral.runner.v1.RunnerAPI.ReportJobResult:output_type -> admiral.runner.v1.ReportJobResultResponse
-	43, // 78: admiral.runner.v1.RunnerAPI.ListRunnerJobs:output_type -> admiral.runner.v1.ListRunnerJobsResponse
-	64, // [64:79] is the sub-list for method output_type
-	49, // [49:64] is the sub-list for method input_type
-	49, // [49:49] is the sub-list for extension type_name
-	49, // [49:49] is the sub-list for extension extendee
-	0,  // [0:49] is the sub-list for field type_name
+	12, // 16: admiral.runner.v1.JobBundle.hooks:type_name -> admiral.runner.v1.Hooks
+	5,  // 17: admiral.runner.v1.Hook.interpreter:type_name -> admiral.runner.v1.HookInterpreter
+	11, // 18: admiral.runner.v1.Hooks.before_init:type_name -> admiral.runner.v1.Hook
+	11, // 19: admiral.runner.v1.Hooks.after_init:type_name -> admiral.runner.v1.Hook
+	11, // 20: admiral.runner.v1.Hooks.before_plan:type_name -> admiral.runner.v1.Hook
+	11, // 21: admiral.runner.v1.Hooks.after_plan:type_name -> admiral.runner.v1.Hook
+	11, // 22: admiral.runner.v1.Hooks.before_apply:type_name -> admiral.runner.v1.Hook
+	11, // 23: admiral.runner.v1.Hooks.after_apply:type_name -> admiral.runner.v1.Hook
+	11, // 24: admiral.runner.v1.Hooks.after_run:type_name -> admiral.runner.v1.Hook
+	1,  // 25: admiral.runner.v1.JobResult.status:type_name -> admiral.runner.v1.JobStatus
+	52, // 26: admiral.runner.v1.JobResult.plan_summary:type_name -> admiral.deployment.v1.ChangeSummary
+	53, // 27: admiral.runner.v1.JobResult.duration:type_name -> google.protobuf.Duration
+	48, // 28: admiral.runner.v1.JobResult.outputs:type_name -> admiral.runner.v1.JobResult.OutputsEntry
+	49, // 29: admiral.runner.v1.CreateRunnerRequest.labels:type_name -> admiral.runner.v1.CreateRunnerRequest.LabelsEntry
+	6,  // 30: admiral.runner.v1.CreateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
+	6,  // 31: admiral.runner.v1.GetRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
+	6,  // 32: admiral.runner.v1.ListRunnersResponse.runners:type_name -> admiral.runner.v1.Runner
+	6,  // 33: admiral.runner.v1.UpdateRunnerRequest.runner:type_name -> admiral.runner.v1.Runner
+	54, // 34: admiral.runner.v1.UpdateRunnerRequest.update_mask:type_name -> google.protobuf.FieldMask
+	6,  // 35: admiral.runner.v1.UpdateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
+	0,  // 36: admiral.runner.v1.GetRunnerStatusResponse.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
+	7,  // 37: admiral.runner.v1.GetRunnerStatusResponse.status:type_name -> admiral.runner.v1.RunnerStatus
+	50, // 38: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
+	50, // 39: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
+	55, // 40: admiral.runner.v1.CreateRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	55, // 41: admiral.runner.v1.ListRunnerTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
+	55, // 42: admiral.runner.v1.GetRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	55, // 43: admiral.runner.v1.RevokeRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	7,  // 44: admiral.runner.v1.HeartbeatRequest.status:type_name -> admiral.runner.v1.RunnerStatus
+	9,  // 45: admiral.runner.v1.ClaimJobResponse.job:type_name -> admiral.runner.v1.Job
+	10, // 46: admiral.runner.v1.GetJobBundleResponse.bundle:type_name -> admiral.runner.v1.JobBundle
+	14, // 47: admiral.runner.v1.ReportJobResultRequest.result:type_name -> admiral.runner.v1.JobResult
+	9,  // 48: admiral.runner.v1.ListRunnerJobsResponse.jobs:type_name -> admiral.runner.v1.Job
+	13, // 49: admiral.runner.v1.JobResult.OutputsEntry.value:type_name -> admiral.runner.v1.EngineOutput
+	15, // 50: admiral.runner.v1.RunnerAPI.CreateRunner:input_type -> admiral.runner.v1.CreateRunnerRequest
+	17, // 51: admiral.runner.v1.RunnerAPI.GetRunner:input_type -> admiral.runner.v1.GetRunnerRequest
+	19, // 52: admiral.runner.v1.RunnerAPI.ListRunners:input_type -> admiral.runner.v1.ListRunnersRequest
+	21, // 53: admiral.runner.v1.RunnerAPI.UpdateRunner:input_type -> admiral.runner.v1.UpdateRunnerRequest
+	23, // 54: admiral.runner.v1.RunnerAPI.DeleteRunner:input_type -> admiral.runner.v1.DeleteRunnerRequest
+	25, // 55: admiral.runner.v1.RunnerAPI.GetRunnerStatus:input_type -> admiral.runner.v1.GetRunnerStatusRequest
+	27, // 56: admiral.runner.v1.RunnerAPI.CreateRunnerToken:input_type -> admiral.runner.v1.CreateRunnerTokenRequest
+	29, // 57: admiral.runner.v1.RunnerAPI.ListRunnerTokens:input_type -> admiral.runner.v1.ListRunnerTokensRequest
+	31, // 58: admiral.runner.v1.RunnerAPI.GetRunnerToken:input_type -> admiral.runner.v1.GetRunnerTokenRequest
+	33, // 59: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:input_type -> admiral.runner.v1.RevokeRunnerTokenRequest
+	35, // 60: admiral.runner.v1.RunnerAPI.Heartbeat:input_type -> admiral.runner.v1.HeartbeatRequest
+	37, // 61: admiral.runner.v1.RunnerAPI.ClaimJob:input_type -> admiral.runner.v1.ClaimJobRequest
+	39, // 62: admiral.runner.v1.RunnerAPI.GetJobBundle:input_type -> admiral.runner.v1.GetJobBundleRequest
+	41, // 63: admiral.runner.v1.RunnerAPI.ReportJobResult:input_type -> admiral.runner.v1.ReportJobResultRequest
+	43, // 64: admiral.runner.v1.RunnerAPI.ListRunnerJobs:input_type -> admiral.runner.v1.ListRunnerJobsRequest
+	16, // 65: admiral.runner.v1.RunnerAPI.CreateRunner:output_type -> admiral.runner.v1.CreateRunnerResponse
+	18, // 66: admiral.runner.v1.RunnerAPI.GetRunner:output_type -> admiral.runner.v1.GetRunnerResponse
+	20, // 67: admiral.runner.v1.RunnerAPI.ListRunners:output_type -> admiral.runner.v1.ListRunnersResponse
+	22, // 68: admiral.runner.v1.RunnerAPI.UpdateRunner:output_type -> admiral.runner.v1.UpdateRunnerResponse
+	24, // 69: admiral.runner.v1.RunnerAPI.DeleteRunner:output_type -> admiral.runner.v1.DeleteRunnerResponse
+	26, // 70: admiral.runner.v1.RunnerAPI.GetRunnerStatus:output_type -> admiral.runner.v1.GetRunnerStatusResponse
+	28, // 71: admiral.runner.v1.RunnerAPI.CreateRunnerToken:output_type -> admiral.runner.v1.CreateRunnerTokenResponse
+	30, // 72: admiral.runner.v1.RunnerAPI.ListRunnerTokens:output_type -> admiral.runner.v1.ListRunnerTokensResponse
+	32, // 73: admiral.runner.v1.RunnerAPI.GetRunnerToken:output_type -> admiral.runner.v1.GetRunnerTokenResponse
+	34, // 74: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:output_type -> admiral.runner.v1.RevokeRunnerTokenResponse
+	36, // 75: admiral.runner.v1.RunnerAPI.Heartbeat:output_type -> admiral.runner.v1.HeartbeatResponse
+	38, // 76: admiral.runner.v1.RunnerAPI.ClaimJob:output_type -> admiral.runner.v1.ClaimJobResponse
+	40, // 77: admiral.runner.v1.RunnerAPI.GetJobBundle:output_type -> admiral.runner.v1.GetJobBundleResponse
+	42, // 78: admiral.runner.v1.RunnerAPI.ReportJobResult:output_type -> admiral.runner.v1.ReportJobResultResponse
+	44, // 79: admiral.runner.v1.RunnerAPI.ListRunnerJobs:output_type -> admiral.runner.v1.ListRunnerJobsResponse
+	65, // [65:80] is the sub-list for method output_type
+	50, // [50:65] is the sub-list for method input_type
+	50, // [50:50] is the sub-list for extension type_name
+	50, // [50:50] is the sub-list for extension extendee
+	0,  // [0:50] is the sub-list for field type_name
 }
 
 func init() { file_admiral_runner_v1_runner_proto_init() }
@@ -3287,7 +3358,7 @@ func file_admiral_runner_v1_runner_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_runner_v1_runner_proto_rawDesc), len(file_admiral_runner_v1_runner_proto_rawDesc)),
-			NumEnums:      5,
+			NumEnums:      6,
 			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,

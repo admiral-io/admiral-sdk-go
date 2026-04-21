@@ -872,6 +872,8 @@ func (m *Hook) validate(all bool) error {
 
 	// no validation rules for Name
 
+	// no validation rules for Interpreter
+
 	if len(errors) > 0 {
 		return HookMultiError(errors)
 	}
