@@ -64,15 +64,16 @@ type VariableAPIClient interface {
 	//
 	// Scope: `var:read`
 	GetVariable(context.Context, *connect.Request[v1.GetVariableRequest]) (*connect.Response[v1.GetVariableResponse], error)
-	// ListVariables returns a merged, paginated list of variables.
-	//
-	// The returned list is a resolved view based on the provided filters:
+	// ListVariables returns a paginated list of variables drawn from all levels
+	// in scope for the provided filters:
 	//   - No application_id or environment_id: global variables only.
-	//   - application_id only: global + app-level variables merged.
-	//   - application_id + environment_id: global + app + environment variables merged.
+	//   - application_id only: global + app-level variables.
+	//   - application_id + environment_id: global + app + environment variables.
 	//
-	// When variables with the same key exist at multiple levels, all are returned
-	// so clients can determine precedence.
+	// The response is the raw union, not a precedence-resolved view: when the
+	// same key exists at multiple levels, every entry is returned. This is
+	// deliberate -- UIs need to show which level overrides which. Deployment
+	// rendering applies precedence (env > app > global) automatically.
 	//
 	// Scope: `var:read`
 	ListVariables(context.Context, *connect.Request[v1.ListVariablesRequest]) (*connect.Response[v1.ListVariablesResponse], error)
@@ -181,15 +182,16 @@ type VariableAPIHandler interface {
 	//
 	// Scope: `var:read`
 	GetVariable(context.Context, *connect.Request[v1.GetVariableRequest]) (*connect.Response[v1.GetVariableResponse], error)
-	// ListVariables returns a merged, paginated list of variables.
-	//
-	// The returned list is a resolved view based on the provided filters:
+	// ListVariables returns a paginated list of variables drawn from all levels
+	// in scope for the provided filters:
 	//   - No application_id or environment_id: global variables only.
-	//   - application_id only: global + app-level variables merged.
-	//   - application_id + environment_id: global + app + environment variables merged.
+	//   - application_id only: global + app-level variables.
+	//   - application_id + environment_id: global + app + environment variables.
 	//
-	// When variables with the same key exist at multiple levels, all are returned
-	// so clients can determine precedence.
+	// The response is the raw union, not a precedence-resolved view: when the
+	// same key exists at multiple levels, every entry is returned. This is
+	// deliberate -- UIs need to show which level overrides which. Deployment
+	// rendering applies precedence (env > app > global) automatically.
 	//
 	// Scope: `var:read`
 	ListVariables(context.Context, *connect.Request[v1.ListVariablesRequest]) (*connect.Response[v1.ListVariablesResponse], error)

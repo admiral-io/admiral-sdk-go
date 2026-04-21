@@ -164,9 +164,9 @@ type RunnerAPIClient interface {
 	// from ClaimJob to keep the claim response lightweight -- the runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
-	// The bundle contains everything the runner needs to execute the Terraform
-	// operation: rendered .tf files, resolved variables, provider configuration,
-	// backend configuration, and the required Terraform version.
+	// The bundle contains everything the runner needs to execute the infrastructure
+	// operation: rendered infrastructure files, resolved variables, provider
+	// configuration, backend configuration, the target engine, and its version.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
@@ -478,9 +478,9 @@ type RunnerAPIHandler interface {
 	// from ClaimJob to keep the claim response lightweight -- the runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
-	// The bundle contains everything the runner needs to execute the Terraform
-	// operation: rendered .tf files, resolved variables, provider configuration,
-	// backend configuration, and the required Terraform version.
+	// The bundle contains everything the runner needs to execute the infrastructure
+	// operation: rendered infrastructure files, resolved variables, provider
+	// configuration, backend configuration, the target engine, and its version.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//

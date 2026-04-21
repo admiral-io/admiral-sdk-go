@@ -210,8 +210,11 @@ type AccessToken struct {
 	// Unique within the parent resource. Lowercase alphanumeric and hyphens only,
 	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Non-secret prefix of the token value (e.g., "adms_pL2m"). Useful for
-	// identifying a token during incident response without exposing the secret.
+	// Non-secret prefix of the token value -- the five-character brand
+	// (`admp_` for PATs, `adms_` for SATs) followed by a short sample of
+	// characters from the secret body (e.g., "adms_pL2m"). URL-safe and safe
+	// to log and display. Use for incident response and audit trails without
+	// exposing the secret.
 	TokenPrefix string `protobuf:"bytes,3,opt,name=token_prefix,json=tokenPrefix,proto3" json:"token_prefix,omitempty"`
 	// The category of this token.
 	TokenType TokenType `protobuf:"varint,4,opt,name=token_type,json=tokenType,proto3,enum=admiral.common.v1.TokenType" json:"token_type,omitempty"`

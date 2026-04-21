@@ -40,11 +40,12 @@ const (
 // application+environment combination (applying overrides), builds a
 // dependency graph, and renders each component into an immutable revision.
 //
-// Infrastructure revisions (Terraform) follow a plan → apply lifecycle.
-// Workload revisions (Helm, Kustomize, manifests) are applied directly to
-// the target cluster. The deployment engine executes the dependency graph
-// in order: independent components run in parallel, dependent components
-// wait for their upstream to succeed.
+// Infrastructure revisions follow a plan → apply lifecycle, executed by a
+// terraform-semantic engine (Terraform or OpenTofu) on the environment's
+// assigned runner. Workload revisions (Helm, Kustomize, manifests) are
+// applied directly to the target cluster. The deployment engine executes
+// the dependency graph in order: independent components run in parallel,
+// dependent components wait for their upstream to succeed.
 //
 // To roll back to a prior known-good state, create a new deployment with
 // `source_deployment_id` set to a previous successful deployment. This
@@ -58,9 +59,10 @@ type DeploymentAPIClient interface {
 	// builds the dependency DAG, and begins rendering and executing revisions.
 	//
 	// To destroy all resources in an environment (e.g., before deleting the
-	// environment), set `destroy` to true. This runs Terraform destroy for
-	// infrastructure components and deletes workload resources from the cluster,
-	// in reverse dependency order.
+	// environment), set `destroy` to true. This runs the engine's destroy
+	// operation (e.g., `terraform destroy` / `tofu destroy`) for infrastructure
+	// components and deletes workload resources from the cluster, in reverse
+	// dependency order.
 	//
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),
@@ -209,11 +211,12 @@ func (c *deploymentAPIClient) ApplyDeployment(ctx context.Context, in *ApplyDepl
 // application+environment combination (applying overrides), builds a
 // dependency graph, and renders each component into an immutable revision.
 //
-// Infrastructure revisions (Terraform) follow a plan → apply lifecycle.
-// Workload revisions (Helm, Kustomize, manifests) are applied directly to
-// the target cluster. The deployment engine executes the dependency graph
-// in order: independent components run in parallel, dependent components
-// wait for their upstream to succeed.
+// Infrastructure revisions follow a plan → apply lifecycle, executed by a
+// terraform-semantic engine (Terraform or OpenTofu) on the environment's
+// assigned runner. Workload revisions (Helm, Kustomize, manifests) are
+// applied directly to the target cluster. The deployment engine executes
+// the dependency graph in order: independent components run in parallel,
+// dependent components wait for their upstream to succeed.
 //
 // To roll back to a prior known-good state, create a new deployment with
 // `source_deployment_id` set to a previous successful deployment. This
@@ -227,9 +230,10 @@ type DeploymentAPIServer interface {
 	// builds the dependency DAG, and begins rendering and executing revisions.
 	//
 	// To destroy all resources in an environment (e.g., before deleting the
-	// environment), set `destroy` to true. This runs Terraform destroy for
-	// infrastructure components and deletes workload resources from the cluster,
-	// in reverse dependency order.
+	// environment), set `destroy` to true. This runs the engine's destroy
+	// operation (e.g., `terraform destroy` / `tofu destroy`) for infrastructure
+	// components and deletes workload resources from the cluster, in reverse
+	// dependency order.
 	//
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),

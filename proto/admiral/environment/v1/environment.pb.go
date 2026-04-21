@@ -234,7 +234,7 @@ func (x *TerraformConfig) GetRunnerId() string {
 
 // WorkloadTarget binds an environment to a workload runtime. Each target
 // carries type-specific configuration that references a managed entity
-// (e.g., a Cluster for Kubernetes, a Connection for Cloud Run).
+// (e.g., a Cluster for Kubernetes).
 //
 // At most one target per WorkloadType is allowed per environment.
 type WorkloadTarget struct {
@@ -308,7 +308,7 @@ func (*WorkloadTarget_Kubernetes) isWorkloadTarget_Config() {}
 
 // InfrastructureTarget binds an environment to an infrastructure provisioning
 // runtime. Each target carries type-specific configuration that references a
-// managed entity (e.g., a Runner for Terraform, a Connection for CloudFormation).
+// managed entity (e.g., a Runner for Terraform/OpenTofu).
 //
 // At most one target per InfrastructureType is allowed per environment.
 type InfrastructureTarget struct {

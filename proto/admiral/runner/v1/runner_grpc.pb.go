@@ -42,17 +42,21 @@ const (
 //
 // RunnerAPI manages infrastructure execution runners and their jobs.
 //
-// Runners are the execution plane for infrastructure operations (Terraform
-// plan, apply, destroy). Administrators create runners via CreateRunner,
-// which returns an Service Access Token (SAT) for deploying the runner binary.
-// Once the runner boots and begins heartbeating, the server transitions
-// its health from PENDING to HEALTHY and the runner can start claiming jobs.
+// Runners are the execution plane for infrastructure operations (plan, apply,
+// destroy) executed by a terraform-semantic engine. The concrete engine --
+// Terraform or OpenTofu -- is selected per job via JobBundle.engine, so a
+// single runner can serve both. Administrators create runners via
+// CreateRunner, which returns a Service Access Token (SAT) for deploying the
+// runner binary. Once the runner boots and begins heartbeating, the server
+// transitions its health from PENDING to HEALTHY and the runner can start
+// claiming jobs.
 //
 // The job lifecycle bridges Deployments and Runners:
 //  1. CreateDeployment resolves components and creates Revisions.
 //  2. For infrastructure revisions, the server creates a Job and assigns it
 //     to the environment's configured runner.
-//  3. The runner calls ClaimJob → GetJobBundle → executes TF → ReportJobResult.
+//  3. The runner calls ClaimJob → GetJobBundle → executes the engine →
+//     ReportJobResult.
 //  4. ReportJobResult transitions the parent Revision status.
 //
 // Admin routes follow /v1/runners/... (plural, with IDs).
@@ -152,9 +156,9 @@ type RunnerAPIClient interface {
 	// from ClaimJob to keep the claim response lightweight -- the runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
-	// The bundle contains everything the runner needs to execute the Terraform
-	// operation: rendered .tf files, resolved variables, provider configuration,
-	// backend configuration, and the required Terraform version.
+	// The bundle contains everything the runner needs to execute the infrastructure
+	// operation: rendered infrastructure files, resolved variables, provider
+	// configuration, backend configuration, the target engine, and its version.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
@@ -340,17 +344,21 @@ func (c *runnerAPIClient) ListRunnerJobs(ctx context.Context, in *ListRunnerJobs
 //
 // RunnerAPI manages infrastructure execution runners and their jobs.
 //
-// Runners are the execution plane for infrastructure operations (Terraform
-// plan, apply, destroy). Administrators create runners via CreateRunner,
-// which returns an Service Access Token (SAT) for deploying the runner binary.
-// Once the runner boots and begins heartbeating, the server transitions
-// its health from PENDING to HEALTHY and the runner can start claiming jobs.
+// Runners are the execution plane for infrastructure operations (plan, apply,
+// destroy) executed by a terraform-semantic engine. The concrete engine --
+// Terraform or OpenTofu -- is selected per job via JobBundle.engine, so a
+// single runner can serve both. Administrators create runners via
+// CreateRunner, which returns a Service Access Token (SAT) for deploying the
+// runner binary. Once the runner boots and begins heartbeating, the server
+// transitions its health from PENDING to HEALTHY and the runner can start
+// claiming jobs.
 //
 // The job lifecycle bridges Deployments and Runners:
 //  1. CreateDeployment resolves components and creates Revisions.
 //  2. For infrastructure revisions, the server creates a Job and assigns it
 //     to the environment's configured runner.
-//  3. The runner calls ClaimJob → GetJobBundle → executes TF → ReportJobResult.
+//  3. The runner calls ClaimJob → GetJobBundle → executes the engine →
+//     ReportJobResult.
 //  4. ReportJobResult transitions the parent Revision status.
 //
 // Admin routes follow /v1/runners/... (plural, with IDs).
@@ -450,9 +458,9 @@ type RunnerAPIServer interface {
 	// from ClaimJob to keep the claim response lightweight -- the runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
-	// The bundle contains everything the runner needs to execute the Terraform
-	// operation: rendered .tf files, resolved variables, provider configuration,
-	// backend configuration, and the required Terraform version.
+	// The bundle contains everything the runner needs to execute the infrastructure
+	// operation: rendered infrastructure files, resolved variables, provider
+	// configuration, backend configuration, the target engine, and its version.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//

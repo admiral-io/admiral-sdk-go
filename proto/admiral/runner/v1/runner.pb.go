@@ -161,19 +161,21 @@ func (JobStatus) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{1}
 }
 
-// JobType identifies the kind of Terraform operation a job executes.
+// JobType identifies the kind of infrastructure operation a job executes.
+// The concrete engine (Terraform or OpenTofu) is selected per job via
+// JobBundle.engine; the semantics of each type are identical across engines.
 type JobType int32
 
 const (
 	// Default value. Must not be used.
 	JobType_JOB_TYPE_UNSPECIFIED JobType = 0
-	// Generate a Terraform execution plan.
+	// Generate an execution plan (e.g., `terraform plan` / `tofu plan`).
 	JobType_JOB_TYPE_PLAN JobType = 1
-	// Apply a Terraform plan.
+	// Apply a previously generated plan.
 	JobType_JOB_TYPE_APPLY JobType = 2
-	// Generate a Terraform destroy plan.
+	// Generate a destroy plan.
 	JobType_JOB_TYPE_DESTROY_PLAN JobType = 3
-	// Apply a Terraform destroy plan (tear down resources).
+	// Apply a destroy plan (tear down resources).
 	JobType_JOB_TYPE_DESTROY_APPLY JobType = 4
 )
 
@@ -397,8 +399,9 @@ func (HookInterpreter) EnumDescriptor() ([]byte, []int) {
 }
 
 // Runner represents a registered infrastructure execution runner within a
-// tenant. Runners claim and execute Terraform operations (plan, apply, destroy)
-// dispatched by the deployment engine.
+// tenant. Runners claim and execute infrastructure operations (plan, apply,
+// destroy) dispatched by the deployment engine, using the terraform-semantic
+// engine selected per job (Terraform or OpenTofu).
 type Runner struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the runner (UUID).
@@ -417,7 +420,9 @@ type Runner struct {
 	HealthStatus RunnerHealthStatus `protobuf:"varint,5,opt,name=health_status,json=healthStatus,proto3,enum=admiral.runner.v1.RunnerHealthStatus" json:"health_status,omitempty"`
 	// When the runner record was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the runner record was last updated.
+	// When the runner record was last updated via UpdateRunner. Heartbeats do
+	// not bump this field -- liveness state is exposed separately via
+	// RunnerStatus and health_status.
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// The user or agent who created this runner (server-populated from token).
 	CreatedBy     *v1.ActorRef `protobuf:"bytes,8,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
@@ -535,6 +540,10 @@ type RunnerStatus struct {
 	// worker thread updates job phase in shared memory; the heartbeat thread
 	// reads and includes it on each tick. Gives the server visibility into
 	// job progress for stuck-job detection and admin dashboards.
+	//
+	// This is the complete set of jobs currently in flight on the instance --
+	// the runner does not cap or sample this list. `len(active_job_details)`
+	// equals `active_jobs` on every heartbeat.
 	ActiveJobDetails []*ActiveJobInfo `protobuf:"bytes,4,rep,name=active_job_details,json=activeJobDetails,proto3" json:"active_job_details,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -675,7 +684,7 @@ type Job struct {
 	RevisionId string `protobuf:"bytes,3,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
 	// The deployment this job belongs to (UUID). Denormalized for convenience.
 	DeploymentId string `protobuf:"bytes,4,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
-	// The type of Terraform operation to execute.
+	// The type of infrastructure operation to execute.
 	JobType JobType `protobuf:"varint,5,opt,name=job_type,json=jobType,proto3,enum=admiral.runner.v1.JobType" json:"job_type,omitempty"`
 	// Current lifecycle status of the job.
 	Status JobStatus `protobuf:"varint,6,opt,name=status,proto3,enum=admiral.runner.v1.JobStatus" json:"status,omitempty"`
@@ -788,13 +797,21 @@ func (x *Job) GetCompletedAt() *timestamppb.Timestamp {
 type JobBundle struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Signed URL to download the rendered artifact bundle (tar.gz containing
-	// .tf files, .tfvars, etc.). Time-limited.
+	// the rendered infrastructure source tree -- `.tf` files, auto-loaded
+	// tfvars, etc.). Time-limited.
 	ArtifactUrl string `protobuf:"bytes,1,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
 	// SHA-256 checksum of the artifact bundle for integrity verification.
 	ArtifactChecksum string `protobuf:"bytes,2,opt,name=artifact_checksum,json=artifactChecksum,proto3" json:"artifact_checksum,omitempty"`
 	// Resolved variable values written to the workspace as an auto-loaded
 	// tfvars file. Sensitive values are included (runner is a trusted
 	// execution context).
+	//
+	// Encoding contract: the runner writes the map verbatim as HCL
+	// `key = value` lines -- it does NOT re-quote strings or JSON-encode
+	// complex types. The server is responsible for producing the correct HCL
+	// literal for each variable's type (e.g., a string is already double-quoted,
+	// a list is already `["a", "b"]`). Keys must match the infrastructure
+	// module's variable names exactly.
 	Variables map[string]string `protobuf:"bytes,3,rep,name=variables,proto3" json:"variables,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Provider configuration blocks (JSON-encoded). Keys are provider names
 	// (e.g., "aws", "google"), values are JSON objects with provider config.
@@ -811,6 +828,12 @@ type JobBundle struct {
 	// runner writes the appropriate version file (`.terraform-version` /
 	// `.opentofu-version`) so tfenv / tofuenv dispatches to the matching
 	// binary, downloading it on demand if not already cached.
+	//
+	// If the runner cannot provide the requested version (download disabled,
+	// no network egress, resolver error), the job fails fast with a
+	// descriptive `JobResult.error_message`; the server does NOT re-route to
+	// a different runner. Operators control which versions are permitted via
+	// the runner image's tfenv/tofuenv configuration.
 	EngineVersion string `protobuf:"bytes,7,opt,name=engine_version,json=engineVersion,proto3" json:"engine_version,omitempty"`
 	// Subdirectory within the extracted archive where the executor should run
 	// (e.g., "modules/cloudsql"). Empty means the archive root. Preserves
@@ -822,10 +845,10 @@ type JobBundle struct {
 	// Empty for plan jobs.
 	PlanFileUrl string `protobuf:"bytes,9,opt,name=plan_file_url,json=planFileUrl,proto3" json:"plan_file_url,omitempty"`
 	// Shell-script hooks that run before and after each engine phase.
-	// The runner invokes each hook via `sh -c <script>` in the execution
-	// directory, with the same environment as the engine. Hook stdout/stderr
-	// is folded into the job transcript. See the Hooks message for failure
-	// semantics.
+	// The runner invokes each hook via the Hook's selected interpreter (bash
+	// by default) in the execution directory, with the same environment as the
+	// engine. Hook stdout/stderr is folded into the job transcript. See the
+	// Hooks message for per-phase failure semantics.
 	Hooks         *Hooks `protobuf:"bytes,10,opt,name=hooks,proto3" json:"hooks,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1016,27 +1039,33 @@ func (x *Hook) GetInterpreter() HookInterpreter {
 // run in list order. Failure behavior differs by phase:
 //   - `before_*` hooks are fail-fast: the first non-zero exit aborts the
 //     phase, the engine command does not run, and the job fails.
-//   - `after_*` hooks and `after_run` hooks are run-all: every script in
-//     the list executes regardless of sibling failures. Individual failures
-//     are logged but do not fail the job.
-//
-// `after_run` always runs, even if an earlier phase failed (it is the
-// runner's equivalent of a `finally` block).
+//   - `after_*` hooks run ONLY when the corresponding engine command
+//     succeeded. If the engine command failed (non-zero exit), the matching
+//     `after_*` list is skipped entirely and the job proceeds to `after_run`.
+//     When they do run, they are run-all: every script executes regardless
+//     of sibling failures, and individual non-zero exits are logged but do
+//     not fail the job.
+//   - `after_run` always runs, even when the engine command or any other
+//     hook failed -- it is the runner's `finally` block. Also run-all.
 type Hooks struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Scripts to run before `terraform init` (or equivalent). Fail-fast.
+	// Scripts to run before the init phase (`terraform init` / `tofu init`).
+	// Fail-fast.
 	BeforeInit []*Hook `protobuf:"bytes,1,rep,name=before_init,json=beforeInit,proto3" json:"before_init,omitempty"`
-	// Scripts to run after `terraform init` succeeded. Run-all.
+	// Scripts to run after the init phase succeeded. Run-all; skipped if
+	// init failed.
 	AfterInit []*Hook `protobuf:"bytes,2,rep,name=after_init,json=afterInit,proto3" json:"after_init,omitempty"`
-	// Scripts to run before `terraform plan` (plan and destroy-plan jobs).
-	// Fail-fast.
+	// Scripts to run before the plan phase (`terraform plan` / `tofu plan`;
+	// plan and destroy-plan jobs). Fail-fast.
 	BeforePlan []*Hook `protobuf:"bytes,3,rep,name=before_plan,json=beforePlan,proto3" json:"before_plan,omitempty"`
-	// Scripts to run after `terraform plan` succeeded. Run-all.
+	// Scripts to run after the plan phase succeeded. Run-all; skipped if
+	// plan failed.
 	AfterPlan []*Hook `protobuf:"bytes,4,rep,name=after_plan,json=afterPlan,proto3" json:"after_plan,omitempty"`
-	// Scripts to run before `terraform apply` (apply and destroy-apply jobs).
-	// Fail-fast.
+	// Scripts to run before the apply phase (`terraform apply` / `tofu apply`;
+	// apply and destroy-apply jobs). Fail-fast.
 	BeforeApply []*Hook `protobuf:"bytes,5,rep,name=before_apply,json=beforeApply,proto3" json:"before_apply,omitempty"`
-	// Scripts to run after `terraform apply` succeeded. Run-all.
+	// Scripts to run after the apply phase succeeded. Run-all; skipped if
+	// apply failed.
 	AfterApply []*Hook `protobuf:"bytes,6,rep,name=after_apply,json=afterApply,proto3" json:"after_apply,omitempty"`
 	// Scripts to run after the job completes, regardless of success or
 	// failure. Always executed (finally-semantics). Run-all.
@@ -1198,7 +1227,8 @@ type JobResult struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The final status of the job (SUCCEEDED or FAILED).
 	Status JobStatus `protobuf:"varint,1,opt,name=status,proto3,enum=admiral.runner.v1.JobStatus" json:"status,omitempty"`
-	// (Plan jobs only) The Terraform plan output in human-readable format.
+	// (Plan jobs only) The engine's plan output in human-readable format
+	// (e.g., the text emitted by `terraform plan` / `tofu plan`).
 	PlanOutput string `protobuf:"bytes,2,opt,name=plan_output,json=planOutput,proto3" json:"plan_output,omitempty"`
 	// (Plan jobs only) Summary of resource changes from the plan.
 	PlanSummary *v11.ChangeSummary `protobuf:"bytes,3,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
@@ -1206,7 +1236,8 @@ type JobResult struct {
 	ErrorMessage string `protobuf:"bytes,4,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	// URL to the full execution logs in external storage.
 	LogsUrl string `protobuf:"bytes,5,opt,name=logs_url,json=logsUrl,proto3" json:"logs_url,omitempty"`
-	// How long the Terraform operation took to execute.
+	// How long the infrastructure operation took to execute (engine run time,
+	// excluding artifact download and workspace setup).
 	Duration *durationpb.Duration `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
 	// (Apply/destroy-apply jobs only) Engine outputs captured after a
 	// successful apply (e.g., `terraform output -json`). Keys are output
@@ -2202,8 +2233,10 @@ func (x *ListRunnerTokensResponse) GetNextPageToken() string {
 }
 
 // GetRunnerTokenRequest identifies a runner SAT to retrieve. Token IDs are
-// globally unique, so no runner scoping is required; the server resolves the
-// parent runner from the token ID.
+// globally unique, so no runner scoping is required in the path; the server
+// resolves the parent runner from the token ID. Authorization is enforced
+// via the `runner:read` scope on the caller's token, not by path prefix --
+// a leaked token ID alone does not grant access.
 type GetRunnerTokenRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the token (UUID).
@@ -2296,8 +2329,10 @@ func (x *GetRunnerTokenResponse) GetAccessToken() *v1.AccessToken {
 }
 
 // RevokeRunnerTokenRequest identifies a runner SAT to revoke. Token IDs are
-// globally unique, so no runner scoping is required; the server resolves the
-// parent runner from the token ID.
+// globally unique, so no runner scoping is required in the path; the server
+// resolves the parent runner from the token ID. Authorization is enforced
+// via the `runner:write` scope on the caller's token, not by path prefix --
+// a leaked token ID alone does not grant revocation.
 type RevokeRunnerTokenRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the token to revoke (UUID).
@@ -2639,7 +2674,8 @@ func (x *GetJobBundleRequest) GetJobId() string {
 // GetJobBundleResponse contains the rendered artifacts for execution.
 type GetJobBundleResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The artifact bundle with everything needed to execute the TF operation.
+	// The artifact bundle with everything needed to execute the infrastructure
+	// operation.
 	Bundle        *JobBundle `protobuf:"bytes,1,opt,name=bundle,proto3" json:"bundle,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

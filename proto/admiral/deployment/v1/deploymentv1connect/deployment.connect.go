@@ -68,9 +68,10 @@ type DeploymentAPIClient interface {
 	// builds the dependency DAG, and begins rendering and executing revisions.
 	//
 	// To destroy all resources in an environment (e.g., before deleting the
-	// environment), set `destroy` to true. This runs Terraform destroy for
-	// infrastructure components and deletes workload resources from the cluster,
-	// in reverse dependency order.
+	// environment), set `destroy` to true. This runs the engine's destroy
+	// operation (e.g., `terraform destroy` / `tofu destroy`) for infrastructure
+	// components and deletes workload resources from the cluster, in reverse
+	// dependency order.
 	//
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),
@@ -243,9 +244,10 @@ type DeploymentAPIHandler interface {
 	// builds the dependency DAG, and begins rendering and executing revisions.
 	//
 	// To destroy all resources in an environment (e.g., before deleting the
-	// environment), set `destroy` to true. This runs Terraform destroy for
-	// infrastructure components and deletes workload resources from the cluster,
-	// in reverse dependency order.
+	// environment), set `destroy` to true. This runs the engine's destroy
+	// operation (e.g., `terraform destroy` / `tofu destroy`) for infrastructure
+	// components and deletes workload resources from the cluster, in reverse
+	// dependency order.
 	//
 	// Concurrency: only one deployment can be active per application+environment
 	// at a time. If a deployment is already in progress (PENDING or RUNNING),

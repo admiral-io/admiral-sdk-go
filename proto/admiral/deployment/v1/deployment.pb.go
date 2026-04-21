@@ -119,20 +119,21 @@ const (
 	// The revision is queued for execution. Its upstream dependencies have
 	// completed and it will begin shortly.
 	RevisionStatus_REVISION_STATUS_QUEUED RevisionStatus = 2
-	// (Infrastructure only) Terraform plan is being generated. Transitions
-	// to AWAITING_APPROVAL on success or FAILED on error.
+	// (Infrastructure only) The engine's plan is being generated
+	// (`terraform plan` / `tofu plan`). Transitions to AWAITING_APPROVAL on
+	// success or FAILED on error.
 	RevisionStatus_REVISION_STATUS_PLANNING RevisionStatus = 3
 	// (Infrastructure only) Plan completed successfully and is awaiting an
 	// explicit apply (via ApplyDeployment). The plan output is available on
 	// the revision for review.
 	RevisionStatus_REVISION_STATUS_AWAITING_APPROVAL RevisionStatus = 4
-	// The revision is being applied. For infrastructure, this is
-	// `terraform apply`. For workloads, this is applying manifests to the
-	// target cluster.
+	// The revision is being applied. For infrastructure, this is the engine's
+	// apply phase (`terraform apply` / `tofu apply`). For workloads, this is
+	// applying manifests to the target cluster.
 	RevisionStatus_REVISION_STATUS_APPLYING RevisionStatus = 6
-	// The revision completed successfully. For infrastructure, Terraform apply
-	// succeeded. For workloads, the manifests were applied and the resources
-	// reached a healthy state.
+	// The revision completed successfully. For infrastructure, the engine's
+	// apply phase succeeded. For workloads, the manifests were applied and the
+	// resources reached a healthy state.
 	RevisionStatus_REVISION_STATUS_SUCCEEDED RevisionStatus = 7
 	// The revision failed. See `error_message` for details.
 	RevisionStatus_REVISION_STATUS_FAILED RevisionStatus = 8
@@ -210,8 +211,9 @@ const (
 	// Triggered by a CI/CD pipeline (via API with a PAT).
 	DeploymentTriggerType_DEPLOYMENT_TRIGGER_TYPE_CI DeploymentTriggerType = 2
 	// Triggered as a destroy operation to tear down all resources in the
-	// environment. Runs Terraform destroy for infra components and deletes
-	// workload resources from the cluster, in reverse dependency order.
+	// environment. Runs the engine's destroy phase (`terraform destroy` /
+	// `tofu destroy`) for infra components and deletes workload resources
+	// from the cluster, in reverse dependency order.
 	DeploymentTriggerType_DEPLOYMENT_TRIGGER_TYPE_DESTROY DeploymentTriggerType = 3
 )
 
@@ -317,6 +319,12 @@ func (RevisionKind) EnumDescriptor() ([]byte, []int) {
 // environment. Each deployment produces one Revision per component. The
 // deployment tracks the composite status across all revisions and provides
 // the audit trail for what was deployed, when, and by whom.
+//
+// Deployment records are immutable once created -- there is no UpdateDeployment
+// RPC and no `updated_at` field. The composite `status`, `revision_summary`,
+// and `completed_at` fields are server-maintained as revisions progress;
+// everything else is fixed at creation time. To change what is deployed,
+// create a new deployment.
 type Deployment struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the deployment (UUID).
@@ -335,9 +343,10 @@ type Deployment struct {
 	// with new caching layer" or "Rolling back to stable after API errors").
 	Message string `protobuf:"bytes,7,opt,name=message,proto3" json:"message,omitempty"`
 	// Whether this is a destroy deployment. Destroy deployments tear down all
-	// resources in the environment: Terraform destroy for infra components,
-	// resource deletion for workload components. Executed in reverse dependency
-	// order. Required before an environment with active resources can be deleted.
+	// resources in the environment: the engine's destroy phase for infra
+	// components (`terraform destroy` / `tofu destroy`), resource deletion for
+	// workload components. Executed in reverse dependency order. Required
+	// before an environment with active resources can be deleted.
 	Destroy bool `protobuf:"varint,8,opt,name=destroy,proto3" json:"destroy,omitempty"`
 	// If this deployment was created as a rollback from a prior deployment,
 	// this field contains the source deployment's UUID. Empty for normal
@@ -572,13 +581,16 @@ func (x *RevisionSummary) GetPending() int32 {
 // Revision represents an immutable, rendered artifact for a single component
 // within a deployment. Each revision tracks the full lifecycle from rendering
 // through execution, and stores references to the produced artifacts
-// (rendered manifests, Terraform plan files, etc.).
+// (rendered manifests, binary plan files, etc.).
 //
-// For infrastructure components (Terraform):
-//   - Rendering produces .tf files and .tfvars with resolved variable values.
-//   - `terraform plan` and `terraform apply` are executed by the assigned runner.
+// For infrastructure components (terraform-semantic engine -- Terraform or
+// OpenTofu):
+//   - Rendering produces the infrastructure source tree (.tf files and
+//     auto-loaded tfvars) with resolved variable values.
+//   - The engine's plan and apply phases are executed by the assigned
+//     runner (see JobBundle.engine for engine selection).
 //   - The plan output is stored for visibility.
-//   - Each component has its own Terraform state.
+//   - Each component has its own state, stored via the configured backend.
 //
 // For workload components (Helm, Kustomize, manifests):
 //   - Rendering produces Kubernetes manifests (via helm template, kustomize
@@ -624,8 +636,8 @@ type Revision struct {
 	// applies to Terraform, OpenTofu, or any future engine that models changes
 	// as create/update/delete counts.
 	PlanSummary *ChangeSummary `protobuf:"bytes,14,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
-	// True when plan output is available in object storage.
-	// Fetch via GET /api/v1/deployments/{id}/revisions/{id}/plan.
+	// True when plan output is available in object storage. Fetch via
+	// `GET /api/v1/deployments/{deployment_id}/revisions/{revision_id}/plan`.
 	HasPlanOutput bool `protobuf:"varint,15,opt,name=has_plan_output,json=hasPlanOutput,proto3" json:"has_plan_output,omitempty"`
 	// Error message if the revision failed. Empty on success.
 	ErrorMessage string `protobuf:"bytes,16,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
@@ -908,10 +920,10 @@ type CreateDeploymentRequest struct {
 	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	// Optional message describing this deployment.
 	Message string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	// Destroy all resources in the environment. Runs Terraform destroy for
-	// infra components and deletes workload resources from the cluster, in
-	// reverse dependency order. Required before deleting an environment that
-	// has active resources.
+	// Destroy all resources in the environment. Runs the engine's destroy
+	// phase (`terraform destroy` / `tofu destroy`) for infra components and
+	// deletes workload resources from the cluster, in reverse dependency
+	// order. Required before deleting an environment that has active resources.
 	Destroy bool `protobuf:"varint,4,opt,name=destroy,proto3" json:"destroy,omitempty"`
 	// Optional: deploy from a prior deployment's configuration snapshots
 	// instead of from the current component HEAD. When set, each revision is
@@ -1130,13 +1142,19 @@ func (x *GetDeploymentResponse) GetDeployment() *Deployment {
 // ListDeploymentsRequest contains pagination and filter parameters.
 type ListDeploymentsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression using the PEG filter DSL.
+	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
-	// Common filter fields:
-	//   - `application_id` -- deployments for a specific application.
-	//   - `environment_id` -- deployments to a specific environment.
-	//   - `status` -- filter by deployment status.
+	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
+	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
+	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
+	//
+	// Filterable fields:
+	//   - `application_id` -- deployments for a specific application (UUID).
+	//   - `environment_id` -- deployments to a specific environment (UUID).
+	//   - `status` -- filter by deployment status (PENDING, RUNNING, SUCCEEDED, ...).
 	//   - `trigger_type` -- filter by trigger type (MANUAL, CI, DESTROY).
+	//
+	// Example: `field['environment_id'] = '<uuid>' AND field['status'] = 'SUCCEEDED'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of deployments to return per page.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`

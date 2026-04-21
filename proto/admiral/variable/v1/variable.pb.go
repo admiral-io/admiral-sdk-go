@@ -35,9 +35,10 @@ const (
 	VariableSource_VARIABLE_SOURCE_UNSPECIFIED VariableSource = 0
 	// User-managed variable created via API or CLI.
 	VariableSource_VARIABLE_SOURCE_USER VariableSource = 1
-	// System-managed variable produced by infrastructure apply (e.g., Terraform
-	// outputs). These variables are written by the output capture pipeline and
-	// cannot be created or deleted via the public API.
+	// System-managed variable produced by a successful infrastructure apply
+	// (engine outputs -- `terraform output` / `tofu output`). These variables
+	// are written by the output capture pipeline and cannot be created or
+	// deleted via the public API.
 	VariableSource_VARIABLE_SOURCE_INFRASTRUCTURE VariableSource = 2
 )
 
@@ -90,19 +91,20 @@ type VariableType int32
 const (
 	// Default value. Must not be used.
 	VariableType_VARIABLE_TYPE_UNSPECIFIED VariableType = 0
-	// Plain text value. Quoted when rendered into Terraform HCL, passed as-is
-	// for Helm and Kustomize. Rendered as a text input in the UI.
+	// Plain text value. Quoted when rendered into HCL for an infrastructure
+	// engine (Terraform / OpenTofu), passed as-is for Helm and Kustomize.
+	// Rendered as a text input in the UI.
 	VariableType_VARIABLE_TYPE_STRING VariableType = 1
-	// Numeric value (integer or decimal). Unquoted when rendered into Terraform
-	// HCL. Rendered as a number input in the UI.
+	// Numeric value (integer or decimal). Unquoted when rendered into HCL.
+	// Rendered as a number input in the UI.
 	VariableType_VARIABLE_TYPE_NUMBER VariableType = 2
-	// Boolean value ("true" or "false"). Unquoted when rendered into Terraform
-	// HCL. Rendered as a toggle in the UI.
+	// Boolean value ("true" or "false"). Unquoted when rendered into HCL.
+	// Rendered as a toggle in the UI.
 	VariableType_VARIABLE_TYPE_BOOLEAN VariableType = 3
 	// Structured value (lists, maps, objects). Stored as a JSON-encoded string
 	// (e.g., '["us-east-1a","us-east-1b"]' or '{"env":"prod","team":"platform"}').
-	// Rendered as HCL for Terraform, YAML for Helm, or JSON for other consumers.
-	// Rendered as a code editor in the UI.
+	// Rendered as HCL for infrastructure engines, YAML for Helm, or JSON for
+	// other consumers. Rendered as a code editor in the UI.
 	VariableType_VARIABLE_TYPE_COMPLEX VariableType = 4
 )
 
@@ -199,8 +201,8 @@ type Variable struct {
 	// When the variable was last updated.
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// How the variable was created. USER for variables created via the API/CLI,
-	// INFRASTRUCTURE for variables produced by terraform output capture.
-	// Server-populated; not settable via CreateVariable.
+	// INFRASTRUCTURE for variables produced by engine output capture (Terraform
+	// or OpenTofu). Server-populated; not settable via CreateVariable.
 	Source        VariableSource `protobuf:"varint,12,opt,name=source,proto3,enum=admiral.variable.v1.VariableSource" json:"source,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -327,7 +329,10 @@ func (x *Variable) GetSource() VariableSource {
 type CreateVariableRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The variable name. Must be a valid environment variable identifier
-	// (e.g., "DATABASE_URL", "API_KEY").
+	// (e.g., "DATABASE_URL", "API_KEY"). Unlike Variable.key, dots are not
+	// permitted here: dot-namespaced keys (e.g., "vpc.vpc_id") are reserved
+	// for system-managed INFRASTRUCTURE variables captured from engine output
+	// and cannot be created through this RPC.
 	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	// The variable value. For COMPLEX type, must be valid JSON.
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
@@ -567,27 +572,34 @@ func (x *GetVariableResponse) GetVariable() *Variable {
 
 // ListVariablesRequest contains filters and pagination parameters.
 //
-// The filter determines which variables are included in the merged view
-// based on the presence of `application_id` and `environment_id` fields:
-//   - Neither field in filter: global variables only.
-//   - `application_id` in filter: global + app-level variables merged.
-//   - `application_id` + `environment_id` in filter: global + app + environment
-//     variables merged.
+// The `application_id` / `environment_id` filter fields also control which
+// levels are included in the returned union:
+//   - Neither present: global variables only.
+//   - `application_id` present: global + app-level variables.
+//   - `application_id` + `environment_id` present: global + app + environment.
 //
-// When variables with the same key exist at multiple levels, all are returned
-// so clients can determine precedence.
+// The response returns all matching entries -- it does NOT apply precedence.
+// See the VariableAPI service docstring for the precedence order deployment
+// rendering applies (env > app > global).
 type ListVariablesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression using the PEG filter DSL.
+	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
-	// Common filter fields:
-	//   - `application_id` -- scope to an application (triggers merge with
-	//     app-level variables alongside global variables).
-	//   - `environment_id` -- scope to an environment (requires application_id;
-	//     triggers merge with environment-level variables).
-	//   - `sensitive` -- filter by sensitivity.
-	//   - `type` -- filter by variable type.
-	//   - `key` -- filter by variable key (supports prefix matching).
+	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
+	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
+	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
+	//
+	// Filterable fields:
+	//   - `application_id` -- scope to an application (UUID; also expands the
+	//     returned union to include app-level variables).
+	//   - `environment_id` -- scope to an environment (UUID; requires
+	//     application_id; also expands the union to include environment-level
+	//     variables).
+	//   - `sensitive` -- filter by sensitivity flag.
+	//   - `type` -- filter by variable type (STRING, NUMBER, BOOLEAN, COMPLEX).
+	//   - `key` -- filter by variable key (supports prefix matching via ~=).
+	//
+	// Example: `field['application_id'] = '<uuid>' AND field['sensitive'] = 'false'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of variables to return per page.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`

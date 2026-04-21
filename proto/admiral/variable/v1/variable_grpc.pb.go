@@ -33,9 +33,16 @@ const (
 // VariableAPI manages configuration variables within a tenant.
 //
 // Variables provide key-value configuration at three levels: global
-// (tenant-wide), per application, or per application+environment. When listing
-// variables for a specific application and environment, Admiral merges variables
-// from all applicable levels, with narrower levels taking precedence.
+// (tenant-wide), per application, or per application+environment. At
+// deployment time, Admiral resolves each key by looking through the levels
+// in order of narrowness -- environment-scoped wins over application-scoped,
+// which wins over global. The resolved value is baked into the deployment's
+// immutable snapshot.
+//
+// ListVariables does NOT apply this precedence; it returns the raw union of
+// variables from all applicable levels so clients (e.g., UIs showing
+// overrides) can display the full picture. When writing your own resolver,
+// apply environment > application > global.
 //
 // Sensitive variables have their values encrypted at rest and masked in API
 // responses. The actual value is only resolved at deployment time into the
@@ -54,15 +61,16 @@ type VariableAPIClient interface {
 	//
 	// Scope: `var:read`
 	GetVariable(ctx context.Context, in *GetVariableRequest, opts ...grpc.CallOption) (*GetVariableResponse, error)
-	// ListVariables returns a merged, paginated list of variables.
-	//
-	// The returned list is a resolved view based on the provided filters:
+	// ListVariables returns a paginated list of variables drawn from all levels
+	// in scope for the provided filters:
 	//   - No application_id or environment_id: global variables only.
-	//   - application_id only: global + app-level variables merged.
-	//   - application_id + environment_id: global + app + environment variables merged.
+	//   - application_id only: global + app-level variables.
+	//   - application_id + environment_id: global + app + environment variables.
 	//
-	// When variables with the same key exist at multiple levels, all are returned
-	// so clients can determine precedence.
+	// The response is the raw union, not a precedence-resolved view: when the
+	// same key exists at multiple levels, every entry is returned. This is
+	// deliberate -- UIs need to show which level overrides which. Deployment
+	// rendering applies precedence (env > app > global) automatically.
 	//
 	// Scope: `var:read`
 	ListVariables(ctx context.Context, in *ListVariablesRequest, opts ...grpc.CallOption) (*ListVariablesResponse, error)
@@ -143,9 +151,16 @@ func (c *variableAPIClient) DeleteVariable(ctx context.Context, in *DeleteVariab
 // VariableAPI manages configuration variables within a tenant.
 //
 // Variables provide key-value configuration at three levels: global
-// (tenant-wide), per application, or per application+environment. When listing
-// variables for a specific application and environment, Admiral merges variables
-// from all applicable levels, with narrower levels taking precedence.
+// (tenant-wide), per application, or per application+environment. At
+// deployment time, Admiral resolves each key by looking through the levels
+// in order of narrowness -- environment-scoped wins over application-scoped,
+// which wins over global. The resolved value is baked into the deployment's
+// immutable snapshot.
+//
+// ListVariables does NOT apply this precedence; it returns the raw union of
+// variables from all applicable levels so clients (e.g., UIs showing
+// overrides) can display the full picture. When writing your own resolver,
+// apply environment > application > global.
 //
 // Sensitive variables have their values encrypted at rest and masked in API
 // responses. The actual value is only resolved at deployment time into the
@@ -164,15 +179,16 @@ type VariableAPIServer interface {
 	//
 	// Scope: `var:read`
 	GetVariable(context.Context, *GetVariableRequest) (*GetVariableResponse, error)
-	// ListVariables returns a merged, paginated list of variables.
-	//
-	// The returned list is a resolved view based on the provided filters:
+	// ListVariables returns a paginated list of variables drawn from all levels
+	// in scope for the provided filters:
 	//   - No application_id or environment_id: global variables only.
-	//   - application_id only: global + app-level variables merged.
-	//   - application_id + environment_id: global + app + environment variables merged.
+	//   - application_id only: global + app-level variables.
+	//   - application_id + environment_id: global + app + environment variables.
 	//
-	// When variables with the same key exist at multiple levels, all are returned
-	// so clients can determine precedence.
+	// The response is the raw union, not a precedence-resolved view: when the
+	// same key exists at multiple levels, every entry is returned. This is
+	// deliberate -- UIs need to show which level overrides which. Deployment
+	// rendering applies precedence (env > app > global) automatically.
 	//
 	// Scope: `var:read`
 	ListVariables(context.Context, *ListVariablesRequest) (*ListVariablesResponse, error)
