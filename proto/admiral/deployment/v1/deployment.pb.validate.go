@@ -627,22 +627,22 @@ var _ interface {
 	ErrorName() string
 } = RevisionValidationError{}
 
-// Validate checks the field values on TerraformPlanSummary with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *TerraformPlanSummary) Validate() error {
+// Validate checks the field values on ChangeSummary with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ChangeSummary) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on TerraformPlanSummary with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// TerraformPlanSummaryMultiError, or nil if none found.
-func (m *TerraformPlanSummary) ValidateAll() error {
+// ValidateAll checks the field values on ChangeSummary with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ChangeSummaryMultiError, or
+// nil if none found.
+func (m *ChangeSummary) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *TerraformPlanSummary) validate(all bool) error {
+func (m *ChangeSummary) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -656,19 +656,19 @@ func (m *TerraformPlanSummary) validate(all bool) error {
 	// no validation rules for Destructions
 
 	if len(errors) > 0 {
-		return TerraformPlanSummaryMultiError(errors)
+		return ChangeSummaryMultiError(errors)
 	}
 
 	return nil
 }
 
-// TerraformPlanSummaryMultiError is an error wrapping multiple validation
-// errors returned by TerraformPlanSummary.ValidateAll() if the designated
-// constraints aren't met.
-type TerraformPlanSummaryMultiError []error
+// ChangeSummaryMultiError is an error wrapping multiple validation errors
+// returned by ChangeSummary.ValidateAll() if the designated constraints
+// aren't met.
+type ChangeSummaryMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m TerraformPlanSummaryMultiError) Error() string {
+func (m ChangeSummaryMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -677,11 +677,11 @@ func (m TerraformPlanSummaryMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m TerraformPlanSummaryMultiError) AllErrors() []error { return m }
+func (m ChangeSummaryMultiError) AllErrors() []error { return m }
 
-// TerraformPlanSummaryValidationError is the validation error returned by
-// TerraformPlanSummary.Validate if the designated constraints aren't met.
-type TerraformPlanSummaryValidationError struct {
+// ChangeSummaryValidationError is the validation error returned by
+// ChangeSummary.Validate if the designated constraints aren't met.
+type ChangeSummaryValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -689,24 +689,22 @@ type TerraformPlanSummaryValidationError struct {
 }
 
 // Field function returns field value.
-func (e TerraformPlanSummaryValidationError) Field() string { return e.field }
+func (e ChangeSummaryValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e TerraformPlanSummaryValidationError) Reason() string { return e.reason }
+func (e ChangeSummaryValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e TerraformPlanSummaryValidationError) Cause() error { return e.cause }
+func (e ChangeSummaryValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e TerraformPlanSummaryValidationError) Key() bool { return e.key }
+func (e ChangeSummaryValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e TerraformPlanSummaryValidationError) ErrorName() string {
-	return "TerraformPlanSummaryValidationError"
-}
+func (e ChangeSummaryValidationError) ErrorName() string { return "ChangeSummaryValidationError" }
 
 // Error satisfies the builtin error interface
-func (e TerraformPlanSummaryValidationError) Error() string {
+func (e ChangeSummaryValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -718,14 +716,14 @@ func (e TerraformPlanSummaryValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sTerraformPlanSummary.%s: %s%s",
+		"invalid %sChangeSummary.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = TerraformPlanSummaryValidationError{}
+var _ error = ChangeSummaryValidationError{}
 
 var _ interface {
 	Field() string
@@ -733,7 +731,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = TerraformPlanSummaryValidationError{}
+} = ChangeSummaryValidationError{}
 
 // Validate checks the field values on CreateDeploymentRequest with the rules
 // defined in the proto definition for this message. If any rules are

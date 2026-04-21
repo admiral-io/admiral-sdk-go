@@ -285,6 +285,64 @@ func (JobPhase) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{3}
 }
 
+// Engine identifies which infrastructure-as-code binary executes the job.
+// Deliberately narrow: only the terraform-semantic engines Admiral manages as
+// first-class citizens. Wrapper tools (e.g., terragrunt) and non-terraform-
+// semantic engines (Pulumi, CDK) are intentionally out of scope -- users
+// shell out to them via hooks if needed.
+type Engine int32
+
+const (
+	// Default value. Servers should treat this as ENGINE_TERRAFORM for
+	// backwards compatibility with bundles written before this field existed.
+	Engine_ENGINE_UNSPECIFIED Engine = 0
+	// HashiCorp Terraform.
+	Engine_ENGINE_TERRAFORM Engine = 1
+	// OpenTofu.
+	Engine_ENGINE_TOFU Engine = 2
+)
+
+// Enum value maps for Engine.
+var (
+	Engine_name = map[int32]string{
+		0: "ENGINE_UNSPECIFIED",
+		1: "ENGINE_TERRAFORM",
+		2: "ENGINE_TOFU",
+	}
+	Engine_value = map[string]int32{
+		"ENGINE_UNSPECIFIED": 0,
+		"ENGINE_TERRAFORM":   1,
+		"ENGINE_TOFU":        2,
+	}
+)
+
+func (x Engine) Enum() *Engine {
+	p := new(Engine)
+	*p = x
+	return p
+}
+
+func (x Engine) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Engine) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_runner_v1_runner_proto_enumTypes[4].Descriptor()
+}
+
+func (Engine) Type() protoreflect.EnumType {
+	return &file_admiral_runner_v1_runner_proto_enumTypes[4]
+}
+
+func (x Engine) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Engine.Descriptor instead.
+func (Engine) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{4}
+}
+
 // Runner represents a registered infrastructure execution runner within a
 // tenant. Runners claim and execute Terraform operations (plan, apply, destroy)
 // dispatched by the deployment engine.
@@ -407,6 +465,11 @@ func (x *Runner) GetCreatedBy() *v1.ActorRef {
 // Server-derived fields (health_status) are NOT included here -- they live
 // on the Runner record and are returned alongside this message in
 // GetRunnerStatusResponse.
+//
+// Runner capabilities (which engines are installed, which credentials are
+// available, etc.) are operator-declared on the Runner record at registration
+// time -- they are NOT self-reported here. Heartbeat is purely for liveness
+// and capacity signals that change at runtime.
 type RunnerStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The runner binary version (e.g., "1.2.0").
@@ -415,21 +478,11 @@ type RunnerStatus struct {
 	ActiveJobs int32 `protobuf:"varint,2,opt,name=active_jobs,json=activeJobs,proto3" json:"active_jobs,omitempty"`
 	// Maximum number of concurrent jobs this runner supports.
 	MaxConcurrentJobs int32 `protobuf:"varint,3,opt,name=max_concurrent_jobs,json=maxConcurrentJobs,proto3" json:"max_concurrent_jobs,omitempty"`
-	// Terraform providers available on this runner (e.g., ["aws", "google", "azurerm"]).
-	AvailableProviders []string `protobuf:"bytes,4,rep,name=available_providers,json=availableProviders,proto3" json:"available_providers,omitempty"`
-	// CLI tool versions installed on this runner, detected at startup and
-	// reported on every heartbeat. Visible to admins via GetRunnerStatus.
-	// The server uses tool_versions to match jobs to capable runners (e.g.,
-	// a job requiring Terraform 1.9.x will only be assigned to a runner
-	// reporting a compatible version).
-	// Keys are tool names (e.g., "terraform", "tofu", "helm", "kustomize", "kubectl").
-	// Values are semantic versions (e.g., "1.7.5", "1.9.0").
-	ToolVersions map[string]string `protobuf:"bytes,5,rep,name=tool_versions,json=toolVersions,proto3" json:"tool_versions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Details of jobs currently being executed by this runner instance. The
 	// worker thread updates job phase in shared memory; the heartbeat thread
 	// reads and includes it on each tick. Gives the server visibility into
 	// job progress for stuck-job detection and admin dashboards.
-	ActiveJobDetails []*ActiveJobInfo `protobuf:"bytes,6,rep,name=active_job_details,json=activeJobDetails,proto3" json:"active_job_details,omitempty"`
+	ActiveJobDetails []*ActiveJobInfo `protobuf:"bytes,4,rep,name=active_job_details,json=activeJobDetails,proto3" json:"active_job_details,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -483,20 +536,6 @@ func (x *RunnerStatus) GetMaxConcurrentJobs() int32 {
 		return x.MaxConcurrentJobs
 	}
 	return 0
-}
-
-func (x *RunnerStatus) GetAvailableProviders() []string {
-	if x != nil {
-		return x.AvailableProviders
-	}
-	return nil
-}
-
-func (x *RunnerStatus) GetToolVersions() map[string]string {
-	if x != nil {
-		return x.ToolVersions
-	}
-	return nil
 }
 
 func (x *RunnerStatus) GetActiveJobDetails() []*ActiveJobInfo {
@@ -690,8 +729,9 @@ func (x *Job) GetCompletedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// JobBundle contains everything a runner needs to execute a Terraform operation.
-// Fetched separately from ClaimJob to keep the claim response lightweight.
+// JobBundle contains everything a runner needs to execute an infrastructure
+// operation. Fetched separately from ClaimJob to keep the claim response
+// lightweight.
 type JobBundle struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Signed URL to download the rendered artifact bundle (tar.gz containing
@@ -699,26 +739,41 @@ type JobBundle struct {
 	ArtifactUrl string `protobuf:"bytes,1,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
 	// SHA-256 checksum of the artifact bundle for integrity verification.
 	ArtifactChecksum string `protobuf:"bytes,2,opt,name=artifact_checksum,json=artifactChecksum,proto3" json:"artifact_checksum,omitempty"`
-	// Resolved variable values to inject as TF_VAR_* environment variables.
-	// Sensitive values are included (runner is a trusted execution context).
+	// Resolved variable values written to the workspace as an auto-loaded
+	// tfvars file. Sensitive values are included (runner is a trusted
+	// execution context).
 	Variables map[string]string `protobuf:"bytes,3,rep,name=variables,proto3" json:"variables,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Provider configuration blocks (JSON-encoded). Keys are provider names
 	// (e.g., "aws", "google"), values are JSON objects with provider config.
 	ProviderConfigs map[string]string `protobuf:"bytes,4,rep,name=provider_configs,json=providerConfigs,proto3" json:"provider_configs,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Terraform backend configuration (JSON-encoded). Contains the backend
-	// type and its configuration for state storage.
+	// Backend configuration (JSON-encoded). Contains the backend type and its
+	// configuration for state storage. Engine-agnostic in shape; the engine's
+	// own backend implementation consumes it.
 	BackendConfig string `protobuf:"bytes,5,opt,name=backend_config,json=backendConfig,proto3" json:"backend_config,omitempty"`
-	// The Terraform version to use for this operation (e.g., "1.7.5").
-	TerraformVersion string `protobuf:"bytes,6,opt,name=terraform_version,json=terraformVersion,proto3" json:"terraform_version,omitempty"`
+	// Which engine should execute this job. ENGINE_UNSPECIFIED means the
+	// runner's default (currently terraform) is used.
+	Engine Engine `protobuf:"varint,6,opt,name=engine,proto3,enum=admiral.runner.v1.Engine" json:"engine,omitempty"`
+	// Version of the selected engine (e.g., "1.7.5"). When empty, the runner
+	// uses whichever version it has pre-installed by default. When set, the
+	// runner writes the appropriate version file (`.terraform-version` /
+	// `.opentofu-version`) so tfenv / tofuenv dispatches to the matching
+	// binary, downloading it on demand if not already cached.
+	EngineVersion string `protobuf:"bytes,7,opt,name=engine_version,json=engineVersion,proto3" json:"engine_version,omitempty"`
 	// Subdirectory within the extracted archive where the executor should run
 	// (e.g., "modules/cloudsql"). Empty means the archive root. Preserves
 	// the broader directory tree so that relative module references resolve.
-	WorkingDirectory string `protobuf:"bytes,7,opt,name=working_directory,json=workingDirectory,proto3" json:"working_directory,omitempty"`
+	WorkingDirectory string `protobuf:"bytes,8,opt,name=working_directory,json=workingDirectory,proto3" json:"working_directory,omitempty"`
 	// (Apply/destroy-apply jobs only) URL to download the binary plan file
 	// produced by the preceding plan job. The runner downloads this file and
-	// passes it to `terraform apply <plan_file>` to ensure the exact reviewed
-	// plan is applied. Empty for plan jobs.
-	PlanFileUrl   string `protobuf:"bytes,8,opt,name=plan_file_url,json=planFileUrl,proto3" json:"plan_file_url,omitempty"`
+	// passes it to `apply <plan_file>` so the exact reviewed plan is applied.
+	// Empty for plan jobs.
+	PlanFileUrl string `protobuf:"bytes,9,opt,name=plan_file_url,json=planFileUrl,proto3" json:"plan_file_url,omitempty"`
+	// Shell-script hooks that run before and after each engine phase.
+	// The runner invokes each hook via `sh -c <script>` in the execution
+	// directory, with the same environment as the engine. Hook stdout/stderr
+	// is folded into the job transcript. See the Hooks message for failure
+	// semantics.
+	Hooks         *Hooks `protobuf:"bytes,10,opt,name=hooks,proto3" json:"hooks,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -788,9 +843,16 @@ func (x *JobBundle) GetBackendConfig() string {
 	return ""
 }
 
-func (x *JobBundle) GetTerraformVersion() string {
+func (x *JobBundle) GetEngine() Engine {
 	if x != nil {
-		return x.TerraformVersion
+		return x.Engine
+	}
+	return Engine_ENGINE_UNSPECIFIED
+}
+
+func (x *JobBundle) GetEngineVersion() string {
+	if x != nil {
+		return x.EngineVersion
 	}
 	return ""
 }
@@ -809,35 +871,45 @@ func (x *JobBundle) GetPlanFileUrl() string {
 	return ""
 }
 
-// TerraformOutput represents a single output value from `terraform output -json`.
-type TerraformOutput struct {
+func (x *JobBundle) GetHooks() *Hooks {
+	if x != nil {
+		return x.Hooks
+	}
+	return nil
+}
+
+// Hook is a single shell-script hook delivered with a JobBundle. Scripts are
+// inlined by the server -- the runner never fetches them from elsewhere.
+type Hook struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The output value, serialized as a string. Complex values (lists, maps)
-	// are JSON-encoded.
-	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
-	// Terraform type descriptor (e.g., "string", "number", "bool",
-	// "list(string)", "map(string)", "object({...})").
-	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	// Whether Terraform marked this output as sensitive.
-	Sensitive     bool `protobuf:"varint,3,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
+	// The shell script to execute. Passed to `sh -c`. The runner closes stdin
+	// (/dev/null) so interactive prompts cannot block execution.
+	Script string `protobuf:"bytes,1,opt,name=script,proto3" json:"script,omitempty"`
+	// Per-script timeout in seconds. If 0, the runner applies its built-in
+	// default (currently 300s). A hook that exceeds its timeout is killed
+	// (SIGKILL after grace period) and treated as a failure.
+	TimeoutSeconds int32 `protobuf:"varint,2,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
+	// Optional human-friendly name used in log lines and error messages
+	// (e.g., "vault-login"). Not required to be unique.
+	Name          string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TerraformOutput) Reset() {
-	*x = TerraformOutput{}
+func (x *Hook) Reset() {
+	*x = Hook{}
 	mi := &file_admiral_runner_v1_runner_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TerraformOutput) String() string {
+func (x *Hook) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TerraformOutput) ProtoMessage() {}
+func (*Hook) ProtoMessage() {}
 
-func (x *TerraformOutput) ProtoReflect() protoreflect.Message {
+func (x *Hook) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_runner_v1_runner_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -849,26 +921,207 @@ func (x *TerraformOutput) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TerraformOutput.ProtoReflect.Descriptor instead.
-func (*TerraformOutput) Descriptor() ([]byte, []int) {
+// Deprecated: Use Hook.ProtoReflect.Descriptor instead.
+func (*Hook) Descriptor() ([]byte, []int) {
 	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *TerraformOutput) GetValue() string {
+func (x *Hook) GetScript() string {
+	if x != nil {
+		return x.Script
+	}
+	return ""
+}
+
+func (x *Hook) GetTimeoutSeconds() int32 {
+	if x != nil {
+		return x.TimeoutSeconds
+	}
+	return 0
+}
+
+func (x *Hook) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// Hooks groups the seven lifecycle extension points. Scripts within a list
+// run in list order. Failure behavior differs by phase:
+//   - `before_*` hooks are fail-fast: the first non-zero exit aborts the
+//     phase, the engine command does not run, and the job fails.
+//   - `after_*` hooks and `after_run` hooks are run-all: every script in
+//     the list executes regardless of sibling failures. Individual failures
+//     are logged but do not fail the job.
+//
+// `after_run` always runs, even if an earlier phase failed (it is the
+// runner's equivalent of a `finally` block).
+type Hooks struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Scripts to run before `terraform init` (or equivalent). Fail-fast.
+	BeforeInit []*Hook `protobuf:"bytes,1,rep,name=before_init,json=beforeInit,proto3" json:"before_init,omitempty"`
+	// Scripts to run after `terraform init` succeeded. Run-all.
+	AfterInit []*Hook `protobuf:"bytes,2,rep,name=after_init,json=afterInit,proto3" json:"after_init,omitempty"`
+	// Scripts to run before `terraform plan` (plan and destroy-plan jobs).
+	// Fail-fast.
+	BeforePlan []*Hook `protobuf:"bytes,3,rep,name=before_plan,json=beforePlan,proto3" json:"before_plan,omitempty"`
+	// Scripts to run after `terraform plan` succeeded. Run-all.
+	AfterPlan []*Hook `protobuf:"bytes,4,rep,name=after_plan,json=afterPlan,proto3" json:"after_plan,omitempty"`
+	// Scripts to run before `terraform apply` (apply and destroy-apply jobs).
+	// Fail-fast.
+	BeforeApply []*Hook `protobuf:"bytes,5,rep,name=before_apply,json=beforeApply,proto3" json:"before_apply,omitempty"`
+	// Scripts to run after `terraform apply` succeeded. Run-all.
+	AfterApply []*Hook `protobuf:"bytes,6,rep,name=after_apply,json=afterApply,proto3" json:"after_apply,omitempty"`
+	// Scripts to run after the job completes, regardless of success or
+	// failure. Always executed (finally-semantics). Run-all.
+	AfterRun      []*Hook `protobuf:"bytes,7,rep,name=after_run,json=afterRun,proto3" json:"after_run,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Hooks) Reset() {
+	*x = Hooks{}
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Hooks) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Hooks) ProtoMessage() {}
+
+func (x *Hooks) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Hooks.ProtoReflect.Descriptor instead.
+func (*Hooks) Descriptor() ([]byte, []int) {
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Hooks) GetBeforeInit() []*Hook {
+	if x != nil {
+		return x.BeforeInit
+	}
+	return nil
+}
+
+func (x *Hooks) GetAfterInit() []*Hook {
+	if x != nil {
+		return x.AfterInit
+	}
+	return nil
+}
+
+func (x *Hooks) GetBeforePlan() []*Hook {
+	if x != nil {
+		return x.BeforePlan
+	}
+	return nil
+}
+
+func (x *Hooks) GetAfterPlan() []*Hook {
+	if x != nil {
+		return x.AfterPlan
+	}
+	return nil
+}
+
+func (x *Hooks) GetBeforeApply() []*Hook {
+	if x != nil {
+		return x.BeforeApply
+	}
+	return nil
+}
+
+func (x *Hooks) GetAfterApply() []*Hook {
+	if x != nil {
+		return x.AfterApply
+	}
+	return nil
+}
+
+func (x *Hooks) GetAfterRun() []*Hook {
+	if x != nil {
+		return x.AfterRun
+	}
+	return nil
+}
+
+// EngineOutput represents a single output value captured from the engine
+// after a successful apply (e.g., `terraform output -json` / `tofu output
+// -json`). Engine-agnostic: the three-field shape (value, type, sensitive)
+// generalizes across terraform-semantic engines.
+type EngineOutput struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The output value, serialized as a string. Complex values (lists, maps)
+	// are JSON-encoded.
+	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// Engine type descriptor (e.g., "string", "number", "bool",
+	// "list(string)", "map(string)", "object({...})").
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Whether the engine marked this output as sensitive.
+	Sensitive     bool `protobuf:"varint,3,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EngineOutput) Reset() {
+	*x = EngineOutput{}
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EngineOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EngineOutput) ProtoMessage() {}
+
+func (x *EngineOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EngineOutput.ProtoReflect.Descriptor instead.
+func (*EngineOutput) Descriptor() ([]byte, []int) {
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *EngineOutput) GetValue() string {
 	if x != nil {
 		return x.Value
 	}
 	return ""
 }
 
-func (x *TerraformOutput) GetType() string {
+func (x *EngineOutput) GetType() string {
 	if x != nil {
 		return x.Type
 	}
 	return ""
 }
 
-func (x *TerraformOutput) GetSensitive() bool {
+func (x *EngineOutput) GetSensitive() bool {
 	if x != nil {
 		return x.Sensitive
 	}
@@ -883,24 +1136,24 @@ type JobResult struct {
 	// (Plan jobs only) The Terraform plan output in human-readable format.
 	PlanOutput string `protobuf:"bytes,2,opt,name=plan_output,json=planOutput,proto3" json:"plan_output,omitempty"`
 	// (Plan jobs only) Summary of resource changes from the plan.
-	PlanSummary *v11.TerraformPlanSummary `protobuf:"bytes,3,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
+	PlanSummary *v11.ChangeSummary `protobuf:"bytes,3,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
 	// Error message if the job failed. Empty on success.
 	ErrorMessage string `protobuf:"bytes,4,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	// URL to the full execution logs in external storage.
 	LogsUrl string `protobuf:"bytes,5,opt,name=logs_url,json=logsUrl,proto3" json:"logs_url,omitempty"`
 	// How long the Terraform operation took to execute.
 	Duration *durationpb.Duration `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
-	// (Apply/destroy-apply jobs only) Terraform outputs captured via
-	// `terraform output -json`. Keys are output names, values contain the
-	// output value, type, and sensitivity flag.
-	Outputs       map[string]*TerraformOutput `protobuf:"bytes,7,rep,name=outputs,proto3" json:"outputs,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// (Apply/destroy-apply jobs only) Engine outputs captured after a
+	// successful apply (e.g., `terraform output -json`). Keys are output
+	// names; values carry the output value, type, and sensitivity flag.
+	Outputs       map[string]*EngineOutput `protobuf:"bytes,7,rep,name=outputs,proto3" json:"outputs,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *JobResult) Reset() {
 	*x = JobResult{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[6]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -912,7 +1165,7 @@ func (x *JobResult) String() string {
 func (*JobResult) ProtoMessage() {}
 
 func (x *JobResult) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[6]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -925,7 +1178,7 @@ func (x *JobResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobResult.ProtoReflect.Descriptor instead.
 func (*JobResult) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{6}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *JobResult) GetStatus() JobStatus {
@@ -942,7 +1195,7 @@ func (x *JobResult) GetPlanOutput() string {
 	return ""
 }
 
-func (x *JobResult) GetPlanSummary() *v11.TerraformPlanSummary {
+func (x *JobResult) GetPlanSummary() *v11.ChangeSummary {
 	if x != nil {
 		return x.PlanSummary
 	}
@@ -970,7 +1223,7 @@ func (x *JobResult) GetDuration() *durationpb.Duration {
 	return nil
 }
 
-func (x *JobResult) GetOutputs() map[string]*TerraformOutput {
+func (x *JobResult) GetOutputs() map[string]*EngineOutput {
 	if x != nil {
 		return x.Outputs
 	}
@@ -993,7 +1246,7 @@ type CreateRunnerRequest struct {
 
 func (x *CreateRunnerRequest) Reset() {
 	*x = CreateRunnerRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[7]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1005,7 +1258,7 @@ func (x *CreateRunnerRequest) String() string {
 func (*CreateRunnerRequest) ProtoMessage() {}
 
 func (x *CreateRunnerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[7]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1018,7 +1271,7 @@ func (x *CreateRunnerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRunnerRequest.ProtoReflect.Descriptor instead.
 func (*CreateRunnerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{7}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateRunnerRequest) GetName() string {
@@ -1062,7 +1315,7 @@ type CreateRunnerResponse struct {
 
 func (x *CreateRunnerResponse) Reset() {
 	*x = CreateRunnerResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[8]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1074,7 +1327,7 @@ func (x *CreateRunnerResponse) String() string {
 func (*CreateRunnerResponse) ProtoMessage() {}
 
 func (x *CreateRunnerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[8]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1087,7 +1340,7 @@ func (x *CreateRunnerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRunnerResponse.ProtoReflect.Descriptor instead.
 func (*CreateRunnerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{8}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CreateRunnerResponse) GetRunner() *Runner {
@@ -1115,7 +1368,7 @@ type GetRunnerRequest struct {
 
 func (x *GetRunnerRequest) Reset() {
 	*x = GetRunnerRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[9]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1127,7 +1380,7 @@ func (x *GetRunnerRequest) String() string {
 func (*GetRunnerRequest) ProtoMessage() {}
 
 func (x *GetRunnerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[9]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1140,7 +1393,7 @@ func (x *GetRunnerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunnerRequest.ProtoReflect.Descriptor instead.
 func (*GetRunnerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{9}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetRunnerRequest) GetRunnerId() string {
@@ -1161,7 +1414,7 @@ type GetRunnerResponse struct {
 
 func (x *GetRunnerResponse) Reset() {
 	*x = GetRunnerResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[10]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1426,7 @@ func (x *GetRunnerResponse) String() string {
 func (*GetRunnerResponse) ProtoMessage() {}
 
 func (x *GetRunnerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[10]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1439,7 @@ func (x *GetRunnerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunnerResponse.ProtoReflect.Descriptor instead.
 func (*GetRunnerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{10}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetRunnerResponse) GetRunner() *Runner {
@@ -1222,7 +1475,7 @@ type ListRunnersRequest struct {
 
 func (x *ListRunnersRequest) Reset() {
 	*x = ListRunnersRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[11]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1234,7 +1487,7 @@ func (x *ListRunnersRequest) String() string {
 func (*ListRunnersRequest) ProtoMessage() {}
 
 func (x *ListRunnersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[11]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1247,7 +1500,7 @@ func (x *ListRunnersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunnersRequest.ProtoReflect.Descriptor instead.
 func (*ListRunnersRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{11}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListRunnersRequest) GetFilter() string {
@@ -1284,7 +1537,7 @@ type ListRunnersResponse struct {
 
 func (x *ListRunnersResponse) Reset() {
 	*x = ListRunnersResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[12]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1296,7 +1549,7 @@ func (x *ListRunnersResponse) String() string {
 func (*ListRunnersResponse) ProtoMessage() {}
 
 func (x *ListRunnersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[12]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1309,7 +1562,7 @@ func (x *ListRunnersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunnersResponse.ProtoReflect.Descriptor instead.
 func (*ListRunnersResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{12}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListRunnersResponse) GetRunners() []*Runner {
@@ -1341,7 +1594,7 @@ type UpdateRunnerRequest struct {
 
 func (x *UpdateRunnerRequest) Reset() {
 	*x = UpdateRunnerRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[13]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1353,7 +1606,7 @@ func (x *UpdateRunnerRequest) String() string {
 func (*UpdateRunnerRequest) ProtoMessage() {}
 
 func (x *UpdateRunnerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[13]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1366,7 +1619,7 @@ func (x *UpdateRunnerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRunnerRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRunnerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{13}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateRunnerRequest) GetRunner() *Runner {
@@ -1394,7 +1647,7 @@ type UpdateRunnerResponse struct {
 
 func (x *UpdateRunnerResponse) Reset() {
 	*x = UpdateRunnerResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[14]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1406,7 +1659,7 @@ func (x *UpdateRunnerResponse) String() string {
 func (*UpdateRunnerResponse) ProtoMessage() {}
 
 func (x *UpdateRunnerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[14]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1419,7 +1672,7 @@ func (x *UpdateRunnerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRunnerResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRunnerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{14}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateRunnerResponse) GetRunner() *Runner {
@@ -1441,7 +1694,7 @@ type DeleteRunnerRequest struct {
 
 func (x *DeleteRunnerRequest) Reset() {
 	*x = DeleteRunnerRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[15]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1453,7 +1706,7 @@ func (x *DeleteRunnerRequest) String() string {
 func (*DeleteRunnerRequest) ProtoMessage() {}
 
 func (x *DeleteRunnerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[15]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1466,7 +1719,7 @@ func (x *DeleteRunnerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRunnerRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRunnerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{15}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *DeleteRunnerRequest) GetRunnerId() string {
@@ -1485,7 +1738,7 @@ type DeleteRunnerResponse struct {
 
 func (x *DeleteRunnerResponse) Reset() {
 	*x = DeleteRunnerResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[16]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1497,7 +1750,7 @@ func (x *DeleteRunnerResponse) String() string {
 func (*DeleteRunnerResponse) ProtoMessage() {}
 
 func (x *DeleteRunnerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[16]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1510,7 +1763,7 @@ func (x *DeleteRunnerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRunnerResponse.ProtoReflect.Descriptor instead.
 func (*DeleteRunnerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{16}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{18}
 }
 
 // GetRunnerStatusRequest identifies a runner whose status to retrieve.
@@ -1524,7 +1777,7 @@ type GetRunnerStatusRequest struct {
 
 func (x *GetRunnerStatusRequest) Reset() {
 	*x = GetRunnerStatusRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[17]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1536,7 +1789,7 @@ func (x *GetRunnerStatusRequest) String() string {
 func (*GetRunnerStatusRequest) ProtoMessage() {}
 
 func (x *GetRunnerStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[17]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1549,7 +1802,7 @@ func (x *GetRunnerStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunnerStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetRunnerStatusRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{17}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetRunnerStatusRequest) GetRunnerId() string {
@@ -1577,7 +1830,7 @@ type GetRunnerStatusResponse struct {
 
 func (x *GetRunnerStatusResponse) Reset() {
 	*x = GetRunnerStatusResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[18]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1589,7 +1842,7 @@ func (x *GetRunnerStatusResponse) String() string {
 func (*GetRunnerStatusResponse) ProtoMessage() {}
 
 func (x *GetRunnerStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[18]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1602,7 +1855,7 @@ func (x *GetRunnerStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunnerStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetRunnerStatusResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{18}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetRunnerStatusResponse) GetHealthStatus() RunnerHealthStatus {
@@ -1644,7 +1897,7 @@ type CreateRunnerTokenRequest struct {
 
 func (x *CreateRunnerTokenRequest) Reset() {
 	*x = CreateRunnerTokenRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[19]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1656,7 +1909,7 @@ func (x *CreateRunnerTokenRequest) String() string {
 func (*CreateRunnerTokenRequest) ProtoMessage() {}
 
 func (x *CreateRunnerTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[19]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1669,7 +1922,7 @@ func (x *CreateRunnerTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRunnerTokenRequest.ProtoReflect.Descriptor instead.
 func (*CreateRunnerTokenRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{19}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CreateRunnerTokenRequest) GetRunnerId() string {
@@ -1707,7 +1960,7 @@ type CreateRunnerTokenResponse struct {
 
 func (x *CreateRunnerTokenResponse) Reset() {
 	*x = CreateRunnerTokenResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[20]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1719,7 +1972,7 @@ func (x *CreateRunnerTokenResponse) String() string {
 func (*CreateRunnerTokenResponse) ProtoMessage() {}
 
 func (x *CreateRunnerTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[20]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1732,7 +1985,7 @@ func (x *CreateRunnerTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRunnerTokenResponse.ProtoReflect.Descriptor instead.
 func (*CreateRunnerTokenResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{20}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateRunnerTokenResponse) GetAccessToken() *v1.AccessToken {
@@ -1772,7 +2025,7 @@ type ListRunnerTokensRequest struct {
 
 func (x *ListRunnerTokensRequest) Reset() {
 	*x = ListRunnerTokensRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[21]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1784,7 +2037,7 @@ func (x *ListRunnerTokensRequest) String() string {
 func (*ListRunnerTokensRequest) ProtoMessage() {}
 
 func (x *ListRunnerTokensRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[21]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1797,7 +2050,7 @@ func (x *ListRunnerTokensRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunnerTokensRequest.ProtoReflect.Descriptor instead.
 func (*ListRunnerTokensRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{21}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListRunnerTokensRequest) GetRunnerId() string {
@@ -1841,7 +2094,7 @@ type ListRunnerTokensResponse struct {
 
 func (x *ListRunnerTokensResponse) Reset() {
 	*x = ListRunnerTokensResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[22]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1853,7 +2106,7 @@ func (x *ListRunnerTokensResponse) String() string {
 func (*ListRunnerTokensResponse) ProtoMessage() {}
 
 func (x *ListRunnerTokensResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[22]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1866,7 +2119,7 @@ func (x *ListRunnerTokensResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunnerTokensResponse.ProtoReflect.Descriptor instead.
 func (*ListRunnerTokensResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{22}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ListRunnerTokensResponse) GetAccessTokens() []*v1.AccessToken {
@@ -1896,7 +2149,7 @@ type GetRunnerTokenRequest struct {
 
 func (x *GetRunnerTokenRequest) Reset() {
 	*x = GetRunnerTokenRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[23]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1908,7 +2161,7 @@ func (x *GetRunnerTokenRequest) String() string {
 func (*GetRunnerTokenRequest) ProtoMessage() {}
 
 func (x *GetRunnerTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[23]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1921,7 +2174,7 @@ func (x *GetRunnerTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunnerTokenRequest.ProtoReflect.Descriptor instead.
 func (*GetRunnerTokenRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{23}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetRunnerTokenRequest) GetTokenId() string {
@@ -1942,7 +2195,7 @@ type GetRunnerTokenResponse struct {
 
 func (x *GetRunnerTokenResponse) Reset() {
 	*x = GetRunnerTokenResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[24]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1954,7 +2207,7 @@ func (x *GetRunnerTokenResponse) String() string {
 func (*GetRunnerTokenResponse) ProtoMessage() {}
 
 func (x *GetRunnerTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[24]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1967,7 +2220,7 @@ func (x *GetRunnerTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunnerTokenResponse.ProtoReflect.Descriptor instead.
 func (*GetRunnerTokenResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{24}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *GetRunnerTokenResponse) GetAccessToken() *v1.AccessToken {
@@ -1990,7 +2243,7 @@ type RevokeRunnerTokenRequest struct {
 
 func (x *RevokeRunnerTokenRequest) Reset() {
 	*x = RevokeRunnerTokenRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[25]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2002,7 +2255,7 @@ func (x *RevokeRunnerTokenRequest) String() string {
 func (*RevokeRunnerTokenRequest) ProtoMessage() {}
 
 func (x *RevokeRunnerTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[25]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2015,7 +2268,7 @@ func (x *RevokeRunnerTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeRunnerTokenRequest.ProtoReflect.Descriptor instead.
 func (*RevokeRunnerTokenRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{25}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *RevokeRunnerTokenRequest) GetTokenId() string {
@@ -2036,7 +2289,7 @@ type RevokeRunnerTokenResponse struct {
 
 func (x *RevokeRunnerTokenResponse) Reset() {
 	*x = RevokeRunnerTokenResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[26]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2048,7 +2301,7 @@ func (x *RevokeRunnerTokenResponse) String() string {
 func (*RevokeRunnerTokenResponse) ProtoMessage() {}
 
 func (x *RevokeRunnerTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[26]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2061,7 +2314,7 @@ func (x *RevokeRunnerTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeRunnerTokenResponse.ProtoReflect.Descriptor instead.
 func (*RevokeRunnerTokenResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{26}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RevokeRunnerTokenResponse) GetAccessToken() *v1.AccessToken {
@@ -2089,7 +2342,7 @@ type HeartbeatRequest struct {
 
 func (x *HeartbeatRequest) Reset() {
 	*x = HeartbeatRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[27]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2101,7 +2354,7 @@ func (x *HeartbeatRequest) String() string {
 func (*HeartbeatRequest) ProtoMessage() {}
 
 func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[27]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2114,7 +2367,7 @@ func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatRequest.ProtoReflect.Descriptor instead.
 func (*HeartbeatRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{27}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *HeartbeatRequest) GetStatus() *RunnerStatus {
@@ -2145,7 +2398,7 @@ type HeartbeatResponse struct {
 
 func (x *HeartbeatResponse) Reset() {
 	*x = HeartbeatResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[28]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2157,7 +2410,7 @@ func (x *HeartbeatResponse) String() string {
 func (*HeartbeatResponse) ProtoMessage() {}
 
 func (x *HeartbeatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[28]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2170,7 +2423,7 @@ func (x *HeartbeatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatResponse.ProtoReflect.Descriptor instead.
 func (*HeartbeatResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{28}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *HeartbeatResponse) GetAck() bool {
@@ -2197,7 +2450,7 @@ type ClaimJobRequest struct {
 
 func (x *ClaimJobRequest) Reset() {
 	*x = ClaimJobRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[29]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2209,7 +2462,7 @@ func (x *ClaimJobRequest) String() string {
 func (*ClaimJobRequest) ProtoMessage() {}
 
 func (x *ClaimJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[29]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2222,7 +2475,7 @@ func (x *ClaimJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimJobRequest.ProtoReflect.Descriptor instead.
 func (*ClaimJobRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{29}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{31}
 }
 
 // ClaimJobResponse contains the next job to execute, if any.
@@ -2237,7 +2490,7 @@ type ClaimJobResponse struct {
 
 func (x *ClaimJobResponse) Reset() {
 	*x = ClaimJobResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[30]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2249,7 +2502,7 @@ func (x *ClaimJobResponse) String() string {
 func (*ClaimJobResponse) ProtoMessage() {}
 
 func (x *ClaimJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[30]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2262,7 +2515,7 @@ func (x *ClaimJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimJobResponse.ProtoReflect.Descriptor instead.
 func (*ClaimJobResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{30}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ClaimJobResponse) GetJob() *Job {
@@ -2283,7 +2536,7 @@ type GetJobBundleRequest struct {
 
 func (x *GetJobBundleRequest) Reset() {
 	*x = GetJobBundleRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[31]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2295,7 +2548,7 @@ func (x *GetJobBundleRequest) String() string {
 func (*GetJobBundleRequest) ProtoMessage() {}
 
 func (x *GetJobBundleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[31]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2308,7 +2561,7 @@ func (x *GetJobBundleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobBundleRequest.ProtoReflect.Descriptor instead.
 func (*GetJobBundleRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{31}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetJobBundleRequest) GetJobId() string {
@@ -2329,7 +2582,7 @@ type GetJobBundleResponse struct {
 
 func (x *GetJobBundleResponse) Reset() {
 	*x = GetJobBundleResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[32]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2341,7 +2594,7 @@ func (x *GetJobBundleResponse) String() string {
 func (*GetJobBundleResponse) ProtoMessage() {}
 
 func (x *GetJobBundleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[32]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2354,7 +2607,7 @@ func (x *GetJobBundleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobBundleResponse.ProtoReflect.Descriptor instead.
 func (*GetJobBundleResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{32}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *GetJobBundleResponse) GetBundle() *JobBundle {
@@ -2377,7 +2630,7 @@ type ReportJobResultRequest struct {
 
 func (x *ReportJobResultRequest) Reset() {
 	*x = ReportJobResultRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[33]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2389,7 +2642,7 @@ func (x *ReportJobResultRequest) String() string {
 func (*ReportJobResultRequest) ProtoMessage() {}
 
 func (x *ReportJobResultRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[33]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2402,7 +2655,7 @@ func (x *ReportJobResultRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportJobResultRequest.ProtoReflect.Descriptor instead.
 func (*ReportJobResultRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{33}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ReportJobResultRequest) GetJobId() string {
@@ -2430,7 +2683,7 @@ type ReportJobResultResponse struct {
 
 func (x *ReportJobResultResponse) Reset() {
 	*x = ReportJobResultResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[34]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2442,7 +2695,7 @@ func (x *ReportJobResultResponse) String() string {
 func (*ReportJobResultResponse) ProtoMessage() {}
 
 func (x *ReportJobResultResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[34]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2455,7 +2708,7 @@ func (x *ReportJobResultResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportJobResultResponse.ProtoReflect.Descriptor instead.
 func (*ReportJobResultResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{34}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ReportJobResultResponse) GetAck() bool {
@@ -2490,7 +2743,7 @@ type ListRunnerJobsRequest struct {
 
 func (x *ListRunnerJobsRequest) Reset() {
 	*x = ListRunnerJobsRequest{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[35]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2502,7 +2755,7 @@ func (x *ListRunnerJobsRequest) String() string {
 func (*ListRunnerJobsRequest) ProtoMessage() {}
 
 func (x *ListRunnerJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[35]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2515,7 +2768,7 @@ func (x *ListRunnerJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunnerJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListRunnerJobsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{35}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ListRunnerJobsRequest) GetRunnerId() string {
@@ -2559,7 +2812,7 @@ type ListRunnerJobsResponse struct {
 
 func (x *ListRunnerJobsResponse) Reset() {
 	*x = ListRunnerJobsResponse{}
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[36]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2571,7 +2824,7 @@ func (x *ListRunnerJobsResponse) String() string {
 func (*ListRunnerJobsResponse) ProtoMessage() {}
 
 func (x *ListRunnerJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_runner_v1_runner_proto_msgTypes[36]
+	mi := &file_admiral_runner_v1_runner_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2584,7 +2837,7 @@ func (x *ListRunnerJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunnerJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListRunnerJobsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{36}
+	return file_admiral_runner_v1_runner_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ListRunnerJobsResponse) GetJobs() []*Job {
@@ -2620,18 +2873,13 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"created_by\x18\b \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xad\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc9\x01\n" +
 	"\fRunnerStatus\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12\x1f\n" +
 	"\vactive_jobs\x18\x02 \x01(\x05R\n" +
 	"activeJobs\x12.\n" +
-	"\x13max_concurrent_jobs\x18\x03 \x01(\x05R\x11maxConcurrentJobs\x12/\n" +
-	"\x13available_providers\x18\x04 \x03(\tR\x12availableProviders\x12p\n" +
-	"\rtool_versions\x18\x05 \x03(\v21.admiral.runner.v1.RunnerStatus.ToolVersionsEntryB\x18\xbaH\x15\x9a\x01\x12\x10 \"\x06r\x04\x10\x01\x18?*\x06r\x04\x10\x01\x18 R\ftoolVersions\x12N\n" +
-	"\x12active_job_details\x18\x06 \x03(\v2 .admiral.runner.v1.ActiveJobInfoR\x10activeJobDetails\x1a?\n" +
-	"\x11ToolVersionsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x9e\x01\n" +
+	"\x13max_concurrent_jobs\x18\x03 \x01(\x05R\x11maxConcurrentJobs\x12N\n" +
+	"\x12active_job_details\x18\x04 \x03(\v2 .admiral.runner.v1.ActiveJobInfoR\x10activeJobDetails\"\x9e\x01\n" +
 	"\rActiveJobInfo\x12\x1f\n" +
 	"\x06job_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x05jobId\x121\n" +
 	"\x05phase\x18\x02 \x01(\x0e2\x1b.admiral.runner.v1.JobPhaseR\x05phase\x129\n" +
@@ -2649,38 +2897,59 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"started_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\xab\x04\n" +
+	"\fcompleted_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\x88\x05\n" +
 	"\tJobBundle\x12!\n" +
 	"\fartifact_url\x18\x01 \x01(\tR\vartifactUrl\x12+\n" +
 	"\x11artifact_checksum\x18\x02 \x01(\tR\x10artifactChecksum\x12I\n" +
 	"\tvariables\x18\x03 \x03(\v2+.admiral.runner.v1.JobBundle.VariablesEntryR\tvariables\x12\\\n" +
 	"\x10provider_configs\x18\x04 \x03(\v21.admiral.runner.v1.JobBundle.ProviderConfigsEntryR\x0fproviderConfigs\x12%\n" +
-	"\x0ebackend_config\x18\x05 \x01(\tR\rbackendConfig\x12+\n" +
-	"\x11terraform_version\x18\x06 \x01(\tR\x10terraformVersion\x12+\n" +
-	"\x11working_directory\x18\a \x01(\tR\x10workingDirectory\x12\"\n" +
-	"\rplan_file_url\x18\b \x01(\tR\vplanFileUrl\x1a<\n" +
+	"\x0ebackend_config\x18\x05 \x01(\tR\rbackendConfig\x121\n" +
+	"\x06engine\x18\x06 \x01(\x0e2\x19.admiral.runner.v1.EngineR\x06engine\x12%\n" +
+	"\x0eengine_version\x18\a \x01(\tR\rengineVersion\x12+\n" +
+	"\x11working_directory\x18\b \x01(\tR\x10workingDirectory\x12\"\n" +
+	"\rplan_file_url\x18\t \x01(\tR\vplanFileUrl\x12.\n" +
+	"\x05hooks\x18\n" +
+	" \x01(\v2\x18.admiral.runner.v1.HooksR\x05hooks\x1a<\n" +
 	"\x0eVariablesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aB\n" +
 	"\x14ProviderConfigsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Y\n" +
-	"\x0fTerraformOutput\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"~\n" +
+	"\x04Hook\x12#\n" +
+	"\x06script\x18\x01 \x01(\tB\v\xbaH\br\x06\x10\x01\x18\x80\x80\x04R\x06script\x123\n" +
+	"\x0ftimeout_seconds\x18\x02 \x01(\x05B\n" +
+	"\xbaH\a\x1a\x05\x18\x90\x1c(\x00R\x0etimeoutSeconds\x12\x1c\n" +
+	"\x04name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x01R\x04name\"\x97\x03\n" +
+	"\x05Hooks\x128\n" +
+	"\vbefore_init\x18\x01 \x03(\v2\x17.admiral.runner.v1.HookR\n" +
+	"beforeInit\x126\n" +
+	"\n" +
+	"after_init\x18\x02 \x03(\v2\x17.admiral.runner.v1.HookR\tafterInit\x128\n" +
+	"\vbefore_plan\x18\x03 \x03(\v2\x17.admiral.runner.v1.HookR\n" +
+	"beforePlan\x126\n" +
+	"\n" +
+	"after_plan\x18\x04 \x03(\v2\x17.admiral.runner.v1.HookR\tafterPlan\x12:\n" +
+	"\fbefore_apply\x18\x05 \x03(\v2\x17.admiral.runner.v1.HookR\vbeforeApply\x128\n" +
+	"\vafter_apply\x18\x06 \x03(\v2\x17.admiral.runner.v1.HookR\n" +
+	"afterApply\x124\n" +
+	"\tafter_run\x18\a \x03(\v2\x17.admiral.runner.v1.HookR\bafterRun\"V\n" +
+	"\fEngineOutput\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1c\n" +
-	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xce\x03\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xc4\x03\n" +
 	"\tJobResult\x124\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1c.admiral.runner.v1.JobStatusR\x06status\x12\x1f\n" +
 	"\vplan_output\x18\x02 \x01(\tR\n" +
-	"planOutput\x12N\n" +
-	"\fplan_summary\x18\x03 \x01(\v2+.admiral.deployment.v1.TerraformPlanSummaryR\vplanSummary\x12#\n" +
+	"planOutput\x12G\n" +
+	"\fplan_summary\x18\x03 \x01(\v2$.admiral.deployment.v1.ChangeSummaryR\vplanSummary\x12#\n" +
 	"\rerror_message\x18\x04 \x01(\tR\ferrorMessage\x12\x19\n" +
 	"\blogs_url\x18\x05 \x01(\tR\alogsUrl\x125\n" +
 	"\bduration\x18\x06 \x01(\v2\x19.google.protobuf.DurationR\bduration\x12C\n" +
-	"\aoutputs\x18\a \x03(\v2).admiral.runner.v1.JobResult.OutputsEntryR\aoutputs\x1a^\n" +
+	"\aoutputs\x18\a \x03(\v2).admiral.runner.v1.JobResult.OutputsEntryR\aoutputs\x1a[\n" +
 	"\fOutputsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x128\n" +
-	"\x05value\x18\x02 \x01(\v2\".admiral.runner.v1.TerraformOutputR\x05value:\x028\x01\"\xa3\x02\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x125\n" +
+	"\x05value\x18\x02 \x01(\v2\x1f.admiral.runner.v1.EngineOutputR\x05value:\x028\x01\"\xa3\x02\n" +
 	"\x13CreateRunnerRequest\x12@\n" +
 	"\x04name\x18\x01 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12c\n" +
@@ -2797,7 +3066,11 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x16JOB_PHASE_INITIALIZING\x10\x01\x12\x16\n" +
 	"\x12JOB_PHASE_PLANNING\x10\x02\x12\x16\n" +
 	"\x12JOB_PHASE_APPLYING\x10\x03\x12\x18\n" +
-	"\x14JOB_PHASE_FINALIZING\x10\x042\x83\x17\n" +
+	"\x14JOB_PHASE_FINALIZING\x10\x04*G\n" +
+	"\x06Engine\x12\x16\n" +
+	"\x12ENGINE_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10ENGINE_TERRAFORM\x10\x01\x12\x0f\n" +
+	"\vENGINE_TOFU\x10\x022\x83\x17\n" +
 	"\tRunnerAPI\x12\xaa\x01\n" +
 	"\fCreateRunner\x12&.admiral.runner.v1.CreateRunnerRequest\x1a'.admiral.runner.v1.CreateRunnerResponse\"I\xbaG\x1a\n" +
 	"\aRunners\x12\x0fCreate a runner\xa2\x97$\x0e\n" +
@@ -2858,140 +3131,150 @@ func file_admiral_runner_v1_runner_proto_rawDescGZIP() []byte {
 	return file_admiral_runner_v1_runner_proto_rawDescData
 }
 
-var file_admiral_runner_v1_runner_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_admiral_runner_v1_runner_proto_msgTypes = make([]protoimpl.MessageInfo, 43)
+var file_admiral_runner_v1_runner_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_admiral_runner_v1_runner_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_admiral_runner_v1_runner_proto_goTypes = []any{
 	(RunnerHealthStatus)(0),           // 0: admiral.runner.v1.RunnerHealthStatus
 	(JobStatus)(0),                    // 1: admiral.runner.v1.JobStatus
 	(JobType)(0),                      // 2: admiral.runner.v1.JobType
 	(JobPhase)(0),                     // 3: admiral.runner.v1.JobPhase
-	(*Runner)(nil),                    // 4: admiral.runner.v1.Runner
-	(*RunnerStatus)(nil),              // 5: admiral.runner.v1.RunnerStatus
-	(*ActiveJobInfo)(nil),             // 6: admiral.runner.v1.ActiveJobInfo
-	(*Job)(nil),                       // 7: admiral.runner.v1.Job
-	(*JobBundle)(nil),                 // 8: admiral.runner.v1.JobBundle
-	(*TerraformOutput)(nil),           // 9: admiral.runner.v1.TerraformOutput
-	(*JobResult)(nil),                 // 10: admiral.runner.v1.JobResult
-	(*CreateRunnerRequest)(nil),       // 11: admiral.runner.v1.CreateRunnerRequest
-	(*CreateRunnerResponse)(nil),      // 12: admiral.runner.v1.CreateRunnerResponse
-	(*GetRunnerRequest)(nil),          // 13: admiral.runner.v1.GetRunnerRequest
-	(*GetRunnerResponse)(nil),         // 14: admiral.runner.v1.GetRunnerResponse
-	(*ListRunnersRequest)(nil),        // 15: admiral.runner.v1.ListRunnersRequest
-	(*ListRunnersResponse)(nil),       // 16: admiral.runner.v1.ListRunnersResponse
-	(*UpdateRunnerRequest)(nil),       // 17: admiral.runner.v1.UpdateRunnerRequest
-	(*UpdateRunnerResponse)(nil),      // 18: admiral.runner.v1.UpdateRunnerResponse
-	(*DeleteRunnerRequest)(nil),       // 19: admiral.runner.v1.DeleteRunnerRequest
-	(*DeleteRunnerResponse)(nil),      // 20: admiral.runner.v1.DeleteRunnerResponse
-	(*GetRunnerStatusRequest)(nil),    // 21: admiral.runner.v1.GetRunnerStatusRequest
-	(*GetRunnerStatusResponse)(nil),   // 22: admiral.runner.v1.GetRunnerStatusResponse
-	(*CreateRunnerTokenRequest)(nil),  // 23: admiral.runner.v1.CreateRunnerTokenRequest
-	(*CreateRunnerTokenResponse)(nil), // 24: admiral.runner.v1.CreateRunnerTokenResponse
-	(*ListRunnerTokensRequest)(nil),   // 25: admiral.runner.v1.ListRunnerTokensRequest
-	(*ListRunnerTokensResponse)(nil),  // 26: admiral.runner.v1.ListRunnerTokensResponse
-	(*GetRunnerTokenRequest)(nil),     // 27: admiral.runner.v1.GetRunnerTokenRequest
-	(*GetRunnerTokenResponse)(nil),    // 28: admiral.runner.v1.GetRunnerTokenResponse
-	(*RevokeRunnerTokenRequest)(nil),  // 29: admiral.runner.v1.RevokeRunnerTokenRequest
-	(*RevokeRunnerTokenResponse)(nil), // 30: admiral.runner.v1.RevokeRunnerTokenResponse
-	(*HeartbeatRequest)(nil),          // 31: admiral.runner.v1.HeartbeatRequest
-	(*HeartbeatResponse)(nil),         // 32: admiral.runner.v1.HeartbeatResponse
-	(*ClaimJobRequest)(nil),           // 33: admiral.runner.v1.ClaimJobRequest
-	(*ClaimJobResponse)(nil),          // 34: admiral.runner.v1.ClaimJobResponse
-	(*GetJobBundleRequest)(nil),       // 35: admiral.runner.v1.GetJobBundleRequest
-	(*GetJobBundleResponse)(nil),      // 36: admiral.runner.v1.GetJobBundleResponse
-	(*ReportJobResultRequest)(nil),    // 37: admiral.runner.v1.ReportJobResultRequest
-	(*ReportJobResultResponse)(nil),   // 38: admiral.runner.v1.ReportJobResultResponse
-	(*ListRunnerJobsRequest)(nil),     // 39: admiral.runner.v1.ListRunnerJobsRequest
-	(*ListRunnerJobsResponse)(nil),    // 40: admiral.runner.v1.ListRunnerJobsResponse
-	nil,                               // 41: admiral.runner.v1.Runner.LabelsEntry
-	nil,                               // 42: admiral.runner.v1.RunnerStatus.ToolVersionsEntry
-	nil,                               // 43: admiral.runner.v1.JobBundle.VariablesEntry
-	nil,                               // 44: admiral.runner.v1.JobBundle.ProviderConfigsEntry
-	nil,                               // 45: admiral.runner.v1.JobResult.OutputsEntry
-	nil,                               // 46: admiral.runner.v1.CreateRunnerRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),     // 47: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),               // 48: admiral.common.v1.ActorRef
-	(*v11.TerraformPlanSummary)(nil),  // 49: admiral.deployment.v1.TerraformPlanSummary
-	(*durationpb.Duration)(nil),       // 50: google.protobuf.Duration
-	(*fieldmaskpb.FieldMask)(nil),     // 51: google.protobuf.FieldMask
-	(*v1.AccessToken)(nil),            // 52: admiral.common.v1.AccessToken
+	(Engine)(0),                       // 4: admiral.runner.v1.Engine
+	(*Runner)(nil),                    // 5: admiral.runner.v1.Runner
+	(*RunnerStatus)(nil),              // 6: admiral.runner.v1.RunnerStatus
+	(*ActiveJobInfo)(nil),             // 7: admiral.runner.v1.ActiveJobInfo
+	(*Job)(nil),                       // 8: admiral.runner.v1.Job
+	(*JobBundle)(nil),                 // 9: admiral.runner.v1.JobBundle
+	(*Hook)(nil),                      // 10: admiral.runner.v1.Hook
+	(*Hooks)(nil),                     // 11: admiral.runner.v1.Hooks
+	(*EngineOutput)(nil),              // 12: admiral.runner.v1.EngineOutput
+	(*JobResult)(nil),                 // 13: admiral.runner.v1.JobResult
+	(*CreateRunnerRequest)(nil),       // 14: admiral.runner.v1.CreateRunnerRequest
+	(*CreateRunnerResponse)(nil),      // 15: admiral.runner.v1.CreateRunnerResponse
+	(*GetRunnerRequest)(nil),          // 16: admiral.runner.v1.GetRunnerRequest
+	(*GetRunnerResponse)(nil),         // 17: admiral.runner.v1.GetRunnerResponse
+	(*ListRunnersRequest)(nil),        // 18: admiral.runner.v1.ListRunnersRequest
+	(*ListRunnersResponse)(nil),       // 19: admiral.runner.v1.ListRunnersResponse
+	(*UpdateRunnerRequest)(nil),       // 20: admiral.runner.v1.UpdateRunnerRequest
+	(*UpdateRunnerResponse)(nil),      // 21: admiral.runner.v1.UpdateRunnerResponse
+	(*DeleteRunnerRequest)(nil),       // 22: admiral.runner.v1.DeleteRunnerRequest
+	(*DeleteRunnerResponse)(nil),      // 23: admiral.runner.v1.DeleteRunnerResponse
+	(*GetRunnerStatusRequest)(nil),    // 24: admiral.runner.v1.GetRunnerStatusRequest
+	(*GetRunnerStatusResponse)(nil),   // 25: admiral.runner.v1.GetRunnerStatusResponse
+	(*CreateRunnerTokenRequest)(nil),  // 26: admiral.runner.v1.CreateRunnerTokenRequest
+	(*CreateRunnerTokenResponse)(nil), // 27: admiral.runner.v1.CreateRunnerTokenResponse
+	(*ListRunnerTokensRequest)(nil),   // 28: admiral.runner.v1.ListRunnerTokensRequest
+	(*ListRunnerTokensResponse)(nil),  // 29: admiral.runner.v1.ListRunnerTokensResponse
+	(*GetRunnerTokenRequest)(nil),     // 30: admiral.runner.v1.GetRunnerTokenRequest
+	(*GetRunnerTokenResponse)(nil),    // 31: admiral.runner.v1.GetRunnerTokenResponse
+	(*RevokeRunnerTokenRequest)(nil),  // 32: admiral.runner.v1.RevokeRunnerTokenRequest
+	(*RevokeRunnerTokenResponse)(nil), // 33: admiral.runner.v1.RevokeRunnerTokenResponse
+	(*HeartbeatRequest)(nil),          // 34: admiral.runner.v1.HeartbeatRequest
+	(*HeartbeatResponse)(nil),         // 35: admiral.runner.v1.HeartbeatResponse
+	(*ClaimJobRequest)(nil),           // 36: admiral.runner.v1.ClaimJobRequest
+	(*ClaimJobResponse)(nil),          // 37: admiral.runner.v1.ClaimJobResponse
+	(*GetJobBundleRequest)(nil),       // 38: admiral.runner.v1.GetJobBundleRequest
+	(*GetJobBundleResponse)(nil),      // 39: admiral.runner.v1.GetJobBundleResponse
+	(*ReportJobResultRequest)(nil),    // 40: admiral.runner.v1.ReportJobResultRequest
+	(*ReportJobResultResponse)(nil),   // 41: admiral.runner.v1.ReportJobResultResponse
+	(*ListRunnerJobsRequest)(nil),     // 42: admiral.runner.v1.ListRunnerJobsRequest
+	(*ListRunnerJobsResponse)(nil),    // 43: admiral.runner.v1.ListRunnerJobsResponse
+	nil,                               // 44: admiral.runner.v1.Runner.LabelsEntry
+	nil,                               // 45: admiral.runner.v1.JobBundle.VariablesEntry
+	nil,                               // 46: admiral.runner.v1.JobBundle.ProviderConfigsEntry
+	nil,                               // 47: admiral.runner.v1.JobResult.OutputsEntry
+	nil,                               // 48: admiral.runner.v1.CreateRunnerRequest.LabelsEntry
+	(*timestamppb.Timestamp)(nil),     // 49: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),               // 50: admiral.common.v1.ActorRef
+	(*v11.ChangeSummary)(nil),         // 51: admiral.deployment.v1.ChangeSummary
+	(*durationpb.Duration)(nil),       // 52: google.protobuf.Duration
+	(*fieldmaskpb.FieldMask)(nil),     // 53: google.protobuf.FieldMask
+	(*v1.AccessToken)(nil),            // 54: admiral.common.v1.AccessToken
 }
 var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
-	41, // 0: admiral.runner.v1.Runner.labels:type_name -> admiral.runner.v1.Runner.LabelsEntry
+	44, // 0: admiral.runner.v1.Runner.labels:type_name -> admiral.runner.v1.Runner.LabelsEntry
 	0,  // 1: admiral.runner.v1.Runner.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
-	47, // 2: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
-	47, // 3: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
-	48, // 4: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
-	42, // 5: admiral.runner.v1.RunnerStatus.tool_versions:type_name -> admiral.runner.v1.RunnerStatus.ToolVersionsEntry
-	6,  // 6: admiral.runner.v1.RunnerStatus.active_job_details:type_name -> admiral.runner.v1.ActiveJobInfo
-	3,  // 7: admiral.runner.v1.ActiveJobInfo.phase:type_name -> admiral.runner.v1.JobPhase
-	47, // 8: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
-	2,  // 9: admiral.runner.v1.Job.job_type:type_name -> admiral.runner.v1.JobType
-	1,  // 10: admiral.runner.v1.Job.status:type_name -> admiral.runner.v1.JobStatus
-	47, // 11: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	47, // 12: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	47, // 13: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
-	43, // 14: admiral.runner.v1.JobBundle.variables:type_name -> admiral.runner.v1.JobBundle.VariablesEntry
-	44, // 15: admiral.runner.v1.JobBundle.provider_configs:type_name -> admiral.runner.v1.JobBundle.ProviderConfigsEntry
-	1,  // 16: admiral.runner.v1.JobResult.status:type_name -> admiral.runner.v1.JobStatus
-	49, // 17: admiral.runner.v1.JobResult.plan_summary:type_name -> admiral.deployment.v1.TerraformPlanSummary
-	50, // 18: admiral.runner.v1.JobResult.duration:type_name -> google.protobuf.Duration
-	45, // 19: admiral.runner.v1.JobResult.outputs:type_name -> admiral.runner.v1.JobResult.OutputsEntry
-	46, // 20: admiral.runner.v1.CreateRunnerRequest.labels:type_name -> admiral.runner.v1.CreateRunnerRequest.LabelsEntry
-	4,  // 21: admiral.runner.v1.CreateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
-	4,  // 22: admiral.runner.v1.GetRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
-	4,  // 23: admiral.runner.v1.ListRunnersResponse.runners:type_name -> admiral.runner.v1.Runner
-	4,  // 24: admiral.runner.v1.UpdateRunnerRequest.runner:type_name -> admiral.runner.v1.Runner
-	51, // 25: admiral.runner.v1.UpdateRunnerRequest.update_mask:type_name -> google.protobuf.FieldMask
-	4,  // 26: admiral.runner.v1.UpdateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
-	0,  // 27: admiral.runner.v1.GetRunnerStatusResponse.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
-	5,  // 28: admiral.runner.v1.GetRunnerStatusResponse.status:type_name -> admiral.runner.v1.RunnerStatus
-	47, // 29: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	47, // 30: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
-	52, // 31: admiral.runner.v1.CreateRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	52, // 32: admiral.runner.v1.ListRunnerTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
-	52, // 33: admiral.runner.v1.GetRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	52, // 34: admiral.runner.v1.RevokeRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	5,  // 35: admiral.runner.v1.HeartbeatRequest.status:type_name -> admiral.runner.v1.RunnerStatus
-	7,  // 36: admiral.runner.v1.ClaimJobResponse.job:type_name -> admiral.runner.v1.Job
-	8,  // 37: admiral.runner.v1.GetJobBundleResponse.bundle:type_name -> admiral.runner.v1.JobBundle
-	10, // 38: admiral.runner.v1.ReportJobResultRequest.result:type_name -> admiral.runner.v1.JobResult
-	7,  // 39: admiral.runner.v1.ListRunnerJobsResponse.jobs:type_name -> admiral.runner.v1.Job
-	9,  // 40: admiral.runner.v1.JobResult.OutputsEntry.value:type_name -> admiral.runner.v1.TerraformOutput
-	11, // 41: admiral.runner.v1.RunnerAPI.CreateRunner:input_type -> admiral.runner.v1.CreateRunnerRequest
-	13, // 42: admiral.runner.v1.RunnerAPI.GetRunner:input_type -> admiral.runner.v1.GetRunnerRequest
-	15, // 43: admiral.runner.v1.RunnerAPI.ListRunners:input_type -> admiral.runner.v1.ListRunnersRequest
-	17, // 44: admiral.runner.v1.RunnerAPI.UpdateRunner:input_type -> admiral.runner.v1.UpdateRunnerRequest
-	19, // 45: admiral.runner.v1.RunnerAPI.DeleteRunner:input_type -> admiral.runner.v1.DeleteRunnerRequest
-	21, // 46: admiral.runner.v1.RunnerAPI.GetRunnerStatus:input_type -> admiral.runner.v1.GetRunnerStatusRequest
-	23, // 47: admiral.runner.v1.RunnerAPI.CreateRunnerToken:input_type -> admiral.runner.v1.CreateRunnerTokenRequest
-	25, // 48: admiral.runner.v1.RunnerAPI.ListRunnerTokens:input_type -> admiral.runner.v1.ListRunnerTokensRequest
-	27, // 49: admiral.runner.v1.RunnerAPI.GetRunnerToken:input_type -> admiral.runner.v1.GetRunnerTokenRequest
-	29, // 50: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:input_type -> admiral.runner.v1.RevokeRunnerTokenRequest
-	31, // 51: admiral.runner.v1.RunnerAPI.Heartbeat:input_type -> admiral.runner.v1.HeartbeatRequest
-	33, // 52: admiral.runner.v1.RunnerAPI.ClaimJob:input_type -> admiral.runner.v1.ClaimJobRequest
-	35, // 53: admiral.runner.v1.RunnerAPI.GetJobBundle:input_type -> admiral.runner.v1.GetJobBundleRequest
-	37, // 54: admiral.runner.v1.RunnerAPI.ReportJobResult:input_type -> admiral.runner.v1.ReportJobResultRequest
-	39, // 55: admiral.runner.v1.RunnerAPI.ListRunnerJobs:input_type -> admiral.runner.v1.ListRunnerJobsRequest
-	12, // 56: admiral.runner.v1.RunnerAPI.CreateRunner:output_type -> admiral.runner.v1.CreateRunnerResponse
-	14, // 57: admiral.runner.v1.RunnerAPI.GetRunner:output_type -> admiral.runner.v1.GetRunnerResponse
-	16, // 58: admiral.runner.v1.RunnerAPI.ListRunners:output_type -> admiral.runner.v1.ListRunnersResponse
-	18, // 59: admiral.runner.v1.RunnerAPI.UpdateRunner:output_type -> admiral.runner.v1.UpdateRunnerResponse
-	20, // 60: admiral.runner.v1.RunnerAPI.DeleteRunner:output_type -> admiral.runner.v1.DeleteRunnerResponse
-	22, // 61: admiral.runner.v1.RunnerAPI.GetRunnerStatus:output_type -> admiral.runner.v1.GetRunnerStatusResponse
-	24, // 62: admiral.runner.v1.RunnerAPI.CreateRunnerToken:output_type -> admiral.runner.v1.CreateRunnerTokenResponse
-	26, // 63: admiral.runner.v1.RunnerAPI.ListRunnerTokens:output_type -> admiral.runner.v1.ListRunnerTokensResponse
-	28, // 64: admiral.runner.v1.RunnerAPI.GetRunnerToken:output_type -> admiral.runner.v1.GetRunnerTokenResponse
-	30, // 65: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:output_type -> admiral.runner.v1.RevokeRunnerTokenResponse
-	32, // 66: admiral.runner.v1.RunnerAPI.Heartbeat:output_type -> admiral.runner.v1.HeartbeatResponse
-	34, // 67: admiral.runner.v1.RunnerAPI.ClaimJob:output_type -> admiral.runner.v1.ClaimJobResponse
-	36, // 68: admiral.runner.v1.RunnerAPI.GetJobBundle:output_type -> admiral.runner.v1.GetJobBundleResponse
-	38, // 69: admiral.runner.v1.RunnerAPI.ReportJobResult:output_type -> admiral.runner.v1.ReportJobResultResponse
-	40, // 70: admiral.runner.v1.RunnerAPI.ListRunnerJobs:output_type -> admiral.runner.v1.ListRunnerJobsResponse
-	56, // [56:71] is the sub-list for method output_type
-	41, // [41:56] is the sub-list for method input_type
-	41, // [41:41] is the sub-list for extension type_name
-	41, // [41:41] is the sub-list for extension extendee
-	0,  // [0:41] is the sub-list for field type_name
+	49, // 2: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
+	49, // 3: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
+	50, // 4: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
+	7,  // 5: admiral.runner.v1.RunnerStatus.active_job_details:type_name -> admiral.runner.v1.ActiveJobInfo
+	3,  // 6: admiral.runner.v1.ActiveJobInfo.phase:type_name -> admiral.runner.v1.JobPhase
+	49, // 7: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
+	2,  // 8: admiral.runner.v1.Job.job_type:type_name -> admiral.runner.v1.JobType
+	1,  // 9: admiral.runner.v1.Job.status:type_name -> admiral.runner.v1.JobStatus
+	49, // 10: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	49, // 11: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	49, // 12: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
+	45, // 13: admiral.runner.v1.JobBundle.variables:type_name -> admiral.runner.v1.JobBundle.VariablesEntry
+	46, // 14: admiral.runner.v1.JobBundle.provider_configs:type_name -> admiral.runner.v1.JobBundle.ProviderConfigsEntry
+	4,  // 15: admiral.runner.v1.JobBundle.engine:type_name -> admiral.runner.v1.Engine
+	11, // 16: admiral.runner.v1.JobBundle.hooks:type_name -> admiral.runner.v1.Hooks
+	10, // 17: admiral.runner.v1.Hooks.before_init:type_name -> admiral.runner.v1.Hook
+	10, // 18: admiral.runner.v1.Hooks.after_init:type_name -> admiral.runner.v1.Hook
+	10, // 19: admiral.runner.v1.Hooks.before_plan:type_name -> admiral.runner.v1.Hook
+	10, // 20: admiral.runner.v1.Hooks.after_plan:type_name -> admiral.runner.v1.Hook
+	10, // 21: admiral.runner.v1.Hooks.before_apply:type_name -> admiral.runner.v1.Hook
+	10, // 22: admiral.runner.v1.Hooks.after_apply:type_name -> admiral.runner.v1.Hook
+	10, // 23: admiral.runner.v1.Hooks.after_run:type_name -> admiral.runner.v1.Hook
+	1,  // 24: admiral.runner.v1.JobResult.status:type_name -> admiral.runner.v1.JobStatus
+	51, // 25: admiral.runner.v1.JobResult.plan_summary:type_name -> admiral.deployment.v1.ChangeSummary
+	52, // 26: admiral.runner.v1.JobResult.duration:type_name -> google.protobuf.Duration
+	47, // 27: admiral.runner.v1.JobResult.outputs:type_name -> admiral.runner.v1.JobResult.OutputsEntry
+	48, // 28: admiral.runner.v1.CreateRunnerRequest.labels:type_name -> admiral.runner.v1.CreateRunnerRequest.LabelsEntry
+	5,  // 29: admiral.runner.v1.CreateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
+	5,  // 30: admiral.runner.v1.GetRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
+	5,  // 31: admiral.runner.v1.ListRunnersResponse.runners:type_name -> admiral.runner.v1.Runner
+	5,  // 32: admiral.runner.v1.UpdateRunnerRequest.runner:type_name -> admiral.runner.v1.Runner
+	53, // 33: admiral.runner.v1.UpdateRunnerRequest.update_mask:type_name -> google.protobuf.FieldMask
+	5,  // 34: admiral.runner.v1.UpdateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
+	0,  // 35: admiral.runner.v1.GetRunnerStatusResponse.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
+	6,  // 36: admiral.runner.v1.GetRunnerStatusResponse.status:type_name -> admiral.runner.v1.RunnerStatus
+	49, // 37: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
+	49, // 38: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
+	54, // 39: admiral.runner.v1.CreateRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	54, // 40: admiral.runner.v1.ListRunnerTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
+	54, // 41: admiral.runner.v1.GetRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	54, // 42: admiral.runner.v1.RevokeRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	6,  // 43: admiral.runner.v1.HeartbeatRequest.status:type_name -> admiral.runner.v1.RunnerStatus
+	8,  // 44: admiral.runner.v1.ClaimJobResponse.job:type_name -> admiral.runner.v1.Job
+	9,  // 45: admiral.runner.v1.GetJobBundleResponse.bundle:type_name -> admiral.runner.v1.JobBundle
+	13, // 46: admiral.runner.v1.ReportJobResultRequest.result:type_name -> admiral.runner.v1.JobResult
+	8,  // 47: admiral.runner.v1.ListRunnerJobsResponse.jobs:type_name -> admiral.runner.v1.Job
+	12, // 48: admiral.runner.v1.JobResult.OutputsEntry.value:type_name -> admiral.runner.v1.EngineOutput
+	14, // 49: admiral.runner.v1.RunnerAPI.CreateRunner:input_type -> admiral.runner.v1.CreateRunnerRequest
+	16, // 50: admiral.runner.v1.RunnerAPI.GetRunner:input_type -> admiral.runner.v1.GetRunnerRequest
+	18, // 51: admiral.runner.v1.RunnerAPI.ListRunners:input_type -> admiral.runner.v1.ListRunnersRequest
+	20, // 52: admiral.runner.v1.RunnerAPI.UpdateRunner:input_type -> admiral.runner.v1.UpdateRunnerRequest
+	22, // 53: admiral.runner.v1.RunnerAPI.DeleteRunner:input_type -> admiral.runner.v1.DeleteRunnerRequest
+	24, // 54: admiral.runner.v1.RunnerAPI.GetRunnerStatus:input_type -> admiral.runner.v1.GetRunnerStatusRequest
+	26, // 55: admiral.runner.v1.RunnerAPI.CreateRunnerToken:input_type -> admiral.runner.v1.CreateRunnerTokenRequest
+	28, // 56: admiral.runner.v1.RunnerAPI.ListRunnerTokens:input_type -> admiral.runner.v1.ListRunnerTokensRequest
+	30, // 57: admiral.runner.v1.RunnerAPI.GetRunnerToken:input_type -> admiral.runner.v1.GetRunnerTokenRequest
+	32, // 58: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:input_type -> admiral.runner.v1.RevokeRunnerTokenRequest
+	34, // 59: admiral.runner.v1.RunnerAPI.Heartbeat:input_type -> admiral.runner.v1.HeartbeatRequest
+	36, // 60: admiral.runner.v1.RunnerAPI.ClaimJob:input_type -> admiral.runner.v1.ClaimJobRequest
+	38, // 61: admiral.runner.v1.RunnerAPI.GetJobBundle:input_type -> admiral.runner.v1.GetJobBundleRequest
+	40, // 62: admiral.runner.v1.RunnerAPI.ReportJobResult:input_type -> admiral.runner.v1.ReportJobResultRequest
+	42, // 63: admiral.runner.v1.RunnerAPI.ListRunnerJobs:input_type -> admiral.runner.v1.ListRunnerJobsRequest
+	15, // 64: admiral.runner.v1.RunnerAPI.CreateRunner:output_type -> admiral.runner.v1.CreateRunnerResponse
+	17, // 65: admiral.runner.v1.RunnerAPI.GetRunner:output_type -> admiral.runner.v1.GetRunnerResponse
+	19, // 66: admiral.runner.v1.RunnerAPI.ListRunners:output_type -> admiral.runner.v1.ListRunnersResponse
+	21, // 67: admiral.runner.v1.RunnerAPI.UpdateRunner:output_type -> admiral.runner.v1.UpdateRunnerResponse
+	23, // 68: admiral.runner.v1.RunnerAPI.DeleteRunner:output_type -> admiral.runner.v1.DeleteRunnerResponse
+	25, // 69: admiral.runner.v1.RunnerAPI.GetRunnerStatus:output_type -> admiral.runner.v1.GetRunnerStatusResponse
+	27, // 70: admiral.runner.v1.RunnerAPI.CreateRunnerToken:output_type -> admiral.runner.v1.CreateRunnerTokenResponse
+	29, // 71: admiral.runner.v1.RunnerAPI.ListRunnerTokens:output_type -> admiral.runner.v1.ListRunnerTokensResponse
+	31, // 72: admiral.runner.v1.RunnerAPI.GetRunnerToken:output_type -> admiral.runner.v1.GetRunnerTokenResponse
+	33, // 73: admiral.runner.v1.RunnerAPI.RevokeRunnerToken:output_type -> admiral.runner.v1.RevokeRunnerTokenResponse
+	35, // 74: admiral.runner.v1.RunnerAPI.Heartbeat:output_type -> admiral.runner.v1.HeartbeatResponse
+	37, // 75: admiral.runner.v1.RunnerAPI.ClaimJob:output_type -> admiral.runner.v1.ClaimJobResponse
+	39, // 76: admiral.runner.v1.RunnerAPI.GetJobBundle:output_type -> admiral.runner.v1.GetJobBundleResponse
+	41, // 77: admiral.runner.v1.RunnerAPI.ReportJobResult:output_type -> admiral.runner.v1.ReportJobResultResponse
+	43, // 78: admiral.runner.v1.RunnerAPI.ListRunnerJobs:output_type -> admiral.runner.v1.ListRunnerJobsResponse
+	64, // [64:79] is the sub-list for method output_type
+	49, // [49:64] is the sub-list for method input_type
+	49, // [49:49] is the sub-list for extension type_name
+	49, // [49:49] is the sub-list for extension extendee
+	0,  // [0:49] is the sub-list for field type_name
 }
 
 func init() { file_admiral_runner_v1_runner_proto_init() }
@@ -3004,8 +3287,8 @@ func file_admiral_runner_v1_runner_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_runner_v1_runner_proto_rawDesc), len(file_admiral_runner_v1_runner_proto_rawDesc)),
-			NumEnums:      4,
-			NumMessages:   43,
+			NumEnums:      5,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -619,9 +619,11 @@ type Revision struct {
 	// Storage location of the rendered artifact bundle. Internal reference
 	// used by agents/runners to fetch the bundle.
 	ArtifactUrl string `protobuf:"bytes,13,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
-	// (Infrastructure only) The number of resources Terraform plans to add,
-	// change, and destroy. Populated after planning completes.
-	PlanSummary *TerraformPlanSummary `protobuf:"bytes,14,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
+	// (Infrastructure only) The number of resources the plan will add,
+	// change, and destroy. Populated after planning completes. Engine-agnostic:
+	// applies to Terraform, OpenTofu, or any future engine that models changes
+	// as create/update/delete counts.
+	PlanSummary *ChangeSummary `protobuf:"bytes,14,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
 	// True when plan output is available in object storage.
 	// Fetch via GET /api/v1/deployments/{id}/revisions/{id}/plan.
 	HasPlanOutput bool `protobuf:"varint,15,opt,name=has_plan_output,json=hasPlanOutput,proto3" json:"has_plan_output,omitempty"`
@@ -768,7 +770,7 @@ func (x *Revision) GetArtifactUrl() string {
 	return ""
 }
 
-func (x *Revision) GetPlanSummary() *TerraformPlanSummary {
+func (x *Revision) GetPlanSummary() *ChangeSummary {
 	if x != nil {
 		return x.PlanSummary
 	}
@@ -831,8 +833,10 @@ func (x *Revision) GetWorkingDirectory() string {
 	return ""
 }
 
-// TerraformPlanSummary provides resource change counts from a Terraform plan.
-type TerraformPlanSummary struct {
+// ChangeSummary provides resource change counts from an infrastructure plan.
+// Engine-agnostic — the "+N / ~N / -N" shape is universal across Terraform,
+// OpenTofu, and similar engines.
+type ChangeSummary struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Number of resources to be created.
 	Additions int32 `protobuf:"varint,1,opt,name=additions,proto3" json:"additions,omitempty"`
@@ -844,20 +848,20 @@ type TerraformPlanSummary struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TerraformPlanSummary) Reset() {
-	*x = TerraformPlanSummary{}
+func (x *ChangeSummary) Reset() {
+	*x = ChangeSummary{}
 	mi := &file_admiral_deployment_v1_deployment_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TerraformPlanSummary) String() string {
+func (x *ChangeSummary) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TerraformPlanSummary) ProtoMessage() {}
+func (*ChangeSummary) ProtoMessage() {}
 
-func (x *TerraformPlanSummary) ProtoReflect() protoreflect.Message {
+func (x *ChangeSummary) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_deployment_v1_deployment_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -869,26 +873,26 @@ func (x *TerraformPlanSummary) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TerraformPlanSummary.ProtoReflect.Descriptor instead.
-func (*TerraformPlanSummary) Descriptor() ([]byte, []int) {
+// Deprecated: Use ChangeSummary.ProtoReflect.Descriptor instead.
+func (*ChangeSummary) Descriptor() ([]byte, []int) {
 	return file_admiral_deployment_v1_deployment_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *TerraformPlanSummary) GetAdditions() int32 {
+func (x *ChangeSummary) GetAdditions() int32 {
 	if x != nil {
 		return x.Additions
 	}
 	return 0
 }
 
-func (x *TerraformPlanSummary) GetChanges() int32 {
+func (x *ChangeSummary) GetChanges() int32 {
 	if x != nil {
 		return x.Changes
 	}
 	return 0
 }
 
-func (x *TerraformPlanSummary) GetDestructions() int32 {
+func (x *ChangeSummary) GetDestructions() int32 {
 	if x != nil {
 		return x.Destructions
 	}
@@ -1803,7 +1807,7 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ablocked\x18\x04 \x01(\x05R\ablocked\x12\x18\n" +
 	"\arunning\x18\x05 \x01(\x05R\arunning\x12\x1a\n" +
 	"\bcanceled\x18\a \x01(\x05R\bcanceled\x12\x18\n" +
-	"\apending\x18\b \x01(\x05R\apending\"\xca\a\n" +
+	"\apending\x18\b \x01(\x05R\apending\"\xc3\a\n" +
 	"\bRevision\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12-\n" +
 	"\rdeployment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x12+\n" +
@@ -1820,8 +1824,8 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\n" +
 	"blocked_by\x18\v \x03(\tR\tblockedBy\x12+\n" +
 	"\x11artifact_checksum\x18\f \x01(\tR\x10artifactChecksum\x12!\n" +
-	"\fartifact_url\x18\r \x01(\tR\vartifactUrl\x12N\n" +
-	"\fplan_summary\x18\x0e \x01(\v2+.admiral.deployment.v1.TerraformPlanSummaryR\vplanSummary\x12&\n" +
+	"\fartifact_url\x18\r \x01(\tR\vartifactUrl\x12G\n" +
+	"\fplan_summary\x18\x0e \x01(\v2$.admiral.deployment.v1.ChangeSummaryR\vplanSummary\x12&\n" +
 	"\x0fhas_plan_output\x18\x0f \x01(\bR\rhasPlanOutput\x12#\n" +
 	"\rerror_message\x18\x10 \x01(\tR\ferrorMessage\x12\x1f\n" +
 	"\vretry_count\x18\x11 \x01(\x05R\n" +
@@ -1832,8 +1836,8 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"started_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
 	"\fcompleted_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12\x1b\n" +
 	"\tmodule_id\x18\x15 \x01(\tR\bmoduleId\x12+\n" +
-	"\x11working_directory\x18\x16 \x01(\tR\x10workingDirectory\"r\n" +
-	"\x14TerraformPlanSummary\x12\x1c\n" +
+	"\x11working_directory\x18\x16 \x01(\tR\x10workingDirectory\"k\n" +
+	"\rChangeSummary\x12\x1c\n" +
 	"\tadditions\x18\x01 \x01(\x05R\tadditions\x12\x18\n" +
 	"\achanges\x18\x02 \x01(\x05R\achanges\x12\"\n" +
 	"\fdestructions\x18\x03 \x01(\x05R\fdestructions\"\xeb\x01\n" +
@@ -1974,7 +1978,7 @@ var file_admiral_deployment_v1_deployment_proto_goTypes = []any{
 	(*Deployment)(nil),               // 4: admiral.deployment.v1.Deployment
 	(*RevisionSummary)(nil),          // 5: admiral.deployment.v1.RevisionSummary
 	(*Revision)(nil),                 // 6: admiral.deployment.v1.Revision
-	(*TerraformPlanSummary)(nil),     // 7: admiral.deployment.v1.TerraformPlanSummary
+	(*ChangeSummary)(nil),            // 7: admiral.deployment.v1.ChangeSummary
 	(*CreateDeploymentRequest)(nil),  // 8: admiral.deployment.v1.CreateDeploymentRequest
 	(*CreateDeploymentResponse)(nil), // 9: admiral.deployment.v1.CreateDeploymentResponse
 	(*GetDeploymentRequest)(nil),     // 10: admiral.deployment.v1.GetDeploymentRequest
@@ -2003,7 +2007,7 @@ var file_admiral_deployment_v1_deployment_proto_depIdxs = []int32{
 	25, // 5: admiral.deployment.v1.Deployment.completed_at:type_name -> google.protobuf.Timestamp
 	3,  // 6: admiral.deployment.v1.Revision.kind:type_name -> admiral.deployment.v1.RevisionKind
 	1,  // 7: admiral.deployment.v1.Revision.status:type_name -> admiral.deployment.v1.RevisionStatus
-	7,  // 8: admiral.deployment.v1.Revision.plan_summary:type_name -> admiral.deployment.v1.TerraformPlanSummary
+	7,  // 8: admiral.deployment.v1.Revision.plan_summary:type_name -> admiral.deployment.v1.ChangeSummary
 	25, // 9: admiral.deployment.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
 	25, // 10: admiral.deployment.v1.Revision.started_at:type_name -> google.protobuf.Timestamp
 	25, // 11: admiral.deployment.v1.Revision.completed_at:type_name -> google.protobuf.Timestamp
