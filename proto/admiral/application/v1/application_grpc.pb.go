@@ -56,8 +56,11 @@ type ApplicationAPIClient interface {
 	//
 	// Scope: `app:write`
 	UpdateApplication(ctx context.Context, in *UpdateApplicationRequest, opts ...grpc.CallOption) (*UpdateApplicationResponse, error)
-	// DeleteApplication permanently deletes an application and all of its
-	// associated environments. This action cannot be undone.
+	// DeleteApplication permanently deletes an application. Fails with
+	// FAILED_PRECONDITION if the application still has environments. Pass
+	// force = true to cascade-delete all environments and their deployments
+	// (metadata only — no cloud resources are destroyed). This action
+	// cannot be undone.
 	//
 	// Scope: `app:write`
 	DeleteApplication(ctx context.Context, in *DeleteApplicationRequest, opts ...grpc.CallOption) (*DeleteApplicationResponse, error)
@@ -151,8 +154,11 @@ type ApplicationAPIServer interface {
 	//
 	// Scope: `app:write`
 	UpdateApplication(context.Context, *UpdateApplicationRequest) (*UpdateApplicationResponse, error)
-	// DeleteApplication permanently deletes an application and all of its
-	// associated environments. This action cannot be undone.
+	// DeleteApplication permanently deletes an application. Fails with
+	// FAILED_PRECONDITION if the application still has environments. Pass
+	// force = true to cascade-delete all environments and their deployments
+	// (metadata only — no cloud resources are destroyed). This action
+	// cannot be undone.
 	//
 	// Scope: `app:write`
 	DeleteApplication(context.Context, *DeleteApplicationRequest) (*DeleteApplicationResponse, error)

@@ -70,11 +70,11 @@ type EnvironmentAPIClient interface {
 	//
 	// Scope: `env:write`
 	UpdateEnvironment(context.Context, *connect.Request[v1.UpdateEnvironmentRequest]) (*connect.Response[v1.UpdateEnvironmentResponse], error)
-	// DeleteEnvironment permanently deletes an environment. Fails if the
-	// environment has an active deployment (last deployment status is SUCCEEDED
-	// with resources running). To delete an environment with deployed resources,
-	// first run a destroy deployment to tear down all components, then delete
-	// the environment record. This action cannot be undone.
+	// DeleteEnvironment permanently deletes an environment. Fails with
+	// FAILED_PRECONDITION if the environment has any deployments. Pass
+	// force = true to cascade-delete all deployment records (metadata
+	// only — no cloud resources are destroyed). This action cannot be
+	// undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(context.Context, *connect.Request[v1.DeleteEnvironmentRequest]) (*connect.Response[v1.DeleteEnvironmentResponse], error)
@@ -178,11 +178,11 @@ type EnvironmentAPIHandler interface {
 	//
 	// Scope: `env:write`
 	UpdateEnvironment(context.Context, *connect.Request[v1.UpdateEnvironmentRequest]) (*connect.Response[v1.UpdateEnvironmentResponse], error)
-	// DeleteEnvironment permanently deletes an environment. Fails if the
-	// environment has an active deployment (last deployment status is SUCCEEDED
-	// with resources running). To delete an environment with deployed resources,
-	// first run a destroy deployment to tear down all components, then delete
-	// the environment record. This action cannot be undone.
+	// DeleteEnvironment permanently deletes an environment. Fails with
+	// FAILED_PRECONDITION if the environment has any deployments. Pass
+	// force = true to cascade-delete all deployment records (metadata
+	// only — no cloud resources are destroyed). This action cannot be
+	// undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(context.Context, *connect.Request[v1.DeleteEnvironmentRequest]) (*connect.Response[v1.DeleteEnvironmentResponse], error)

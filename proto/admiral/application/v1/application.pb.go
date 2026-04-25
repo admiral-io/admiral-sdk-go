@@ -573,6 +573,9 @@ type DeleteApplicationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the application to delete (UUID).
 	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	// When true, bypass the children-exist check and cascade-delete all
+	// environments and their deployments (metadata records only).
+	Force         bool `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -612,6 +615,13 @@ func (x *DeleteApplicationRequest) GetApplicationId() string {
 		return x.ApplicationId
 	}
 	return ""
+}
+
+func (x *DeleteApplicationRequest) GetForce() bool {
+	if x != nil {
+		return x.Force
+	}
+	return false
 }
 
 // DeleteApplicationResponse is empty on success.
@@ -697,9 +707,10 @@ const file_admiral_application_v1_application_proto_rawDesc = "" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"b\n" +
 	"\x19UpdateApplicationResponse\x12E\n" +
-	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"K\n" +
+	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"a\n" +
 	"\x18DeleteApplicationRequest\x12/\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\"\x1b\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12\x14\n" +
+	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
 	"\x19DeleteApplicationResponse2\xc9\b\n" +
 	"\x0eApplicationAPI\x12\xd0\x01\n" +
 	"\x11CreateApplication\x120.admiral.application.v1.CreateApplicationRequest\x1a1.admiral.application.v1.CreateApplicationResponse\"V\xbaG%\n" +

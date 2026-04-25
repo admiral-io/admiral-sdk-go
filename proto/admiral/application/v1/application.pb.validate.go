@@ -1266,6 +1266,8 @@ func (m *DeleteApplicationRequest) validate(all bool) error {
 
 	// no validation rules for ApplicationId
 
+	// no validation rules for Force
+
 	if len(errors) > 0 {
 		return DeleteApplicationRequestMultiError(errors)
 	}

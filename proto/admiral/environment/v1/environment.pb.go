@@ -1038,6 +1038,9 @@ type DeleteEnvironmentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the environment to delete (UUID).
 	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	// When true, bypass the children-exist check and cascade-delete all
+	// deployment records (metadata only).
+	Force         bool `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1077,6 +1080,13 @@ func (x *DeleteEnvironmentRequest) GetEnvironmentId() string {
 		return x.EnvironmentId
 	}
 	return ""
+}
+
+func (x *DeleteEnvironmentRequest) GetForce() bool {
+	if x != nil {
+		return x.Force
+	}
+	return false
 }
 
 // DeleteEnvironmentResponse is empty on success.
@@ -1186,9 +1196,10 @@ const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"b\n" +
 	"\x19UpdateEnvironmentResponse\x12E\n" +
-	"\venvironment\x18\x01 \x01(\v2#.admiral.environment.v1.EnvironmentR\venvironment\"K\n" +
+	"\venvironment\x18\x01 \x01(\v2#.admiral.environment.v1.EnvironmentR\venvironment\"a\n" +
 	"\x18DeleteEnvironmentRequest\x12/\n" +
-	"\x0eenvironment_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"\x1b\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x14\n" +
+	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
 	"\x19DeleteEnvironmentResponse*K\n" +
 	"\fWorkloadType\x12\x1d\n" +
 	"\x19WORKLOAD_TYPE_UNSPECIFIED\x10\x00\x12\x1c\n" +

@@ -181,6 +181,8 @@ func local_request_ApplicationAPI_UpdateApplication_0(ctx context.Context, marsh
 	return msg, metadata, err
 }
 
+var filter_ApplicationAPI_DeleteApplication_0 = &utilities.DoubleArray{Encoding: map[string]int{"application_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+
 func request_ApplicationAPI_DeleteApplication_0(ctx context.Context, marshaler runtime.Marshaler, client ApplicationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq DeleteApplicationRequest
@@ -197,6 +199,12 @@ func request_ApplicationAPI_DeleteApplication_0(ctx context.Context, marshaler r
 	protoReq.ApplicationId, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "application_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ApplicationAPI_DeleteApplication_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.DeleteApplication(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -215,6 +223,12 @@ func local_request_ApplicationAPI_DeleteApplication_0(ctx context.Context, marsh
 	protoReq.ApplicationId, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "application_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ApplicationAPI_DeleteApplication_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.DeleteApplication(ctx, &protoReq)
 	return msg, metadata, err

@@ -66,11 +66,11 @@ type EnvironmentAPIClient interface {
 	//
 	// Scope: `env:write`
 	UpdateEnvironment(ctx context.Context, in *UpdateEnvironmentRequest, opts ...grpc.CallOption) (*UpdateEnvironmentResponse, error)
-	// DeleteEnvironment permanently deletes an environment. Fails if the
-	// environment has an active deployment (last deployment status is SUCCEEDED
-	// with resources running). To delete an environment with deployed resources,
-	// first run a destroy deployment to tear down all components, then delete
-	// the environment record. This action cannot be undone.
+	// DeleteEnvironment permanently deletes an environment. Fails with
+	// FAILED_PRECONDITION if the environment has any deployments. Pass
+	// force = true to cascade-delete all deployment records (metadata
+	// only — no cloud resources are destroyed). This action cannot be
+	// undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(ctx context.Context, in *DeleteEnvironmentRequest, opts ...grpc.CallOption) (*DeleteEnvironmentResponse, error)
@@ -174,11 +174,11 @@ type EnvironmentAPIServer interface {
 	//
 	// Scope: `env:write`
 	UpdateEnvironment(context.Context, *UpdateEnvironmentRequest) (*UpdateEnvironmentResponse, error)
-	// DeleteEnvironment permanently deletes an environment. Fails if the
-	// environment has an active deployment (last deployment status is SUCCEEDED
-	// with resources running). To delete an environment with deployed resources,
-	// first run a destroy deployment to tear down all components, then delete
-	// the environment record. This action cannot be undone.
+	// DeleteEnvironment permanently deletes an environment. Fails with
+	// FAILED_PRECONDITION if the environment has any deployments. Pass
+	// force = true to cascade-delete all deployment records (metadata
+	// only — no cloud resources are destroyed). This action cannot be
+	// undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(context.Context, *DeleteEnvironmentRequest) (*DeleteEnvironmentResponse, error)
