@@ -36,6 +36,7 @@ func main() {
 	// Access services via accessors
 	// c.Application().MethodName(ctx, req)
 	// c.Authentication().MethodName(ctx, req)
+	// c.ChangeSet().MethodName(ctx, req)
 	// c.Cluster().MethodName(ctx, req)
 	// c.Component().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
@@ -57,6 +58,7 @@ func main() {
 |---------|----------|--------|
 | ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/application/v1` |
 | AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/authentication/v1` |
+| ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/changeset/v1` |
 | ClusterAPI | `Cluster()` | `go.admiral.io/sdk/proto/admiral/cluster/v1` |
 | ComponentAPI | `Component()` | `go.admiral.io/sdk/proto/admiral/component/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/credential/v1` |

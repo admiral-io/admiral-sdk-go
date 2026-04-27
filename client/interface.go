@@ -3,6 +3,7 @@ package client
 import (
 	applicationv1 "go.admiral.io/sdk/proto/admiral/application/v1"
 	authenticationv1 "go.admiral.io/sdk/proto/admiral/authentication/v1"
+	changesetv1 "go.admiral.io/sdk/proto/admiral/changeset/v1"
 	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
 	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/credential/v1"
@@ -23,6 +24,8 @@ type AdmiralClient interface {
 	Application() applicationv1.ApplicationAPIClient
 	// Authentication returns the AuthenticationAPI client.
 	Authentication() authenticationv1.AuthenticationAPIClient
+	// ChangeSet returns the ChangeSetAPI client.
+	ChangeSet() changesetv1.ChangeSetAPIClient
 	// Cluster returns the ClusterAPI client.
 	Cluster() clusterv1.ClusterAPIClient
 	// Component returns the ComponentAPI client.

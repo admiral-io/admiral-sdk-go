@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	applicationv1 "go.admiral.io/sdk/proto/admiral/application/v1"
 	authenticationv1 "go.admiral.io/sdk/proto/admiral/authentication/v1"
+	changesetv1 "go.admiral.io/sdk/proto/admiral/changeset/v1"
 	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
 	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/credential/v1"
@@ -35,6 +36,7 @@ type Client struct {
 	tokenValidator TokenValidator
 	application applicationv1.ApplicationAPIClient
 	authentication authenticationv1.AuthenticationAPIClient
+	changeSet changesetv1.ChangeSetAPIClient
 	cluster clusterv1.ClusterAPIClient
 	component componentv1.ComponentAPIClient
 	credential credentialv1.CredentialAPIClient
@@ -89,6 +91,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		tokenValidator: cfg.TokenValidator,
 		application: applicationv1.NewApplicationAPIClient(conn),
 		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
+		changeSet: changesetv1.NewChangeSetAPIClient(conn),
 		cluster: clusterv1.NewClusterAPIClient(conn),
 		component: componentv1.NewComponentAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
@@ -112,6 +115,11 @@ func (c *Client) Application() applicationv1.ApplicationAPIClient {
 // Authentication returns the AuthenticationAPI client.
 func (c *Client) Authentication() authenticationv1.AuthenticationAPIClient {
 	return c.authentication
+}
+
+// ChangeSet returns the ChangeSetAPI client.
+func (c *Client) ChangeSet() changesetv1.ChangeSetAPIClient {
+	return c.changeSet
 }
 
 // Cluster returns the ClusterAPI client.
