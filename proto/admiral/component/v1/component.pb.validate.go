@@ -169,9 +169,15 @@ func (m *Component) validate(all bool) error {
 
 	// no validation rules for Name
 
+	// no validation rules for Slug
+
 	// no validation rules for Description
 
 	// no validation rules for Kind
+
+	// no validation rules for DesiredState
+
+	// no validation rules for DeletionProtection
 
 	// no validation rules for ModuleId
 
@@ -647,6 +653,8 @@ func (m *CreateComponentRequest) validate(all bool) error {
 	// no validation rules for ApplicationId
 
 	// no validation rules for Name
+
+	// no validation rules for Slug
 
 	// no validation rules for Description
 

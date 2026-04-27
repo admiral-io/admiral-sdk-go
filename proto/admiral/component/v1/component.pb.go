@@ -191,11 +191,14 @@ type Component struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The application this component belongs to (UUID).
 	ApplicationId string `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// Human-readable name for this component within the application
-	// (e.g., "vpc", "redis", "api-server"). Unique within the application.
-	// Lowercase alphanumeric and hyphens only (1-63 chars). This name is used
-	// in template expressions: `{{ .component.<name>.<output> }}`.
+	// Mutable display label for this component within the application
+	// (e.g., "Primary VPC", "Redis Cache"). Unique within the application.
 	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// Immutable semantic key for this component within the application
+	// (e.g., "vpc", "redis", "api-server"). Used in template expressions:
+	// `{{ .output.<slug>.<output> }}`, variable namespacing, and dependency
+	// tracking. Defaults to name at creation if not provided.
+	Slug string `protobuf:"bytes,16,opt,name=slug,proto3" json:"slug,omitempty"`
 	// Optional description of the component's purpose
 	// (e.g., "Primary VPC for all environments" or "Redis cache layer").
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
@@ -203,6 +206,10 @@ type Component struct {
 	// the referenced module's type when the component is created, but stored
 	// explicitly for filtering and to determine execution behavior.
 	Kind ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.component.v1.ComponentKind" json:"kind,omitempty"`
+	// The desired lifecycle state of this component.
+	DesiredState string `protobuf:"bytes,17,opt,name=desired_state,json=desiredState,proto3" json:"desired_state,omitempty"`
+	// When true, DESTROY operations are rejected for this component.
+	DeletionProtection bool `protobuf:"varint,18,opt,name=deletion_protection,json=deletionProtection,proto3" json:"deletion_protection,omitempty"`
 	// The module this component deploys (UUID). References a Module defined
 	// via the ModuleAPI. The module's source, ref, root, and path are inherited.
 	ModuleId string `protobuf:"bytes,6,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
@@ -325,6 +332,13 @@ func (x *Component) GetName() string {
 	return ""
 }
 
+func (x *Component) GetSlug() string {
+	if x != nil {
+		return x.Slug
+	}
+	return ""
+}
+
 func (x *Component) GetDescription() string {
 	if x != nil {
 		return x.Description
@@ -337,6 +351,20 @@ func (x *Component) GetKind() ComponentKind {
 		return x.Kind
 	}
 	return ComponentKind_COMPONENT_KIND_UNSPECIFIED
+}
+
+func (x *Component) GetDesiredState() string {
+	if x != nil {
+		return x.DesiredState
+	}
+	return ""
+}
+
+func (x *Component) GetDeletionProtection() bool {
+	if x != nil {
+		return x.DeletionProtection
+	}
+	return false
 }
 
 func (x *Component) GetModuleId() string {
@@ -572,9 +600,11 @@ type CreateComponentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The application to add this component to (UUID).
 	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// Human-readable name for this component. Must be unique within the
-	// application. This name is used in template expressions.
+	// Display name for this component. Must be unique within the application.
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// Immutable semantic key. Defaults to name if not provided.
+	// Used in template expressions: `{{ .output.<slug>.<output> }}`.
+	Slug string `protobuf:"bytes,9,opt,name=slug,proto3" json:"slug,omitempty"`
 	// Optional description of the component's purpose.
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// The module this component deploys (UUID).
@@ -635,6 +665,13 @@ func (x *CreateComponentRequest) GetApplicationId() string {
 func (x *CreateComponentRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateComponentRequest) GetSlug() string {
+	if x != nil {
+		return x.Slug
 	}
 	return ""
 }
@@ -1641,13 +1678,16 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
 	"\x0evalue_template\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xdc\x05\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xf4\x06\n" +
 	"\tComponent\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
-	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
+	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12@\n" +
+	"\x04slug\x18\x10 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04slug\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x127\n" +
-	"\x04kind\x18\x05 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12%\n" +
+	"\x04kind\x18\x05 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12#\n" +
+	"\rdesired_state\x18\x11 \x01(\tR\fdesiredState\x12/\n" +
+	"\x13deletion_protection\x18\x12 \x01(\bR\x12deletionProtection\x12%\n" +
 	"\tmodule_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
 	"\aversion\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
 	"\x0fvalues_template\x18\b \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12,\n" +
@@ -1686,10 +1726,11 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"_module_idB\n" +
 	"\n" +
 	"\b_versionB\x12\n" +
-	"\x10_values_template\"\xa5\x03\n" +
+	"\x10_values_template\"\xb9\x03\n" +
 	"\x16CreateComponentRequest\x12/\n" +
 	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
-	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
+	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12\x12\n" +
+	"\x04slug\x18\t \x01(\tR\x04slug\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12%\n" +
 	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
 	"\aversion\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +

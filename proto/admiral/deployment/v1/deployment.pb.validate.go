@@ -102,6 +102,8 @@ func (m *Deployment) validate(all bool) error {
 
 	// no validation rules for SourceDeploymentId
 
+	// no validation rules for ChangeSetId
+
 	if all {
 		switch v := interface{}(m.GetRevisionSummary()).(type) {
 		case interface{ ValidateAll() error }:
@@ -408,11 +410,15 @@ func (m *Revision) validate(all bool) error {
 
 	// no validation rules for ComponentId
 
-	// no validation rules for ComponentName
+	// no validation rules for ComponentSlug
 
 	// no validation rules for Kind
 
 	// no validation rules for Status
+
+	// no validation rules for ChangeType
+
+	// no validation rules for PreviousRevisionId
 
 	// no validation rules for SourceId
 

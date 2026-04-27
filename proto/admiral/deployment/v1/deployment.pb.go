@@ -40,8 +40,12 @@ const (
 	// application+environment. It will start automatically when the preceding
 	// deployment completes or is canceled.
 	DeploymentStatus_DEPLOYMENT_STATUS_QUEUED DeploymentStatus = 2
-	// At least one revision is actively being processed (planning, applying).
-	DeploymentStatus_DEPLOYMENT_STATUS_RUNNING DeploymentStatus = 3
+	// At least one revision is actively planning (or waiting to plan).
+	DeploymentStatus_DEPLOYMENT_STATUS_PLANNING DeploymentStatus = 3
+	// All revisions have completed planning and are awaiting approval.
+	DeploymentStatus_DEPLOYMENT_STATUS_PLANNED DeploymentStatus = 8
+	// At least one revision is actively applying.
+	DeploymentStatus_DEPLOYMENT_STATUS_APPLYING DeploymentStatus = 9
 	// All revisions completed successfully.
 	DeploymentStatus_DEPLOYMENT_STATUS_SUCCEEDED DeploymentStatus = 4
 	// Some revisions succeeded but at least one failed or is blocked. No
@@ -61,7 +65,9 @@ var (
 		0: "DEPLOYMENT_STATUS_UNSPECIFIED",
 		1: "DEPLOYMENT_STATUS_PENDING",
 		2: "DEPLOYMENT_STATUS_QUEUED",
-		3: "DEPLOYMENT_STATUS_RUNNING",
+		3: "DEPLOYMENT_STATUS_PLANNING",
+		8: "DEPLOYMENT_STATUS_PLANNED",
+		9: "DEPLOYMENT_STATUS_APPLYING",
 		4: "DEPLOYMENT_STATUS_SUCCEEDED",
 		5: "DEPLOYMENT_STATUS_PARTIALLY_FAILED",
 		6: "DEPLOYMENT_STATUS_FAILED",
@@ -71,7 +77,9 @@ var (
 		"DEPLOYMENT_STATUS_UNSPECIFIED":      0,
 		"DEPLOYMENT_STATUS_PENDING":          1,
 		"DEPLOYMENT_STATUS_QUEUED":           2,
-		"DEPLOYMENT_STATUS_RUNNING":          3,
+		"DEPLOYMENT_STATUS_PLANNING":         3,
+		"DEPLOYMENT_STATUS_PLANNED":          8,
+		"DEPLOYMENT_STATUS_APPLYING":         9,
 		"DEPLOYMENT_STATUS_SUCCEEDED":        4,
 		"DEPLOYMENT_STATUS_PARTIALLY_FAILED": 5,
 		"DEPLOYMENT_STATUS_FAILED":           6,
@@ -352,6 +360,9 @@ type Deployment struct {
 	// this field contains the source deployment's UUID. Empty for normal
 	// deployments.
 	SourceDeploymentId string `protobuf:"bytes,9,opt,name=source_deployment_id,json=sourceDeploymentId,proto3" json:"source_deployment_id,omitempty"`
+	// The changeset that was deployed (UUID). Absent for pre-changeset
+	// deployments and reconcile (no-changeset) deployments.
+	ChangeSetId string `protobuf:"bytes,13,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
 	// Summary counts for quick status display.
 	RevisionSummary *RevisionSummary `protobuf:"bytes,10,opt,name=revision_summary,json=revisionSummary,proto3" json:"revision_summary,omitempty"`
 	// When the deployment was created.
@@ -452,6 +463,13 @@ func (x *Deployment) GetDestroy() bool {
 func (x *Deployment) GetSourceDeploymentId() string {
 	if x != nil {
 		return x.SourceDeploymentId
+	}
+	return ""
+}
+
+func (x *Deployment) GetChangeSetId() string {
+	if x != nil {
+		return x.ChangeSetId
 	}
 	return ""
 }
@@ -605,12 +623,18 @@ type Revision struct {
 	DeploymentId string `protobuf:"bytes,2,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
 	// The component this revision is for (UUID).
 	ComponentId string `protobuf:"bytes,3,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// Component name at the time of deployment (denormalized for display).
-	ComponentName string `protobuf:"bytes,4,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
+	// Component slug at the time of deployment (immutable semantic key).
+	ComponentSlug string `protobuf:"bytes,4,opt,name=component_slug,json=componentSlug,proto3" json:"component_slug,omitempty"`
 	// Component kind at the time of deployment (after override resolution).
 	Kind RevisionKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.deployment.v1.RevisionKind" json:"kind,omitempty"`
 	// Lifecycle status of this revision.
 	Status RevisionStatus `protobuf:"varint,6,opt,name=status,proto3,enum=admiral.deployment.v1.RevisionStatus" json:"status,omitempty"`
+	// What type of change this revision represents relative to the previously
+	// deployed state (CREATE, UPDATE, DESTROY, RECREATE, IMPORT, NO_CHANGE).
+	ChangeType string `protobuf:"bytes,23,opt,name=change_type,json=changeType,proto3" json:"change_type,omitempty"`
+	// The last succeeded revision for this (component, environment) at the
+	// time this revision was created. Null for CREATE revisions.
+	PreviousRevisionId string `protobuf:"bytes,24,opt,name=previous_revision_id,json=previousRevisionId,proto3" json:"previous_revision_id,omitempty"`
 	// The source used for this revision (UUID, after override resolution).
 	SourceId string `protobuf:"bytes,7,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	// The version deployed (after override resolution).
@@ -712,9 +736,9 @@ func (x *Revision) GetComponentId() string {
 	return ""
 }
 
-func (x *Revision) GetComponentName() string {
+func (x *Revision) GetComponentSlug() string {
 	if x != nil {
-		return x.ComponentName
+		return x.ComponentSlug
 	}
 	return ""
 }
@@ -731,6 +755,20 @@ func (x *Revision) GetStatus() RevisionStatus {
 		return x.Status
 	}
 	return RevisionStatus_REVISION_STATUS_UNSPECIFIED
+}
+
+func (x *Revision) GetChangeType() string {
+	if x != nil {
+		return x.ChangeType
+	}
+	return ""
+}
+
+func (x *Revision) GetPreviousRevisionId() string {
+	if x != nil {
+		return x.PreviousRevisionId
+	}
+	return ""
 }
 
 func (x *Revision) GetSourceId() string {
@@ -1801,7 +1839,7 @@ var File_admiral_deployment_v1_deployment_proto protoreflect.FileDescriptor
 
 const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\n" +
-	"&admiral/deployment/v1/deployment.proto\x12\x15admiral.deployment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x97\x05\n" +
+	"&admiral/deployment/v1/deployment.proto\x12\x15admiral.deployment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbb\x05\n" +
 	"\n" +
 	"Deployment\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
@@ -1812,7 +1850,8 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ftriggered_by\x18\x06 \x01(\v2\x1b.admiral.common.v1.ActorRefR\vtriggeredBy\x12\"\n" +
 	"\amessage\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\x18\n" +
 	"\adestroy\x18\b \x01(\bR\adestroy\x120\n" +
-	"\x14source_deployment_id\x18\t \x01(\tR\x12sourceDeploymentId\x12Q\n" +
+	"\x14source_deployment_id\x18\t \x01(\tR\x12sourceDeploymentId\x12\"\n" +
+	"\rchange_set_id\x18\r \x01(\tR\vchangeSetId\x12Q\n" +
 	"\x10revision_summary\x18\n" +
 	" \x01(\v2&.admiral.deployment.v1.RevisionSummaryR\x0frevisionSummary\x129\n" +
 	"\n" +
@@ -1825,14 +1864,17 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\ablocked\x18\x04 \x01(\x05R\ablocked\x12\x18\n" +
 	"\arunning\x18\x05 \x01(\x05R\arunning\x12\x1a\n" +
 	"\bcanceled\x18\a \x01(\x05R\bcanceled\x12\x18\n" +
-	"\apending\x18\b \x01(\x05R\apending\"\xc3\a\n" +
+	"\apending\x18\b \x01(\x05R\apending\"\x96\b\n" +
 	"\bRevision\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12-\n" +
 	"\rdeployment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x12+\n" +
 	"\fcomponent_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12%\n" +
-	"\x0ecomponent_name\x18\x04 \x01(\tR\rcomponentName\x127\n" +
+	"\x0ecomponent_slug\x18\x04 \x01(\tR\rcomponentSlug\x127\n" +
 	"\x04kind\x18\x05 \x01(\x0e2#.admiral.deployment.v1.RevisionKindR\x04kind\x12=\n" +
-	"\x06status\x18\x06 \x01(\x0e2%.admiral.deployment.v1.RevisionStatusR\x06status\x12\x1b\n" +
+	"\x06status\x18\x06 \x01(\x0e2%.admiral.deployment.v1.RevisionStatusR\x06status\x12\x1f\n" +
+	"\vchange_type\x18\x17 \x01(\tR\n" +
+	"changeType\x120\n" +
+	"\x14previous_revision_id\x18\x18 \x01(\tR\x12previousRevisionId\x12\x1b\n" +
 	"\tsource_id\x18\a \x01(\tR\bsourceId\x12\x18\n" +
 	"\aversion\x18\b \x01(\tR\aversion\x12'\n" +
 	"\x0fresolved_values\x18\t \x01(\tR\x0eresolvedValues\x12\x1d\n" +
@@ -1916,12 +1958,14 @@ const file_admiral_deployment_v1_deployment_proto_rawDesc = "" +
 	"\x17ApplyDeploymentResponse\x12A\n" +
 	"\n" +
 	"deployment\x18\x01 \x01(\v2!.admiral.deployment.v1.DeploymentR\n" +
-	"deployment*\x98\x02\n" +
+	"deployment*\xd8\x02\n" +
 	"\x10DeploymentStatus\x12!\n" +
 	"\x1dDEPLOYMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19DEPLOYMENT_STATUS_PENDING\x10\x01\x12\x1c\n" +
-	"\x18DEPLOYMENT_STATUS_QUEUED\x10\x02\x12\x1d\n" +
-	"\x19DEPLOYMENT_STATUS_RUNNING\x10\x03\x12\x1f\n" +
+	"\x18DEPLOYMENT_STATUS_QUEUED\x10\x02\x12\x1e\n" +
+	"\x1aDEPLOYMENT_STATUS_PLANNING\x10\x03\x12\x1d\n" +
+	"\x19DEPLOYMENT_STATUS_PLANNED\x10\b\x12\x1e\n" +
+	"\x1aDEPLOYMENT_STATUS_APPLYING\x10\t\x12\x1f\n" +
 	"\x1bDEPLOYMENT_STATUS_SUCCEEDED\x10\x04\x12&\n" +
 	"\"DEPLOYMENT_STATUS_PARTIALLY_FAILED\x10\x05\x12\x1c\n" +
 	"\x18DEPLOYMENT_STATUS_FAILED\x10\x06\x12\x1e\n" +
