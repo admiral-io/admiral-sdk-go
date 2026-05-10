@@ -1,9 +1,21 @@
 name: Release
 
+# Triggered by sync commits pushed from admiral-protos:
+#   - push to master  → admiral-protos tag-triggered cascade. go-semantic-release
+#                        cuts a regular release tag (vX.Y.Z) from conventional
+#                        commits.
+#   - push to next    → admiral-protos master-triggered "rolling RC" cascade.
+#                        go-semantic-release cuts a pre-release tag
+#                        (vX.Y.Z-rc.N) so external testers can `go get @vX.Y.Z-rc.1`.
+#
+# Both branches share the same release.yml workflow; the prerelease input on
+# go-semantic-release switches behavior based on which branch dispatched it.
+
 on:
   push:
     branches:
       - master
+      - next
     paths:
       - '**/*.go'
       - 'go.mod'
@@ -23,7 +35,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
@@ -37,7 +49,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
       - name: Release
@@ -45,5 +57,9 @@ jobs:
         with:
           changelog-generator-opt: "emojis=true"
           force-bump-patch-version: ${{ inputs.force || false }}
+          # When the dispatching branch is `next`, mark the release as a
+          # pre-release. go-semantic-release will compute the version with
+          # an rc suffix (e.g., v1.24.0-rc.1) instead of a clean tag.
+          prerelease: ${{ github.ref == 'refs/heads/next' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
