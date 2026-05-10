@@ -8,12 +8,9 @@ package variablev1
 
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	_ "github.com/google/gnostic/openapiv3"
 	v1 "go.admiral.io/sdk/proto/admiral/common/v1"
-	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -33,10 +30,10 @@ type VariableSource int32
 const (
 	// Default value. Must not be used.
 	VariableSource_VARIABLE_SOURCE_UNSPECIFIED VariableSource = 0
-	// User-managed variable created via API or CLI.
+	// User-managed variable created via change sets (ChangeSetAPI.SetVariable).
 	VariableSource_VARIABLE_SOURCE_USER VariableSource = 1
 	// System-managed variable produced by a successful infrastructure apply
-	// (engine outputs -- `terraform output` / `tofu output`). These variables
+	// (engine outputs from `terraform output` / `tofu output`). These variables
 	// are written by the output capture pipeline and cannot be created or
 	// deleted via the public API.
 	VariableSource_VARIABLE_SOURCE_INFRASTRUCTURE VariableSource = 2
@@ -153,14 +150,16 @@ func (VariableType) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{1}
 }
 
-// Variable represents a configuration key-value pair scoped to a tenant,
-// application, or application+environment. Variables are resolved at deployment
-// time into immutable deployment snapshots.
+// Variable represents a configuration key-value pair scoped to a specific
+// environment within an application. Variables are user-managed configuration
+// values, distinct from infrastructure outputs which are system-managed values
+// produced by apply (e.g., Terraform outputs, namespaced as
+// `<component_name>.<output_name>`).
 //
-// Variables are user-managed configuration values, distinct from component
-// outputs which are system-managed values produced by apply (e.g., Terraform
-// outputs). Component outputs are resolved at render time and referenced via
-// a separate namespace ({{ .component.<name>.<output> }}).
+// Variables are mutated exclusively through change sets (ChangeSetAPI.SetVariable
+// / RemoveVariable). They are read via EnvironmentAPI.ListEnvironmentVariables.
+//
+// Sensitive variables have their values masked in API responses.
 type Variable struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the variable (UUID).
@@ -170,7 +169,7 @@ type Variable struct {
 	// Infrastructure output variables use dot-namespaced keys
 	// (e.g., "vpc.vpc_id", "database.endpoint") and are system-managed.
 	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
-	// The variable value. Always stored as a string -- use `type` to indicate
+	// The variable value. Always stored as a string; use `type` to indicate
 	// how to interpret it. Masked or empty for sensitive variables in responses.
 	//
 	// For COMPLEX type, this is a JSON-encoded string (e.g., '["a","b"]' or
@@ -185,25 +184,22 @@ type Variable struct {
 	// Optional description of the variable's purpose (e.g., "Maximum replica
 	// count for production scaling" or "RDS instance class per environment").
 	Description string `protobuf:"bytes,6,opt,name=description,proto3" json:"description,omitempty"`
-	// The application this variable is scoped to (UUID). When set, the variable
-	// is scoped to this application. When both application_id and environment_id
-	// are set, the variable is scoped to that specific environment.
-	// Absent means the variable is global (tenant-wide).
+	// The application this variable belongs to (UUID). Always set; variables
+	// are env-scoped and inherit their app from the environment.
 	ApplicationId *string `protobuf:"bytes,7,opt,name=application_id,json=applicationId,proto3,oneof" json:"application_id,omitempty"`
-	// The environment this variable is scoped to (UUID). Requires application_id.
-	// When set alongside application_id, the variable applies only to this
-	// specific environment within the application.
+	// The environment this variable is scoped to (UUID). Always set; variables
+	// are env-scoped.
 	EnvironmentId *string `protobuf:"bytes,8,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
-	// The user or agent who created this variable (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// When the variable was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the variable was last updated.
-	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// How the variable was created. USER for variables created via the API/CLI,
+	// How the variable was created. USER for change-set-managed variables,
 	// INFRASTRUCTURE for variables produced by engine output capture (Terraform
-	// or OpenTofu). Server-populated; not settable via CreateVariable.
-	Source        VariableSource `protobuf:"varint,12,opt,name=source,proto3,enum=admiral.variable.v1.VariableSource" json:"source,omitempty"`
+	// or OpenTofu). Server-populated.
+	Source VariableSource `protobuf:"varint,9,opt,name=source,proto3,enum=admiral.variable.v1.VariableSource" json:"source,omitempty"`
+	// The user or agent who created this variable (server-populated from token).
+	CreatedBy *v1.ActorRef `protobuf:"bytes,10,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	// When the variable was created.
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// When the variable was last updated.
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -294,6 +290,13 @@ func (x *Variable) GetEnvironmentId() string {
 	return ""
 }
 
+func (x *Variable) GetSource() VariableSource {
+	if x != nil {
+		return x.Source
+	}
+	return VariableSource_VARIABLE_SOURCE_UNSPECIFIED
+}
+
 func (x *Variable) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
@@ -315,597 +318,11 @@ func (x *Variable) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Variable) GetSource() VariableSource {
-	if x != nil {
-		return x.Source
-	}
-	return VariableSource_VARIABLE_SOURCE_UNSPECIFIED
-}
-
-// CreateVariableRequest contains the parameters for creating a new variable.
-// The variable's scope is derived from the presence of application_id and
-// environment_id: neither means global, application_id only means app-scoped,
-// both means environment-scoped.
-type CreateVariableRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The variable name. Must be a valid environment variable identifier
-	// (e.g., "DATABASE_URL", "API_KEY"). Unlike Variable.key, dots are not
-	// permitted here: dot-namespaced keys (e.g., "vpc.vpc_id") are reserved
-	// for system-managed INFRASTRUCTURE variables captured from engine output
-	// and cannot be created through this RPC.
-	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// The variable value. For COMPLEX type, must be valid JSON.
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	// Whether the variable value should be encrypted at rest and masked in
-	// API responses.
-	Sensitive bool `protobuf:"varint,3,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
-	// How the value should be interpreted. Defaults to STRING if not specified.
-	Type VariableType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.variable.v1.VariableType" json:"type,omitempty"`
-	// Optional description of the variable's purpose.
-	Description string `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
-	// The application to scope this variable to (UUID). When set without
-	// environment_id, the variable applies to all environments in the app.
-	ApplicationId *string `protobuf:"bytes,6,opt,name=application_id,json=applicationId,proto3,oneof" json:"application_id,omitempty"`
-	// The environment to scope this variable to (UUID). Requires application_id.
-	// When set, the variable applies only to this specific environment.
-	EnvironmentId *string `protobuf:"bytes,7,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateVariableRequest) Reset() {
-	*x = CreateVariableRequest{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateVariableRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateVariableRequest) ProtoMessage() {}
-
-func (x *CreateVariableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateVariableRequest.ProtoReflect.Descriptor instead.
-func (*CreateVariableRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *CreateVariableRequest) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-func (x *CreateVariableRequest) GetValue() string {
-	if x != nil {
-		return x.Value
-	}
-	return ""
-}
-
-func (x *CreateVariableRequest) GetSensitive() bool {
-	if x != nil {
-		return x.Sensitive
-	}
-	return false
-}
-
-func (x *CreateVariableRequest) GetType() VariableType {
-	if x != nil {
-		return x.Type
-	}
-	return VariableType_VARIABLE_TYPE_UNSPECIFIED
-}
-
-func (x *CreateVariableRequest) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *CreateVariableRequest) GetApplicationId() string {
-	if x != nil && x.ApplicationId != nil {
-		return *x.ApplicationId
-	}
-	return ""
-}
-
-func (x *CreateVariableRequest) GetEnvironmentId() string {
-	if x != nil && x.EnvironmentId != nil {
-		return *x.EnvironmentId
-	}
-	return ""
-}
-
-// CreateVariableResponse contains the newly created variable.
-type CreateVariableResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created variable.
-	Variable      *Variable `protobuf:"bytes,1,opt,name=variable,proto3" json:"variable,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateVariableResponse) Reset() {
-	*x = CreateVariableResponse{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateVariableResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateVariableResponse) ProtoMessage() {}
-
-func (x *CreateVariableResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateVariableResponse.ProtoReflect.Descriptor instead.
-func (*CreateVariableResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *CreateVariableResponse) GetVariable() *Variable {
-	if x != nil {
-		return x.Variable
-	}
-	return nil
-}
-
-// GetVariableRequest identifies a variable to retrieve.
-type GetVariableRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the variable (UUID).
-	VariableId    string `protobuf:"bytes,1,opt,name=variable_id,json=variableId,proto3" json:"variable_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetVariableRequest) Reset() {
-	*x = GetVariableRequest{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetVariableRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetVariableRequest) ProtoMessage() {}
-
-func (x *GetVariableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetVariableRequest.ProtoReflect.Descriptor instead.
-func (*GetVariableRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *GetVariableRequest) GetVariableId() string {
-	if x != nil {
-		return x.VariableId
-	}
-	return ""
-}
-
-// GetVariableResponse contains the variable record.
-type GetVariableResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The variable record. Sensitive variable values are masked.
-	Variable      *Variable `protobuf:"bytes,1,opt,name=variable,proto3" json:"variable,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetVariableResponse) Reset() {
-	*x = GetVariableResponse{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetVariableResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetVariableResponse) ProtoMessage() {}
-
-func (x *GetVariableResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetVariableResponse.ProtoReflect.Descriptor instead.
-func (*GetVariableResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *GetVariableResponse) GetVariable() *Variable {
-	if x != nil {
-		return x.Variable
-	}
-	return nil
-}
-
-// ListVariablesRequest contains filters and pagination parameters.
-//
-// The `application_id` / `environment_id` filter fields also control which
-// levels are included in the returned union:
-//   - Neither present: global variables only.
-//   - `application_id` present: global + app-level variables.
-//   - `application_id` + `environment_id` present: global + app + environment.
-//
-// The response returns all matching entries -- it does NOT apply precedence.
-// See the VariableAPI service docstring for the precedence order deployment
-// rendering applies (env > app > global).
-type ListVariablesRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
-	//
-	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
-	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
-	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
-	//
-	// Filterable fields:
-	//   - `application_id` -- scope to an application (UUID; also expands the
-	//     returned union to include app-level variables).
-	//   - `environment_id` -- scope to an environment (UUID; requires
-	//     application_id; also expands the union to include environment-level
-	//     variables).
-	//   - `sensitive` -- filter by sensitivity flag.
-	//   - `type` -- filter by variable type (STRING, NUMBER, BOOLEAN, COMPLEX).
-	//   - `key` -- filter by variable key (supports prefix matching via ~=).
-	//
-	// Example: `field['application_id'] = '<uuid>' AND field['sensitive'] = 'false'`
-	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of variables to return per page.
-	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListVariablesRequest) Reset() {
-	*x = ListVariablesRequest{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListVariablesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListVariablesRequest) ProtoMessage() {}
-
-func (x *ListVariablesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListVariablesRequest.ProtoReflect.Descriptor instead.
-func (*ListVariablesRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ListVariablesRequest) GetFilter() string {
-	if x != nil {
-		return x.Filter
-	}
-	return ""
-}
-
-func (x *ListVariablesRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-func (x *ListVariablesRequest) GetPageToken() string {
-	if x != nil {
-		return x.PageToken
-	}
-	return ""
-}
-
-// ListVariablesResponse contains a page of variables.
-type ListVariablesResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of variables from all applicable levels.
-	Variables []*Variable `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListVariablesResponse) Reset() {
-	*x = ListVariablesResponse{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListVariablesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListVariablesResponse) ProtoMessage() {}
-
-func (x *ListVariablesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListVariablesResponse.ProtoReflect.Descriptor instead.
-func (*ListVariablesResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ListVariablesResponse) GetVariables() []*Variable {
-	if x != nil {
-		return x.Variables
-	}
-	return nil
-}
-
-func (x *ListVariablesResponse) GetNextPageToken() string {
-	if x != nil {
-		return x.NextPageToken
-	}
-	return ""
-}
-
-// UpdateVariableRequest contains the variable fields to update.
-type UpdateVariableRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The variable with updated fields.
-	// Only fields specified in `update_mask` are updated.
-	Variable *Variable `protobuf:"bytes,1,opt,name=variable,proto3" json:"variable,omitempty"`
-	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `value`, `sensitive`, `type`, `description`.
-	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateVariableRequest) Reset() {
-	*x = UpdateVariableRequest{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateVariableRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateVariableRequest) ProtoMessage() {}
-
-func (x *UpdateVariableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateVariableRequest.ProtoReflect.Descriptor instead.
-func (*UpdateVariableRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *UpdateVariableRequest) GetVariable() *Variable {
-	if x != nil {
-		return x.Variable
-	}
-	return nil
-}
-
-func (x *UpdateVariableRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
-	if x != nil {
-		return x.UpdateMask
-	}
-	return nil
-}
-
-// UpdateVariableResponse contains the updated variable.
-type UpdateVariableResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The updated variable.
-	Variable      *Variable `protobuf:"bytes,1,opt,name=variable,proto3" json:"variable,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateVariableResponse) Reset() {
-	*x = UpdateVariableResponse{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateVariableResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateVariableResponse) ProtoMessage() {}
-
-func (x *UpdateVariableResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateVariableResponse.ProtoReflect.Descriptor instead.
-func (*UpdateVariableResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *UpdateVariableResponse) GetVariable() *Variable {
-	if x != nil {
-		return x.Variable
-	}
-	return nil
-}
-
-// DeleteVariableRequest identifies a variable to delete.
-type DeleteVariableRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the variable to delete (UUID).
-	VariableId    string `protobuf:"bytes,1,opt,name=variable_id,json=variableId,proto3" json:"variable_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteVariableRequest) Reset() {
-	*x = DeleteVariableRequest{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteVariableRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteVariableRequest) ProtoMessage() {}
-
-func (x *DeleteVariableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteVariableRequest.ProtoReflect.Descriptor instead.
-func (*DeleteVariableRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *DeleteVariableRequest) GetVariableId() string {
-	if x != nil {
-		return x.VariableId
-	}
-	return ""
-}
-
-// DeleteVariableResponse is empty on success.
-type DeleteVariableResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteVariableResponse) Reset() {
-	*x = DeleteVariableResponse{}
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteVariableResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteVariableResponse) ProtoMessage() {}
-
-func (x *DeleteVariableResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_variable_v1_variable_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteVariableResponse.ProtoReflect.Descriptor instead.
-func (*DeleteVariableResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_variable_v1_variable_proto_rawDescGZIP(), []int{10}
-}
-
 var File_admiral_variable_v1_variable_proto protoreflect.FileDescriptor
 
 const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x04\n" +
+	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x04\n" +
 	"\bVariable\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12;\n" +
 	"\x03key\x18\x02 \x01(\tB)\xbaH&r$\x10\x01\x18?2\x1e^[A-Za-z_][A-Za-z0-9_.]{0,62}$R\x03key\x12\x14\n" +
@@ -914,52 +331,17 @@ const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\x04type\x18\x05 \x01(\x0e2!.admiral.variable.v1.VariableTypeR\x04type\x12*\n" +
 	"\vdescription\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x124\n" +
 	"\x0eapplication_id\x18\a \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationId\x88\x01\x01\x124\n" +
-	"\x0eenvironment_id\x18\b \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\renvironmentId\x88\x01\x01\x12:\n" +
+	"\x0eenvironment_id\x18\b \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\renvironmentId\x88\x01\x01\x12;\n" +
+	"\x06source\x18\t \x01(\x0e2#.admiral.variable.v1.VariableSourceR\x06source\x12:\n" +
 	"\n" +
-	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\n" +
+	" \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12;\n" +
-	"\x06source\x18\f \x01(\x0e2#.admiral.variable.v1.VariableSourceR\x06sourceB\x11\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x11\n" +
 	"\x0f_application_idB\x11\n" +
-	"\x0f_environment_id\"\x85\x03\n" +
-	"\x15CreateVariableRequest\x12:\n" +
-	"\x03key\x18\x01 \x01(\tB(\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\x12\x1d\n" +
-	"\x05value\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05value\x12\x1c\n" +
-	"\tsensitive\x18\x03 \x01(\bR\tsensitive\x125\n" +
-	"\x04type\x18\x04 \x01(\x0e2!.admiral.variable.v1.VariableTypeR\x04type\x12*\n" +
-	"\vdescription\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x124\n" +
-	"\x0eapplication_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationId\x88\x01\x01\x124\n" +
-	"\x0eenvironment_id\x18\a \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\renvironmentId\x88\x01\x01B\x11\n" +
-	"\x0f_application_idB\x11\n" +
-	"\x0f_environment_id\"S\n" +
-	"\x16CreateVariableResponse\x129\n" +
-	"\bvariable\x18\x01 \x01(\v2\x1d.admiral.variable.v1.VariableR\bvariable\"?\n" +
-	"\x12GetVariableRequest\x12)\n" +
-	"\vvariable_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
-	"variableId\"P\n" +
-	"\x13GetVariableResponse\x129\n" +
-	"\bvariable\x18\x01 \x01(\v2\x1d.admiral.variable.v1.VariableR\bvariable\"\x7f\n" +
-	"\x14ListVariablesRequest\x12 \n" +
-	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
-	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
-	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"|\n" +
-	"\x15ListVariablesResponse\x12;\n" +
-	"\tvariables\x18\x01 \x03(\v2\x1d.admiral.variable.v1.VariableR\tvariables\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x97\x01\n" +
-	"\x15UpdateVariableRequest\x12A\n" +
-	"\bvariable\x18\x01 \x01(\v2\x1d.admiral.variable.v1.VariableB\x06\xbaH\x03\xc8\x01\x01R\bvariable\x12;\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
-	"updateMask\"S\n" +
-	"\x16UpdateVariableResponse\x129\n" +
-	"\bvariable\x18\x01 \x01(\v2\x1d.admiral.variable.v1.VariableR\bvariable\"B\n" +
-	"\x15DeleteVariableRequest\x12)\n" +
-	"\vvariable_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
-	"variableId\"\x18\n" +
-	"\x16DeleteVariableResponse*o\n" +
+	"\x0f_environment_id*o\n" +
 	"\x0eVariableSource\x12\x1f\n" +
 	"\x1bVARIABLE_SOURCE_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14VARIABLE_SOURCE_USER\x10\x01\x12\"\n" +
@@ -969,25 +351,7 @@ const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\x14VARIABLE_TYPE_STRING\x10\x01\x12\x18\n" +
 	"\x14VARIABLE_TYPE_NUMBER\x10\x02\x12\x19\n" +
 	"\x15VARIABLE_TYPE_BOOLEAN\x10\x03\x12\x19\n" +
-	"\x15VARIABLE_TYPE_COMPLEX\x10\x042\xc1\a\n" +
-	"\vVariableAPI\x12\xb7\x01\n" +
-	"\x0eCreateVariable\x12*.admiral.variable.v1.CreateVariableRequest\x1a+.admiral.variable.v1.CreateVariableResponse\"L\xbaG\x1e\n" +
-	"\tVariables\x12\x11Create a variable\xa2\x97$\v\n" +
-	"\tvar:write\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/api/v1/variables\x12\xba\x01\n" +
-	"\vGetVariable\x12'.admiral.variable.v1.GetVariableRequest\x1a(.admiral.variable.v1.GetVariableResponse\"X\xbaG \n" +
-	"\tVariables\x12\x13Retrieve a variable\xa2\x97$\n" +
-	"\n" +
-	"\bvar:read\x82\xd3\xe4\x93\x02!\x12\x1f/api/v1/variables/{variable_id}\x12\xad\x01\n" +
-	"\rListVariables\x12).admiral.variable.v1.ListVariablesRequest\x1a*.admiral.variable.v1.ListVariablesResponse\"E\xbaG\x1b\n" +
-	"\tVariables\x12\x0eList variables\xa2\x97$\n" +
-	"\n" +
-	"\bvar:read\x82\xd3\xe4\x93\x02\x13\x12\x11/api/v1/variables\x12\xc5\x01\n" +
-	"\x0eUpdateVariable\x12*.admiral.variable.v1.UpdateVariableRequest\x1a+.admiral.variable.v1.UpdateVariableResponse\"Z\xbaG\x1e\n" +
-	"\tVariables\x12\x11Update a variable\xa2\x97$\v\n" +
-	"\tvar:write\x82\xd3\xe4\x93\x02$:\x01*2\x1f/api/v1/variables/{variable.id}\x12\xc2\x01\n" +
-	"\x0eDeleteVariable\x12*.admiral.variable.v1.DeleteVariableRequest\x1a+.admiral.variable.v1.DeleteVariableResponse\"W\xbaG\x1e\n" +
-	"\tVariables\x12\x11Delete a variable\xa2\x97$\v\n" +
-	"\tvar:write\x82\xd3\xe4\x93\x02!*\x1f/api/v1/variables/{variable_id}B\xce\x01\n" +
+	"\x15VARIABLE_TYPE_COMPLEX\x10\x04B\xce\x01\n" +
 	"\x17com.admiral.variable.v1B\rVariableProtoP\x01Z6go.admiral.io/sdk/proto/admiral/variable/v1;variablev1\xa2\x02\x03AVX\xaa\x02\x13Admiral.Variable.V1\xca\x02\x13Admiral\\Variable\\V1\xe2\x02\x1fAdmiral\\Variable\\V1\\GPBMetadata\xea\x02\x15Admiral::Variable::V1b\x06proto3"
 
 var (
@@ -1003,53 +367,25 @@ func file_admiral_variable_v1_variable_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_variable_v1_variable_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_admiral_variable_v1_variable_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_admiral_variable_v1_variable_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_admiral_variable_v1_variable_proto_goTypes = []any{
-	(VariableSource)(0),            // 0: admiral.variable.v1.VariableSource
-	(VariableType)(0),              // 1: admiral.variable.v1.VariableType
-	(*Variable)(nil),               // 2: admiral.variable.v1.Variable
-	(*CreateVariableRequest)(nil),  // 3: admiral.variable.v1.CreateVariableRequest
-	(*CreateVariableResponse)(nil), // 4: admiral.variable.v1.CreateVariableResponse
-	(*GetVariableRequest)(nil),     // 5: admiral.variable.v1.GetVariableRequest
-	(*GetVariableResponse)(nil),    // 6: admiral.variable.v1.GetVariableResponse
-	(*ListVariablesRequest)(nil),   // 7: admiral.variable.v1.ListVariablesRequest
-	(*ListVariablesResponse)(nil),  // 8: admiral.variable.v1.ListVariablesResponse
-	(*UpdateVariableRequest)(nil),  // 9: admiral.variable.v1.UpdateVariableRequest
-	(*UpdateVariableResponse)(nil), // 10: admiral.variable.v1.UpdateVariableResponse
-	(*DeleteVariableRequest)(nil),  // 11: admiral.variable.v1.DeleteVariableRequest
-	(*DeleteVariableResponse)(nil), // 12: admiral.variable.v1.DeleteVariableResponse
-	(*v1.ActorRef)(nil),            // 13: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),  // 14: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),  // 15: google.protobuf.FieldMask
+	(VariableSource)(0),           // 0: admiral.variable.v1.VariableSource
+	(VariableType)(0),             // 1: admiral.variable.v1.VariableType
+	(*Variable)(nil),              // 2: admiral.variable.v1.Variable
+	(*v1.ActorRef)(nil),           // 3: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
 }
 var file_admiral_variable_v1_variable_proto_depIdxs = []int32{
-	1,  // 0: admiral.variable.v1.Variable.type:type_name -> admiral.variable.v1.VariableType
-	13, // 1: admiral.variable.v1.Variable.created_by:type_name -> admiral.common.v1.ActorRef
-	14, // 2: admiral.variable.v1.Variable.created_at:type_name -> google.protobuf.Timestamp
-	14, // 3: admiral.variable.v1.Variable.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 4: admiral.variable.v1.Variable.source:type_name -> admiral.variable.v1.VariableSource
-	1,  // 5: admiral.variable.v1.CreateVariableRequest.type:type_name -> admiral.variable.v1.VariableType
-	2,  // 6: admiral.variable.v1.CreateVariableResponse.variable:type_name -> admiral.variable.v1.Variable
-	2,  // 7: admiral.variable.v1.GetVariableResponse.variable:type_name -> admiral.variable.v1.Variable
-	2,  // 8: admiral.variable.v1.ListVariablesResponse.variables:type_name -> admiral.variable.v1.Variable
-	2,  // 9: admiral.variable.v1.UpdateVariableRequest.variable:type_name -> admiral.variable.v1.Variable
-	15, // 10: admiral.variable.v1.UpdateVariableRequest.update_mask:type_name -> google.protobuf.FieldMask
-	2,  // 11: admiral.variable.v1.UpdateVariableResponse.variable:type_name -> admiral.variable.v1.Variable
-	3,  // 12: admiral.variable.v1.VariableAPI.CreateVariable:input_type -> admiral.variable.v1.CreateVariableRequest
-	5,  // 13: admiral.variable.v1.VariableAPI.GetVariable:input_type -> admiral.variable.v1.GetVariableRequest
-	7,  // 14: admiral.variable.v1.VariableAPI.ListVariables:input_type -> admiral.variable.v1.ListVariablesRequest
-	9,  // 15: admiral.variable.v1.VariableAPI.UpdateVariable:input_type -> admiral.variable.v1.UpdateVariableRequest
-	11, // 16: admiral.variable.v1.VariableAPI.DeleteVariable:input_type -> admiral.variable.v1.DeleteVariableRequest
-	4,  // 17: admiral.variable.v1.VariableAPI.CreateVariable:output_type -> admiral.variable.v1.CreateVariableResponse
-	6,  // 18: admiral.variable.v1.VariableAPI.GetVariable:output_type -> admiral.variable.v1.GetVariableResponse
-	8,  // 19: admiral.variable.v1.VariableAPI.ListVariables:output_type -> admiral.variable.v1.ListVariablesResponse
-	10, // 20: admiral.variable.v1.VariableAPI.UpdateVariable:output_type -> admiral.variable.v1.UpdateVariableResponse
-	12, // 21: admiral.variable.v1.VariableAPI.DeleteVariable:output_type -> admiral.variable.v1.DeleteVariableResponse
-	17, // [17:22] is the sub-list for method output_type
-	12, // [12:17] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	1, // 0: admiral.variable.v1.Variable.type:type_name -> admiral.variable.v1.VariableType
+	0, // 1: admiral.variable.v1.Variable.source:type_name -> admiral.variable.v1.VariableSource
+	3, // 2: admiral.variable.v1.Variable.created_by:type_name -> admiral.common.v1.ActorRef
+	4, // 3: admiral.variable.v1.Variable.created_at:type_name -> google.protobuf.Timestamp
+	4, // 4: admiral.variable.v1.Variable.updated_at:type_name -> google.protobuf.Timestamp
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_admiral_variable_v1_variable_proto_init() }
@@ -1058,16 +394,15 @@ func file_admiral_variable_v1_variable_proto_init() {
 		return
 	}
 	file_admiral_variable_v1_variable_proto_msgTypes[0].OneofWrappers = []any{}
-	file_admiral_variable_v1_variable_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_variable_v1_variable_proto_rawDesc), len(file_admiral_variable_v1_variable_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   11,
+			NumMessages:   1,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_admiral_variable_v1_variable_proto_goTypes,
 		DependencyIndexes: file_admiral_variable_v1_variable_proto_depIdxs,

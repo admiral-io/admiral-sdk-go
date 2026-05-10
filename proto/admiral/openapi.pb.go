@@ -26,20 +26,21 @@ var File_admiral_openapi_proto protoreflect.FileDescriptor
 const file_admiral_openapi_proto_rawDesc = "" +
 	"\n" +
 	"\x15admiral/openapi.proto\x12\n" +
-	"admiral.v1\x1a$gnostic/openapi/v3/annotations.protoB\xa7\x0e\xbaG\x91\r\x12\x98\x01\n" +
-	"\vAdmiral API\x12\x88\x01The Admiral REST API for managing applications, infrastructure, and deployments. See https://admiral.io/docs for complete documentation.:?\n" +
+	"admiral.v1\x1a$gnostic/openapi/v3/annotations.protoB\xe8\x0e\xbaG\xd2\r\x12\x91\x01\n" +
+	"\vAdmiral API\x12\x81\x01The Admiral REST API for managing applications, infrastructure, and runs. See https://admiral.io/docs for complete documentation.:?\n" +
 	"\fApplications\x12/Manage application lifecycle and configuration.:V\n" +
 	"\bClusters\x12JManage Kubernetes clusters, service access tokens, and workload telemetry.:B\n" +
 	"\x0eCluster Tokens\x120Manage service access tokens for cluster agents.:C\n" +
 	"\x11Cluster Workloads\x12.View workloads running on registered clusters.:l\n" +
-	"\rCluster Agent\x12[Agent-facing endpoints for cluster telemetry and revision delivery. Requires a cluster SAT.:F\n" +
-	"\n" +
-	"Components\x128Manage application components and environment overrides.:A\n" +
+	"\rCluster Agent\x12[Agent-facing endpoints for cluster telemetry and revision delivery. Requires a cluster SAT.:A\n" +
 	"\vCredentials\x122Manage credentials for accessing external systems.:@\n" +
 	"\aModules\x125Manage module definitions and resolve module content.:B\n" +
-	"\x0eAuthentication\x120OAuth2/OIDC authentication for browser sessions.:@\n" +
-	"\vDeployments\x121Manage deployments and track component revisions.:6\n" +
-	"\fEnvironments\x12&Manage deployment target environments.:%\n" +
+	"\x0eAuthentication\x120OAuth2/OIDC authentication for browser sessions.:\x88\x01\n" +
+	"\n" +
+	"ChangeSets\x12zManage change sets: scoped, isolated proposals to mutate the deployed state of an application within a single environment.:8\n" +
+	"\x04Runs\x120Manage runs across components in an environment.:I\n" +
+	"\rRun Revisions\x128Retrieve and retry per-component revisions within a run.:4\n" +
+	"\fEnvironments\x12$Manage target environments for runs.:%\n" +
 	"\x06Health\x12\x1bCheck service availability.:D\n" +
 	"\aRunners\x129Manage infrastructure runners, tokens, and job execution.::\n" +
 	"\rRunner Tokens\x12)Manage service access tokens for runners.:-\n" +
@@ -49,8 +50,7 @@ const file_admiral_openapi_proto_rawDesc = "" +
 	"\x05State\x12;Manage Terraform state records, version history, and locks.:j\n" +
 	"\rState Backend\x12YTerraform HTTP state backend used by runners during job execution. Requires a runner SAT.:\x1f\n" +
 	"\x04User\x12\x17Retrieve user profiles.:O\n" +
-	"\x16Personal Access Tokens\x125Manage personal access tokens for API authentication.::\n" +
-	"\tVariables\x12-Manage configuration variables across scopes.\n" +
+	"\x16Personal Access Tokens\x125Manage personal access tokens for API authentication.\n" +
 	"\x0ecom.admiral.v1B\fOpenapiProtoP\x01Z)go.admiral.io/sdk/proto/admiral;admiralv1\xa2\x02\x03AXX\xaa\x02\n" +
 	"Admiral.V1\xca\x02\n" +
 	"Admiral\\V1\xe2\x02\x16Admiral\\V1\\GPBMetadata\xea\x02\vAdmiral::V1b\x06proto3"

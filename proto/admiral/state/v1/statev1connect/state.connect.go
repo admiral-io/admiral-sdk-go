@@ -62,7 +62,7 @@ const (
 // StateAPIClient is a client for the admiral.state.v1.StateAPI service.
 type StateAPIClient interface {
 	// GetState fetches the current state for a job's component + environment.
-	// Returns empty data if no state exists yet (fresh init -- Terraform
+	// Returns empty data if no state exists yet (fresh init; Terraform
 	// handles this gracefully).
 	//
 	// The server validates that the SAT's runner binding matches the runner
@@ -123,12 +123,12 @@ type StateAPIClient interface {
 	GetCurrentState(context.Context, *connect.Request[v1.GetCurrentStateRequest]) (*connect.Response[v1.GetCurrentStateResponse], error)
 	// ListStates returns a paginated list of state records within the caller's
 	// tenant. Use filters to scope by component, environment, or application.
-	// Returns metadata only -- use GetCurrentState to fetch full state data.
+	// Returns metadata only. Use GetCurrentState to fetch full state data.
 	//
 	// Scope: `state:read`
 	ListStates(context.Context, *connect.Request[v1.ListStatesRequest]) (*connect.Response[v1.ListStatesResponse], error)
 	// ListStateVersions returns a paginated history of state versions for a
-	// state record. Returns metadata only (serial, md5, size) -- use
+	// state record. Returns metadata only (serial, md5, size). Use
 	// GetStateVersion to fetch the full state data at a specific serial.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
@@ -145,7 +145,7 @@ type StateAPIClient interface {
 	GetStateVersion(context.Context, *connect.Request[v1.GetStateVersionRequest]) (*connect.Response[v1.GetStateVersionResponse], error)
 	// ForceUnlockState forcefully releases a stuck lock on a state record.
 	// Use this when a runner has crashed or become unreachable while holding
-	// a lock, preventing subsequent deployments from proceeding.
+	// a lock, preventing subsequent runs from proceeding.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
 	// Returns FAILED_PRECONDITION if the state has no active lock.
@@ -154,7 +154,7 @@ type StateAPIClient interface {
 	// Scope: `state:admin`
 	ForceUnlockState(context.Context, *connect.Request[v1.ForceUnlockStateRequest]) (*connect.Response[v1.ForceUnlockStateResponse], error)
 	// DeleteState permanently deletes a state record and all its version
-	// history. Fails if the state is currently locked -- force-unlock first.
+	// history. Fails if the state is currently locked. Force-unlock first.
 	// This action cannot be undone.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
@@ -305,7 +305,7 @@ func (c *stateAPIClient) DeleteState(ctx context.Context, req *connect.Request[v
 // StateAPIHandler is an implementation of the admiral.state.v1.StateAPI service.
 type StateAPIHandler interface {
 	// GetState fetches the current state for a job's component + environment.
-	// Returns empty data if no state exists yet (fresh init -- Terraform
+	// Returns empty data if no state exists yet (fresh init; Terraform
 	// handles this gracefully).
 	//
 	// The server validates that the SAT's runner binding matches the runner
@@ -366,12 +366,12 @@ type StateAPIHandler interface {
 	GetCurrentState(context.Context, *connect.Request[v1.GetCurrentStateRequest]) (*connect.Response[v1.GetCurrentStateResponse], error)
 	// ListStates returns a paginated list of state records within the caller's
 	// tenant. Use filters to scope by component, environment, or application.
-	// Returns metadata only -- use GetCurrentState to fetch full state data.
+	// Returns metadata only. Use GetCurrentState to fetch full state data.
 	//
 	// Scope: `state:read`
 	ListStates(context.Context, *connect.Request[v1.ListStatesRequest]) (*connect.Response[v1.ListStatesResponse], error)
 	// ListStateVersions returns a paginated history of state versions for a
-	// state record. Returns metadata only (serial, md5, size) -- use
+	// state record. Returns metadata only (serial, md5, size). Use
 	// GetStateVersion to fetch the full state data at a specific serial.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
@@ -388,7 +388,7 @@ type StateAPIHandler interface {
 	GetStateVersion(context.Context, *connect.Request[v1.GetStateVersionRequest]) (*connect.Response[v1.GetStateVersionResponse], error)
 	// ForceUnlockState forcefully releases a stuck lock on a state record.
 	// Use this when a runner has crashed or become unreachable while holding
-	// a lock, preventing subsequent deployments from proceeding.
+	// a lock, preventing subsequent runs from proceeding.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
 	// Returns FAILED_PRECONDITION if the state has no active lock.
@@ -397,7 +397,7 @@ type StateAPIHandler interface {
 	// Scope: `state:admin`
 	ForceUnlockState(context.Context, *connect.Request[v1.ForceUnlockStateRequest]) (*connect.Response[v1.ForceUnlockStateResponse], error)
 	// DeleteState permanently deletes a state record and all its version
-	// history. Fails if the state is currently locked -- force-unlock first.
+	// history. Fails if the state is currently locked. Force-unlock first.
 	// This action cannot be undone.
 	//
 	// Returns NOT_FOUND if the state record does not exist.

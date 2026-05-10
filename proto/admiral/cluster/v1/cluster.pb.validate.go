@@ -3225,8 +3225,6 @@ func (m *ReportWorkloadStatusRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ClusterId
-
 	for idx, item := range m.GetWorkloads() {
 		_, _ = idx, item
 

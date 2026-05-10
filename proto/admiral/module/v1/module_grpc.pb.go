@@ -31,7 +31,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ModuleAPI manages module definitions -- named references to a slice of content
+// ModuleAPI manages module definitions: named references to a slice of content
 // within a Source at a specific ref. One Source can back many Modules (different
 // refs, different subtrees).
 //
@@ -72,8 +72,8 @@ type ModuleAPIClient interface {
 	// Scope: `module:write`
 	DeleteModule(ctx context.Context, in *DeleteModuleRequest, opts ...grpc.CallOption) (*DeleteModuleResponse, error)
 	// ResolveModule fetches the module via its Source and returns the resolved
-	// revision and content digest. Does NOT stream content -- content delivery
-	// to Runners is a separate concern (Phase 6).
+	// revision and content digest. Does NOT stream content; content delivery
+	// to runners is handled separately.
 	//
 	// This operation fetches from the external system in real time and may take
 	// several seconds depending on the source type and size.
@@ -154,7 +154,7 @@ func (c *moduleAPIClient) ResolveModule(ctx context.Context, in *ResolveModuleRe
 // All implementations should embed UnimplementedModuleAPIServer
 // for forward compatibility.
 //
-// ModuleAPI manages module definitions -- named references to a slice of content
+// ModuleAPI manages module definitions: named references to a slice of content
 // within a Source at a specific ref. One Source can back many Modules (different
 // refs, different subtrees).
 //
@@ -195,8 +195,8 @@ type ModuleAPIServer interface {
 	// Scope: `module:write`
 	DeleteModule(context.Context, *DeleteModuleRequest) (*DeleteModuleResponse, error)
 	// ResolveModule fetches the module via its Source and returns the resolved
-	// revision and content digest. Does NOT stream content -- content delivery
-	// to Runners is a separate concern (Phase 6).
+	// revision and content digest. Does NOT stream content; content delivery
+	// to runners is handled separately.
 	//
 	// This operation fetches from the external system in real time and may take
 	// several seconds depending on the source type and size.

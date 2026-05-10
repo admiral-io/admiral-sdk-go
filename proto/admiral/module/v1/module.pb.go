@@ -27,7 +27,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ModuleType identifies the content semantics -- what the fetched content is and
+// ModuleType identifies the content semantics: what the fetched content is and
 // how it should be executed. This is orthogonal to SourceType, which identifies
 // the fetch protocol. A single GIT source can back TERRAFORM, HELM, KUSTOMIZE,
 // and MANIFEST modules in different subdirectories.
@@ -115,31 +115,34 @@ type Module struct {
 	// Optional longer-form description of the module's purpose
 	// (e.g., "Standard VPC module for billing workloads").
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// The content type -- what this module contains and how it should be executed.
+	// The content type: what this module contains and how it should be executed.
 	Type ModuleType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.module.v1.ModuleType" json:"type,omitempty"`
 	// Reference to the Source this module fetches from (UUID).
 	SourceId string `protobuf:"bytes,5,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	// Git ref, registry version, chart version, or OCI tag to fetch.
-	// Optional -- when empty, the backend uses its default (e.g., HEAD for Git,
+	// Optional. When empty, the backend uses its default (e.g., HEAD for Git,
 	// latest for registries). This is an overridable default: Components can
 	// override the ref at deploy time.
 	Ref string `protobuf:"bytes,6,opt,name=ref,proto3" json:"ref,omitempty"`
 	// Subdirectory within the fetched tree to treat as the module root.
-	// Optional -- when empty, the entire fetched tree is the module root.
+	// Optional. When empty, the entire fetched tree is the module root.
 	// Example: "modules/vpc" within a monorepo.
 	Root string `protobuf:"bytes,7,opt,name=root,proto3" json:"root,omitempty"`
 	// Working directory within root for execution (e.g., "environments/prod").
-	// Optional -- when empty, defaults to root itself.
+	// Optional. When empty, defaults to root itself.
 	Path string `protobuf:"bytes,8,opt,name=path,proto3" json:"path,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering modules
 	// (e.g., `{"team": "platform", "stack": "networking"}`).
-	Labels map[string]string `protobuf:"bytes,16,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Labels map[string]string `protobuf:"bytes,9,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Display name of the parent source. Denormalized for display.
+	// Read-only; ignored on writes.
+	SourceName string `protobuf:"bytes,10,opt,name=source_name,json=sourceName,proto3" json:"source_name,omitempty"`
 	// The user or agent who created this module (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,20,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedBy *v1.ActorRef `protobuf:"bytes,11,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the module was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the module was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -237,6 +240,13 @@ func (x *Module) GetLabels() map[string]string {
 	return nil
 }
 
+func (x *Module) GetSourceName() string {
+	if x != nil {
+		return x.SourceName
+	}
+	return ""
+}
+
 func (x *Module) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
@@ -265,7 +275,7 @@ type CreateModuleRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional description of the module's purpose.
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// The content type -- what this module contains and how it should be executed.
+	// The content type: what this module contains and how it should be executed.
 	Type ModuleType `protobuf:"varint,3,opt,name=type,proto3,enum=admiral.module.v1.ModuleType" json:"type,omitempty"`
 	// Reference to the Source this module fetches from (UUID).
 	SourceId string `protobuf:"bytes,4,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
@@ -276,7 +286,7 @@ type CreateModuleRequest struct {
 	// Working directory within root for execution.
 	Path string `protobuf:"bytes,7,opt,name=path,proto3" json:"path,omitempty"`
 	// Arbitrary key-value labels.
-	Labels        map[string]string `protobuf:"bytes,15,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Labels        map[string]string `protobuf:"bytes,8,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -511,9 +521,9 @@ type ListModulesRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `name` -- filter by module name.
-	//   - `type` -- filter by module type (TERRAFORM, HELM, KUSTOMIZE, MANIFEST).
-	//   - `source_id` -- filter by source reference.
+	//   - `name`: filter by module name.
+	//   - `type`: filter by module type (TERRAFORM, HELM, KUSTOMIZE, MANIFEST).
+	//   - `source_id`: filter by source reference.
 	//
 	// Example: `field['type'] = 'TERRAFORM'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -637,7 +647,7 @@ type UpdateModuleRequest struct {
 	// The module with updated fields. Only fields specified in `update_mask`
 	// are updated.
 	Module *Module `protobuf:"bytes,1,opt,name=module,proto3" json:"module,omitempty"`
-	// The set of fields to update. Required -- the server rejects updates
+	// The set of fields to update. Required. The server rejects updates
 	// without a mask to prevent accidental full-replace.
 	// Supported fields: `name`, `description`, `source_id`, `ref`, `root`,
 	// `path`, `labels`.
@@ -949,7 +959,7 @@ var File_admiral_module_v1_module_proto protoreflect.FileDescriptor
 
 const file_admiral_module_v1_module_proto_rawDesc = "" +
 	"\n" +
-	"\x1eadmiral/module/v1/module.proto\x12\x11admiral.module.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x87\x05\n" +
+	"\x1eadmiral/module/v1/module.proto\x12\x11admiral.module.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x05\n" +
 	"\x06Module\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
@@ -959,13 +969,16 @@ const file_admiral_module_v1_module_proto_rawDesc = "" +
 	"\x03ref\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x03ref\x12\x1c\n" +
 	"\x04root\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x04R\x04root\x12\x1c\n" +
 	"\x04path\x18\b \x01(\tB\b\xbaH\x05r\x03\x18\x80\x04R\x04path\x12V\n" +
-	"\x06labels\x18\x10 \x03(\v2%.admiral.module.v1.Module.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
+	"\x06labels\x18\t \x03(\v2%.admiral.module.v1.Module.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12\x1f\n" +
+	"\vsource_name\x18\n" +
+	" \x01(\tR\n" +
+	"sourceName\x12:\n" +
 	"\n" +
-	"created_by\x18\x14 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\v \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xe1\x03\n" +
@@ -978,7 +991,7 @@ const file_admiral_module_v1_module_proto_rawDesc = "" +
 	"\x03ref\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x03ref\x12\x1c\n" +
 	"\x04root\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x04R\x04root\x12\x1c\n" +
 	"\x04path\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x04R\x04path\x12c\n" +
-	"\x06labels\x18\x0f \x03(\v22.admiral.module.v1.CreateModuleRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
+	"\x06labels\x18\b \x03(\v22.admiral.module.v1.CreateModuleRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"I\n" +

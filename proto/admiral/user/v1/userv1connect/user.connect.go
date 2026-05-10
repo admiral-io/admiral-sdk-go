@@ -58,6 +58,8 @@ const (
 type UserAPIClient interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
+	//
+	// Scope: any authenticated token (no specific scope required).
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
 	// GetUser retrieves a user's profile by ID.
 	//
@@ -75,7 +77,7 @@ type UserAPIClient interface {
 	// Scope: `token:read`
 	ListPersonalAccessTokens(context.Context, *connect.Request[v1.ListPersonalAccessTokensRequest]) (*connect.Response[v1.ListPersonalAccessTokensResponse], error)
 	// GetPersonalAccessToken retrieves a single PAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `token:read`
 	GetPersonalAccessToken(context.Context, *connect.Request[v1.GetPersonalAccessTokenRequest]) (*connect.Response[v1.GetPersonalAccessTokenResponse], error)
@@ -198,6 +200,8 @@ func (c *userAPIClient) RevokePersonalAccessToken(ctx context.Context, req *conn
 type UserAPIHandler interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
+	//
+	// Scope: any authenticated token (no specific scope required).
 	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
 	// GetUser retrieves a user's profile by ID.
 	//
@@ -215,7 +219,7 @@ type UserAPIHandler interface {
 	// Scope: `token:read`
 	ListPersonalAccessTokens(context.Context, *connect.Request[v1.ListPersonalAccessTokensRequest]) (*connect.Response[v1.ListPersonalAccessTokensResponse], error)
 	// GetPersonalAccessToken retrieves a single PAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `token:read`
 	GetPersonalAccessToken(context.Context, *connect.Request[v1.GetPersonalAccessTokenRequest]) (*connect.Response[v1.GetPersonalAccessTokenResponse], error)

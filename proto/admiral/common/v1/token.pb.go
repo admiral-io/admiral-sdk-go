@@ -24,7 +24,7 @@ const (
 )
 
 // TokenType identifies the category of an access token issued by Admiral's token system.
-// IDP-issued JWTs (OAuth2/OIDC sessions) are NOT represented here — they are
+// IDP-issued JWTs (OAuth2/OIDC sessions) are NOT represented here. They are
 // resolved by separate middleware and can be referenced as "session" in
 // AuthRule.allowed_token_types when needed.
 type TokenType int32
@@ -198,10 +198,10 @@ func (AccessTokenStatus) EnumDescriptor() ([]byte, []int) {
 //
 // Admiral issues two kinds of tokens, distinguished by `token_type`:
 //
-//   - **Personal Access Tokens (PATs)** -- bound to a user, created by that
+//   - **Personal Access Tokens (PATs)**: bound to a user, created by that
 //     user via UserAPI. Scopes are user-selected at creation time. Intended
 //     for CLI, CI, and human-driven automation.
-//   - **Service Access Tokens (SATs)** -- bound to a cluster or runner,
+//   - **Service Access Tokens (SATs)**: bound to a cluster or runner,
 //     created by administrators via ClusterAPI / RunnerAPI. Scopes are
 //     auto-assigned from the resource type. Intended for long-lived agents
 //     that authenticate as the cluster or runner itself.
@@ -226,7 +226,7 @@ type AccessToken struct {
 	// Unique within the parent resource. Lowercase alphanumeric and hyphens only,
 	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Non-secret prefix of the token value -- the five-character brand
+	// Non-secret prefix of the token value. The five-character brand
 	// (`admp_` for PATs, `adms_` for SATs) followed by a short sample of
 	// characters from the secret body (e.g., "adms_pL2m"). URL-safe and safe
 	// to log and display. Use for incident response and audit trails without
@@ -243,17 +243,17 @@ type AccessToken struct {
 	BindingType BindingType `protobuf:"varint,7,opt,name=binding_type,json=bindingType,proto3,enum=admiral.common.v1.BindingType" json:"binding_type,omitempty"`
 	// The ID of the resource this token is bound to (UUID).
 	BindingId string `protobuf:"bytes,8,opt,name=binding_id,json=bindingId,proto3" json:"binding_id,omitempty"`
+	// When the token expires. If unset, the token does not expire.
+	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	// When the token was last used to authenticate an API request.
+	LastUsedAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
+	// When the token was revoked. Only set when status is REVOKED.
+	RevokedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
 	// The user who created this token. For PATs, this is the token owner.
 	// For SATs, this is the administrator who issued the token.
-	CreatedBy *ActorRef `protobuf:"bytes,10,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// When the token expires. If unset, the token does not expire.
-	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	// When the token was last used to authenticate an API request.
-	LastUsedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
+	CreatedBy *ActorRef `protobuf:"bytes,12,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the token was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the token was revoked. Only set when status is REVOKED.
-	RevokedAt     *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -344,13 +344,6 @@ func (x *AccessToken) GetBindingId() string {
 	return ""
 }
 
-func (x *AccessToken) GetCreatedBy() *ActorRef {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return nil
-}
-
 func (x *AccessToken) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ExpiresAt
@@ -365,16 +358,23 @@ func (x *AccessToken) GetLastUsedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *AccessToken) GetCreatedAt() *timestamppb.Timestamp {
+func (x *AccessToken) GetRevokedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.CreatedAt
+		return x.RevokedAt
 	}
 	return nil
 }
 
-func (x *AccessToken) GetRevokedAt() *timestamppb.Timestamp {
+func (x *AccessToken) GetCreatedBy() *ActorRef {
 	if x != nil {
-		return x.RevokedAt
+		return x.CreatedBy
+	}
+	return nil
+}
+
+func (x *AccessToken) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
 	}
 	return nil
 }
@@ -394,18 +394,18 @@ const file_admiral_common_v1_token_proto_rawDesc = "" +
 	"\x06status\x18\x06 \x01(\x0e2$.admiral.common.v1.AccessTokenStatusR\x06status\x12A\n" +
 	"\fbinding_type\x18\a \x01(\x0e2\x1e.admiral.common.v1.BindingTypeR\vbindingType\x12\x1d\n" +
 	"\n" +
-	"binding_id\x18\b \x01(\tR\tbindingId\x12:\n" +
+	"binding_id\x18\b \x01(\tR\tbindingId\x129\n" +
 	"\n" +
-	"created_by\x18\n" +
-	" \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
-	"\n" +
-	"expires_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12<\n" +
-	"\flast_used_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"expires_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12<\n" +
+	"\flast_used_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"lastUsedAt\x129\n" +
 	"\n" +
-	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"revoked_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt\x12:\n" +
 	"\n" +
-	"revoked_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt*O\n" +
+	"created_by\x18\f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"\n" +
+	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt*O\n" +
 	"\tTokenType\x12\x1a\n" +
 	"\x16TOKEN_TYPE_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eTOKEN_TYPE_PAT\x10\x01\x12\x12\n" +
@@ -442,18 +442,18 @@ var file_admiral_common_v1_token_proto_goTypes = []any{
 	(BindingType)(0),              // 1: admiral.common.v1.BindingType
 	(AccessTokenStatus)(0),        // 2: admiral.common.v1.AccessTokenStatus
 	(*AccessToken)(nil),           // 3: admiral.common.v1.AccessToken
-	(*ActorRef)(nil),              // 4: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
+	(*ActorRef)(nil),              // 5: admiral.common.v1.ActorRef
 }
 var file_admiral_common_v1_token_proto_depIdxs = []int32{
 	0, // 0: admiral.common.v1.AccessToken.token_type:type_name -> admiral.common.v1.TokenType
 	2, // 1: admiral.common.v1.AccessToken.status:type_name -> admiral.common.v1.AccessTokenStatus
 	1, // 2: admiral.common.v1.AccessToken.binding_type:type_name -> admiral.common.v1.BindingType
-	4, // 3: admiral.common.v1.AccessToken.created_by:type_name -> admiral.common.v1.ActorRef
-	5, // 4: admiral.common.v1.AccessToken.expires_at:type_name -> google.protobuf.Timestamp
-	5, // 5: admiral.common.v1.AccessToken.last_used_at:type_name -> google.protobuf.Timestamp
-	5, // 6: admiral.common.v1.AccessToken.created_at:type_name -> google.protobuf.Timestamp
-	5, // 7: admiral.common.v1.AccessToken.revoked_at:type_name -> google.protobuf.Timestamp
+	4, // 3: admiral.common.v1.AccessToken.expires_at:type_name -> google.protobuf.Timestamp
+	4, // 4: admiral.common.v1.AccessToken.last_used_at:type_name -> google.protobuf.Timestamp
+	4, // 5: admiral.common.v1.AccessToken.revoked_at:type_name -> google.protobuf.Timestamp
+	5, // 6: admiral.common.v1.AccessToken.created_by:type_name -> admiral.common.v1.ActorRef
+	4, // 7: admiral.common.v1.AccessToken.created_at:type_name -> google.protobuf.Timestamp
 	8, // [8:8] is the sub-list for method output_type
 	8, // [8:8] is the sub-list for method input_type
 	8, // [8:8] is the sub-list for extension type_name

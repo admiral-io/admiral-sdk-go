@@ -1,15 +1,17 @@
 name: Release
 
 # Triggered by sync commits pushed from admiral-protos:
-#   - push to master  → admiral-protos tag-triggered cascade. go-semantic-release
+#   - push to master  → admiral-protos tag-triggered cascade. semantic-release
 #                        cuts a regular release tag (vX.Y.Z) from conventional
 #                        commits.
 #   - push to next    → admiral-protos master-triggered "rolling RC" cascade.
-#                        go-semantic-release cuts a pre-release tag
-#                        (vX.Y.Z-rc.N) so external testers can `go get @vX.Y.Z-rc.1`.
+#                        semantic-release cuts a pre-release tag
+#                        (vX.Y.Z-rc.N) so external testers can
+#                        `go get @vX.Y.Z-rc.1`.
 #
-# Both branches share the same release.yml workflow; the prerelease input on
-# go-semantic-release switches behavior based on which branch dispatched it.
+# Branch-specific behavior is configured in .releaserc.json:
+#   master → stable (vX.Y.Z)
+#   next   → prerelease "rc" (vX.Y.Z-rc.N)
 
 on:
   push:
@@ -20,22 +22,18 @@ on:
       - '**/*.go'
       - 'go.mod'
       - 'go.sum'
-  workflow_dispatch:
-    inputs:
-      force:
-        description: 'Force release even if no changes detected'
-        required: false
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Set up Go
         uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
@@ -49,17 +47,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
-      - name: Release
-        uses: go-semantic-release/action@2e9dc4247a6004f8377781bef4cb9dad273a741f # v1.24.1
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
-          changelog-generator-opt: "emojis=true"
-          force-bump-patch-version: ${{ inputs.force || false }}
-          # When the dispatching branch is `next`, mark the release as a
-          # pre-release. go-semantic-release will compute the version with
-          # an rc suffix (e.g., v1.24.0-rc.1) instead of a clean tag.
-          prerelease: ${{ github.ref == 'refs/heads/next' }}
+          node-version: 22
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx --yes semantic-release

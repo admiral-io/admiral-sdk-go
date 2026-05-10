@@ -38,17 +38,17 @@ const (
 // StateAPI manages Terraform state for infrastructure components within a
 // tenant.
 //
-// State is scoped to **component + environment** -- each infrastructure
+// State is scoped to **component + environment**: each infrastructure
 // component (e.g., "rds", "vpc") has exactly one state record per
 // environment (e.g., dev, staging, prod). This state persists for the
 // entire lifetime of that component in that environment, spanning many
-// deployments and jobs. Locks protect the state record itself, not any
-// individual job -- if a job crashes while holding a lock, the lock remains
-// on the state until released or force-unlocked.
+// runs and jobs. Locks protect the state record itself, not any individual
+// job. If a job crashes while holding a lock, the lock remains on the
+// state until released or force-unlocked.
 //
 // Admiral acts as the state backend for all Terraform-backed components.
-// You do not need to configure a separate backend (S3, GCS, etc.) --
-// Admiral stores and versions state automatically.
+// You do not need to configure a separate backend (S3, GCS, etc.); Admiral
+// stores and versions state automatically.
 //
 // Most callers only need the admin-facing RPCs: GetCurrentState, ListStates,
 // ListStateVersions, GetStateVersion, ForceUnlockState, and DeleteState.
@@ -57,7 +57,7 @@ const (
 //
 // Runner-facing RPCs (GetState, PushState, LockState, UnlockState) are
 // called by Admiral's runner binary during job execution. These endpoints
-// use job_id as an access path -- the server resolves the job's component
+// use job_id as an access path; the server resolves the job's component
 // and environment to locate the underlying state record. The runner
 // configures Terraform's HTTP backend with per-job state URLs and injects
 // its SAT as a bearer token. These endpoints are not intended for direct
@@ -69,7 +69,7 @@ const (
 //	PushState → UnlockState → ReportJobResult
 //
 // Admin routes use /v1/states/... (plural, with state_id).
-// Runner-facing routes use /v1/runner/jobs/{job_id}/state (job-scoped --
+// Runner-facing routes use /v1/runner/jobs/{job_id}/state (job-scoped:
 // the server resolves the component and environment from the job).
 //
 // All operations delegate to the platform StateAPI. The facade resolves the
@@ -77,7 +77,7 @@ const (
 // job_id → state_id before forwarding state operations.
 type StateAPIClient interface {
 	// GetState fetches the current state for a job's component + environment.
-	// Returns empty data if no state exists yet (fresh init -- Terraform
+	// Returns empty data if no state exists yet (fresh init; Terraform
 	// handles this gracefully).
 	//
 	// The server validates that the SAT's runner binding matches the runner
@@ -138,12 +138,12 @@ type StateAPIClient interface {
 	GetCurrentState(ctx context.Context, in *GetCurrentStateRequest, opts ...grpc.CallOption) (*GetCurrentStateResponse, error)
 	// ListStates returns a paginated list of state records within the caller's
 	// tenant. Use filters to scope by component, environment, or application.
-	// Returns metadata only -- use GetCurrentState to fetch full state data.
+	// Returns metadata only. Use GetCurrentState to fetch full state data.
 	//
 	// Scope: `state:read`
 	ListStates(ctx context.Context, in *ListStatesRequest, opts ...grpc.CallOption) (*ListStatesResponse, error)
 	// ListStateVersions returns a paginated history of state versions for a
-	// state record. Returns metadata only (serial, md5, size) -- use
+	// state record. Returns metadata only (serial, md5, size). Use
 	// GetStateVersion to fetch the full state data at a specific serial.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
@@ -160,7 +160,7 @@ type StateAPIClient interface {
 	GetStateVersion(ctx context.Context, in *GetStateVersionRequest, opts ...grpc.CallOption) (*GetStateVersionResponse, error)
 	// ForceUnlockState forcefully releases a stuck lock on a state record.
 	// Use this when a runner has crashed or become unreachable while holding
-	// a lock, preventing subsequent deployments from proceeding.
+	// a lock, preventing subsequent runs from proceeding.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
 	// Returns FAILED_PRECONDITION if the state has no active lock.
@@ -169,7 +169,7 @@ type StateAPIClient interface {
 	// Scope: `state:admin`
 	ForceUnlockState(ctx context.Context, in *ForceUnlockStateRequest, opts ...grpc.CallOption) (*ForceUnlockStateResponse, error)
 	// DeleteState permanently deletes a state record and all its version
-	// history. Fails if the state is currently locked -- force-unlock first.
+	// history. Fails if the state is currently locked. Force-unlock first.
 	// This action cannot be undone.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
@@ -294,17 +294,17 @@ func (c *stateAPIClient) DeleteState(ctx context.Context, in *DeleteStateRequest
 // StateAPI manages Terraform state for infrastructure components within a
 // tenant.
 //
-// State is scoped to **component + environment** -- each infrastructure
+// State is scoped to **component + environment**: each infrastructure
 // component (e.g., "rds", "vpc") has exactly one state record per
 // environment (e.g., dev, staging, prod). This state persists for the
 // entire lifetime of that component in that environment, spanning many
-// deployments and jobs. Locks protect the state record itself, not any
-// individual job -- if a job crashes while holding a lock, the lock remains
-// on the state until released or force-unlocked.
+// runs and jobs. Locks protect the state record itself, not any individual
+// job. If a job crashes while holding a lock, the lock remains on the
+// state until released or force-unlocked.
 //
 // Admiral acts as the state backend for all Terraform-backed components.
-// You do not need to configure a separate backend (S3, GCS, etc.) --
-// Admiral stores and versions state automatically.
+// You do not need to configure a separate backend (S3, GCS, etc.); Admiral
+// stores and versions state automatically.
 //
 // Most callers only need the admin-facing RPCs: GetCurrentState, ListStates,
 // ListStateVersions, GetStateVersion, ForceUnlockState, and DeleteState.
@@ -313,7 +313,7 @@ func (c *stateAPIClient) DeleteState(ctx context.Context, in *DeleteStateRequest
 //
 // Runner-facing RPCs (GetState, PushState, LockState, UnlockState) are
 // called by Admiral's runner binary during job execution. These endpoints
-// use job_id as an access path -- the server resolves the job's component
+// use job_id as an access path; the server resolves the job's component
 // and environment to locate the underlying state record. The runner
 // configures Terraform's HTTP backend with per-job state URLs and injects
 // its SAT as a bearer token. These endpoints are not intended for direct
@@ -325,7 +325,7 @@ func (c *stateAPIClient) DeleteState(ctx context.Context, in *DeleteStateRequest
 //	PushState → UnlockState → ReportJobResult
 //
 // Admin routes use /v1/states/... (plural, with state_id).
-// Runner-facing routes use /v1/runner/jobs/{job_id}/state (job-scoped --
+// Runner-facing routes use /v1/runner/jobs/{job_id}/state (job-scoped:
 // the server resolves the component and environment from the job).
 //
 // All operations delegate to the platform StateAPI. The facade resolves the
@@ -333,7 +333,7 @@ func (c *stateAPIClient) DeleteState(ctx context.Context, in *DeleteStateRequest
 // job_id → state_id before forwarding state operations.
 type StateAPIServer interface {
 	// GetState fetches the current state for a job's component + environment.
-	// Returns empty data if no state exists yet (fresh init -- Terraform
+	// Returns empty data if no state exists yet (fresh init; Terraform
 	// handles this gracefully).
 	//
 	// The server validates that the SAT's runner binding matches the runner
@@ -394,12 +394,12 @@ type StateAPIServer interface {
 	GetCurrentState(context.Context, *GetCurrentStateRequest) (*GetCurrentStateResponse, error)
 	// ListStates returns a paginated list of state records within the caller's
 	// tenant. Use filters to scope by component, environment, or application.
-	// Returns metadata only -- use GetCurrentState to fetch full state data.
+	// Returns metadata only. Use GetCurrentState to fetch full state data.
 	//
 	// Scope: `state:read`
 	ListStates(context.Context, *ListStatesRequest) (*ListStatesResponse, error)
 	// ListStateVersions returns a paginated history of state versions for a
-	// state record. Returns metadata only (serial, md5, size) -- use
+	// state record. Returns metadata only (serial, md5, size). Use
 	// GetStateVersion to fetch the full state data at a specific serial.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
@@ -416,7 +416,7 @@ type StateAPIServer interface {
 	GetStateVersion(context.Context, *GetStateVersionRequest) (*GetStateVersionResponse, error)
 	// ForceUnlockState forcefully releases a stuck lock on a state record.
 	// Use this when a runner has crashed or become unreachable while holding
-	// a lock, preventing subsequent deployments from proceeding.
+	// a lock, preventing subsequent runs from proceeding.
 	//
 	// Returns NOT_FOUND if the state record does not exist.
 	// Returns FAILED_PRECONDITION if the state has no active lock.
@@ -425,7 +425,7 @@ type StateAPIServer interface {
 	// Scope: `state:admin`
 	ForceUnlockState(context.Context, *ForceUnlockStateRequest) (*ForceUnlockStateResponse, error)
 	// DeleteState permanently deletes a state record and all its version
-	// history. Fails if the state is currently locked -- force-unlock first.
+	// history. Fails if the state is currently locked. Force-unlock first.
 	// This action cannot be undone.
 	//
 	// Returns NOT_FOUND if the state record does not exist.

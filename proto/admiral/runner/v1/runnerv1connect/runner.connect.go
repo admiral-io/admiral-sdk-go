@@ -78,7 +78,7 @@ type RunnerAPIClient interface {
 	// generates an initial Service Access Token (SAT). The runner starts in PENDING
 	// health status until it begins heartbeating.
 	//
-	// The response includes a `plain_text_token` -- the raw SAT secret shown
+	// The response includes a `plain_text_token`: the raw SAT secret shown
 	// exactly once. Deploy this token to the runner binary for authentication.
 	//
 	// Scope: `runner:write`
@@ -130,7 +130,7 @@ type RunnerAPIClient interface {
 	// Scope: `runner:read`
 	ListRunnerTokens(context.Context, *connect.Request[v1.ListRunnerTokensRequest]) (*connect.Response[v1.ListRunnerTokensResponse], error)
 	// GetRunnerToken retrieves a single SAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `runner:read`
 	GetRunnerToken(context.Context, *connect.Request[v1.GetRunnerTokenRequest]) (*connect.Response[v1.GetRunnerTokenResponse], error)
@@ -143,8 +143,9 @@ type RunnerAPIClient interface {
 	// Heartbeat reports that the runner is alive and includes current capacity
 	// metrics. The server uses heartbeat recency to derive health status.
 	//
-	// The runner is identified by the service access token -- the server resolves the
-	// runner from the SAT's binding. No runner_id is required in the request.
+	// The runner is identified by the service access token. The server
+	// resolves the runner from the SAT's binding. No runner_id is required
+	// in the request.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
@@ -154,14 +155,14 @@ type RunnerAPIClient interface {
 	// metadata if work is available, or an empty response if no jobs are
 	// pending. The runner should call this on a polling interval.
 	//
-	// The runner is identified by the service access token -- no runner_id is required.
+	// The runner is identified by the service access token; no runner_id is required.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
 	// Scope: `runner:exec` | Token types: `sat`
 	ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error)
 	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated
-	// from ClaimJob to keep the claim response lightweight -- the runner first
+	// from ClaimJob to keep the claim response lightweight. The runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
 	// The bundle contains everything the runner needs to execute the infrastructure
@@ -392,7 +393,7 @@ type RunnerAPIHandler interface {
 	// generates an initial Service Access Token (SAT). The runner starts in PENDING
 	// health status until it begins heartbeating.
 	//
-	// The response includes a `plain_text_token` -- the raw SAT secret shown
+	// The response includes a `plain_text_token`: the raw SAT secret shown
 	// exactly once. Deploy this token to the runner binary for authentication.
 	//
 	// Scope: `runner:write`
@@ -444,7 +445,7 @@ type RunnerAPIHandler interface {
 	// Scope: `runner:read`
 	ListRunnerTokens(context.Context, *connect.Request[v1.ListRunnerTokensRequest]) (*connect.Response[v1.ListRunnerTokensResponse], error)
 	// GetRunnerToken retrieves a single SAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `runner:read`
 	GetRunnerToken(context.Context, *connect.Request[v1.GetRunnerTokenRequest]) (*connect.Response[v1.GetRunnerTokenResponse], error)
@@ -457,8 +458,9 @@ type RunnerAPIHandler interface {
 	// Heartbeat reports that the runner is alive and includes current capacity
 	// metrics. The server uses heartbeat recency to derive health status.
 	//
-	// The runner is identified by the service access token -- the server resolves the
-	// runner from the SAT's binding. No runner_id is required in the request.
+	// The runner is identified by the service access token. The server
+	// resolves the runner from the SAT's binding. No runner_id is required
+	// in the request.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
@@ -468,14 +470,14 @@ type RunnerAPIHandler interface {
 	// metadata if work is available, or an empty response if no jobs are
 	// pending. The runner should call this on a polling interval.
 	//
-	// The runner is identified by the service access token -- no runner_id is required.
+	// The runner is identified by the service access token; no runner_id is required.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
 	// Scope: `runner:exec` | Token types: `sat`
 	ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error)
 	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated
-	// from ClaimJob to keep the claim response lightweight -- the runner first
+	// from ClaimJob to keep the claim response lightweight. The runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
 	// The bundle contains everything the runner needs to execute the infrastructure

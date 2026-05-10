@@ -72,9 +72,9 @@ type ApplicationAPIClient interface {
 	UpdateApplication(context.Context, *connect.Request[v1.UpdateApplicationRequest]) (*connect.Response[v1.UpdateApplicationResponse], error)
 	// DeleteApplication permanently deletes an application. Fails with
 	// FAILED_PRECONDITION if the application still has environments. Pass
-	// force = true to cascade-delete all environments and their deployments
-	// (metadata only — no cloud resources are destroyed). This action
-	// cannot be undone.
+	// force = true to cascade-delete all environments and their runs
+	// (metadata only; no cloud resources are destroyed). This action cannot
+	// be undone.
 	//
 	// Scope: `app:write`
 	DeleteApplication(context.Context, *connect.Request[v1.DeleteApplicationRequest]) (*connect.Response[v1.DeleteApplicationResponse], error)
@@ -180,9 +180,9 @@ type ApplicationAPIHandler interface {
 	UpdateApplication(context.Context, *connect.Request[v1.UpdateApplicationRequest]) (*connect.Response[v1.UpdateApplicationResponse], error)
 	// DeleteApplication permanently deletes an application. Fails with
 	// FAILED_PRECONDITION if the application still has environments. Pass
-	// force = true to cascade-delete all environments and their deployments
-	// (metadata only — no cloud resources are destroyed). This action
-	// cannot be undone.
+	// force = true to cascade-delete all environments and their runs
+	// (metadata only; no cloud resources are destroyed). This action cannot
+	// be undone.
 	//
 	// Scope: `app:write`
 	DeleteApplication(context.Context, *connect.Request[v1.DeleteApplicationRequest]) (*connect.Response[v1.DeleteApplicationResponse], error)

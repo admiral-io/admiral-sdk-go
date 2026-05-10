@@ -30,7 +30,7 @@ const (
 type AuthRule struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The scope required to call this RPC (e.g., "cluster:read").
-	// Empty string means any valid token is sufficient — no specific scope required.
+	// Empty string means any valid token is sufficient; no specific scope required.
 	Scope string `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
 	// Restrict to specific token types ("pat", "sat", "session").
 	// Empty means all token types are allowed.

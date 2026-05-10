@@ -26,7 +26,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// HealthcheckAPI provides health check operations for monitoring service availability.
+// HealthcheckAPI provides health check operations for monitoring service
+// availability. All RPCs in this service are public (no authentication
+// required), suitable for load balancer probes.
 type HealthcheckAPIClient interface {
 	// Healthcheck verifies that the service is running and healthy.
 	// Returns an empty response on success. Use this endpoint for load balancer
@@ -56,7 +58,9 @@ func (c *healthcheckAPIClient) Healthcheck(ctx context.Context, in *HealthcheckR
 // All implementations should embed UnimplementedHealthcheckAPIServer
 // for forward compatibility.
 //
-// HealthcheckAPI provides health check operations for monitoring service availability.
+// HealthcheckAPI provides health check operations for monitoring service
+// availability. All RPCs in this service are public (no authentication
+// required), suitable for load balancer probes.
 type HealthcheckAPIServer interface {
 	// Healthcheck verifies that the service is running and healthy.
 	// Returns an empty response on success. Use this endpoint for load balancer

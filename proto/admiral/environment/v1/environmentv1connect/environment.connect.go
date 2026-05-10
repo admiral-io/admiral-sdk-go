@@ -48,6 +48,12 @@ const (
 	// EnvironmentAPIDeleteEnvironmentProcedure is the fully-qualified name of the EnvironmentAPI's
 	// DeleteEnvironment RPC.
 	EnvironmentAPIDeleteEnvironmentProcedure = "/admiral.environment.v1.EnvironmentAPI/DeleteEnvironment"
+	// EnvironmentAPIListEnvironmentVariablesProcedure is the fully-qualified name of the
+	// EnvironmentAPI's ListEnvironmentVariables RPC.
+	EnvironmentAPIListEnvironmentVariablesProcedure = "/admiral.environment.v1.EnvironmentAPI/ListEnvironmentVariables"
+	// EnvironmentAPIListEnvironmentComponentsProcedure is the fully-qualified name of the
+	// EnvironmentAPI's ListEnvironmentComponents RPC.
+	EnvironmentAPIListEnvironmentComponentsProcedure = "/admiral.environment.v1.EnvironmentAPI/ListEnvironmentComponents"
 )
 
 // EnvironmentAPIClient is a client for the admiral.environment.v1.EnvironmentAPI service.
@@ -71,13 +77,33 @@ type EnvironmentAPIClient interface {
 	// Scope: `env:write`
 	UpdateEnvironment(context.Context, *connect.Request[v1.UpdateEnvironmentRequest]) (*connect.Response[v1.UpdateEnvironmentResponse], error)
 	// DeleteEnvironment permanently deletes an environment. Fails with
-	// FAILED_PRECONDITION if the environment has any deployments. Pass
-	// force = true to cascade-delete all deployment records (metadata
-	// only — no cloud resources are destroyed). This action cannot be
-	// undone.
+	// FAILED_PRECONDITION if the environment has any runs. Pass force = true
+	// to cascade-delete all run records (metadata only; no cloud resources
+	// are destroyed). This action cannot be undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(context.Context, *connect.Request[v1.DeleteEnvironmentRequest]) (*connect.Response[v1.DeleteEnvironmentResponse], error)
+	// ListEnvironmentVariables returns a paginated list of variables scoped
+	// to a single environment. Variables are mutated exclusively through
+	// change sets (ChangeSetAPI.SetVariable / RemoveVariable); this endpoint
+	// is read-only.
+	//
+	// Sensitive variable values are masked in the response.
+	//
+	// Scope: `var:read`
+	ListEnvironmentVariables(context.Context, *connect.Request[v1.ListEnvironmentVariablesRequest]) (*connect.Response[v1.ListEnvironmentVariablesResponse], error)
+	// ListEnvironmentComponents returns the components currently deployed to
+	// a single environment, with each component's last-succeeded revision
+	// surfaced as a denormalized status block. Use this to render an
+	// at-a-glance "what's running here?" view without separate calls per
+	// component.
+	//
+	// Components without a SUCCEEDED revision (e.g. CREATE entries that
+	// failed mid-plan) still appear, with `last_revision_status` and
+	// `last_deployed_at` empty.
+	//
+	// Scope: `env:read`
+	ListEnvironmentComponents(context.Context, *connect.Request[v1.ListEnvironmentComponentsRequest]) (*connect.Response[v1.ListEnvironmentComponentsResponse], error)
 }
 
 // NewEnvironmentAPIClient constructs a client for the admiral.environment.v1.EnvironmentAPI
@@ -121,16 +147,30 @@ func NewEnvironmentAPIClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(environmentAPIMethods.ByName("DeleteEnvironment")),
 			connect.WithClientOptions(opts...),
 		),
+		listEnvironmentVariables: connect.NewClient[v1.ListEnvironmentVariablesRequest, v1.ListEnvironmentVariablesResponse](
+			httpClient,
+			baseURL+EnvironmentAPIListEnvironmentVariablesProcedure,
+			connect.WithSchema(environmentAPIMethods.ByName("ListEnvironmentVariables")),
+			connect.WithClientOptions(opts...),
+		),
+		listEnvironmentComponents: connect.NewClient[v1.ListEnvironmentComponentsRequest, v1.ListEnvironmentComponentsResponse](
+			httpClient,
+			baseURL+EnvironmentAPIListEnvironmentComponentsProcedure,
+			connect.WithSchema(environmentAPIMethods.ByName("ListEnvironmentComponents")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // environmentAPIClient implements EnvironmentAPIClient.
 type environmentAPIClient struct {
-	createEnvironment *connect.Client[v1.CreateEnvironmentRequest, v1.CreateEnvironmentResponse]
-	getEnvironment    *connect.Client[v1.GetEnvironmentRequest, v1.GetEnvironmentResponse]
-	listEnvironments  *connect.Client[v1.ListEnvironmentsRequest, v1.ListEnvironmentsResponse]
-	updateEnvironment *connect.Client[v1.UpdateEnvironmentRequest, v1.UpdateEnvironmentResponse]
-	deleteEnvironment *connect.Client[v1.DeleteEnvironmentRequest, v1.DeleteEnvironmentResponse]
+	createEnvironment         *connect.Client[v1.CreateEnvironmentRequest, v1.CreateEnvironmentResponse]
+	getEnvironment            *connect.Client[v1.GetEnvironmentRequest, v1.GetEnvironmentResponse]
+	listEnvironments          *connect.Client[v1.ListEnvironmentsRequest, v1.ListEnvironmentsResponse]
+	updateEnvironment         *connect.Client[v1.UpdateEnvironmentRequest, v1.UpdateEnvironmentResponse]
+	deleteEnvironment         *connect.Client[v1.DeleteEnvironmentRequest, v1.DeleteEnvironmentResponse]
+	listEnvironmentVariables  *connect.Client[v1.ListEnvironmentVariablesRequest, v1.ListEnvironmentVariablesResponse]
+	listEnvironmentComponents *connect.Client[v1.ListEnvironmentComponentsRequest, v1.ListEnvironmentComponentsResponse]
 }
 
 // CreateEnvironment calls admiral.environment.v1.EnvironmentAPI.CreateEnvironment.
@@ -158,6 +198,16 @@ func (c *environmentAPIClient) DeleteEnvironment(ctx context.Context, req *conne
 	return c.deleteEnvironment.CallUnary(ctx, req)
 }
 
+// ListEnvironmentVariables calls admiral.environment.v1.EnvironmentAPI.ListEnvironmentVariables.
+func (c *environmentAPIClient) ListEnvironmentVariables(ctx context.Context, req *connect.Request[v1.ListEnvironmentVariablesRequest]) (*connect.Response[v1.ListEnvironmentVariablesResponse], error) {
+	return c.listEnvironmentVariables.CallUnary(ctx, req)
+}
+
+// ListEnvironmentComponents calls admiral.environment.v1.EnvironmentAPI.ListEnvironmentComponents.
+func (c *environmentAPIClient) ListEnvironmentComponents(ctx context.Context, req *connect.Request[v1.ListEnvironmentComponentsRequest]) (*connect.Response[v1.ListEnvironmentComponentsResponse], error) {
+	return c.listEnvironmentComponents.CallUnary(ctx, req)
+}
+
 // EnvironmentAPIHandler is an implementation of the admiral.environment.v1.EnvironmentAPI service.
 type EnvironmentAPIHandler interface {
 	// CreateEnvironment creates a new environment for the specified application.
@@ -179,13 +229,33 @@ type EnvironmentAPIHandler interface {
 	// Scope: `env:write`
 	UpdateEnvironment(context.Context, *connect.Request[v1.UpdateEnvironmentRequest]) (*connect.Response[v1.UpdateEnvironmentResponse], error)
 	// DeleteEnvironment permanently deletes an environment. Fails with
-	// FAILED_PRECONDITION if the environment has any deployments. Pass
-	// force = true to cascade-delete all deployment records (metadata
-	// only — no cloud resources are destroyed). This action cannot be
-	// undone.
+	// FAILED_PRECONDITION if the environment has any runs. Pass force = true
+	// to cascade-delete all run records (metadata only; no cloud resources
+	// are destroyed). This action cannot be undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(context.Context, *connect.Request[v1.DeleteEnvironmentRequest]) (*connect.Response[v1.DeleteEnvironmentResponse], error)
+	// ListEnvironmentVariables returns a paginated list of variables scoped
+	// to a single environment. Variables are mutated exclusively through
+	// change sets (ChangeSetAPI.SetVariable / RemoveVariable); this endpoint
+	// is read-only.
+	//
+	// Sensitive variable values are masked in the response.
+	//
+	// Scope: `var:read`
+	ListEnvironmentVariables(context.Context, *connect.Request[v1.ListEnvironmentVariablesRequest]) (*connect.Response[v1.ListEnvironmentVariablesResponse], error)
+	// ListEnvironmentComponents returns the components currently deployed to
+	// a single environment, with each component's last-succeeded revision
+	// surfaced as a denormalized status block. Use this to render an
+	// at-a-glance "what's running here?" view without separate calls per
+	// component.
+	//
+	// Components without a SUCCEEDED revision (e.g. CREATE entries that
+	// failed mid-plan) still appear, with `last_revision_status` and
+	// `last_deployed_at` empty.
+	//
+	// Scope: `env:read`
+	ListEnvironmentComponents(context.Context, *connect.Request[v1.ListEnvironmentComponentsRequest]) (*connect.Response[v1.ListEnvironmentComponentsResponse], error)
 }
 
 // NewEnvironmentAPIHandler builds an HTTP handler from the service implementation. It returns the
@@ -225,6 +295,18 @@ func NewEnvironmentAPIHandler(svc EnvironmentAPIHandler, opts ...connect.Handler
 		connect.WithSchema(environmentAPIMethods.ByName("DeleteEnvironment")),
 		connect.WithHandlerOptions(opts...),
 	)
+	environmentAPIListEnvironmentVariablesHandler := connect.NewUnaryHandler(
+		EnvironmentAPIListEnvironmentVariablesProcedure,
+		svc.ListEnvironmentVariables,
+		connect.WithSchema(environmentAPIMethods.ByName("ListEnvironmentVariables")),
+		connect.WithHandlerOptions(opts...),
+	)
+	environmentAPIListEnvironmentComponentsHandler := connect.NewUnaryHandler(
+		EnvironmentAPIListEnvironmentComponentsProcedure,
+		svc.ListEnvironmentComponents,
+		connect.WithSchema(environmentAPIMethods.ByName("ListEnvironmentComponents")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.environment.v1.EnvironmentAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case EnvironmentAPICreateEnvironmentProcedure:
@@ -237,6 +319,10 @@ func NewEnvironmentAPIHandler(svc EnvironmentAPIHandler, opts ...connect.Handler
 			environmentAPIUpdateEnvironmentHandler.ServeHTTP(w, r)
 		case EnvironmentAPIDeleteEnvironmentProcedure:
 			environmentAPIDeleteEnvironmentHandler.ServeHTTP(w, r)
+		case EnvironmentAPIListEnvironmentVariablesProcedure:
+			environmentAPIListEnvironmentVariablesHandler.ServeHTTP(w, r)
+		case EnvironmentAPIListEnvironmentComponentsProcedure:
+			environmentAPIListEnvironmentComponentsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -264,4 +350,12 @@ func (UnimplementedEnvironmentAPIHandler) UpdateEnvironment(context.Context, *co
 
 func (UnimplementedEnvironmentAPIHandler) DeleteEnvironment(context.Context, *connect.Request[v1.DeleteEnvironmentRequest]) (*connect.Response[v1.DeleteEnvironmentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.environment.v1.EnvironmentAPI.DeleteEnvironment is not implemented"))
+}
+
+func (UnimplementedEnvironmentAPIHandler) ListEnvironmentVariables(context.Context, *connect.Request[v1.ListEnvironmentVariablesRequest]) (*connect.Response[v1.ListEnvironmentVariablesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.environment.v1.EnvironmentAPI.ListEnvironmentVariables is not implemented"))
+}
+
+func (UnimplementedEnvironmentAPIHandler) ListEnvironmentComponents(context.Context, *connect.Request[v1.ListEnvironmentComponentsRequest]) (*connect.Response[v1.ListEnvironmentComponentsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.environment.v1.EnvironmentAPI.ListEnvironmentComponents is not implemented"))
 }

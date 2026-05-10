@@ -27,7 +27,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// SourceType identifies the fetch protocol -- how Admiral's Fetcher layer
+// SourceType identifies the fetch protocol: how Admiral's Fetcher layer
 // retrieves content from the source URL. Types are carved by wire protocol,
 // not by content semantics. "This is a Terraform module" vs "this is a Helm
 // chart" is a Module/Component concern, not a Source concern.
@@ -37,7 +37,7 @@ const (
 	// Default value. Must not be used.
 	SourceType_SOURCE_TYPE_UNSPECIFIED SourceType = 0
 	// Git repository over smart HTTP(S) or SSH. Any repo regardless of what
-	// it contains -- Terraform modules, Helm charts, Kustomize overlays, raw
+	// it contains: Terraform modules, Helm charts, Kustomize overlays, raw
 	// manifests, plain source code. Module/Component decides how to interpret.
 	SourceType_SOURCE_TYPE_GIT SourceType = 1
 	// Terraform Module/Provider Registry Protocol. A JSON HTTP API for version
@@ -427,7 +427,7 @@ func (x *SourceVersion) GetDescription() string {
 	return ""
 }
 
-// Source represents a fetchable artifact definition -- a pointer to an external
+// Source represents a fetchable artifact definition: a pointer to an external
 // module, chart, or manifest set that Admiral can fetch, inspect, and render
 // into deployment snapshots.
 //
@@ -451,11 +451,11 @@ type Source struct {
 	//   - TERRAFORM: registry hostname (e.g., "registry.terraform.io")
 	//   - HELM: chart repo URL (e.g., "https://charts.bitnami.com/bitnami")
 	//   - OCI: OCI repository URL (e.g., "oci://ghcr.io/myorg/charts/my-app")
-	//   - HTTP: full HTTP(S) URL to the archive (tar/zip) -- covers plain
+	//   - HTTP: full HTTP(S) URL to the archive (tar/zip). Covers plain
 	//     HTTP hosts and presigned S3/GCS/Azure Blob URLs.
 	Url string `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
 	// Reference to the credential providing authentication for this source (UUID).
-	// Optional -- null for public sources that require no authentication
+	// Optional. Null for public sources that require no authentication
 	// (e.g., public Terraform registry, public Helm repos).
 	CredentialId *string `protobuf:"bytes,6,opt,name=credential_id,json=credentialId,proto3,oneof" json:"credential_id,omitempty"`
 	// Whether this source is a curated catalog entry. Catalog sources are managed
@@ -469,23 +469,27 @@ type Source struct {
 	SourceConfig *SourceConfig `protobuf:"bytes,8,opt,name=source_config,json=sourceConfig,proto3" json:"source_config,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering sources
 	// (e.g., `{"team": "platform", "category": "database"}`).
-	Labels map[string]string `protobuf:"bytes,16,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// The user or agent who created this source (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,20,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	Labels map[string]string `protobuf:"bytes,9,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Outcome of the most recent TestSource invocation. Reflects whether the
 	// attached credential successfully authenticated against `url` the last time
 	// a test was run. Absent if the source has never been tested.
-	LastTestStatus *SourceTestStatus `protobuf:"varint,21,opt,name=last_test_status,json=lastTestStatus,proto3,enum=admiral.source.v1.SourceTestStatus,oneof" json:"last_test_status,omitempty"`
+	LastTestStatus *SourceTestStatus `protobuf:"varint,11,opt,name=last_test_status,json=lastTestStatus,proto3,enum=admiral.source.v1.SourceTestStatus,oneof" json:"last_test_status,omitempty"`
 	// Human-readable error message from the most recent failed TestSource.
 	// Empty when `last_test_status` is SUCCESS or unset.
-	LastTestError string `protobuf:"bytes,22,opt,name=last_test_error,json=lastTestError,proto3" json:"last_test_error,omitempty"`
+	LastTestError string `protobuf:"bytes,12,opt,name=last_test_error,json=lastTestError,proto3" json:"last_test_error,omitempty"`
 	// When TestSource was last invoked against this source. Absent if never
 	// tested.
-	LastTestedAt *timestamppb.Timestamp `protobuf:"bytes,23,opt,name=last_tested_at,json=lastTestedAt,proto3" json:"last_tested_at,omitempty"`
+	LastTestedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=last_tested_at,json=lastTestedAt,proto3" json:"last_tested_at,omitempty"`
+	// Display name of the attached credential. Denormalized for display.
+	// Empty when `credential_id` is unset (public sources). Read-only;
+	// ignored on writes.
+	CredentialName string `protobuf:"bytes,14,opt,name=credential_name,json=credentialName,proto3" json:"credential_name,omitempty"`
+	// The user or agent who created this source (server-populated from token).
+	CreatedBy *v1.ActorRef `protobuf:"bytes,15,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the source was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the source was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -583,13 +587,6 @@ func (x *Source) GetLabels() map[string]string {
 	return nil
 }
 
-func (x *Source) GetCreatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return nil
-}
-
 func (x *Source) GetLastTestStatus() SourceTestStatus {
 	if x != nil && x.LastTestStatus != nil {
 		return *x.LastTestStatus
@@ -607,6 +604,20 @@ func (x *Source) GetLastTestError() string {
 func (x *Source) GetLastTestedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.LastTestedAt
+	}
+	return nil
+}
+
+func (x *Source) GetCredentialName() string {
+	if x != nil {
+		return x.CredentialName
+	}
+	return ""
+}
+
+func (x *Source) GetCreatedBy() *v1.ActorRef {
+	if x != nil {
+		return x.CreatedBy
 	}
 	return nil
 }
@@ -645,7 +656,7 @@ type CreateSourceRequest struct {
 	// omit for GIT, OCI, HTTP.
 	SourceConfig *SourceConfig `protobuf:"bytes,7,opt,name=source_config,json=sourceConfig,proto3" json:"source_config,omitempty"`
 	// Arbitrary key-value labels.
-	Labels        map[string]string `protobuf:"bytes,15,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Labels        map[string]string `protobuf:"bytes,8,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -884,10 +895,10 @@ type ListSourcesRequest struct {
 	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
 	//
 	// Filterable fields:
-	//   - `name` -- filter by source name.
-	//   - `type` -- filter by source type (GIT, TERRAFORM, HELM, OCI, HTTP).
-	//   - `catalog` -- filter by catalog status (true/false).
-	//   - `labels.key` -- filter by label key.
+	//   - `name`: filter by source name.
+	//   - `type`: filter by source type (GIT, TERRAFORM, HELM, OCI, HTTP).
+	//   - `catalog`: filter by catalog status (true/false).
+	//   - `labels.key`: filter by label key.
 	//
 	// Example: `field['type'] = 'TERRAFORM' AND field['catalog'] = 'true'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -1445,7 +1456,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\rSourceVersion\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12=\n" +
 	"\fpublished_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"\x9c\a\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\"\xc5\a\n" +
 	"\x06Source\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
@@ -1455,16 +1466,17 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\rcredential_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\fcredentialId\x88\x01\x01\x12\x18\n" +
 	"\acatalog\x18\a \x01(\bR\acatalog\x12D\n" +
 	"\rsource_config\x18\b \x01(\v2\x1f.admiral.source.v1.SourceConfigR\fsourceConfig\x12V\n" +
-	"\x06labels\x18\x10 \x03(\v2%.admiral.source.v1.Source.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
+	"\x06labels\x18\t \x03(\v2%.admiral.source.v1.Source.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12R\n" +
+	"\x10last_test_status\x18\v \x01(\x0e2#.admiral.source.v1.SourceTestStatusH\x01R\x0elastTestStatus\x88\x01\x01\x12&\n" +
+	"\x0flast_test_error\x18\f \x01(\tR\rlastTestError\x12@\n" +
+	"\x0elast_tested_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\flastTestedAt\x12'\n" +
+	"\x0fcredential_name\x18\x0e \x01(\tR\x0ecredentialName\x12:\n" +
 	"\n" +
-	"created_by\x18\x14 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x12R\n" +
-	"\x10last_test_status\x18\x15 \x01(\x0e2#.admiral.source.v1.SourceTestStatusH\x01R\x0elastTestStatus\x88\x01\x01\x12&\n" +
-	"\x0flast_test_error\x18\x16 \x01(\tR\rlastTestError\x12@\n" +
-	"\x0elast_tested_at\x18\x17 \x01(\v2\x1a.google.protobuf.TimestampR\flastTestedAt\x129\n" +
+	"created_by\x18\x0f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x10\n" +
@@ -1479,7 +1491,7 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\rcredential_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\fcredentialId\x88\x01\x01\x12\x18\n" +
 	"\acatalog\x18\x06 \x01(\bR\acatalog\x12D\n" +
 	"\rsource_config\x18\a \x01(\v2\x1f.admiral.source.v1.SourceConfigR\fsourceConfig\x12c\n" +
-	"\x06labels\x18\x0f \x03(\v22.admiral.source.v1.CreateSourceRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
+	"\x06labels\x18\b \x03(\v22.admiral.source.v1.CreateSourceRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x10\n" +
@@ -1608,9 +1620,9 @@ var file_admiral_source_v1_source_proto_depIdxs = []int32{
 	0,  // 3: admiral.source.v1.Source.type:type_name -> admiral.source.v1.SourceType
 	4,  // 4: admiral.source.v1.Source.source_config:type_name -> admiral.source.v1.SourceConfig
 	21, // 5: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
-	24, // 6: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
-	1,  // 7: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
-	23, // 8: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
+	1,  // 6: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
+	23, // 7: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
+	24, // 8: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
 	23, // 9: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
 	23, // 10: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 11: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType

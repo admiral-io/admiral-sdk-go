@@ -557,21 +557,12 @@ func request_ClusterAPI_ReportWorkloadStatus_0(ctx context.Context, marshaler ru
 	var (
 		protoReq ReportWorkloadStatusRequest
 		metadata runtime.ServerMetadata
-		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
 	}
 	msg, err := client.ReportWorkloadStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -581,18 +572,9 @@ func local_request_ClusterAPI_ReportWorkloadStatus_0(ctx context.Context, marsha
 	var (
 		protoReq ReportWorkloadStatusRequest
 		metadata runtime.ServerMetadata
-		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
 	}
 	msg, err := server.ReportWorkloadStatus(ctx, &protoReq)
 	return msg, metadata, err
@@ -934,7 +916,7 @@ func RegisterClusterAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux,
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.cluster.v1.ClusterAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/api/v1/clusters/{cluster_id}/workloads/status"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.cluster.v1.ClusterAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/api/v1/agent/workloads/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1236,7 +1218,7 @@ func RegisterClusterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.cluster.v1.ClusterAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/api/v1/clusters/{cluster_id}/workloads/status"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.cluster.v1.ClusterAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/api/v1/agent/workloads/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1299,7 +1281,7 @@ var (
 	pattern_ClusterAPI_RevokeClusterToken_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "clusters", "cluster_id", "tokens", "token_id", "revoke"}, ""))
 	pattern_ClusterAPI_ReportClusterStatus_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "agent", "status"}, ""))
 	pattern_ClusterAPI_ListWorkloads_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "clusters", "cluster_id", "workloads"}, ""))
-	pattern_ClusterAPI_ReportWorkloadStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"api", "v1", "clusters", "cluster_id", "workloads", "status"}, ""))
+	pattern_ClusterAPI_ReportWorkloadStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "agent", "workloads", "status"}, ""))
 	pattern_ClusterAPI_GetRevisionBundle_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agent", "revisions", "revision_id", "bundle"}, ""))
 	pattern_ClusterAPI_ReportRevisionResult_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agent", "revisions", "revision_id", "result"}, ""))
 )

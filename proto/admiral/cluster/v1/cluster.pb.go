@@ -172,11 +172,11 @@ type Cluster struct {
 	// Derived health status based on agent connectivity and workload state.
 	HealthStatus ClusterHealthStatus `protobuf:"varint,6,opt,name=health_status,json=healthStatus,proto3,enum=admiral.cluster.v1.ClusterHealthStatus" json:"health_status,omitempty"`
 	// The user or agent who created this cluster (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedBy *v1.ActorRef `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the cluster record was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the cluster record was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -279,7 +279,7 @@ func (x *Cluster) GetUpdatedAt() *timestamppb.Timestamp {
 // (ReportClusterStatusRequest) and the read response (GetClusterStatusResponse).
 //
 // Server-derived fields (health_status, agent connectivity) are NOT included
-// here -- they live on the Cluster and Agent records respectively, and are
+// here. They live on the Cluster and Agent records respectively, and are
 // returned alongside this message in GetClusterStatusResponse.
 type ClusterStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -996,12 +996,12 @@ func (x *CreateClusterRequest) GetLabels() map[string]string {
 // Service Access Token (SAT).
 type CreateClusterResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created cluster. Health status will be PENDING until an agent connects
-	// and calls AgentAPI.RegisterAgent.
+	// The created cluster. Health status will be PENDING until an agent
+	// connects and reports its first telemetry payload.
 	Cluster *Cluster `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
-	// The raw Agent Token secret (e.g., "adms_pL2mN5oQ8rS1..."). This value
-	// is shown exactly once and cannot be retrieved again. Deploy this token to
-	// the K8s agent for authentication.
+	// The raw Service Access Token secret (e.g., "adms_pL2mN5oQ8rS1...").
+	// This value is shown exactly once and cannot be retrieved again. Deploy
+	// this token to the K8s agent for authentication.
 	//
 	// To create additional tokens (e.g., for rotation), use
 	// CreateClusterToken (POST /v1/clusters/{cluster_id}/tokens).
@@ -1156,9 +1156,9 @@ type ListClustersRequest struct {
 	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
 	//
 	// Filterable fields:
-	//   - `name` -- filter by cluster name.
-	//   - `health_status` -- filter by health status.
-	//   - `labels.key` -- filter by label key.
+	//   - `name`: filter by cluster name.
+	//   - `health_status`: filter by health status.
+	//   - `labels.key`: filter by label key.
 	//
 	// Example: `field['health_status'] = 'HEALTHY' AND field['labels.region'] = 'us-east-1'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -1581,7 +1581,7 @@ func (x *GetClusterStatusResponse) GetReportedAt() *timestamppb.Timestamp {
 // Admiral splits this into three storage tiers: current snapshot, time-series
 // metrics, and events.
 //
-// The cluster is identified by the service access token's binding -- no cluster_id is
+// The cluster is identified by the service access token's binding. No cluster_id is
 // required. The server resolves the cluster from the SAT.
 type ReportClusterStatusRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1893,10 +1893,10 @@ type ListWorkloadsRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `namespace` -- filter by Kubernetes namespace.
-	//   - `kind` -- filter by workload kind (Deployment, StatefulSet, DaemonSet).
-	//   - `name` -- filter by workload name.
-	//   - `health_status` -- filter by workload health status.
+	//   - `namespace`: filter by Kubernetes namespace.
+	//   - `kind`: filter by workload kind (Deployment, StatefulSet, DaemonSet).
+	//   - `name`: filter by workload name.
+	//   - `health_status`: filter by workload health status.
 	//
 	// Example: `field['namespace'] = 'production' AND field['health_status'] = 'DEGRADED'`
 	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -2021,11 +2021,11 @@ func (x *ListWorkloadsResponse) GetNextPageToken() string {
 	return ""
 }
 
-// ReportWorkloadStatusRequest contains incremental workload telemetry from a K8s agent.
+// ReportWorkloadStatusRequest contains incremental workload telemetry from a
+// K8s agent. The cluster is identified by the SAT's binding. No cluster_id
+// is required.
 type ReportWorkloadStatusRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The cluster these workloads belong to (UUID).
-	ClusterId string `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
 	// Per-workload status snapshots.
 	Workloads []*WorkloadStatus `protobuf:"bytes,2,rep,name=workloads,proto3" json:"workloads,omitempty"`
 	// When the agent generated this report.
@@ -2062,13 +2062,6 @@ func (x *ReportWorkloadStatusRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ReportWorkloadStatusRequest.ProtoReflect.Descriptor instead.
 func (*ReportWorkloadStatusRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_cluster_v1_cluster_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *ReportWorkloadStatusRequest) GetClusterId() string {
-	if x != nil {
-		return x.ClusterId
-	}
-	return ""
 }
 
 func (x *ReportWorkloadStatusRequest) GetWorkloads() []*WorkloadStatus {
@@ -2262,8 +2255,8 @@ type ListClusterTokensRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `name` -- filter by token name.
-	//   - `status` -- filter by token status (ACTIVE, REVOKED).
+	//   - `name`: filter by token name.
+	//   - `status`: filter by token status (ACTIVE, REVOKED).
 	//
 	// Example: `field['status'] = 'ACTIVE'`
 	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -2958,11 +2951,11 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"clusterUid\x12L\n" +
 	"\rhealth_status\x18\x06 \x01(\x0e2'.admiral.cluster.v1.ClusterHealthStatusR\fhealthStatus\x12:\n" +
 	"\n" +
-	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x8d\x05\n" +
@@ -3116,10 +3109,8 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"{\n" +
 	"\x15ListWorkloadsResponse\x12:\n" +
 	"\tworkloads\x18\x01 \x03(\v2\x1c.admiral.cluster.v1.WorkloadR\tworkloads\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xc5\x01\n" +
-	"\x1bReportWorkloadStatusRequest\x12'\n" +
-	"\n" +
-	"cluster_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\x12@\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x9c\x01\n" +
+	"\x1bReportWorkloadStatusRequest\x12@\n" +
 	"\tworkloads\x18\x02 \x03(\v2\".admiral.cluster.v1.WorkloadStatusR\tworkloads\x12;\n" +
 	"\vreported_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"reportedAt\"0\n" +
@@ -3189,7 +3180,7 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"\"WORKLOAD_HEALTH_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eWORKLOAD_HEALTH_STATUS_HEALTHY\x10\x01\x12#\n" +
 	"\x1fWORKLOAD_HEALTH_STATUS_DEGRADED\x10\x02\x12 \n" +
-	"\x1cWORKLOAD_HEALTH_STATUS_ERROR\x10\x032\xa9\x19\n" +
+	"\x1cWORKLOAD_HEALTH_STATUS_ERROR\x10\x032\x99\x19\n" +
 	"\n" +
 	"ClusterAPI\x12\xb3\x01\n" +
 	"\rCreateCluster\x12(.admiral.cluster.v1.CreateClusterRequest\x1a).admiral.cluster.v1.CreateClusterResponse\"M\xbaG\x1c\n" +
@@ -3228,10 +3219,10 @@ const file_admiral_cluster_v1_cluster_proto_rawDesc = "" +
 	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/agent/status\x12\xcd\x01\n" +
 	"\rListWorkloads\x12(.admiral.cluster.v1.ListWorkloadsRequest\x1a).admiral.cluster.v1.ListWorkloadsResponse\"g\xbaG#\n" +
 	"\x11Cluster Workloads\x12\x0eList workloads\xa2\x97$\x0e\n" +
-	"\fcluster:read\x82\xd3\xe4\x93\x02)\x12'/api/v1/clusters/{cluster_id}/workloads\x12\xf7\x01\n" +
-	"\x14ReportWorkloadStatus\x12/.admiral.cluster.v1.ReportWorkloadStatusRequest\x1a0.admiral.cluster.v1.ReportWorkloadStatusResponse\"|\xbaG'\n" +
+	"\fcluster:read\x82\xd3\xe4\x93\x02)\x12'/api/v1/clusters/{cluster_id}/workloads\x12\xe7\x01\n" +
+	"\x14ReportWorkloadStatus\x12/.admiral.cluster.v1.ReportWorkloadStatusRequest\x1a0.admiral.cluster.v1.ReportWorkloadStatusResponse\"l\xbaG'\n" +
 	"\rCluster Agent\x12\x16Report workload status\xa2\x97$\x15\n" +
-	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x023:\x01*\"./api/v1/clusters/{cluster_id}/workloads/status\x12\xed\x01\n" +
+	"\x0ecluster:status\x12\x03sat\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/agent/workloads/status\x12\xed\x01\n" +
 	"\x11GetRevisionBundle\x12,.admiral.cluster.v1.GetRevisionBundleRequest\x1a-.admiral.cluster.v1.GetRevisionBundleResponse\"{\xbaG+\n" +
 	"\rCluster Agent\x12\x1aRetrieve a revision bundle\xa2\x97$\x15\n" +
 	"\x0ecluster:deploy\x12\x03sat\x82\xd3\xe4\x93\x02.\x12,/api/v1/agent/revisions/{revision_id}/bundle\x12\xf5\x01\n" +

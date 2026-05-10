@@ -30,6 +30,9 @@ const (
 // AuthenticationAPI handles the OAuth2/OIDC authentication flow for browser
 // sessions. Non-browser consumers (CLI, agents) authenticate with pre-created
 // access tokens in the Authorization header and do not use these endpoints.
+//
+// All RPCs in this service are public (no authentication required). Login
+// initiates the flow; Callback completes it and establishes a session cookie.
 type AuthenticationAPIClient interface {
 	// Login initiates the OAuth2 authorization code flow. Generates a signed
 	// state nonce and returns the IdP authorization URL for the client to
@@ -76,6 +79,9 @@ func (c *authenticationAPIClient) Callback(ctx context.Context, in *CallbackRequ
 // AuthenticationAPI handles the OAuth2/OIDC authentication flow for browser
 // sessions. Non-browser consumers (CLI, agents) authenticate with pre-created
 // access tokens in the Authorization header and do not use these endpoints.
+//
+// All RPCs in this service are public (no authentication required). Login
+// initiates the flow; Callback completes it and establishes a session cookie.
 type AuthenticationAPIServer interface {
 	// Login initiates the OAuth2 authorization code flow. Generates a signed
 	// state nonce and returns the IdP authorization URL for the client to

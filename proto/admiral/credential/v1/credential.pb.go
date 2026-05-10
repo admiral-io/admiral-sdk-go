@@ -365,8 +365,8 @@ func (*AuthConfig_BearerToken) isAuthConfig_Variant() {}
 // external system. Credentials are tenant-scoped and referenced by sources
 // when fetching artifacts.
 //
-// Sensitive fields within auth_config are write-only -- they are accepted on
-// create and update but never returned in API responses.
+// Sensitive fields within auth_config are write-only: accepted on create and
+// update but never returned in API responses.
 type Credential struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the credential (UUID).
@@ -385,13 +385,13 @@ type Credential struct {
 	AuthConfig *AuthConfig `protobuf:"bytes,5,opt,name=auth_config,json=authConfig,proto3" json:"auth_config,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering credentials
 	// (e.g., `{"team": "platform", "environment": "prod"}`).
-	Labels map[string]string `protobuf:"bytes,17,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Labels map[string]string `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// The user or agent who created this credential (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,18,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedBy *v1.ActorRef `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the credential was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the credential was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,21,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -502,7 +502,7 @@ type CreateCredentialRequest struct {
 	// Auth material corresponding to `type`.
 	AuthConfig *AuthConfig `protobuf:"bytes,4,opt,name=auth_config,json=authConfig,proto3" json:"auth_config,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering credentials.
-	Labels        map[string]string `protobuf:"bytes,16,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Labels        map[string]string `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -716,9 +716,9 @@ type ListCredentialsRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `name` -- filter by credential name.
-	//   - `type` -- filter by credential type (SSH_KEY, BASIC_AUTH, BEARER_TOKEN).
-	//   - `labels.key` -- filter by label key.
+	//   - `name`: filter by credential name.
+	//   - `type`: filter by credential type (SSH_KEY, BASIC_AUTH, BEARER_TOKEN).
+	//   - `labels.key`: filter by label key.
 	//
 	// Example: `field['type'] = 'BEARER_TOKEN'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -1058,13 +1058,13 @@ const file_admiral_credential_v1_credential_proto_rawDesc = "" +
 	"\x04type\x18\x04 \x01(\x0e2%.admiral.credential.v1.CredentialTypeR\x04type\x12B\n" +
 	"\vauth_config\x18\x05 \x01(\v2!.admiral.credential.v1.AuthConfigR\n" +
 	"authConfig\x12^\n" +
-	"\x06labels\x18\x11 \x03(\v2-.admiral.credential.v1.Credential.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
+	"\x06labels\x18\x06 \x03(\v2-.admiral.credential.v1.Credential.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
 	"\n" +
-	"created_by\x18\x12 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xba\x03\n" +
@@ -1075,7 +1075,7 @@ const file_admiral_credential_v1_credential_proto_rawDesc = "" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12B\n" +
 	"\vauth_config\x18\x04 \x01(\v2!.admiral.credential.v1.AuthConfigR\n" +
 	"authConfig\x12k\n" +
-	"\x06labels\x18\x10 \x03(\v2:.admiral.credential.v1.CreateCredentialRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
+	"\x06labels\x18\x05 \x03(\v2:.admiral.credential.v1.CreateCredentialRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"]\n" +

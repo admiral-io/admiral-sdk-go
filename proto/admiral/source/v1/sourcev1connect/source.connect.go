@@ -54,7 +54,7 @@ const (
 type SourceAPIClient interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
-	// The source type and source_config must match -- for example, a
+	// The source type and source_config must match. For example, a
 	// TERRAFORM source requires a TerraformConfig.
 	//
 	// Scope: `source:write`
@@ -74,7 +74,7 @@ type SourceAPIClient interface {
 	// Scope: `source:write`
 	UpdateSource(context.Context, *connect.Request[v1.UpdateSourceRequest]) (*connect.Response[v1.UpdateSourceResponse], error)
 	// DeleteSource permanently deletes a source definition. Fails if any
-	// application components still reference this source -- remove or reassign
+	// application components still reference this source. Remove or reassign
 	// those components first. This action cannot be undone.
 	//
 	// Scope: `source:write`
@@ -83,7 +83,7 @@ type SourceAPIClient interface {
 	// performing an authenticated probe against the external system. Writes the
 	// outcome (success or failure) and timestamp to the source record.
 	//
-	// A credential in isolation cannot be meaningfully tested -- a GitHub PAT is
+	// A credential in isolation cannot be meaningfully tested. A GitHub PAT is
 	// just a string until a target URL is known. TestSource is where the
 	// "attach credential, verify it works" flow lives.
 	//
@@ -213,7 +213,7 @@ func (c *sourceAPIClient) ListSourceVersions(ctx context.Context, req *connect.R
 type SourceAPIHandler interface {
 	// CreateSource creates a new source definition within the caller's tenant.
 	//
-	// The source type and source_config must match -- for example, a
+	// The source type and source_config must match. For example, a
 	// TERRAFORM source requires a TerraformConfig.
 	//
 	// Scope: `source:write`
@@ -233,7 +233,7 @@ type SourceAPIHandler interface {
 	// Scope: `source:write`
 	UpdateSource(context.Context, *connect.Request[v1.UpdateSourceRequest]) (*connect.Response[v1.UpdateSourceResponse], error)
 	// DeleteSource permanently deletes a source definition. Fails if any
-	// application components still reference this source -- remove or reassign
+	// application components still reference this source. Remove or reassign
 	// those components first. This action cannot be undone.
 	//
 	// Scope: `source:write`
@@ -242,7 +242,7 @@ type SourceAPIHandler interface {
 	// performing an authenticated probe against the external system. Writes the
 	// outcome (success or failure) and timestamp to the source record.
 	//
-	// A credential in isolation cannot be meaningfully tested -- a GitHub PAT is
+	// A credential in isolation cannot be meaningfully tested. A GitHub PAT is
 	// just a string until a target URL is known. TestSource is where the
 	// "attach credential, verify it works" flow lives.
 	//
