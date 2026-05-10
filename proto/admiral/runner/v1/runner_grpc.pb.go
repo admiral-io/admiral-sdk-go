@@ -43,16 +43,16 @@ const (
 // RunnerAPI manages infrastructure execution runners and their jobs.
 //
 // Runners are the execution plane for infrastructure operations (plan, apply,
-// destroy) executed by a terraform-semantic engine. The concrete engine --
-// Terraform or OpenTofu -- is selected per job via JobBundle.engine, so a
+// destroy) executed by a terraform-semantic engine. The concrete engine
+// (Terraform or OpenTofu) is selected per job via JobBundle.engine, so a
 // single runner can serve both. Administrators create runners via
 // CreateRunner, which returns a Service Access Token (SAT) for deploying the
 // runner binary. Once the runner boots and begins heartbeating, the server
 // transitions its health from PENDING to HEALTHY and the runner can start
 // claiming jobs.
 //
-// The job lifecycle bridges Deployments and Runners:
-//  1. CreateDeployment resolves components and creates Revisions.
+// The job lifecycle bridges Runs and Runners:
+//  1. CreateRun resolves components and creates Revisions.
 //  2. For infrastructure revisions, the server creates a Job and assigns it
 //     to the environment's configured runner.
 //  3. The runner calls ClaimJob → GetJobBundle → executes the engine →
@@ -60,7 +60,7 @@ const (
 //  4. ReportJobResult transitions the parent Revision status.
 //
 // Admin routes follow /v1/runners/... (plural, with IDs).
-// Runner-facing routes use /v1/runner/... (singular, no ID -- derived from
+// Runner-facing routes use /v1/runner/... (singular, no ID; derived from
 // the SAT binding), matching the cluster agent pattern.
 //
 // All operations delegate to the platform RunnerAPI. The facade resolves the
@@ -70,7 +70,7 @@ type RunnerAPIClient interface {
 	// generates an initial Service Access Token (SAT). The runner starts in PENDING
 	// health status until it begins heartbeating.
 	//
-	// The response includes a `plain_text_token` -- the raw SAT secret shown
+	// The response includes a `plain_text_token`: the raw SAT secret shown
 	// exactly once. Deploy this token to the runner binary for authentication.
 	//
 	// Scope: `runner:write`
@@ -122,7 +122,7 @@ type RunnerAPIClient interface {
 	// Scope: `runner:read`
 	ListRunnerTokens(ctx context.Context, in *ListRunnerTokensRequest, opts ...grpc.CallOption) (*ListRunnerTokensResponse, error)
 	// GetRunnerToken retrieves a single SAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `runner:read`
 	GetRunnerToken(ctx context.Context, in *GetRunnerTokenRequest, opts ...grpc.CallOption) (*GetRunnerTokenResponse, error)
@@ -135,8 +135,9 @@ type RunnerAPIClient interface {
 	// Heartbeat reports that the runner is alive and includes current capacity
 	// metrics. The server uses heartbeat recency to derive health status.
 	//
-	// The runner is identified by the service access token -- the server resolves the
-	// runner from the SAT's binding. No runner_id is required in the request.
+	// The runner is identified by the service access token. The server
+	// resolves the runner from the SAT's binding. No runner_id is required
+	// in the request.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
@@ -146,14 +147,14 @@ type RunnerAPIClient interface {
 	// metadata if work is available, or an empty response if no jobs are
 	// pending. The runner should call this on a polling interval.
 	//
-	// The runner is identified by the service access token -- no runner_id is required.
+	// The runner is identified by the service access token; no runner_id is required.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
 	// Scope: `runner:exec` | Token types: `sat`
 	ClaimJob(ctx context.Context, in *ClaimJobRequest, opts ...grpc.CallOption) (*ClaimJobResponse, error)
 	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated
-	// from ClaimJob to keep the claim response lightweight -- the runner first
+	// from ClaimJob to keep the claim response lightweight. The runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
 	// The bundle contains everything the runner needs to execute the infrastructure
@@ -345,16 +346,16 @@ func (c *runnerAPIClient) ListRunnerJobs(ctx context.Context, in *ListRunnerJobs
 // RunnerAPI manages infrastructure execution runners and their jobs.
 //
 // Runners are the execution plane for infrastructure operations (plan, apply,
-// destroy) executed by a terraform-semantic engine. The concrete engine --
-// Terraform or OpenTofu -- is selected per job via JobBundle.engine, so a
+// destroy) executed by a terraform-semantic engine. The concrete engine
+// (Terraform or OpenTofu) is selected per job via JobBundle.engine, so a
 // single runner can serve both. Administrators create runners via
 // CreateRunner, which returns a Service Access Token (SAT) for deploying the
 // runner binary. Once the runner boots and begins heartbeating, the server
 // transitions its health from PENDING to HEALTHY and the runner can start
 // claiming jobs.
 //
-// The job lifecycle bridges Deployments and Runners:
-//  1. CreateDeployment resolves components and creates Revisions.
+// The job lifecycle bridges Runs and Runners:
+//  1. CreateRun resolves components and creates Revisions.
 //  2. For infrastructure revisions, the server creates a Job and assigns it
 //     to the environment's configured runner.
 //  3. The runner calls ClaimJob → GetJobBundle → executes the engine →
@@ -362,7 +363,7 @@ func (c *runnerAPIClient) ListRunnerJobs(ctx context.Context, in *ListRunnerJobs
 //  4. ReportJobResult transitions the parent Revision status.
 //
 // Admin routes follow /v1/runners/... (plural, with IDs).
-// Runner-facing routes use /v1/runner/... (singular, no ID -- derived from
+// Runner-facing routes use /v1/runner/... (singular, no ID; derived from
 // the SAT binding), matching the cluster agent pattern.
 //
 // All operations delegate to the platform RunnerAPI. The facade resolves the
@@ -372,7 +373,7 @@ type RunnerAPIServer interface {
 	// generates an initial Service Access Token (SAT). The runner starts in PENDING
 	// health status until it begins heartbeating.
 	//
-	// The response includes a `plain_text_token` -- the raw SAT secret shown
+	// The response includes a `plain_text_token`: the raw SAT secret shown
 	// exactly once. Deploy this token to the runner binary for authentication.
 	//
 	// Scope: `runner:write`
@@ -424,7 +425,7 @@ type RunnerAPIServer interface {
 	// Scope: `runner:read`
 	ListRunnerTokens(context.Context, *ListRunnerTokensRequest) (*ListRunnerTokensResponse, error)
 	// GetRunnerToken retrieves a single SAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `runner:read`
 	GetRunnerToken(context.Context, *GetRunnerTokenRequest) (*GetRunnerTokenResponse, error)
@@ -437,8 +438,9 @@ type RunnerAPIServer interface {
 	// Heartbeat reports that the runner is alive and includes current capacity
 	// metrics. The server uses heartbeat recency to derive health status.
 	//
-	// The runner is identified by the service access token -- the server resolves the
-	// runner from the SAT's binding. No runner_id is required in the request.
+	// The runner is identified by the service access token. The server
+	// resolves the runner from the SAT's binding. No runner_id is required
+	// in the request.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
@@ -448,14 +450,14 @@ type RunnerAPIServer interface {
 	// metadata if work is available, or an empty response if no jobs are
 	// pending. The runner should call this on a polling interval.
 	//
-	// The runner is identified by the service access token -- no runner_id is required.
+	// The runner is identified by the service access token; no runner_id is required.
 	//
 	// This endpoint is runner-facing and restricted to service access tokens.
 	//
 	// Scope: `runner:exec` | Token types: `sat`
 	ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error)
 	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated
-	// from ClaimJob to keep the claim response lightweight -- the runner first
+	// from ClaimJob to keep the claim response lightweight. The runner first
 	// claims a job, then fetches the (potentially large) artifact bundle.
 	//
 	// The bundle contains everything the runner needs to execute the infrastructure

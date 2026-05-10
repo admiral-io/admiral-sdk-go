@@ -12,17 +12,15 @@ import (
 	authenticationv1 "go.admiral.io/sdk/proto/admiral/authentication/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/changeset/v1"
 	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
-	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/credential/v1"
-	deploymentv1 "go.admiral.io/sdk/proto/admiral/deployment/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/healthcheck/v1"
 	modulev1 "go.admiral.io/sdk/proto/admiral/module/v1"
+	runv1 "go.admiral.io/sdk/proto/admiral/run/v1"
 	runnerv1 "go.admiral.io/sdk/proto/admiral/runner/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/source/v1"
 	statev1 "go.admiral.io/sdk/proto/admiral/state/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/user/v1"
-	variablev1 "go.admiral.io/sdk/proto/admiral/variable/v1"
 )
 
 // Compile-time check that Client implements AdmiralClient
@@ -38,17 +36,15 @@ type Client struct {
 	authentication authenticationv1.AuthenticationAPIClient
 	changeSet changesetv1.ChangeSetAPIClient
 	cluster clusterv1.ClusterAPIClient
-	component componentv1.ComponentAPIClient
 	credential credentialv1.CredentialAPIClient
-	deployment deploymentv1.DeploymentAPIClient
 	environment environmentv1.EnvironmentAPIClient
 	healthcheck healthcheckv1.HealthcheckAPIClient
 	module modulev1.ModuleAPIClient
+	run runv1.RunAPIClient
 	runner runnerv1.RunnerAPIClient
 	source sourcev1.SourceAPIClient
 	state statev1.StateAPIClient
 	user userv1.UserAPIClient
-	variable variablev1.VariableAPIClient
 }
 
 // New creates a new Admiral client with the given configuration.
@@ -93,17 +89,15 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
 		changeSet: changesetv1.NewChangeSetAPIClient(conn),
 		cluster: clusterv1.NewClusterAPIClient(conn),
-		component: componentv1.NewComponentAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
-		deployment: deploymentv1.NewDeploymentAPIClient(conn),
 		environment: environmentv1.NewEnvironmentAPIClient(conn),
 		healthcheck: healthcheckv1.NewHealthcheckAPIClient(conn),
 		module: modulev1.NewModuleAPIClient(conn),
+		run: runv1.NewRunAPIClient(conn),
 		runner: runnerv1.NewRunnerAPIClient(conn),
 		source: sourcev1.NewSourceAPIClient(conn),
 		state: statev1.NewStateAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
-		variable: variablev1.NewVariableAPIClient(conn),
 	}, nil
 }
 
@@ -127,19 +121,9 @@ func (c *Client) Cluster() clusterv1.ClusterAPIClient {
 	return c.cluster
 }
 
-// Component returns the ComponentAPI client.
-func (c *Client) Component() componentv1.ComponentAPIClient {
-	return c.component
-}
-
 // Credential returns the CredentialAPI client.
 func (c *Client) Credential() credentialv1.CredentialAPIClient {
 	return c.credential
-}
-
-// Deployment returns the DeploymentAPI client.
-func (c *Client) Deployment() deploymentv1.DeploymentAPIClient {
-	return c.deployment
 }
 
 // Environment returns the EnvironmentAPI client.
@@ -155,6 +139,11 @@ func (c *Client) Healthcheck() healthcheckv1.HealthcheckAPIClient {
 // Module returns the ModuleAPI client.
 func (c *Client) Module() modulev1.ModuleAPIClient {
 	return c.module
+}
+
+// Run returns the RunAPI client.
+func (c *Client) Run() runv1.RunAPIClient {
+	return c.run
 }
 
 // Runner returns the RunnerAPI client.
@@ -175,11 +164,6 @@ func (c *Client) State() statev1.StateAPIClient {
 // User returns the UserAPI client.
 func (c *Client) User() userv1.UserAPIClient {
 	return c.user
-}
-
-// Variable returns the VariableAPI client.
-func (c *Client) Variable() variablev1.VariableAPIClient {
-	return c.variable
 }
 
 // ValidateToken validates the client's auth token format.

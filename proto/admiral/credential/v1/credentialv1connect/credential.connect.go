@@ -54,7 +54,7 @@ const (
 type CredentialAPIClient interface {
 	// CreateCredential creates a new credential within the caller's tenant.
 	//
-	// The credential type and auth config must match -- for example, a GIT_TOKEN
+	// The credential type and auth config must match. For example, a GIT_TOKEN
 	// credential requires a matching auth_config (e.g. BEARER_TOKEN → bearer_token).
 	//
 	// Scope: `credential:write`
@@ -74,14 +74,14 @@ type CredentialAPIClient interface {
 	// UpdateCredential updates a credential's mutable fields.
 	// Use the `update_mask` to specify which fields to update.
 	//
-	// When updating auth_config, the entire auth config is replaced -- partial
+	// When updating auth_config, the entire auth config is replaced. Partial
 	// updates within the auth config oneof are not supported. Omitting auth_config
 	// from the update_mask leaves credentials unchanged.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error)
 	// DeleteCredential permanently deletes a credential. Fails if any sources
-	// still reference this credential -- remove or reassign those sources first.
+	// still reference this credential. Remove or reassign those sources first.
 	// This action cannot be undone.
 	//
 	// Scope: `credential:write`
@@ -170,7 +170,7 @@ func (c *credentialAPIClient) DeleteCredential(ctx context.Context, req *connect
 type CredentialAPIHandler interface {
 	// CreateCredential creates a new credential within the caller's tenant.
 	//
-	// The credential type and auth config must match -- for example, a GIT_TOKEN
+	// The credential type and auth config must match. For example, a GIT_TOKEN
 	// credential requires a matching auth_config (e.g. BEARER_TOKEN → bearer_token).
 	//
 	// Scope: `credential:write`
@@ -190,14 +190,14 @@ type CredentialAPIHandler interface {
 	// UpdateCredential updates a credential's mutable fields.
 	// Use the `update_mask` to specify which fields to update.
 	//
-	// When updating auth_config, the entire auth config is replaced -- partial
+	// When updating auth_config, the entire auth config is replaced. Partial
 	// updates within the auth config oneof are not supported. Omitting auth_config
 	// from the update_mask leaves credentials unchanged.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error)
 	// DeleteCredential permanently deletes a credential. Fails if any sources
-	// still reference this credential -- remove or reassign those sources first.
+	// still reference this credential. Remove or reassign those sources first.
 	// This action cannot be undone.
 	//
 	// Scope: `credential:write`

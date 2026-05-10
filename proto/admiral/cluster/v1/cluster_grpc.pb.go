@@ -42,10 +42,10 @@ const (
 //
 // ClusterAPI manages Kubernetes clusters and their workload telemetry.
 //
-// Administrators create clusters via CreateCluster, which returns an Agent
-// Token (SAT) for deploying the K8s agent. Once the agent boots and calls
-// AgentAPI.RegisterAgent, the cluster transitions from PENDING to HEALTHY
-// and begins receiving telemetry.
+// Administrators create clusters via CreateCluster, which returns a Service
+// Access Token (SAT) for deploying the K8s agent. Once the agent boots and
+// reports its first telemetry payload via ReportClusterStatus, the cluster
+// transitions from PENDING to HEALTHY.
 //
 // The telemetry model has three tiers: current snapshot (upserted per push),
 // time-series metrics (rolling 48-hour window), and events (rolling 7-day window).
@@ -57,10 +57,10 @@ type ClusterAPIClient interface {
 	// generates an initial Service Access Token (SAT) for the K8s agent. The cluster
 	// starts in PENDING status until an agent registers against it.
 	//
-	// The response includes a `plain_text_token` -- the raw SAT secret shown
+	// The response includes a `plain_text_token`: the raw SAT secret shown
 	// exactly once. Deploy this token to the K8s agent (e.g., via Helm values
-	// or a Kubernetes Secret). The agent uses it to authenticate with
-	// AgentAPI.RegisterAgent on first boot.
+	// or a Kubernetes Secret). The agent uses it as a bearer token on its
+	// first telemetry push, which transitions the cluster to HEALTHY.
 	//
 	// Scope: `cluster:write`
 	CreateCluster(ctx context.Context, in *CreateClusterRequest, opts ...grpc.CallOption) (*CreateClusterResponse, error)
@@ -112,7 +112,7 @@ type ClusterAPIClient interface {
 	// Scope: `cluster:read`
 	ListClusterTokens(ctx context.Context, in *ListClusterTokensRequest, opts ...grpc.CallOption) (*ListClusterTokensResponse, error)
 	// GetClusterToken retrieves a single SAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `cluster:read`
 	GetClusterToken(ctx context.Context, in *GetClusterTokenRequest, opts ...grpc.CallOption) (*GetClusterTokenResponse, error)
@@ -126,8 +126,9 @@ type ClusterAPIClient interface {
 	// The payload includes cluster-level metrics, per-workload status, and
 	// Kubernetes events. Admiral splits this into three storage tiers on receipt.
 	//
-	// The cluster is identified by the service access token -- the server resolves the
-	// cluster from the SAT's binding. No cluster_id is required in the request.
+	// The cluster is identified by the service access token. The server
+	// resolves the cluster from the SAT's binding. No cluster_id is required
+	// in the request.
 	//
 	// This endpoint is agent-facing and restricted to service access tokens.
 	//
@@ -140,6 +141,9 @@ type ClusterAPIClient interface {
 	// ReportWorkloadStatus receives workload-only telemetry from a K8s agent.
 	// Used for incremental workload updates between full cluster status pushes.
 	//
+	// The cluster is identified by the service access token. The server resolves
+	// the cluster from the SAT's binding. No cluster_id is required in the request.
+	//
 	// This endpoint is agent-facing and restricted to service access tokens.
 	//
 	// Scope: `cluster:status` | Token types: `sat`
@@ -150,7 +154,7 @@ type ClusterAPIClient interface {
 	//
 	// The bundle contains pre-rendered Kubernetes manifests (from Helm template,
 	// kustomize build, or raw manifests) ready for server-side apply. The agent
-	// does not need to render anything -- it applies the bundle as-is.
+	// does not need to render anything; it applies the bundle as-is.
 	//
 	// The cluster is identified by the service access token's binding. Returns
 	// PERMISSION_DENIED if the revision's target cluster does not match the
@@ -335,10 +339,10 @@ func (c *clusterAPIClient) ReportRevisionResult(ctx context.Context, in *ReportR
 //
 // ClusterAPI manages Kubernetes clusters and their workload telemetry.
 //
-// Administrators create clusters via CreateCluster, which returns an Agent
-// Token (SAT) for deploying the K8s agent. Once the agent boots and calls
-// AgentAPI.RegisterAgent, the cluster transitions from PENDING to HEALTHY
-// and begins receiving telemetry.
+// Administrators create clusters via CreateCluster, which returns a Service
+// Access Token (SAT) for deploying the K8s agent. Once the agent boots and
+// reports its first telemetry payload via ReportClusterStatus, the cluster
+// transitions from PENDING to HEALTHY.
 //
 // The telemetry model has three tiers: current snapshot (upserted per push),
 // time-series metrics (rolling 48-hour window), and events (rolling 7-day window).
@@ -350,10 +354,10 @@ type ClusterAPIServer interface {
 	// generates an initial Service Access Token (SAT) for the K8s agent. The cluster
 	// starts in PENDING status until an agent registers against it.
 	//
-	// The response includes a `plain_text_token` -- the raw SAT secret shown
+	// The response includes a `plain_text_token`: the raw SAT secret shown
 	// exactly once. Deploy this token to the K8s agent (e.g., via Helm values
-	// or a Kubernetes Secret). The agent uses it to authenticate with
-	// AgentAPI.RegisterAgent on first boot.
+	// or a Kubernetes Secret). The agent uses it as a bearer token on its
+	// first telemetry push, which transitions the cluster to HEALTHY.
 	//
 	// Scope: `cluster:write`
 	CreateCluster(context.Context, *CreateClusterRequest) (*CreateClusterResponse, error)
@@ -405,7 +409,7 @@ type ClusterAPIServer interface {
 	// Scope: `cluster:read`
 	ListClusterTokens(context.Context, *ListClusterTokensRequest) (*ListClusterTokensResponse, error)
 	// GetClusterToken retrieves a single SAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `cluster:read`
 	GetClusterToken(context.Context, *GetClusterTokenRequest) (*GetClusterTokenResponse, error)
@@ -419,8 +423,9 @@ type ClusterAPIServer interface {
 	// The payload includes cluster-level metrics, per-workload status, and
 	// Kubernetes events. Admiral splits this into three storage tiers on receipt.
 	//
-	// The cluster is identified by the service access token -- the server resolves the
-	// cluster from the SAT's binding. No cluster_id is required in the request.
+	// The cluster is identified by the service access token. The server
+	// resolves the cluster from the SAT's binding. No cluster_id is required
+	// in the request.
 	//
 	// This endpoint is agent-facing and restricted to service access tokens.
 	//
@@ -433,6 +438,9 @@ type ClusterAPIServer interface {
 	// ReportWorkloadStatus receives workload-only telemetry from a K8s agent.
 	// Used for incremental workload updates between full cluster status pushes.
 	//
+	// The cluster is identified by the service access token. The server resolves
+	// the cluster from the SAT's binding. No cluster_id is required in the request.
+	//
 	// This endpoint is agent-facing and restricted to service access tokens.
 	//
 	// Scope: `cluster:status` | Token types: `sat`
@@ -443,7 +451,7 @@ type ClusterAPIServer interface {
 	//
 	// The bundle contains pre-rendered Kubernetes manifests (from Helm template,
 	// kustomize build, or raw manifests) ready for server-side apply. The agent
-	// does not need to render anything -- it applies the bundle as-is.
+	// does not need to render anything; it applies the bundle as-is.
 	//
 	// The cluster is identified by the service access token's binding. Returns
 	// PERMISSION_DENIED if the revision's target cluster does not match the

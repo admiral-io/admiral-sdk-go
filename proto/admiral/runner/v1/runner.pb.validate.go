@@ -67,6 +67,35 @@ func (m *Runner) validate(all bool) error {
 	// no validation rules for HealthStatus
 
 	if all {
+		switch v := interface{}(m.GetCreatedBy()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RunnerValidationError{
+					field:  "CreatedBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RunnerValidationError{
+					field:  "CreatedBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedBy()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RunnerValidationError{
+				field:  "CreatedBy",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -118,35 +147,6 @@ func (m *Runner) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return RunnerValidationError{
 				field:  "UpdatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetCreatedBy()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, RunnerValidationError{
-					field:  "CreatedBy",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, RunnerValidationError{
-					field:  "CreatedBy",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCreatedBy()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return RunnerValidationError{
-				field:  "CreatedBy",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -529,40 +529,11 @@ func (m *Job) validate(all bool) error {
 
 	// no validation rules for RevisionId
 
-	// no validation rules for DeploymentId
+	// no validation rules for RunId
 
 	// no validation rules for JobType
 
 	// no validation rules for Status
-
-	if all {
-		switch v := interface{}(m.GetCreatedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, JobValidationError{
-					field:  "CreatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, JobValidationError{
-					field:  "CreatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return JobValidationError{
-				field:  "CreatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	if all {
 		switch v := interface{}(m.GetStartedAt()).(type) {
@@ -616,6 +587,35 @@ func (m *Job) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return JobValidationError{
 				field:  "CompletedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, JobValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, JobValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return JobValidationError{
+				field:  "CreatedAt",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

@@ -41,6 +41,8 @@ const (
 type UserAPIClient interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
+	//
+	// Scope: any authenticated token (no specific scope required).
 	GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*GetMeResponse, error)
 	// GetUser retrieves a user's profile by ID.
 	//
@@ -58,7 +60,7 @@ type UserAPIClient interface {
 	// Scope: `token:read`
 	ListPersonalAccessTokens(ctx context.Context, in *ListPersonalAccessTokensRequest, opts ...grpc.CallOption) (*ListPersonalAccessTokensResponse, error)
 	// GetPersonalAccessToken retrieves a single PAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `token:read`
 	GetPersonalAccessToken(ctx context.Context, in *GetPersonalAccessTokenRequest, opts ...grpc.CallOption) (*GetPersonalAccessTokenResponse, error)
@@ -166,6 +168,8 @@ func (c *userAPIClient) RevokePersonalAccessToken(ctx context.Context, in *Revok
 type UserAPIServer interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
+	//
+	// Scope: any authenticated token (no specific scope required).
 	GetMe(context.Context, *GetMeRequest) (*GetMeResponse, error)
 	// GetUser retrieves a user's profile by ID.
 	//
@@ -183,7 +187,7 @@ type UserAPIServer interface {
 	// Scope: `token:read`
 	ListPersonalAccessTokens(context.Context, *ListPersonalAccessTokensRequest) (*ListPersonalAccessTokensResponse, error)
 	// GetPersonalAccessToken retrieves a single PAT by ID.
-	// Returns metadata only -- the token secret is never included.
+	// Returns metadata only. The token secret is never included.
 	//
 	// Scope: `token:read`
 	GetPersonalAccessToken(context.Context, *GetPersonalAccessTokenRequest) (*GetPersonalAccessTokenResponse, error)

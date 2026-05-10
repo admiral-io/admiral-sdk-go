@@ -77,8 +77,8 @@ type ModuleAPIClient interface {
 	// Scope: `module:write`
 	DeleteModule(context.Context, *connect.Request[v1.DeleteModuleRequest]) (*connect.Response[v1.DeleteModuleResponse], error)
 	// ResolveModule fetches the module via its Source and returns the resolved
-	// revision and content digest. Does NOT stream content -- content delivery
-	// to Runners is a separate concern (Phase 6).
+	// revision and content digest. Does NOT stream content; content delivery
+	// to runners is handled separately.
 	//
 	// This operation fetches from the external system in real time and may take
 	// several seconds depending on the source type and size.
@@ -207,8 +207,8 @@ type ModuleAPIHandler interface {
 	// Scope: `module:write`
 	DeleteModule(context.Context, *connect.Request[v1.DeleteModuleRequest]) (*connect.Response[v1.DeleteModuleResponse], error)
 	// ResolveModule fetches the module via its Source and returns the resolved
-	// revision and content digest. Does NOT stream content -- content delivery
-	// to Runners is a separate concern (Phase 6).
+	// revision and content digest. Does NOT stream content; content delivery
+	// to runners is handled separately.
 	//
 	// This operation fetches from the external system in real time and may take
 	// several seconds depending on the source type and size.

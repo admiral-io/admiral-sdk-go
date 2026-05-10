@@ -17,6 +17,12 @@ import (
 	"unicode/utf8"
 
 	"google.golang.org/protobuf/types/known/anypb"
+
+	componentv1 "go.admiral.io/sdk/proto/admiral/component/v1"
+
+	modulev1 "go.admiral.io/sdk/proto/admiral/module/v1"
+
+	runv1 "go.admiral.io/sdk/proto/admiral/run/v1"
 )
 
 // ensure the imports are used
@@ -33,6 +39,12 @@ var (
 	_ = (*mail.Address)(nil)
 	_ = anypb.Any{}
 	_ = sort.Sort
+
+	_ = componentv1.ComponentDesiredState(0)
+
+	_ = modulev1.ModuleType(0)
+
+	_ = runv1.RevisionStatus(0)
 )
 
 // Validate checks the field values on KubernetesConfig with the rules defined
@@ -2120,3 +2132,648 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteEnvironmentResponseValidationError{}
+
+// Validate checks the field values on ListEnvironmentVariablesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListEnvironmentVariablesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEnvironmentVariablesRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListEnvironmentVariablesRequestMultiError, or nil if none found.
+func (m *ListEnvironmentVariablesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEnvironmentVariablesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for EnvironmentId
+
+	// no validation rules for Filter
+
+	// no validation rules for PageSize
+
+	// no validation rules for PageToken
+
+	if len(errors) > 0 {
+		return ListEnvironmentVariablesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEnvironmentVariablesRequestMultiError is an error wrapping multiple
+// validation errors returned by ListEnvironmentVariablesRequest.ValidateAll()
+// if the designated constraints aren't met.
+type ListEnvironmentVariablesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEnvironmentVariablesRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEnvironmentVariablesRequestMultiError) AllErrors() []error { return m }
+
+// ListEnvironmentVariablesRequestValidationError is the validation error
+// returned by ListEnvironmentVariablesRequest.Validate if the designated
+// constraints aren't met.
+type ListEnvironmentVariablesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEnvironmentVariablesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEnvironmentVariablesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEnvironmentVariablesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEnvironmentVariablesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEnvironmentVariablesRequestValidationError) ErrorName() string {
+	return "ListEnvironmentVariablesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEnvironmentVariablesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEnvironmentVariablesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEnvironmentVariablesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEnvironmentVariablesRequestValidationError{}
+
+// Validate checks the field values on ListEnvironmentVariablesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *ListEnvironmentVariablesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEnvironmentVariablesResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListEnvironmentVariablesResponseMultiError, or nil if none found.
+func (m *ListEnvironmentVariablesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEnvironmentVariablesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetVariables() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListEnvironmentVariablesResponseValidationError{
+						field:  fmt.Sprintf("Variables[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListEnvironmentVariablesResponseValidationError{
+						field:  fmt.Sprintf("Variables[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListEnvironmentVariablesResponseValidationError{
+					field:  fmt.Sprintf("Variables[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for NextPageToken
+
+	if len(errors) > 0 {
+		return ListEnvironmentVariablesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEnvironmentVariablesResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// ListEnvironmentVariablesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListEnvironmentVariablesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEnvironmentVariablesResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEnvironmentVariablesResponseMultiError) AllErrors() []error { return m }
+
+// ListEnvironmentVariablesResponseValidationError is the validation error
+// returned by ListEnvironmentVariablesResponse.Validate if the designated
+// constraints aren't met.
+type ListEnvironmentVariablesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEnvironmentVariablesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEnvironmentVariablesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEnvironmentVariablesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEnvironmentVariablesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEnvironmentVariablesResponseValidationError) ErrorName() string {
+	return "ListEnvironmentVariablesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEnvironmentVariablesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEnvironmentVariablesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEnvironmentVariablesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEnvironmentVariablesResponseValidationError{}
+
+// Validate checks the field values on EnvironmentComponent with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *EnvironmentComponent) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on EnvironmentComponent with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// EnvironmentComponentMultiError, or nil if none found.
+func (m *EnvironmentComponent) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EnvironmentComponent) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for DesiredState
+
+	// no validation rules for ModuleId
+
+	// no validation rules for ModuleName
+
+	// no validation rules for ModuleType
+
+	// no validation rules for Version
+
+	// no validation rules for LastRevisionId
+
+	// no validation rules for LastRevisionStatus
+
+	if all {
+		switch v := interface{}(m.GetLastDeployedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnvironmentComponentValidationError{
+					field:  "LastDeployedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnvironmentComponentValidationError{
+					field:  "LastDeployedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLastDeployedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnvironmentComponentValidationError{
+				field:  "LastDeployedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return EnvironmentComponentMultiError(errors)
+	}
+
+	return nil
+}
+
+// EnvironmentComponentMultiError is an error wrapping multiple validation
+// errors returned by EnvironmentComponent.ValidateAll() if the designated
+// constraints aren't met.
+type EnvironmentComponentMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EnvironmentComponentMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EnvironmentComponentMultiError) AllErrors() []error { return m }
+
+// EnvironmentComponentValidationError is the validation error returned by
+// EnvironmentComponent.Validate if the designated constraints aren't met.
+type EnvironmentComponentValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EnvironmentComponentValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EnvironmentComponentValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EnvironmentComponentValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EnvironmentComponentValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EnvironmentComponentValidationError) ErrorName() string {
+	return "EnvironmentComponentValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EnvironmentComponentValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEnvironmentComponent.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EnvironmentComponentValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EnvironmentComponentValidationError{}
+
+// Validate checks the field values on ListEnvironmentComponentsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *ListEnvironmentComponentsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEnvironmentComponentsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListEnvironmentComponentsRequestMultiError, or nil if none found.
+func (m *ListEnvironmentComponentsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEnvironmentComponentsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for EnvironmentId
+
+	if len(errors) > 0 {
+		return ListEnvironmentComponentsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEnvironmentComponentsRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// ListEnvironmentComponentsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListEnvironmentComponentsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEnvironmentComponentsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEnvironmentComponentsRequestMultiError) AllErrors() []error { return m }
+
+// ListEnvironmentComponentsRequestValidationError is the validation error
+// returned by ListEnvironmentComponentsRequest.Validate if the designated
+// constraints aren't met.
+type ListEnvironmentComponentsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEnvironmentComponentsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEnvironmentComponentsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEnvironmentComponentsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEnvironmentComponentsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEnvironmentComponentsRequestValidationError) ErrorName() string {
+	return "ListEnvironmentComponentsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEnvironmentComponentsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEnvironmentComponentsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEnvironmentComponentsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEnvironmentComponentsRequestValidationError{}
+
+// Validate checks the field values on ListEnvironmentComponentsResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *ListEnvironmentComponentsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListEnvironmentComponentsResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// ListEnvironmentComponentsResponseMultiError, or nil if none found.
+func (m *ListEnvironmentComponentsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListEnvironmentComponentsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetComponents() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListEnvironmentComponentsResponseValidationError{
+						field:  fmt.Sprintf("Components[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListEnvironmentComponentsResponseValidationError{
+						field:  fmt.Sprintf("Components[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListEnvironmentComponentsResponseValidationError{
+					field:  fmt.Sprintf("Components[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListEnvironmentComponentsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListEnvironmentComponentsResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// ListEnvironmentComponentsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListEnvironmentComponentsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListEnvironmentComponentsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListEnvironmentComponentsResponseMultiError) AllErrors() []error { return m }
+
+// ListEnvironmentComponentsResponseValidationError is the validation error
+// returned by ListEnvironmentComponentsResponse.Validate if the designated
+// constraints aren't met.
+type ListEnvironmentComponentsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListEnvironmentComponentsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListEnvironmentComponentsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListEnvironmentComponentsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListEnvironmentComponentsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListEnvironmentComponentsResponseValidationError) ErrorName() string {
+	return "ListEnvironmentComponentsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListEnvironmentComponentsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListEnvironmentComponentsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListEnvironmentComponentsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListEnvironmentComponentsResponseValidationError{}

@@ -19,11 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	EnvironmentAPI_CreateEnvironment_FullMethodName = "/admiral.environment.v1.EnvironmentAPI/CreateEnvironment"
-	EnvironmentAPI_GetEnvironment_FullMethodName    = "/admiral.environment.v1.EnvironmentAPI/GetEnvironment"
-	EnvironmentAPI_ListEnvironments_FullMethodName  = "/admiral.environment.v1.EnvironmentAPI/ListEnvironments"
-	EnvironmentAPI_UpdateEnvironment_FullMethodName = "/admiral.environment.v1.EnvironmentAPI/UpdateEnvironment"
-	EnvironmentAPI_DeleteEnvironment_FullMethodName = "/admiral.environment.v1.EnvironmentAPI/DeleteEnvironment"
+	EnvironmentAPI_CreateEnvironment_FullMethodName         = "/admiral.environment.v1.EnvironmentAPI/CreateEnvironment"
+	EnvironmentAPI_GetEnvironment_FullMethodName            = "/admiral.environment.v1.EnvironmentAPI/GetEnvironment"
+	EnvironmentAPI_ListEnvironments_FullMethodName          = "/admiral.environment.v1.EnvironmentAPI/ListEnvironments"
+	EnvironmentAPI_UpdateEnvironment_FullMethodName         = "/admiral.environment.v1.EnvironmentAPI/UpdateEnvironment"
+	EnvironmentAPI_DeleteEnvironment_FullMethodName         = "/admiral.environment.v1.EnvironmentAPI/DeleteEnvironment"
+	EnvironmentAPI_ListEnvironmentVariables_FullMethodName  = "/admiral.environment.v1.EnvironmentAPI/ListEnvironmentVariables"
+	EnvironmentAPI_ListEnvironmentComponents_FullMethodName = "/admiral.environment.v1.EnvironmentAPI/ListEnvironmentComponents"
 )
 
 // EnvironmentAPIClient is the client API for EnvironmentAPI service.
@@ -35,7 +37,7 @@ const (
 // An environment is a named deployment target (e.g., dev, staging, prod) that
 // binds an application to its workload and infrastructure runtimes. Each
 // environment carries its own configuration, credentials, and compute targets.
-// Promotion between environments is explicit -- Admiral never auto-promotes.
+// Promotion between environments is explicit; Admiral never auto-promotes.
 //
 // An environment carries two independent sets of runtime bindings:
 //   - **Workload targets**: where application workloads are deployed.
@@ -45,7 +47,7 @@ const (
 //
 // Additional target types may be added in future releases. Either or both
 // can be configured depending on the application's components. At most one
-// target per type is allowed per environment -- the server enforces
+// target per type is allowed per environment; the server enforces
 // uniqueness within each list.
 type EnvironmentAPIClient interface {
 	// CreateEnvironment creates a new environment for the specified application.
@@ -67,13 +69,33 @@ type EnvironmentAPIClient interface {
 	// Scope: `env:write`
 	UpdateEnvironment(ctx context.Context, in *UpdateEnvironmentRequest, opts ...grpc.CallOption) (*UpdateEnvironmentResponse, error)
 	// DeleteEnvironment permanently deletes an environment. Fails with
-	// FAILED_PRECONDITION if the environment has any deployments. Pass
-	// force = true to cascade-delete all deployment records (metadata
-	// only — no cloud resources are destroyed). This action cannot be
-	// undone.
+	// FAILED_PRECONDITION if the environment has any runs. Pass force = true
+	// to cascade-delete all run records (metadata only; no cloud resources
+	// are destroyed). This action cannot be undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(ctx context.Context, in *DeleteEnvironmentRequest, opts ...grpc.CallOption) (*DeleteEnvironmentResponse, error)
+	// ListEnvironmentVariables returns a paginated list of variables scoped
+	// to a single environment. Variables are mutated exclusively through
+	// change sets (ChangeSetAPI.SetVariable / RemoveVariable); this endpoint
+	// is read-only.
+	//
+	// Sensitive variable values are masked in the response.
+	//
+	// Scope: `var:read`
+	ListEnvironmentVariables(ctx context.Context, in *ListEnvironmentVariablesRequest, opts ...grpc.CallOption) (*ListEnvironmentVariablesResponse, error)
+	// ListEnvironmentComponents returns the components currently deployed to
+	// a single environment, with each component's last-succeeded revision
+	// surfaced as a denormalized status block. Use this to render an
+	// at-a-glance "what's running here?" view without separate calls per
+	// component.
+	//
+	// Components without a SUCCEEDED revision (e.g. CREATE entries that
+	// failed mid-plan) still appear, with `last_revision_status` and
+	// `last_deployed_at` empty.
+	//
+	// Scope: `env:read`
+	ListEnvironmentComponents(ctx context.Context, in *ListEnvironmentComponentsRequest, opts ...grpc.CallOption) (*ListEnvironmentComponentsResponse, error)
 }
 
 type environmentAPIClient struct {
@@ -134,6 +156,26 @@ func (c *environmentAPIClient) DeleteEnvironment(ctx context.Context, in *Delete
 	return out, nil
 }
 
+func (c *environmentAPIClient) ListEnvironmentVariables(ctx context.Context, in *ListEnvironmentVariablesRequest, opts ...grpc.CallOption) (*ListEnvironmentVariablesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEnvironmentVariablesResponse)
+	err := c.cc.Invoke(ctx, EnvironmentAPI_ListEnvironmentVariables_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *environmentAPIClient) ListEnvironmentComponents(ctx context.Context, in *ListEnvironmentComponentsRequest, opts ...grpc.CallOption) (*ListEnvironmentComponentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEnvironmentComponentsResponse)
+	err := c.cc.Invoke(ctx, EnvironmentAPI_ListEnvironmentComponents_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EnvironmentAPIServer is the server API for EnvironmentAPI service.
 // All implementations should embed UnimplementedEnvironmentAPIServer
 // for forward compatibility.
@@ -143,7 +185,7 @@ func (c *environmentAPIClient) DeleteEnvironment(ctx context.Context, in *Delete
 // An environment is a named deployment target (e.g., dev, staging, prod) that
 // binds an application to its workload and infrastructure runtimes. Each
 // environment carries its own configuration, credentials, and compute targets.
-// Promotion between environments is explicit -- Admiral never auto-promotes.
+// Promotion between environments is explicit; Admiral never auto-promotes.
 //
 // An environment carries two independent sets of runtime bindings:
 //   - **Workload targets**: where application workloads are deployed.
@@ -153,7 +195,7 @@ func (c *environmentAPIClient) DeleteEnvironment(ctx context.Context, in *Delete
 //
 // Additional target types may be added in future releases. Either or both
 // can be configured depending on the application's components. At most one
-// target per type is allowed per environment -- the server enforces
+// target per type is allowed per environment; the server enforces
 // uniqueness within each list.
 type EnvironmentAPIServer interface {
 	// CreateEnvironment creates a new environment for the specified application.
@@ -175,13 +217,33 @@ type EnvironmentAPIServer interface {
 	// Scope: `env:write`
 	UpdateEnvironment(context.Context, *UpdateEnvironmentRequest) (*UpdateEnvironmentResponse, error)
 	// DeleteEnvironment permanently deletes an environment. Fails with
-	// FAILED_PRECONDITION if the environment has any deployments. Pass
-	// force = true to cascade-delete all deployment records (metadata
-	// only — no cloud resources are destroyed). This action cannot be
-	// undone.
+	// FAILED_PRECONDITION if the environment has any runs. Pass force = true
+	// to cascade-delete all run records (metadata only; no cloud resources
+	// are destroyed). This action cannot be undone.
 	//
 	// Scope: `env:write`
 	DeleteEnvironment(context.Context, *DeleteEnvironmentRequest) (*DeleteEnvironmentResponse, error)
+	// ListEnvironmentVariables returns a paginated list of variables scoped
+	// to a single environment. Variables are mutated exclusively through
+	// change sets (ChangeSetAPI.SetVariable / RemoveVariable); this endpoint
+	// is read-only.
+	//
+	// Sensitive variable values are masked in the response.
+	//
+	// Scope: `var:read`
+	ListEnvironmentVariables(context.Context, *ListEnvironmentVariablesRequest) (*ListEnvironmentVariablesResponse, error)
+	// ListEnvironmentComponents returns the components currently deployed to
+	// a single environment, with each component's last-succeeded revision
+	// surfaced as a denormalized status block. Use this to render an
+	// at-a-glance "what's running here?" view without separate calls per
+	// component.
+	//
+	// Components without a SUCCEEDED revision (e.g. CREATE entries that
+	// failed mid-plan) still appear, with `last_revision_status` and
+	// `last_deployed_at` empty.
+	//
+	// Scope: `env:read`
+	ListEnvironmentComponents(context.Context, *ListEnvironmentComponentsRequest) (*ListEnvironmentComponentsResponse, error)
 }
 
 // UnimplementedEnvironmentAPIServer should be embedded to have
@@ -205,6 +267,12 @@ func (UnimplementedEnvironmentAPIServer) UpdateEnvironment(context.Context, *Upd
 }
 func (UnimplementedEnvironmentAPIServer) DeleteEnvironment(context.Context, *DeleteEnvironmentRequest) (*DeleteEnvironmentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteEnvironment not implemented")
+}
+func (UnimplementedEnvironmentAPIServer) ListEnvironmentVariables(context.Context, *ListEnvironmentVariablesRequest) (*ListEnvironmentVariablesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListEnvironmentVariables not implemented")
+}
+func (UnimplementedEnvironmentAPIServer) ListEnvironmentComponents(context.Context, *ListEnvironmentComponentsRequest) (*ListEnvironmentComponentsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListEnvironmentComponents not implemented")
 }
 func (UnimplementedEnvironmentAPIServer) testEmbeddedByValue() {}
 
@@ -316,6 +384,42 @@ func _EnvironmentAPI_DeleteEnvironment_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EnvironmentAPI_ListEnvironmentVariables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEnvironmentVariablesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnvironmentAPIServer).ListEnvironmentVariables(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EnvironmentAPI_ListEnvironmentVariables_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnvironmentAPIServer).ListEnvironmentVariables(ctx, req.(*ListEnvironmentVariablesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnvironmentAPI_ListEnvironmentComponents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEnvironmentComponentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnvironmentAPIServer).ListEnvironmentComponents(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EnvironmentAPI_ListEnvironmentComponents_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnvironmentAPIServer).ListEnvironmentComponents(ctx, req.(*ListEnvironmentComponentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EnvironmentAPI_ServiceDesc is the grpc.ServiceDesc for EnvironmentAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +446,14 @@ var EnvironmentAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteEnvironment",
 			Handler:    _EnvironmentAPI_DeleteEnvironment_Handler,
+		},
+		{
+			MethodName: "ListEnvironmentVariables",
+			Handler:    _EnvironmentAPI_ListEnvironmentVariables_Handler,
+		},
+		{
+			MethodName: "ListEnvironmentComponents",
+			Handler:    _EnvironmentAPI_ListEnvironmentComponents_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

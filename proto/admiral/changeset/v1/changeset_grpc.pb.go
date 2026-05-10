@@ -24,6 +24,7 @@ const (
 	ChangeSetAPI_ListChangeSets_FullMethodName   = "/admiral.changeset.v1.ChangeSetAPI/ListChangeSets"
 	ChangeSetAPI_UpdateChangeSet_FullMethodName  = "/admiral.changeset.v1.ChangeSetAPI/UpdateChangeSet"
 	ChangeSetAPI_DiscardChangeSet_FullMethodName = "/admiral.changeset.v1.ChangeSetAPI/DiscardChangeSet"
+	ChangeSetAPI_DiffChangeSet_FullMethodName    = "/admiral.changeset.v1.ChangeSetAPI/DiffChangeSet"
 	ChangeSetAPI_CopyChangeSet_FullMethodName    = "/admiral.changeset.v1.ChangeSetAPI/CopyChangeSet"
 	ChangeSetAPI_SetEntry_FullMethodName         = "/admiral.changeset.v1.ChangeSetAPI/SetEntry"
 	ChangeSetAPI_RemoveEntry_FullMethodName      = "/admiral.changeset.v1.ChangeSetAPI/RemoveEntry"
@@ -41,7 +42,7 @@ const (
 // A change set bundles component changes (add a component, change a version,
 // destroy a component) and variable changes (set or remove a key) into one
 // reviewable, deployable unit. Multiple change sets can be open simultaneously
-// for the same application+environment by different authors -- they isolate
+// for the same application+environment by different authors. They isolate
 // the editing phase so concurrent work does not collide.
 //
 // Change sets are immutable once they leave OPEN status. Mutations
@@ -67,8 +68,8 @@ type ChangeSetAPIClient interface {
 	// ListChangeSets returns a paginated list of change sets.
 	//
 	// Common filter fields: `application_id`, `environment_id`, `status`. The
-	// returned `ChangeSet` records do not include entries or variable entries
-	// -- call GetChangeSet for the full record.
+	// returned `ChangeSet` records do not include entries or variable entries;
+	// call GetChangeSet for the full record.
 	//
 	// Scope: `app:read`
 	ListChangeSets(ctx context.Context, in *ListChangeSetsRequest, opts ...grpc.CallOption) (*ListChangeSetsResponse, error)
@@ -87,6 +88,22 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `app:write`
 	DiscardChangeSet(ctx context.Context, in *DiscardChangeSetRequest, opts ...grpc.CallOption) (*DiscardChangeSetResponse, error)
+	// DiffChangeSet computes a structural diff for an OPEN change set: the
+	// per-entry deltas relative to current env HEAD, the per-variable deltas
+	// relative to current env variables, and the deployed components whose
+	// `values_template` references a name touched by this change set ("if you
+	// apply this, these other components will also re-plan").
+	//
+	// Sensitive values are never returned. Changed-but-masked entries set
+	// `sensitive=true` and omit `old`/`new` so the reviewer knows a change is
+	// present without seeing the value.
+	//
+	// Available for change sets in any status; for non-OPEN change sets the
+	// result reflects the diff against the env's CURRENT HEAD, not the env's
+	// state at the time the change set was deployed.
+	//
+	// Scope: `app:read`
+	DiffChangeSet(ctx context.Context, in *DiffChangeSetRequest, opts ...grpc.CallOption) (*DiffChangeSetResponse, error)
 	// CopyChangeSet creates a new OPEN change set in a target environment by
 	// copying every entry and variable entry from the source. The new change
 	// set's `copied_from_id` points back to the source for audit (promotion
@@ -98,14 +115,14 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `app:write`
 	CopyChangeSet(ctx context.Context, in *CopyChangeSetRequest, opts ...grpc.CallOption) (*CopyChangeSetResponse, error)
-	// SetEntry creates or replaces an entry for a component slug within the
-	// change set. One slug = one entry; calling SetEntry for an existing slug
+	// SetEntry creates or replaces an entry for a component name within the
+	// change set. One name = one entry; calling SetEntry for an existing name
 	// overwrites the prior entry.
 	//
 	// The `change_type` field selects the operation:
 	//   - CREATE: add a new component. Requires `module_id`. Rejects if a
-	//     component with the same slug already exists in the application.
-	//   - UPDATE: change an existing component. The slug must match an
+	//     component with the same name already exists in the application.
+	//   - UPDATE: change an existing component. The name must match an
 	//     existing component in the application. Only non-empty optional
 	//     fields are recorded as changes.
 	//   - DESTROY: schedule the component for terraform destroy at deploy.
@@ -128,7 +145,7 @@ type ChangeSetAPIClient interface {
 	// change set. One key = one entry. At deploy time, the variable's value is
 	// upserted in the target environment.
 	//
-	// To delete a variable on apply, use RemoveVariable -- it writes a
+	// To delete a variable on apply, use RemoveVariable; it writes a
 	// tombstone entry on the change set so the apply phase removes the key.
 	//
 	// Rejected when the change set is not OPEN.
@@ -206,6 +223,16 @@ func (c *changeSetAPIClient) DiscardChangeSet(ctx context.Context, in *DiscardCh
 	return out, nil
 }
 
+func (c *changeSetAPIClient) DiffChangeSet(ctx context.Context, in *DiffChangeSetRequest, opts ...grpc.CallOption) (*DiffChangeSetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DiffChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_DiffChangeSet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *changeSetAPIClient) CopyChangeSet(ctx context.Context, in *CopyChangeSetRequest, opts ...grpc.CallOption) (*CopyChangeSetResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CopyChangeSetResponse)
@@ -266,7 +293,7 @@ func (c *changeSetAPIClient) RemoveVariable(ctx context.Context, in *RemoveVaria
 // A change set bundles component changes (add a component, change a version,
 // destroy a component) and variable changes (set or remove a key) into one
 // reviewable, deployable unit. Multiple change sets can be open simultaneously
-// for the same application+environment by different authors -- they isolate
+// for the same application+environment by different authors. They isolate
 // the editing phase so concurrent work does not collide.
 //
 // Change sets are immutable once they leave OPEN status. Mutations
@@ -292,8 +319,8 @@ type ChangeSetAPIServer interface {
 	// ListChangeSets returns a paginated list of change sets.
 	//
 	// Common filter fields: `application_id`, `environment_id`, `status`. The
-	// returned `ChangeSet` records do not include entries or variable entries
-	// -- call GetChangeSet for the full record.
+	// returned `ChangeSet` records do not include entries or variable entries;
+	// call GetChangeSet for the full record.
 	//
 	// Scope: `app:read`
 	ListChangeSets(context.Context, *ListChangeSetsRequest) (*ListChangeSetsResponse, error)
@@ -312,6 +339,22 @@ type ChangeSetAPIServer interface {
 	//
 	// Scope: `app:write`
 	DiscardChangeSet(context.Context, *DiscardChangeSetRequest) (*DiscardChangeSetResponse, error)
+	// DiffChangeSet computes a structural diff for an OPEN change set: the
+	// per-entry deltas relative to current env HEAD, the per-variable deltas
+	// relative to current env variables, and the deployed components whose
+	// `values_template` references a name touched by this change set ("if you
+	// apply this, these other components will also re-plan").
+	//
+	// Sensitive values are never returned. Changed-but-masked entries set
+	// `sensitive=true` and omit `old`/`new` so the reviewer knows a change is
+	// present without seeing the value.
+	//
+	// Available for change sets in any status; for non-OPEN change sets the
+	// result reflects the diff against the env's CURRENT HEAD, not the env's
+	// state at the time the change set was deployed.
+	//
+	// Scope: `app:read`
+	DiffChangeSet(context.Context, *DiffChangeSetRequest) (*DiffChangeSetResponse, error)
 	// CopyChangeSet creates a new OPEN change set in a target environment by
 	// copying every entry and variable entry from the source. The new change
 	// set's `copied_from_id` points back to the source for audit (promotion
@@ -323,14 +366,14 @@ type ChangeSetAPIServer interface {
 	//
 	// Scope: `app:write`
 	CopyChangeSet(context.Context, *CopyChangeSetRequest) (*CopyChangeSetResponse, error)
-	// SetEntry creates or replaces an entry for a component slug within the
-	// change set. One slug = one entry; calling SetEntry for an existing slug
+	// SetEntry creates or replaces an entry for a component name within the
+	// change set. One name = one entry; calling SetEntry for an existing name
 	// overwrites the prior entry.
 	//
 	// The `change_type` field selects the operation:
 	//   - CREATE: add a new component. Requires `module_id`. Rejects if a
-	//     component with the same slug already exists in the application.
-	//   - UPDATE: change an existing component. The slug must match an
+	//     component with the same name already exists in the application.
+	//   - UPDATE: change an existing component. The name must match an
 	//     existing component in the application. Only non-empty optional
 	//     fields are recorded as changes.
 	//   - DESTROY: schedule the component for terraform destroy at deploy.
@@ -353,7 +396,7 @@ type ChangeSetAPIServer interface {
 	// change set. One key = one entry. At deploy time, the variable's value is
 	// upserted in the target environment.
 	//
-	// To delete a variable on apply, use RemoveVariable -- it writes a
+	// To delete a variable on apply, use RemoveVariable; it writes a
 	// tombstone entry on the change set so the apply phase removes the key.
 	//
 	// Rejected when the change set is not OPEN.
@@ -394,6 +437,9 @@ func (UnimplementedChangeSetAPIServer) UpdateChangeSet(context.Context, *UpdateC
 }
 func (UnimplementedChangeSetAPIServer) DiscardChangeSet(context.Context, *DiscardChangeSetRequest) (*DiscardChangeSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DiscardChangeSet not implemented")
+}
+func (UnimplementedChangeSetAPIServer) DiffChangeSet(context.Context, *DiffChangeSetRequest) (*DiffChangeSetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DiffChangeSet not implemented")
 }
 func (UnimplementedChangeSetAPIServer) CopyChangeSet(context.Context, *CopyChangeSetRequest) (*CopyChangeSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CopyChangeSet not implemented")
@@ -520,6 +566,24 @@ func _ChangeSetAPI_DiscardChangeSet_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChangeSetAPI_DiffChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiffChangeSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).DiffChangeSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_DiffChangeSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).DiffChangeSet(ctx, req.(*DiffChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ChangeSetAPI_CopyChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CopyChangeSetRequest)
 	if err := dec(in); err != nil {
@@ -636,6 +700,10 @@ var ChangeSetAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DiscardChangeSet",
 			Handler:    _ChangeSetAPI_DiscardChangeSet_Handler,
+		},
+		{
+			MethodName: "DiffChangeSet",
+			Handler:    _ChangeSetAPI_DiffChangeSet_Handler,
 		},
 		{
 			MethodName: "CopyChangeSet",

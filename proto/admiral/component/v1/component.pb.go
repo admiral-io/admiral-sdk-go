@@ -8,12 +8,9 @@ package componentv1
 
 import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
-	_ "github.com/google/gnostic/openapiv3"
 	v1 "go.admiral.io/sdk/proto/admiral/common/v1"
-	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -89,10 +86,75 @@ func (ComponentKind) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{0}
 }
 
+// ComponentDesiredState is the lifecycle state operators can drive a
+// component into. ACTIVE is the steady-state; DESTROY/ORPHAN are operator
+// intent recorded by a change set entry; DESTROYED is the terminal state
+// reached after a successful destroy revision applies.
+type ComponentDesiredState int32
+
+const (
+	// Default value. Must not be used.
+	ComponentDesiredState_COMPONENT_DESIRED_STATE_UNSPECIFIED ComponentDesiredState = 0
+	// The component is managed and reconciled to its current HEAD.
+	ComponentDesiredState_COMPONENT_DESIRED_STATE_ACTIVE ComponentDesiredState = 1
+	// The next run will run terraform destroy / equivalent for this component.
+	ComponentDesiredState_COMPONENT_DESIRED_STATE_DESTROY ComponentDesiredState = 2
+	// The component is detached from management; the underlying infrastructure
+	// is left intact.
+	ComponentDesiredState_COMPONENT_DESIRED_STATE_ORPHAN ComponentDesiredState = 3
+	// Terminal state reached after a successful destroy revision applies.
+	ComponentDesiredState_COMPONENT_DESIRED_STATE_DESTROYED ComponentDesiredState = 4
+)
+
+// Enum value maps for ComponentDesiredState.
+var (
+	ComponentDesiredState_name = map[int32]string{
+		0: "COMPONENT_DESIRED_STATE_UNSPECIFIED",
+		1: "COMPONENT_DESIRED_STATE_ACTIVE",
+		2: "COMPONENT_DESIRED_STATE_DESTROY",
+		3: "COMPONENT_DESIRED_STATE_ORPHAN",
+		4: "COMPONENT_DESIRED_STATE_DESTROYED",
+	}
+	ComponentDesiredState_value = map[string]int32{
+		"COMPONENT_DESIRED_STATE_UNSPECIFIED": 0,
+		"COMPONENT_DESIRED_STATE_ACTIVE":      1,
+		"COMPONENT_DESIRED_STATE_DESTROY":     2,
+		"COMPONENT_DESIRED_STATE_ORPHAN":      3,
+		"COMPONENT_DESIRED_STATE_DESTROYED":   4,
+	}
+)
+
+func (x ComponentDesiredState) Enum() *ComponentDesiredState {
+	p := new(ComponentDesiredState)
+	*p = x
+	return p
+}
+
+func (x ComponentDesiredState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ComponentDesiredState) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_component_v1_component_proto_enumTypes[1].Descriptor()
+}
+
+func (ComponentDesiredState) Type() protoreflect.EnumType {
+	return &file_admiral_component_v1_component_proto_enumTypes[1]
+}
+
+func (x ComponentDesiredState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ComponentDesiredState.Descriptor instead.
+func (ComponentDesiredState) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{1}
+}
+
 // ComponentOutput declares a named output value produced by a component.
 //
 // For infrastructure components (Terraform), outputs are auto-discovered from
-// the module's output blocks and this field is ignored -- do not declare
+// the module's output blocks and this field is ignored. Do not declare
 // outputs manually for Terraform components.
 //
 // For workload components (Helm, Kustomize, manifests), outputs must be
@@ -175,15 +237,21 @@ func (x *ComponentOutput) GetDescription() string {
 	return ""
 }
 
-// Component represents a named, deployable unit within an application. It
-// binds a module to an application with configuration (values template) that
-// maps variables and other component outputs into the module's expected
-// inputs.
+// Component represents a named, deployable unit within an application+environment
+// pair. It binds a module to a specific environment with configuration (values
+// template) that maps variables and other component outputs into the module's
+// expected inputs.
+//
+// Components are scoped to (application, environment): each environment has
+// its own set of components. The same name may exist in multiple environments
+// with different module/version/values, supporting both the uniform-fleet case
+// (identical components stamped across envs) and the divergent case (Postgres
+// in cluster for dev, managed service for prod).
 //
 // Components are the nodes in Admiral's dependency graph. Infrastructure
 // components produce auto-discovered outputs (Terraform outputs). Workload
 // components declare outputs explicitly. Other components consume these via
-// template expressions. The deployment engine resolves this DAG to determine
+// template expressions. The run engine resolves this DAG to determine
 // execution order.
 type Component struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -191,32 +259,32 @@ type Component struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The application this component belongs to (UUID).
 	ApplicationId string `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// Mutable display label for this component within the application
-	// (e.g., "Primary VPC", "Redis Cache"). Unique within the application.
-	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	// Immutable semantic key for this component within the application
-	// (e.g., "vpc", "redis", "api-server"). Used in template expressions:
-	// `{{ .output.<slug>.<output> }}`, variable namespacing, and dependency
-	// tracking. Defaults to name at creation if not provided.
-	Slug string `protobuf:"bytes,16,opt,name=slug,proto3" json:"slug,omitempty"`
+	// The environment this component is scoped to (UUID).
+	EnvironmentId string `protobuf:"bytes,3,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	// Component identifier within the (application, environment) pair (e.g.,
+	// "vpc", "redis", "api-server"). Set at creation; no rename path today.
+	// Referenced from peer components' template expressions
+	// (`{{ .component.<name>.<output> }}`), `depends_on` lists, and the
+	// variable namespace for outputs.
+	Name string `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional description of the component's purpose
 	// (e.g., "Primary VPC for all environments" or "Redis cache layer").
-	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
 	// Whether this is an infrastructure or workload component. Derived from
 	// the referenced module's type when the component is created, but stored
 	// explicitly for filtering and to determine execution behavior.
-	Kind ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.component.v1.ComponentKind" json:"kind,omitempty"`
+	Kind ComponentKind `protobuf:"varint,6,opt,name=kind,proto3,enum=admiral.component.v1.ComponentKind" json:"kind,omitempty"`
 	// The desired lifecycle state of this component.
-	DesiredState string `protobuf:"bytes,17,opt,name=desired_state,json=desiredState,proto3" json:"desired_state,omitempty"`
+	DesiredState ComponentDesiredState `protobuf:"varint,7,opt,name=desired_state,json=desiredState,proto3,enum=admiral.component.v1.ComponentDesiredState" json:"desired_state,omitempty"`
 	// When true, DESTROY operations are rejected for this component.
-	DeletionProtection bool `protobuf:"varint,18,opt,name=deletion_protection,json=deletionProtection,proto3" json:"deletion_protection,omitempty"`
+	DeletionProtection bool `protobuf:"varint,8,opt,name=deletion_protection,json=deletionProtection,proto3" json:"deletion_protection,omitempty"`
 	// The module this component deploys (UUID). References a Module defined
 	// via the ModuleAPI. The module's source, ref, root, and path are inherited.
-	ModuleId string `protobuf:"bytes,6,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
+	ModuleId string `protobuf:"bytes,9,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
 	// Optional ref override for the module's default ref. When empty, the
 	// module's ref is used. When set, overrides the module's ref at deploy time
 	// (e.g., pin a specific tag, branch, or commit SHA for this component).
-	Version string `protobuf:"bytes,7,opt,name=version,proto3" json:"version,omitempty"`
+	Version string `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
 	// Values template that maps configuration into the module's expected inputs.
 	// This is a JSON-encoded object where keys are the module input names and
 	// values are either literal values or template expressions.
@@ -245,38 +313,29 @@ type Component struct {
 	//
 	// The rendering engine resolves all expressions at deployment time using
 	// the environment's variables and the outputs of upstream components.
-	ValuesTemplate string `protobuf:"bytes,8,opt,name=values_template,json=valuesTemplate,proto3" json:"values_template,omitempty"`
-	// Component IDs that must complete successfully before this component can
-	// be deployed (UUIDs). Must reference components within the same
-	// application. The deployment engine uses these, combined with implicit
-	// dependencies from template expressions, to build the execution DAG.
+	ValuesTemplate string `protobuf:"bytes,11,opt,name=values_template,json=valuesTemplate,proto3" json:"values_template,omitempty"`
+	// Component names that must complete successfully before this component
+	// can be deployed. Must reference components within the same environment.
+	// The run engine uses these, combined with implicit dependencies from
+	// template expressions, to build the execution DAG.
 	//
 	// Explicit depends_on is useful when there is a deployment-order dependency
 	// that is not captured by output references (e.g., cert-manager must be
 	// installed before any workload that uses TLS certificates).
-	DependsOn []string `protobuf:"bytes,9,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
+	DependsOn []string `protobuf:"bytes,12,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
 	// Declared outputs for this component. For infrastructure components
 	// (Terraform), outputs are auto-discovered from the module and this field
 	// is ignored. For workload components, outputs must be declared here to
 	// be available for template expressions in other components.
 	//
 	// See ComponentOutput for examples.
-	Outputs []*ComponentOutput `protobuf:"bytes,10,rep,name=outputs,proto3" json:"outputs,omitempty"`
-	// Whether this component is disabled in the resolved environment context.
-	// Always false on the application-level component. Set to true when
-	// ListComponents is called with an environment_id and the component has
-	// a disabled override for that environment.
-	Disabled bool `protobuf:"varint,11,opt,name=disabled,proto3" json:"disabled,omitempty"`
-	// Whether any field on this component has been overridden in the resolved
-	// environment context. Always false when ListComponents is called without
-	// an environment_id.
-	HasOverride bool `protobuf:"varint,12,opt,name=has_override,json=hasOverride,proto3" json:"has_override,omitempty"`
+	Outputs []*ComponentOutput `protobuf:"bytes,13,rep,name=outputs,proto3" json:"outputs,omitempty"`
 	// The user or agent who created this component (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,15,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedBy *v1.ActorRef `protobuf:"bytes,14,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the component was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the component was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -325,16 +384,16 @@ func (x *Component) GetApplicationId() string {
 	return ""
 }
 
-func (x *Component) GetName() string {
+func (x *Component) GetEnvironmentId() string {
 	if x != nil {
-		return x.Name
+		return x.EnvironmentId
 	}
 	return ""
 }
 
-func (x *Component) GetSlug() string {
+func (x *Component) GetName() string {
 	if x != nil {
-		return x.Slug
+		return x.Name
 	}
 	return ""
 }
@@ -353,11 +412,11 @@ func (x *Component) GetKind() ComponentKind {
 	return ComponentKind_COMPONENT_KIND_UNSPECIFIED
 }
 
-func (x *Component) GetDesiredState() string {
+func (x *Component) GetDesiredState() ComponentDesiredState {
 	if x != nil {
 		return x.DesiredState
 	}
-	return ""
+	return ComponentDesiredState_COMPONENT_DESIRED_STATE_UNSPECIFIED
 }
 
 func (x *Component) GetDeletionProtection() bool {
@@ -402,20 +461,6 @@ func (x *Component) GetOutputs() []*ComponentOutput {
 	return nil
 }
 
-func (x *Component) GetDisabled() bool {
-	if x != nil {
-		return x.Disabled
-	}
-	return false
-}
-
-func (x *Component) GetHasOverride() bool {
-	if x != nil {
-		return x.HasOverride
-	}
-	return false
-}
-
 func (x *Component) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
@@ -437,1416 +482,48 @@ func (x *Component) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// ComponentOverride provides environment-level customization for a component.
-// When an override exists for a component + environment combination, the
-// override fields take precedence over the application-level component
-// defaults during deployment.
-//
-// This enables patterns like:
-//   - Different modules per environment (Helm Redis in dev, Terraform
-//     ElastiCache in prod)
-//   - Different versions per environment (canary version in staging)
-//   - Different values per environment (smaller instance in dev)
-//   - Disabling a component in certain environments
-type ComponentOverride struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The component this override applies to (UUID).
-	ComponentId string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// The environment this override applies to (UUID).
-	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
-	// When true, the component is not deployed in this environment.
-	// All other override fields are ignored when disabled.
-	Disabled bool `protobuf:"varint,3,opt,name=disabled,proto3" json:"disabled,omitempty"`
-	// Override module for this environment (UUID). When set, this module is
-	// used instead of the component's default module. This may also change the
-	// component's effective category (e.g., switching from a Helm module to a
-	// Terraform module changes the component from workload to infrastructure
-	// in this environment).
-	ModuleId *string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3,oneof" json:"module_id,omitempty"`
-	// Override version for this environment. When set, this version is used
-	// instead of the component's default version.
-	Version *string `protobuf:"bytes,5,opt,name=version,proto3,oneof" json:"version,omitempty"`
-	// Override values template for this environment. When set, this template
-	// completely replaces the component's default values template -- there is
-	// no merge.
-	ValuesTemplate *string `protobuf:"bytes,6,opt,name=values_template,json=valuesTemplate,proto3,oneof" json:"values_template,omitempty"`
-	// Override depends_on for this environment (component UUIDs). When set,
-	// replaces the component's default depends_on list for this environment.
-	DependsOn []string `protobuf:"bytes,7,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
-	// Override outputs for this environment. When set, replaces the component's
-	// declared outputs. Useful when an override changes the module type
-	// (e.g., Helm → Terraform) and the output templates need to change.
-	Outputs []*ComponentOutput `protobuf:"bytes,8,rep,name=outputs,proto3" json:"outputs,omitempty"`
-	// The user or agent who created this override (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,11,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// When the override was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the override was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ComponentOverride) Reset() {
-	*x = ComponentOverride{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ComponentOverride) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ComponentOverride) ProtoMessage() {}
-
-func (x *ComponentOverride) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ComponentOverride.ProtoReflect.Descriptor instead.
-func (*ComponentOverride) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ComponentOverride) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-func (x *ComponentOverride) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
-	}
-	return ""
-}
-
-func (x *ComponentOverride) GetDisabled() bool {
-	if x != nil {
-		return x.Disabled
-	}
-	return false
-}
-
-func (x *ComponentOverride) GetModuleId() string {
-	if x != nil && x.ModuleId != nil {
-		return *x.ModuleId
-	}
-	return ""
-}
-
-func (x *ComponentOverride) GetVersion() string {
-	if x != nil && x.Version != nil {
-		return *x.Version
-	}
-	return ""
-}
-
-func (x *ComponentOverride) GetValuesTemplate() string {
-	if x != nil && x.ValuesTemplate != nil {
-		return *x.ValuesTemplate
-	}
-	return ""
-}
-
-func (x *ComponentOverride) GetDependsOn() []string {
-	if x != nil {
-		return x.DependsOn
-	}
-	return nil
-}
-
-func (x *ComponentOverride) GetOutputs() []*ComponentOutput {
-	if x != nil {
-		return x.Outputs
-	}
-	return nil
-}
-
-func (x *ComponentOverride) GetCreatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return nil
-}
-
-func (x *ComponentOverride) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-func (x *ComponentOverride) GetUpdatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return nil
-}
-
-// CreateComponentRequest contains the parameters for adding a component to
-// an application.
-type CreateComponentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The application to add this component to (UUID).
-	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// Display name for this component. Must be unique within the application.
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Immutable semantic key. Defaults to name if not provided.
-	// Used in template expressions: `{{ .output.<slug>.<output> }}`.
-	Slug string `protobuf:"bytes,9,opt,name=slug,proto3" json:"slug,omitempty"`
-	// Optional description of the component's purpose.
-	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// The module this component deploys (UUID).
-	ModuleId string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
-	// Optional ref override for the module's default ref. When empty, the
-	// module's default ref is used.
-	Version string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
-	// Values template mapping configuration into the module's inputs.
-	// See Component.values_template for template expression syntax.
-	ValuesTemplate string `protobuf:"bytes,6,opt,name=values_template,json=valuesTemplate,proto3" json:"values_template,omitempty"`
-	// Explicit deployment-order dependencies (component UUIDs).
-	DependsOn []string `protobuf:"bytes,7,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
-	// Declared outputs for workload components.
-	// Ignored for infrastructure components (Terraform outputs are
-	// auto-discovered).
-	Outputs       []*ComponentOutput `protobuf:"bytes,8,rep,name=outputs,proto3" json:"outputs,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateComponentRequest) Reset() {
-	*x = CreateComponentRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateComponentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateComponentRequest) ProtoMessage() {}
-
-func (x *CreateComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateComponentRequest.ProtoReflect.Descriptor instead.
-func (*CreateComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *CreateComponentRequest) GetApplicationId() string {
-	if x != nil {
-		return x.ApplicationId
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetSlug() string {
-	if x != nil {
-		return x.Slug
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetModuleId() string {
-	if x != nil {
-		return x.ModuleId
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetVersion() string {
-	if x != nil {
-		return x.Version
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetValuesTemplate() string {
-	if x != nil {
-		return x.ValuesTemplate
-	}
-	return ""
-}
-
-func (x *CreateComponentRequest) GetDependsOn() []string {
-	if x != nil {
-		return x.DependsOn
-	}
-	return nil
-}
-
-func (x *CreateComponentRequest) GetOutputs() []*ComponentOutput {
-	if x != nil {
-		return x.Outputs
-	}
-	return nil
-}
-
-// CreateComponentResponse contains the newly created component.
-type CreateComponentResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created component.
-	Component     *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateComponentResponse) Reset() {
-	*x = CreateComponentResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateComponentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateComponentResponse) ProtoMessage() {}
-
-func (x *CreateComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateComponentResponse.ProtoReflect.Descriptor instead.
-func (*CreateComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *CreateComponentResponse) GetComponent() *Component {
-	if x != nil {
-		return x.Component
-	}
-	return nil
-}
-
-// GetComponentRequest identifies a component to retrieve.
-type GetComponentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier of the component (UUID).
-	ComponentId   string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetComponentRequest) Reset() {
-	*x = GetComponentRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetComponentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetComponentRequest) ProtoMessage() {}
-
-func (x *GetComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetComponentRequest.ProtoReflect.Descriptor instead.
-func (*GetComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *GetComponentRequest) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-// GetComponentResponse contains the component record.
-type GetComponentResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The component record (application-level defaults).
-	Component     *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetComponentResponse) Reset() {
-	*x = GetComponentResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetComponentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetComponentResponse) ProtoMessage() {}
-
-func (x *GetComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetComponentResponse.ProtoReflect.Descriptor instead.
-func (*GetComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *GetComponentResponse) GetComponent() *Component {
-	if x != nil {
-		return x.Component
-	}
-	return nil
-}
-
-// ListComponentsRequest contains pagination, scoping, and filter parameters.
-//
-// Scoping uses dedicated fields, not the filter DSL:
-//   - `application_id` alone: application-level component defaults.
-//   - `application_id` + `environment_id`: resolved view with environment
-//     overrides applied. Each component reflects its effective module,
-//     version, values_template, depends_on, and outputs. Disabled
-//     components are included with `disabled=true`. Components with any
-//     overridden field have `has_override=true`.
-//
-// `filter` is reserved for predicates on component columns (`kind`,
-// `name`, `module_id`).
-type ListComponentsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Scope listing to a specific application (UUID). Required for meaningful
-	// results since components always belong to an application.
-	ApplicationId string `protobuf:"bytes,4,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// When set alongside `application_id`, returns the resolved view with
-	// environment overrides applied (UUID). Optional.
-	EnvironmentId *string `protobuf:"bytes,5,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
-	// Filter expression using the PEG filter DSL. Filterable fields:
-	//   - `kind` -- filter by component kind (INFRASTRUCTURE, WORKLOAD).
-	//   - `name` -- filter by component name.
-	//   - `module_id` -- filter by module reference.
-	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of components to return per page.
-	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListComponentsRequest) Reset() {
-	*x = ListComponentsRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListComponentsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListComponentsRequest) ProtoMessage() {}
-
-func (x *ListComponentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListComponentsRequest.ProtoReflect.Descriptor instead.
-func (*ListComponentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ListComponentsRequest) GetApplicationId() string {
-	if x != nil {
-		return x.ApplicationId
-	}
-	return ""
-}
-
-func (x *ListComponentsRequest) GetEnvironmentId() string {
-	if x != nil && x.EnvironmentId != nil {
-		return *x.EnvironmentId
-	}
-	return ""
-}
-
-func (x *ListComponentsRequest) GetFilter() string {
-	if x != nil {
-		return x.Filter
-	}
-	return ""
-}
-
-func (x *ListComponentsRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-func (x *ListComponentsRequest) GetPageToken() string {
-	if x != nil {
-		return x.PageToken
-	}
-	return ""
-}
-
-// ListComponentsResponse contains a page of components.
-type ListComponentsResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of components. When `environment_id` is present in the filter,
-	// each component reflects the resolved view with overrides applied.
-	Components []*Component `protobuf:"bytes,1,rep,name=components,proto3" json:"components,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListComponentsResponse) Reset() {
-	*x = ListComponentsResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListComponentsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListComponentsResponse) ProtoMessage() {}
-
-func (x *ListComponentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListComponentsResponse.ProtoReflect.Descriptor instead.
-func (*ListComponentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *ListComponentsResponse) GetComponents() []*Component {
-	if x != nil {
-		return x.Components
-	}
-	return nil
-}
-
-func (x *ListComponentsResponse) GetNextPageToken() string {
-	if x != nil {
-		return x.NextPageToken
-	}
-	return ""
-}
-
-// UpdateComponentRequest contains the component fields to update.
-type UpdateComponentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The component with updated fields. Only fields specified in
-	// `update_mask` are updated.
-	Component *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `name`, `description`, `module_id`, `version`,
-	// `values_template`, `depends_on`, `outputs`.
-	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateComponentRequest) Reset() {
-	*x = UpdateComponentRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateComponentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateComponentRequest) ProtoMessage() {}
-
-func (x *UpdateComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateComponentRequest.ProtoReflect.Descriptor instead.
-func (*UpdateComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *UpdateComponentRequest) GetComponent() *Component {
-	if x != nil {
-		return x.Component
-	}
-	return nil
-}
-
-func (x *UpdateComponentRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
-	if x != nil {
-		return x.UpdateMask
-	}
-	return nil
-}
-
-// UpdateComponentResponse contains the updated component.
-type UpdateComponentResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The updated component.
-	Component     *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateComponentResponse) Reset() {
-	*x = UpdateComponentResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateComponentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateComponentResponse) ProtoMessage() {}
-
-func (x *UpdateComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateComponentResponse.ProtoReflect.Descriptor instead.
-func (*UpdateComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *UpdateComponentResponse) GetComponent() *Component {
-	if x != nil {
-		return x.Component
-	}
-	return nil
-}
-
-// DeleteComponentRequest identifies a component to delete.
-type DeleteComponentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier of the component to delete (UUID).
-	// Fails if other components depend on this component (via depends_on
-	// or output references in values_template).
-	ComponentId   string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteComponentRequest) Reset() {
-	*x = DeleteComponentRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteComponentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteComponentRequest) ProtoMessage() {}
-
-func (x *DeleteComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteComponentRequest.ProtoReflect.Descriptor instead.
-func (*DeleteComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *DeleteComponentRequest) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-// DeleteComponentResponse is empty on success.
-type DeleteComponentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteComponentResponse) Reset() {
-	*x = DeleteComponentResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteComponentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteComponentResponse) ProtoMessage() {}
-
-func (x *DeleteComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteComponentResponse.ProtoReflect.Descriptor instead.
-func (*DeleteComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{12}
-}
-
-// SetComponentOverrideRequest creates or replaces an environment-level override.
-type SetComponentOverrideRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The component to override (UUID).
-	ComponentId string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// The environment this override applies to (UUID).
-	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
-	// When true, the component is not deployed in this environment.
-	Disabled bool `protobuf:"varint,3,opt,name=disabled,proto3" json:"disabled,omitempty"`
-	// Override module (UUID). When set, replaces the component's default module.
-	ModuleId *string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3,oneof" json:"module_id,omitempty"`
-	// Override version. When set, replaces the component's default version.
-	Version *string `protobuf:"bytes,5,opt,name=version,proto3,oneof" json:"version,omitempty"`
-	// Override values template. When set, completely replaces the component's
-	// default values template (no merge).
-	ValuesTemplate *string `protobuf:"bytes,6,opt,name=values_template,json=valuesTemplate,proto3,oneof" json:"values_template,omitempty"`
-	// Override depends_on (component UUIDs). When set, replaces the component's
-	// default depends_on.
-	DependsOn []string `protobuf:"bytes,7,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
-	// Override outputs. When set, replaces the component's declared outputs.
-	Outputs       []*ComponentOutput `protobuf:"bytes,8,rep,name=outputs,proto3" json:"outputs,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SetComponentOverrideRequest) Reset() {
-	*x = SetComponentOverrideRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SetComponentOverrideRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetComponentOverrideRequest) ProtoMessage() {}
-
-func (x *SetComponentOverrideRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetComponentOverrideRequest.ProtoReflect.Descriptor instead.
-func (*SetComponentOverrideRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *SetComponentOverrideRequest) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-func (x *SetComponentOverrideRequest) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
-	}
-	return ""
-}
-
-func (x *SetComponentOverrideRequest) GetDisabled() bool {
-	if x != nil {
-		return x.Disabled
-	}
-	return false
-}
-
-func (x *SetComponentOverrideRequest) GetModuleId() string {
-	if x != nil && x.ModuleId != nil {
-		return *x.ModuleId
-	}
-	return ""
-}
-
-func (x *SetComponentOverrideRequest) GetVersion() string {
-	if x != nil && x.Version != nil {
-		return *x.Version
-	}
-	return ""
-}
-
-func (x *SetComponentOverrideRequest) GetValuesTemplate() string {
-	if x != nil && x.ValuesTemplate != nil {
-		return *x.ValuesTemplate
-	}
-	return ""
-}
-
-func (x *SetComponentOverrideRequest) GetDependsOn() []string {
-	if x != nil {
-		return x.DependsOn
-	}
-	return nil
-}
-
-func (x *SetComponentOverrideRequest) GetOutputs() []*ComponentOutput {
-	if x != nil {
-		return x.Outputs
-	}
-	return nil
-}
-
-// SetComponentOverrideResponse contains the override record.
-type SetComponentOverrideResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created or updated override.
-	Override      *ComponentOverride `protobuf:"bytes,1,opt,name=override,proto3" json:"override,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SetComponentOverrideResponse) Reset() {
-	*x = SetComponentOverrideResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SetComponentOverrideResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetComponentOverrideResponse) ProtoMessage() {}
-
-func (x *SetComponentOverrideResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetComponentOverrideResponse.ProtoReflect.Descriptor instead.
-func (*SetComponentOverrideResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *SetComponentOverrideResponse) GetOverride() *ComponentOverride {
-	if x != nil {
-		return x.Override
-	}
-	return nil
-}
-
-// GetComponentOverrideRequest identifies a specific component + environment
-// override.
-type GetComponentOverrideRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The component (UUID).
-	ComponentId string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// The environment (UUID).
-	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetComponentOverrideRequest) Reset() {
-	*x = GetComponentOverrideRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetComponentOverrideRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetComponentOverrideRequest) ProtoMessage() {}
-
-func (x *GetComponentOverrideRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetComponentOverrideRequest.ProtoReflect.Descriptor instead.
-func (*GetComponentOverrideRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *GetComponentOverrideRequest) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-func (x *GetComponentOverrideRequest) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
-	}
-	return ""
-}
-
-// GetComponentOverrideResponse contains the override record.
-type GetComponentOverrideResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The override record. Empty/not-found if no override exists.
-	Override      *ComponentOverride `protobuf:"bytes,1,opt,name=override,proto3" json:"override,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetComponentOverrideResponse) Reset() {
-	*x = GetComponentOverrideResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetComponentOverrideResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetComponentOverrideResponse) ProtoMessage() {}
-
-func (x *GetComponentOverrideResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetComponentOverrideResponse.ProtoReflect.Descriptor instead.
-func (*GetComponentOverrideResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *GetComponentOverrideResponse) GetOverride() *ComponentOverride {
-	if x != nil {
-		return x.Override
-	}
-	return nil
-}
-
-// ListComponentOverridesRequest lists all overrides for a component.
-type ListComponentOverridesRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier of the component to list overrides for (UUID).
-	ComponentId string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// Maximum number of overrides to return per page.
-	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListComponentOverridesRequest) Reset() {
-	*x = ListComponentOverridesRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListComponentOverridesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListComponentOverridesRequest) ProtoMessage() {}
-
-func (x *ListComponentOverridesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListComponentOverridesRequest.ProtoReflect.Descriptor instead.
-func (*ListComponentOverridesRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *ListComponentOverridesRequest) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-func (x *ListComponentOverridesRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-func (x *ListComponentOverridesRequest) GetPageToken() string {
-	if x != nil {
-		return x.PageToken
-	}
-	return ""
-}
-
-// ListComponentOverridesResponse contains all overrides for a component.
-type ListComponentOverridesResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of environment-level overrides for the component.
-	Overrides []*ComponentOverride `protobuf:"bytes,1,rep,name=overrides,proto3" json:"overrides,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListComponentOverridesResponse) Reset() {
-	*x = ListComponentOverridesResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[18]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListComponentOverridesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListComponentOverridesResponse) ProtoMessage() {}
-
-func (x *ListComponentOverridesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[18]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListComponentOverridesResponse.ProtoReflect.Descriptor instead.
-func (*ListComponentOverridesResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{18}
-}
-
-func (x *ListComponentOverridesResponse) GetOverrides() []*ComponentOverride {
-	if x != nil {
-		return x.Overrides
-	}
-	return nil
-}
-
-func (x *ListComponentOverridesResponse) GetNextPageToken() string {
-	if x != nil {
-		return x.NextPageToken
-	}
-	return ""
-}
-
-// DeleteComponentOverrideRequest removes an environment-level override.
-type DeleteComponentOverrideRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The component (UUID).
-	ComponentId string `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// The environment (UUID).
-	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteComponentOverrideRequest) Reset() {
-	*x = DeleteComponentOverrideRequest{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[19]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteComponentOverrideRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteComponentOverrideRequest) ProtoMessage() {}
-
-func (x *DeleteComponentOverrideRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[19]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteComponentOverrideRequest.ProtoReflect.Descriptor instead.
-func (*DeleteComponentOverrideRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{19}
-}
-
-func (x *DeleteComponentOverrideRequest) GetComponentId() string {
-	if x != nil {
-		return x.ComponentId
-	}
-	return ""
-}
-
-func (x *DeleteComponentOverrideRequest) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
-	}
-	return ""
-}
-
-// DeleteComponentOverrideResponse is empty on success.
-type DeleteComponentOverrideResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteComponentOverrideResponse) Reset() {
-	*x = DeleteComponentOverrideResponse{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[20]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteComponentOverrideResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteComponentOverrideResponse) ProtoMessage() {}
-
-func (x *DeleteComponentOverrideResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[20]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteComponentOverrideResponse.ProtoReflect.Descriptor instead.
-func (*DeleteComponentOverrideResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{20}
-}
-
 var File_admiral_component_v1_component_proto protoreflect.FileDescriptor
 
 const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\n" +
-	"$admiral/component/v1/component.proto\x12\x14admiral.component.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa7\x01\n" +
+	"$admiral/component/v1/component.proto\x12\x14admiral.component.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa7\x01\n" +
 	"\x0fComponentOutput\x125\n" +
 	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
 	"\x0evalue_template\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xf4\x06\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xc2\x06\n" +
 	"\tComponent\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
-	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
-	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12@\n" +
-	"\x04slug\x18\x10 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04slug\x12*\n" +
-	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x127\n" +
-	"\x04kind\x18\x05 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12#\n" +
-	"\rdesired_state\x18\x11 \x01(\tR\fdesiredState\x12/\n" +
-	"\x13deletion_protection\x18\x12 \x01(\bR\x12deletionProtection\x12%\n" +
-	"\tmodule_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
-	"\aversion\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
-	"\x0fvalues_template\x18\b \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12,\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
+	"\x0eenvironment_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12@\n" +
+	"\x04name\x18\x04 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
+	"\vdescription\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x127\n" +
+	"\x04kind\x18\x06 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12P\n" +
+	"\rdesired_state\x18\a \x01(\x0e2+.admiral.component.v1.ComponentDesiredStateR\fdesiredState\x12/\n" +
+	"\x13deletion_protection\x18\b \x01(\bR\x12deletionProtection\x12%\n" +
+	"\tmodule_id\x18\t \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
+	"\aversion\x18\n" +
+	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
+	"\x0fvalues_template\x18\v \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12\x1d\n" +
 	"\n" +
-	"depends_on\x18\t \x03(\tB\r\xbaH\n" +
-	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\tdependsOn\x12?\n" +
-	"\aoutputs\x18\n" +
-	" \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputs\x12\x1a\n" +
-	"\bdisabled\x18\v \x01(\bR\bdisabled\x12!\n" +
-	"\fhas_override\x18\f \x01(\bR\vhasOverride\x12:\n" +
+	"depends_on\x18\f \x03(\tR\tdependsOn\x12?\n" +
+	"\aoutputs\x18\r \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputs\x12:\n" +
 	"\n" +
-	"created_by\x18\x0f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\x0e \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xd5\x04\n" +
-	"\x11ComponentOverride\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1a\n" +
-	"\bdisabled\x18\x03 \x01(\bR\bdisabled\x12*\n" +
-	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bmoduleId\x88\x01\x01\x12\x1d\n" +
-	"\aversion\x18\x05 \x01(\tH\x01R\aversion\x88\x01\x01\x12,\n" +
-	"\x0fvalues_template\x18\x06 \x01(\tH\x02R\x0evaluesTemplate\x88\x01\x01\x12,\n" +
-	"\n" +
-	"depends_on\x18\a \x03(\tB\r\xbaH\n" +
-	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\tdependsOn\x12?\n" +
-	"\aoutputs\x18\b \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputs\x12:\n" +
-	"\n" +
-	"created_by\x18\v \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
-	"\n" +
-	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
-	"\n" +
-	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\f\n" +
-	"\n" +
-	"_module_idB\n" +
-	"\n" +
-	"\b_versionB\x12\n" +
-	"\x10_values_template\"\xb9\x03\n" +
-	"\x16CreateComponentRequest\x12/\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
-	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12\x12\n" +
-	"\x04slug\x18\t \x01(\tR\x04slug\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12%\n" +
-	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
-	"\aversion\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
-	"\x0fvalues_template\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12,\n" +
-	"\n" +
-	"depends_on\x18\a \x03(\tB\r\xbaH\n" +
-	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\tdependsOn\x12?\n" +
-	"\aoutputs\x18\b \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputs\"X\n" +
-	"\x17CreateComponentResponse\x12=\n" +
-	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentR\tcomponent\"B\n" +
-	"\x13GetComponentRequest\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\"U\n" +
-	"\x14GetComponentResponse\x12=\n" +
-	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentR\tcomponent\"\xfa\x01\n" +
-	"\x15ListComponentsRequest\x12/\n" +
-	"\x0eapplication_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x124\n" +
-	"\x0eenvironment_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\renvironmentId\x88\x01\x01\x12 \n" +
-	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
-	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
-	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageTokenB\x11\n" +
-	"\x0f_environment_id\"\x81\x01\n" +
-	"\x16ListComponentsResponse\x12?\n" +
-	"\n" +
-	"components\x18\x01 \x03(\v2\x1f.admiral.component.v1.ComponentR\n" +
-	"components\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x9c\x01\n" +
-	"\x16UpdateComponentRequest\x12E\n" +
-	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentB\x06\xbaH\x03\xc8\x01\x01R\tcomponent\x12;\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
-	"updateMask\"X\n" +
-	"\x17UpdateComponentResponse\x12=\n" +
-	"\tcomponent\x18\x01 \x01(\v2\x1f.admiral.component.v1.ComponentR\tcomponent\"E\n" +
-	"\x16DeleteComponentRequest\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\"\x19\n" +
-	"\x17DeleteComponentResponse\"\xc2\x03\n" +
-	"\x1bSetComponentOverrideRequest\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1a\n" +
-	"\bdisabled\x18\x03 \x01(\bR\bdisabled\x12*\n" +
-	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bmoduleId\x88\x01\x01\x12'\n" +
-	"\aversion\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x01R\aversion\x88\x01\x01\x127\n" +
-	"\x0fvalues_template\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04H\x02R\x0evaluesTemplate\x88\x01\x01\x12,\n" +
-	"\n" +
-	"depends_on\x18\a \x03(\tB\r\xbaH\n" +
-	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\tdependsOn\x12?\n" +
-	"\aoutputs\x18\b \x03(\v2%.admiral.component.v1.ComponentOutputR\aoutputsB\f\n" +
-	"\n" +
-	"_module_idB\n" +
-	"\n" +
-	"\b_versionB\x12\n" +
-	"\x10_values_template\"c\n" +
-	"\x1cSetComponentOverrideResponse\x12C\n" +
-	"\boverride\x18\x01 \x01(\v2'.admiral.component.v1.ComponentOverrideR\boverride\"{\n" +
-	"\x1bGetComponentOverrideRequest\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"c\n" +
-	"\x1cGetComponentOverrideResponse\x12C\n" +
-	"\boverride\x18\x01 \x01(\v2'.admiral.component.v1.ComponentOverrideR\boverride\"\x93\x01\n" +
-	"\x1dListComponentOverridesRequest\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12&\n" +
-	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
-	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8f\x01\n" +
-	"\x1eListComponentOverridesResponse\x12E\n" +
-	"\toverrides\x18\x01 \x03(\v2'.admiral.component.v1.ComponentOverrideR\toverrides\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"~\n" +
-	"\x1eDeleteComponentOverrideRequest\x12+\n" +
-	"\fcomponent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"!\n" +
-	"\x1fDeleteComponentOverrideResponse*o\n" +
+	"updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt*o\n" +
 	"\rComponentKind\x12\x1e\n" +
 	"\x1aCOMPONENT_KIND_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dCOMPONENT_KIND_INFRASTRUCTURE\x10\x01\x12\x1b\n" +
-	"\x17COMPONENT_KIND_WORKLOAD\x10\x022\xed\x0f\n" +
-	"\fComponentAPI\x12\xbf\x01\n" +
-	"\x0fCreateComponent\x12,.admiral.component.v1.CreateComponentRequest\x1a-.admiral.component.v1.CreateComponentResponse\"O\xbaG \n" +
-	"\n" +
-	"Components\x12\x12Create a component\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/components\x12\xc3\x01\n" +
-	"\fGetComponent\x12).admiral.component.v1.GetComponentRequest\x1a*.admiral.component.v1.GetComponentResponse\"\\\xbaG\"\n" +
-	"\n" +
-	"Components\x12\x14Retrieve a component\xa2\x97$\n" +
-	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02#\x12!/api/v1/components/{component_id}\x12\xb5\x01\n" +
-	"\x0eListComponents\x12+.admiral.component.v1.ListComponentsRequest\x1a,.admiral.component.v1.ListComponentsResponse\"H\xbaG\x1d\n" +
-	"\n" +
-	"Components\x12\x0fList components\xa2\x97$\n" +
-	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/components\x12\xce\x01\n" +
-	"\x0fUpdateComponent\x12,.admiral.component.v1.UpdateComponentRequest\x1a-.admiral.component.v1.UpdateComponentResponse\"^\xbaG \n" +
-	"\n" +
-	"Components\x12\x12Update a component\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02&:\x01*2!/api/v1/components/{component.id}\x12\xcb\x01\n" +
-	"\x0fDeleteComponent\x12,.admiral.component.v1.DeleteComponentRequest\x1a-.admiral.component.v1.DeleteComponentResponse\"[\xbaG \n" +
-	"\n" +
-	"Components\x12\x12Delete a component\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02#*!/api/v1/components/{component_id}\x12\xfe\x01\n" +
-	"\x14SetComponentOverride\x121.admiral.component.v1.SetComponentOverrideRequest\x1a2.admiral.component.v1.SetComponentOverrideResponse\"\x7f\xbaG&\n" +
-	"\n" +
-	"Components\x12\x18Set a component override\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02A:\x01*\x1a</api/v1/components/{component_id}/overrides/{environment_id}\x12\x80\x02\n" +
-	"\x14GetComponentOverride\x121.admiral.component.v1.GetComponentOverrideRequest\x1a2.admiral.component.v1.GetComponentOverrideResponse\"\x80\x01\xbaG+\n" +
-	"\n" +
-	"Components\x12\x1dRetrieve a component override\xa2\x97$\n" +
-	"\n" +
-	"\benv:read\x82\xd3\xe4\x93\x02>\x12</api/v1/components/{component_id}/overrides/{environment_id}\x12\xef\x01\n" +
-	"\x16ListComponentOverrides\x123.admiral.component.v1.ListComponentOverridesRequest\x1a4.admiral.component.v1.ListComponentOverridesResponse\"j\xbaG&\n" +
-	"\n" +
-	"Components\x12\x18List component overrides\xa2\x97$\n" +
-	"\n" +
-	"\benv:read\x82\xd3\xe4\x93\x02-\x12+/api/v1/components/{component_id}/overrides\x12\x87\x02\n" +
-	"\x17DeleteComponentOverride\x124.admiral.component.v1.DeleteComponentOverrideRequest\x1a5.admiral.component.v1.DeleteComponentOverrideResponse\"\x7f\xbaG)\n" +
-	"\n" +
-	"Components\x12\x1bDelete a component override\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02>*</api/v1/components/{component_id}/overrides/{environment_id}B\xd6\x01\n" +
+	"\x17COMPONENT_KIND_WORKLOAD\x10\x02*\xd4\x01\n" +
+	"\x15ComponentDesiredState\x12'\n" +
+	"#COMPONENT_DESIRED_STATE_UNSPECIFIED\x10\x00\x12\"\n" +
+	"\x1eCOMPONENT_DESIRED_STATE_ACTIVE\x10\x01\x12#\n" +
+	"\x1fCOMPONENT_DESIRED_STATE_DESTROY\x10\x02\x12\"\n" +
+	"\x1eCOMPONENT_DESIRED_STATE_ORPHAN\x10\x03\x12%\n" +
+	"!COMPONENT_DESIRED_STATE_DESTROYED\x10\x04B\xd6\x01\n" +
 	"\x18com.admiral.component.v1B\x0eComponentProtoP\x01Z8go.admiral.io/sdk/proto/admiral/component/v1;componentv1\xa2\x02\x03ACX\xaa\x02\x14Admiral.Component.V1\xca\x02\x14Admiral\\Component\\V1\xe2\x02 Admiral\\Component\\V1\\GPBMetadata\xea\x02\x16Admiral::Component::V1b\x06proto3"
 
 var (
@@ -1861,79 +538,28 @@ func file_admiral_component_v1_component_proto_rawDescGZIP() []byte {
 	return file_admiral_component_v1_component_proto_rawDescData
 }
 
-var file_admiral_component_v1_component_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_admiral_component_v1_component_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_admiral_component_v1_component_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_admiral_component_v1_component_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_admiral_component_v1_component_proto_goTypes = []any{
-	(ComponentKind)(0),                      // 0: admiral.component.v1.ComponentKind
-	(*ComponentOutput)(nil),                 // 1: admiral.component.v1.ComponentOutput
-	(*Component)(nil),                       // 2: admiral.component.v1.Component
-	(*ComponentOverride)(nil),               // 3: admiral.component.v1.ComponentOverride
-	(*CreateComponentRequest)(nil),          // 4: admiral.component.v1.CreateComponentRequest
-	(*CreateComponentResponse)(nil),         // 5: admiral.component.v1.CreateComponentResponse
-	(*GetComponentRequest)(nil),             // 6: admiral.component.v1.GetComponentRequest
-	(*GetComponentResponse)(nil),            // 7: admiral.component.v1.GetComponentResponse
-	(*ListComponentsRequest)(nil),           // 8: admiral.component.v1.ListComponentsRequest
-	(*ListComponentsResponse)(nil),          // 9: admiral.component.v1.ListComponentsResponse
-	(*UpdateComponentRequest)(nil),          // 10: admiral.component.v1.UpdateComponentRequest
-	(*UpdateComponentResponse)(nil),         // 11: admiral.component.v1.UpdateComponentResponse
-	(*DeleteComponentRequest)(nil),          // 12: admiral.component.v1.DeleteComponentRequest
-	(*DeleteComponentResponse)(nil),         // 13: admiral.component.v1.DeleteComponentResponse
-	(*SetComponentOverrideRequest)(nil),     // 14: admiral.component.v1.SetComponentOverrideRequest
-	(*SetComponentOverrideResponse)(nil),    // 15: admiral.component.v1.SetComponentOverrideResponse
-	(*GetComponentOverrideRequest)(nil),     // 16: admiral.component.v1.GetComponentOverrideRequest
-	(*GetComponentOverrideResponse)(nil),    // 17: admiral.component.v1.GetComponentOverrideResponse
-	(*ListComponentOverridesRequest)(nil),   // 18: admiral.component.v1.ListComponentOverridesRequest
-	(*ListComponentOverridesResponse)(nil),  // 19: admiral.component.v1.ListComponentOverridesResponse
-	(*DeleteComponentOverrideRequest)(nil),  // 20: admiral.component.v1.DeleteComponentOverrideRequest
-	(*DeleteComponentOverrideResponse)(nil), // 21: admiral.component.v1.DeleteComponentOverrideResponse
-	(*v1.ActorRef)(nil),                     // 22: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),           // 23: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),           // 24: google.protobuf.FieldMask
+	(ComponentKind)(0),            // 0: admiral.component.v1.ComponentKind
+	(ComponentDesiredState)(0),    // 1: admiral.component.v1.ComponentDesiredState
+	(*ComponentOutput)(nil),       // 2: admiral.component.v1.ComponentOutput
+	(*Component)(nil),             // 3: admiral.component.v1.Component
+	(*v1.ActorRef)(nil),           // 4: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
 }
 var file_admiral_component_v1_component_proto_depIdxs = []int32{
-	0,  // 0: admiral.component.v1.Component.kind:type_name -> admiral.component.v1.ComponentKind
-	1,  // 1: admiral.component.v1.Component.outputs:type_name -> admiral.component.v1.ComponentOutput
-	22, // 2: admiral.component.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
-	23, // 3: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp
-	23, // 4: admiral.component.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 5: admiral.component.v1.ComponentOverride.outputs:type_name -> admiral.component.v1.ComponentOutput
-	22, // 6: admiral.component.v1.ComponentOverride.created_by:type_name -> admiral.common.v1.ActorRef
-	23, // 7: admiral.component.v1.ComponentOverride.created_at:type_name -> google.protobuf.Timestamp
-	23, // 8: admiral.component.v1.ComponentOverride.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 9: admiral.component.v1.CreateComponentRequest.outputs:type_name -> admiral.component.v1.ComponentOutput
-	2,  // 10: admiral.component.v1.CreateComponentResponse.component:type_name -> admiral.component.v1.Component
-	2,  // 11: admiral.component.v1.GetComponentResponse.component:type_name -> admiral.component.v1.Component
-	2,  // 12: admiral.component.v1.ListComponentsResponse.components:type_name -> admiral.component.v1.Component
-	2,  // 13: admiral.component.v1.UpdateComponentRequest.component:type_name -> admiral.component.v1.Component
-	24, // 14: admiral.component.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	2,  // 15: admiral.component.v1.UpdateComponentResponse.component:type_name -> admiral.component.v1.Component
-	1,  // 16: admiral.component.v1.SetComponentOverrideRequest.outputs:type_name -> admiral.component.v1.ComponentOutput
-	3,  // 17: admiral.component.v1.SetComponentOverrideResponse.override:type_name -> admiral.component.v1.ComponentOverride
-	3,  // 18: admiral.component.v1.GetComponentOverrideResponse.override:type_name -> admiral.component.v1.ComponentOverride
-	3,  // 19: admiral.component.v1.ListComponentOverridesResponse.overrides:type_name -> admiral.component.v1.ComponentOverride
-	4,  // 20: admiral.component.v1.ComponentAPI.CreateComponent:input_type -> admiral.component.v1.CreateComponentRequest
-	6,  // 21: admiral.component.v1.ComponentAPI.GetComponent:input_type -> admiral.component.v1.GetComponentRequest
-	8,  // 22: admiral.component.v1.ComponentAPI.ListComponents:input_type -> admiral.component.v1.ListComponentsRequest
-	10, // 23: admiral.component.v1.ComponentAPI.UpdateComponent:input_type -> admiral.component.v1.UpdateComponentRequest
-	12, // 24: admiral.component.v1.ComponentAPI.DeleteComponent:input_type -> admiral.component.v1.DeleteComponentRequest
-	14, // 25: admiral.component.v1.ComponentAPI.SetComponentOverride:input_type -> admiral.component.v1.SetComponentOverrideRequest
-	16, // 26: admiral.component.v1.ComponentAPI.GetComponentOverride:input_type -> admiral.component.v1.GetComponentOverrideRequest
-	18, // 27: admiral.component.v1.ComponentAPI.ListComponentOverrides:input_type -> admiral.component.v1.ListComponentOverridesRequest
-	20, // 28: admiral.component.v1.ComponentAPI.DeleteComponentOverride:input_type -> admiral.component.v1.DeleteComponentOverrideRequest
-	5,  // 29: admiral.component.v1.ComponentAPI.CreateComponent:output_type -> admiral.component.v1.CreateComponentResponse
-	7,  // 30: admiral.component.v1.ComponentAPI.GetComponent:output_type -> admiral.component.v1.GetComponentResponse
-	9,  // 31: admiral.component.v1.ComponentAPI.ListComponents:output_type -> admiral.component.v1.ListComponentsResponse
-	11, // 32: admiral.component.v1.ComponentAPI.UpdateComponent:output_type -> admiral.component.v1.UpdateComponentResponse
-	13, // 33: admiral.component.v1.ComponentAPI.DeleteComponent:output_type -> admiral.component.v1.DeleteComponentResponse
-	15, // 34: admiral.component.v1.ComponentAPI.SetComponentOverride:output_type -> admiral.component.v1.SetComponentOverrideResponse
-	17, // 35: admiral.component.v1.ComponentAPI.GetComponentOverride:output_type -> admiral.component.v1.GetComponentOverrideResponse
-	19, // 36: admiral.component.v1.ComponentAPI.ListComponentOverrides:output_type -> admiral.component.v1.ListComponentOverridesResponse
-	21, // 37: admiral.component.v1.ComponentAPI.DeleteComponentOverride:output_type -> admiral.component.v1.DeleteComponentOverrideResponse
-	29, // [29:38] is the sub-list for method output_type
-	20, // [20:29] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	0, // 0: admiral.component.v1.Component.kind:type_name -> admiral.component.v1.ComponentKind
+	1, // 1: admiral.component.v1.Component.desired_state:type_name -> admiral.component.v1.ComponentDesiredState
+	2, // 2: admiral.component.v1.Component.outputs:type_name -> admiral.component.v1.ComponentOutput
+	4, // 3: admiral.component.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
+	5, // 4: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp
+	5, // 5: admiral.component.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_admiral_component_v1_component_proto_init() }
@@ -1941,18 +567,15 @@ func file_admiral_component_v1_component_proto_init() {
 	if File_admiral_component_v1_component_proto != nil {
 		return
 	}
-	file_admiral_component_v1_component_proto_msgTypes[2].OneofWrappers = []any{}
-	file_admiral_component_v1_component_proto_msgTypes[7].OneofWrappers = []any{}
-	file_admiral_component_v1_component_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_component_v1_component_proto_rawDesc), len(file_admiral_component_v1_component_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   21,
+			NumEnums:      2,
+			NumMessages:   2,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_admiral_component_v1_component_proto_goTypes,
 		DependencyIndexes: file_admiral_component_v1_component_proto_depIdxs,

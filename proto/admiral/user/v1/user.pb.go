@@ -329,7 +329,7 @@ type CreatePersonalAccessTokenRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// The scopes to grant this token. Must be valid scopes allowed for PATs.
 	// The server enforces that issued scopes are a subset of the caller's own
-	// scopes -- a token cannot grant more access than the user holds.
+	// scopes. A token cannot grant more access than the user holds.
 	Scopes []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	// Optional expiration time. If unset, the token does not expire.
 	// Tenant policies may enforce a maximum lifetime.
@@ -451,8 +451,8 @@ type ListPersonalAccessTokensRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `name` -- filter by token name.
-	//   - `status` -- filter by token status (ACTIVE, REVOKED, EXPIRED).
+	//   - `name`: filter by token name.
+	//   - `status`: filter by token status (ACTIVE, REVOKED, EXPIRED).
 	//
 	// Example: `field['status'] = 'ACTIVE'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -673,7 +673,7 @@ type UpdatePersonalAccessTokenRequest struct {
 	Name *string `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
 	// New scopes for the token. Replaces all existing scopes.
 	// The server enforces that issued scopes are a subset of the caller's own
-	// scopes -- a token cannot grant more access than the user holds.
+	// scopes. A token cannot grant more access than the user holds.
 	// Omit to leave scopes unchanged.
 	Scopes        []string `protobuf:"bytes,3,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	unknownFields protoimpl.UnknownFields

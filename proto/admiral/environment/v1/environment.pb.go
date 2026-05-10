@@ -10,6 +10,10 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
 	v1 "go.admiral.io/sdk/proto/admiral/common/v1"
+	v12 "go.admiral.io/sdk/proto/admiral/component/v1"
+	v13 "go.admiral.io/sdk/proto/admiral/module/v1"
+	v14 "go.admiral.io/sdk/proto/admiral/run/v1"
+	v11 "go.admiral.io/sdk/proto/admiral/variable/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -393,7 +397,7 @@ func (*InfrastructureTarget_Terraform) isInfrastructureTarget_Config() {}
 // An application with only Helm charts needs a workload target; one with only
 // Terraform modules needs an infrastructure target; most applications need both.
 //
-// At most one target per type is allowed per environment. The deployment engine
+// At most one target per type is allowed per environment. The run engine
 // routes each component to the matching target based on its source type.
 type Environment struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -411,19 +415,19 @@ type Environment struct {
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	// Workload runtime targets. Each entry binds this environment to a workload
 	// runtime (e.g., Kubernetes cluster). At most one target per WorkloadType
-	// is allowed -- the server rejects duplicates.
+	// is allowed; the server rejects duplicates.
 	//
 	// Components with workload sources (Helm, Kustomize, manifests) are routed
 	// to the matching target at deployment time. If no matching target exists,
-	// the deployment fails with a clear error.
+	// the run fails with a clear error.
 	WorkloadTargets []*WorkloadTarget `protobuf:"bytes,5,rep,name=workload_targets,json=workloadTargets,proto3" json:"workload_targets,omitempty"`
 	// Infrastructure runtime targets. Each entry binds this environment to an
 	// infrastructure provisioning tool (e.g., Terraform runner). At most one
-	// target per InfrastructureType is allowed -- the server rejects duplicates.
+	// target per InfrastructureType is allowed; the server rejects duplicates.
 	//
 	// Components with infrastructure sources (Terraform modules) are routed to
 	// the matching target at deployment time. If no matching target exists,
-	// the deployment fails with a clear error.
+	// the run fails with a clear error.
 	InfrastructureTargets []*InfrastructureTarget `protobuf:"bytes,6,rep,name=infrastructure_targets,json=infrastructureTargets,proto3" json:"infrastructure_targets,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering environments
 	// (e.g., `{"region": "us-east-1", "tier": "production"}`).
@@ -431,19 +435,19 @@ type Environment struct {
 	// Whether the environment has configuration changes that have not yet been
 	// deployed. Server-derived by comparing current resolved config (variables,
 	// component settings, overrides, source versions) against the last
-	// successful deployment's snapshot. False if no successful deployment
-	// exists yet (a fresh environment with no deployments returns false --
-	// use `last_deployed_at` to distinguish "clean" from "never deployed").
+	// successful run's snapshot. False if no successful run exists yet (a
+	// fresh environment with no runs returns false; use `last_deployed_at`
+	// to distinguish "clean" from "never deployed").
 	HasPendingChanges bool `protobuf:"varint,8,opt,name=has_pending_changes,json=hasPendingChanges,proto3" json:"has_pending_changes,omitempty"`
-	// When the last successful deployment to this environment completed.
-	// Absent if no successful deployment has occurred yet.
+	// When the last successful run for this environment completed. Absent if
+	// no successful run has occurred yet.
 	LastDeployedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=last_deployed_at,json=lastDeployedAt,proto3" json:"last_deployed_at,omitempty"`
 	// The user or agent who created this environment (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,10,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the environment was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the environment was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -572,10 +576,10 @@ type CreateEnvironmentRequest struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional longer-form description of the environment's purpose.
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// Workload runtime targets. Optional -- can be added later via
+	// Workload runtime targets. Optional; can be added later via
 	// UpdateEnvironment. At most one target per WorkloadType.
 	WorkloadTargets []*WorkloadTarget `protobuf:"bytes,4,rep,name=workload_targets,json=workloadTargets,proto3" json:"workload_targets,omitempty"`
-	// Infrastructure runtime targets. Optional -- can be added later via
+	// Infrastructure runtime targets. Optional; can be added later via
 	// UpdateEnvironment. At most one target per InfrastructureType.
 	InfrastructureTargets []*InfrastructureTarget `protobuf:"bytes,5,rep,name=infrastructure_targets,json=infrastructureTargets,proto3" json:"infrastructure_targets,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering environments.
@@ -804,11 +808,13 @@ type ListEnvironmentsRequest struct {
 	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
 	//
 	// Filterable fields:
-	//   - `application_id` -- filter by parent application (UUID).
-	//   - `name` -- filter by environment name.
-	//   - `workload_type` -- filter by workload target type (KUBERNETES).
-	//   - `infrastructure_type` -- filter by infrastructure target type (TERRAFORM).
-	//   - `labels.key` -- filter by label key.
+	//   - `application_id`: filter by parent application (UUID).
+	//   - `name`: filter by environment name.
+	//   - `workload_type`: filter by workload target type (KUBERNETES).
+	//     Matches environments that have a workload target of the given type.
+	//   - `infrastructure_type`: filter by infrastructure target type (TERRAFORM).
+	//     Matches environments that have an infrastructure target of the given type.
+	//   - `labels.key`: filter by label key.
 	//
 	// Example: `field['application_id'] = '<uuid>' AND field['name'] = 'prod'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -936,7 +942,7 @@ type UpdateEnvironmentRequest struct {
 	// Supported fields: `name`, `description`, `workload_targets`,
 	// `infrastructure_targets`, `labels`.
 	//
-	// When updating target lists, the entire list is replaced -- there is no
+	// When updating target lists, the entire list is replaced. There is no
 	// partial merge of individual targets within the list.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1039,7 +1045,7 @@ type DeleteEnvironmentRequest struct {
 	// The unique identifier of the environment to delete (UUID).
 	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	// When true, bypass the children-exist check and cascade-delete all
-	// deployment records (metadata only).
+	// run records (metadata only).
 	Force         bool `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1126,11 +1132,366 @@ func (*DeleteEnvironmentResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_environment_v1_environment_proto_rawDescGZIP(), []int{14}
 }
 
+// ListEnvironmentVariablesRequest contains the environment ID, filters, and
+// pagination parameters.
+type ListEnvironmentVariablesRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The environment whose variables should be listed (UUID).
+	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	// Filter expression to narrow results. Uses the Admiral filter DSL.
+	//
+	// Filterable fields:
+	//   - `key`: filter by variable key (supports prefix matching via ~=).
+	//   - `sensitive`: filter by sensitivity flag.
+	//   - `type`: filter by variable type (STRING, NUMBER, BOOLEAN, COMPLEX).
+	//   - `source`: filter by source (USER, INFRASTRUCTURE).
+	//
+	// Example: `field['source'] = 'USER' AND field['sensitive'] = false`
+	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
+	// Maximum number of variables to return per page.
+	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Opaque pagination token from a previous response.
+	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListEnvironmentVariablesRequest) Reset() {
+	*x = ListEnvironmentVariablesRequest{}
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListEnvironmentVariablesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEnvironmentVariablesRequest) ProtoMessage() {}
+
+func (x *ListEnvironmentVariablesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEnvironmentVariablesRequest.ProtoReflect.Descriptor instead.
+func (*ListEnvironmentVariablesRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_environment_v1_environment_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListEnvironmentVariablesRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *ListEnvironmentVariablesRequest) GetFilter() string {
+	if x != nil {
+		return x.Filter
+	}
+	return ""
+}
+
+func (x *ListEnvironmentVariablesRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListEnvironmentVariablesRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+// ListEnvironmentVariablesResponse contains a page of variables.
+type ListEnvironmentVariablesResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The variables scoped to this environment. Sensitive values are masked.
+	Variables []*v11.Variable `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
+	// Pagination token for the next page. Empty when there are no more results.
+	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListEnvironmentVariablesResponse) Reset() {
+	*x = ListEnvironmentVariablesResponse{}
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListEnvironmentVariablesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEnvironmentVariablesResponse) ProtoMessage() {}
+
+func (x *ListEnvironmentVariablesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEnvironmentVariablesResponse.ProtoReflect.Descriptor instead.
+func (*ListEnvironmentVariablesResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_environment_v1_environment_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ListEnvironmentVariablesResponse) GetVariables() []*v11.Variable {
+	if x != nil {
+		return x.Variables
+	}
+	return nil
+}
+
+func (x *ListEnvironmentVariablesResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
+// EnvironmentComponent is a denormalized view of a deployed component for
+// `ListEnvironmentComponents`. It joins the component's HEAD with the
+// component's last-succeeded revision so the CLI can render an at-a-glance
+// status row without follow-up calls.
+type EnvironmentComponent struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Component name (stable identifier set at creation).
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The component's current desired state.
+	DesiredState v12.ComponentDesiredState `protobuf:"varint,2,opt,name=desired_state,json=desiredState,proto3,enum=admiral.component.v1.ComponentDesiredState" json:"desired_state,omitempty"`
+	// Module the component is bound to (UUID).
+	ModuleId string `protobuf:"bytes,3,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
+	// Module name. Denormalized for display.
+	ModuleName string `protobuf:"bytes,4,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
+	// Module type the component renders against (TERRAFORM, HELM, etc).
+	ModuleType v13.ModuleType `protobuf:"varint,5,opt,name=module_type,json=moduleType,proto3,enum=admiral.module.v1.ModuleType" json:"module_type,omitempty"`
+	// Optional ref / version override the component pins.
+	Version string `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
+	// ID of the last-succeeded revision for this component in this env, if
+	// any (UUID). Empty when the component has never reached SUCCEEDED.
+	LastRevisionId string `protobuf:"bytes,7,opt,name=last_revision_id,json=lastRevisionId,proto3" json:"last_revision_id,omitempty"`
+	// Status of the last revision (SUCCEEDED when populated). UNSPECIFIED
+	// means the component has no last-succeeded revision yet.
+	LastRevisionStatus v14.RevisionStatus `protobuf:"varint,8,opt,name=last_revision_status,json=lastRevisionStatus,proto3,enum=admiral.run.v1.RevisionStatus" json:"last_revision_status,omitempty"`
+	// When the last-succeeded revision completed.
+	LastDeployedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=last_deployed_at,json=lastDeployedAt,proto3" json:"last_deployed_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *EnvironmentComponent) Reset() {
+	*x = EnvironmentComponent{}
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnvironmentComponent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnvironmentComponent) ProtoMessage() {}
+
+func (x *EnvironmentComponent) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnvironmentComponent.ProtoReflect.Descriptor instead.
+func (*EnvironmentComponent) Descriptor() ([]byte, []int) {
+	return file_admiral_environment_v1_environment_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *EnvironmentComponent) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *EnvironmentComponent) GetDesiredState() v12.ComponentDesiredState {
+	if x != nil {
+		return x.DesiredState
+	}
+	return v12.ComponentDesiredState(0)
+}
+
+func (x *EnvironmentComponent) GetModuleId() string {
+	if x != nil {
+		return x.ModuleId
+	}
+	return ""
+}
+
+func (x *EnvironmentComponent) GetModuleName() string {
+	if x != nil {
+		return x.ModuleName
+	}
+	return ""
+}
+
+func (x *EnvironmentComponent) GetModuleType() v13.ModuleType {
+	if x != nil {
+		return x.ModuleType
+	}
+	return v13.ModuleType(0)
+}
+
+func (x *EnvironmentComponent) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *EnvironmentComponent) GetLastRevisionId() string {
+	if x != nil {
+		return x.LastRevisionId
+	}
+	return ""
+}
+
+func (x *EnvironmentComponent) GetLastRevisionStatus() v14.RevisionStatus {
+	if x != nil {
+		return x.LastRevisionStatus
+	}
+	return v14.RevisionStatus(0)
+}
+
+func (x *EnvironmentComponent) GetLastDeployedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastDeployedAt
+	}
+	return nil
+}
+
+// ListEnvironmentComponentsRequest identifies the environment whose
+// components should be listed.
+type ListEnvironmentComponentsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The environment whose components should be listed (UUID).
+	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListEnvironmentComponentsRequest) Reset() {
+	*x = ListEnvironmentComponentsRequest{}
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListEnvironmentComponentsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEnvironmentComponentsRequest) ProtoMessage() {}
+
+func (x *ListEnvironmentComponentsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEnvironmentComponentsRequest.ProtoReflect.Descriptor instead.
+func (*ListEnvironmentComponentsRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_environment_v1_environment_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ListEnvironmentComponentsRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+// ListEnvironmentComponentsResponse returns every active component for the
+// environment, ordered by name.
+type ListEnvironmentComponentsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Active components (DesiredState=ACTIVE) attached to the environment,
+	// sorted by name.
+	Components    []*EnvironmentComponent `protobuf:"bytes,1,rep,name=components,proto3" json:"components,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListEnvironmentComponentsResponse) Reset() {
+	*x = ListEnvironmentComponentsResponse{}
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListEnvironmentComponentsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEnvironmentComponentsResponse) ProtoMessage() {}
+
+func (x *ListEnvironmentComponentsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_environment_v1_environment_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEnvironmentComponentsResponse.ProtoReflect.Descriptor instead.
+func (*ListEnvironmentComponentsResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_environment_v1_environment_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ListEnvironmentComponentsResponse) GetComponents() []*EnvironmentComponent {
+	if x != nil {
+		return x.Components
+	}
+	return nil
+}
+
 var File_admiral_environment_v1_environment_proto protoreflect.FileDescriptor
 
 const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"\n" +
-	"(admiral/environment/v1/environment.proto\x12\x16admiral.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"l\n" +
+	"(admiral/environment/v1/environment.proto\x12\x16admiral.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a$admiral/component/v1/component.proto\x1a\x1eadmiral/module/v1/module.proto\x1a\x18admiral/run/v1/run.proto\x1a\"admiral/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"l\n" +
 	"\x10KubernetesConfig\x12'\n" +
 	"\n" +
 	"cluster_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\x12!\n" +
@@ -1161,9 +1522,9 @@ const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"created_by\x18\n" +
 	" \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x9b\x04\n" +
@@ -1200,13 +1561,40 @@ const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"\x18DeleteEnvironmentRequest\x12/\n" +
 	"\x0eenvironment_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x14\n" +
 	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
-	"\x19DeleteEnvironmentResponse*K\n" +
+	"\x19DeleteEnvironmentResponse\"\xbb\x01\n" +
+	"\x1fListEnvironmentVariablesRequest\x12/\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12 \n" +
+	"\x06filter\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
+	"\tpage_size\x18\x03 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x04 \x01(\tR\tpageToken\"\x87\x01\n" +
+	" ListEnvironmentVariablesResponse\x12;\n" +
+	"\tvariables\x18\x01 \x03(\v2\x1d.admiral.variable.v1.VariableR\tvariables\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xd6\x03\n" +
+	"\x14EnvironmentComponent\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12P\n" +
+	"\rdesired_state\x18\x02 \x01(\x0e2+.admiral.component.v1.ComponentDesiredStateR\fdesiredState\x12\x1b\n" +
+	"\tmodule_id\x18\x03 \x01(\tR\bmoduleId\x12\x1f\n" +
+	"\vmodule_name\x18\x04 \x01(\tR\n" +
+	"moduleName\x12>\n" +
+	"\vmodule_type\x18\x05 \x01(\x0e2\x1d.admiral.module.v1.ModuleTypeR\n" +
+	"moduleType\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\tR\aversion\x12(\n" +
+	"\x10last_revision_id\x18\a \x01(\tR\x0elastRevisionId\x12P\n" +
+	"\x14last_revision_status\x18\b \x01(\x0e2\x1e.admiral.run.v1.RevisionStatusR\x12lastRevisionStatus\x12D\n" +
+	"\x10last_deployed_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x0elastDeployedAt\"S\n" +
+	" ListEnvironmentComponentsRequest\x12/\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"q\n" +
+	"!ListEnvironmentComponentsResponse\x12L\n" +
+	"\n" +
+	"components\x18\x01 \x03(\v2,.admiral.environment.v1.EnvironmentComponentR\n" +
+	"components*K\n" +
 	"\fWorkloadType\x12\x1d\n" +
 	"\x19WORKLOAD_TYPE_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18WORKLOAD_TYPE_KUBERNETES\x10\x01*\\\n" +
 	"\x12InfrastructureType\x12#\n" +
 	"\x1fINFRASTRUCTURE_TYPE_UNSPECIFIED\x10\x00\x12!\n" +
-	"\x1dINFRASTRUCTURE_TYPE_TERRAFORM\x10\x012\xc9\b\n" +
+	"\x1dINFRASTRUCTURE_TYPE_TERRAFORM\x10\x012\xed\f\n" +
 	"\x0eEnvironmentAPI\x12\xd0\x01\n" +
 	"\x11CreateEnvironment\x120.admiral.environment.v1.CreateEnvironmentRequest\x1a1.admiral.environment.v1.CreateEnvironmentResponse\"V\xbaG%\n" +
 	"\fEnvironments\x12\x15Create an environment\xa2\x97$\v\n" +
@@ -1224,7 +1612,15 @@ const file_admiral_environment_v1_environment_proto_rawDesc = "" +
 	"\tenv:write\x82\xd3\xe4\x93\x02*:\x01*2%/api/v1/environments/{environment.id}\x12\xde\x01\n" +
 	"\x11DeleteEnvironment\x120.admiral.environment.v1.DeleteEnvironmentRequest\x1a1.admiral.environment.v1.DeleteEnvironmentResponse\"d\xbaG%\n" +
 	"\fEnvironments\x12\x15Delete an environment\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02'*%/api/v1/environments/{environment_id}B\xe6\x01\n" +
+	"\tenv:write\x82\xd3\xe4\x93\x02'*%/api/v1/environments/{environment_id}\x12\x88\x02\n" +
+	"\x18ListEnvironmentVariables\x127.admiral.environment.v1.ListEnvironmentVariablesRequest\x1a8.admiral.environment.v1.ListEnvironmentVariablesResponse\"y\xbaG1\n" +
+	"\fEnvironments\x12!List variables for an environment\xa2\x97$\n" +
+	"\n" +
+	"\bvar:read\x82\xd3\xe4\x93\x021\x12//api/v1/environments/{environment_id}/variables\x12\x96\x02\n" +
+	"\x19ListEnvironmentComponents\x128.admiral.environment.v1.ListEnvironmentComponentsRequest\x1a9.admiral.environment.v1.ListEnvironmentComponentsResponse\"\x83\x01\xbaG:\n" +
+	"\fEnvironments\x12*List components deployed to an environment\xa2\x97$\n" +
+	"\n" +
+	"\benv:read\x82\xd3\xe4\x93\x022\x120/api/v1/environments/{environment_id}/componentsB\xe6\x01\n" +
 	"\x1acom.admiral.environment.v1B\x10EnvironmentProtoP\x01Z<go.admiral.io/sdk/proto/admiral/environment/v1;environmentv1\xa2\x02\x03AEX\xaa\x02\x16Admiral.Environment.V1\xca\x02\x16Admiral\\Environment\\V1\xe2\x02\"Admiral\\Environment\\V1\\GPBMetadata\xea\x02\x18Admiral::Environment::V1b\x06proto3"
 
 var (
@@ -1240,65 +1636,84 @@ func file_admiral_environment_v1_environment_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_environment_v1_environment_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_admiral_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_admiral_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_admiral_environment_v1_environment_proto_goTypes = []any{
-	(WorkloadType)(0),                 // 0: admiral.environment.v1.WorkloadType
-	(InfrastructureType)(0),           // 1: admiral.environment.v1.InfrastructureType
-	(*KubernetesConfig)(nil),          // 2: admiral.environment.v1.KubernetesConfig
-	(*TerraformConfig)(nil),           // 3: admiral.environment.v1.TerraformConfig
-	(*WorkloadTarget)(nil),            // 4: admiral.environment.v1.WorkloadTarget
-	(*InfrastructureTarget)(nil),      // 5: admiral.environment.v1.InfrastructureTarget
-	(*Environment)(nil),               // 6: admiral.environment.v1.Environment
-	(*CreateEnvironmentRequest)(nil),  // 7: admiral.environment.v1.CreateEnvironmentRequest
-	(*CreateEnvironmentResponse)(nil), // 8: admiral.environment.v1.CreateEnvironmentResponse
-	(*GetEnvironmentRequest)(nil),     // 9: admiral.environment.v1.GetEnvironmentRequest
-	(*GetEnvironmentResponse)(nil),    // 10: admiral.environment.v1.GetEnvironmentResponse
-	(*ListEnvironmentsRequest)(nil),   // 11: admiral.environment.v1.ListEnvironmentsRequest
-	(*ListEnvironmentsResponse)(nil),  // 12: admiral.environment.v1.ListEnvironmentsResponse
-	(*UpdateEnvironmentRequest)(nil),  // 13: admiral.environment.v1.UpdateEnvironmentRequest
-	(*UpdateEnvironmentResponse)(nil), // 14: admiral.environment.v1.UpdateEnvironmentResponse
-	(*DeleteEnvironmentRequest)(nil),  // 15: admiral.environment.v1.DeleteEnvironmentRequest
-	(*DeleteEnvironmentResponse)(nil), // 16: admiral.environment.v1.DeleteEnvironmentResponse
-	nil,                               // 17: admiral.environment.v1.Environment.LabelsEntry
-	nil,                               // 18: admiral.environment.v1.CreateEnvironmentRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),     // 19: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),               // 20: admiral.common.v1.ActorRef
-	(*fieldmaskpb.FieldMask)(nil),     // 21: google.protobuf.FieldMask
+	(WorkloadType)(0),                         // 0: admiral.environment.v1.WorkloadType
+	(InfrastructureType)(0),                   // 1: admiral.environment.v1.InfrastructureType
+	(*KubernetesConfig)(nil),                  // 2: admiral.environment.v1.KubernetesConfig
+	(*TerraformConfig)(nil),                   // 3: admiral.environment.v1.TerraformConfig
+	(*WorkloadTarget)(nil),                    // 4: admiral.environment.v1.WorkloadTarget
+	(*InfrastructureTarget)(nil),              // 5: admiral.environment.v1.InfrastructureTarget
+	(*Environment)(nil),                       // 6: admiral.environment.v1.Environment
+	(*CreateEnvironmentRequest)(nil),          // 7: admiral.environment.v1.CreateEnvironmentRequest
+	(*CreateEnvironmentResponse)(nil),         // 8: admiral.environment.v1.CreateEnvironmentResponse
+	(*GetEnvironmentRequest)(nil),             // 9: admiral.environment.v1.GetEnvironmentRequest
+	(*GetEnvironmentResponse)(nil),            // 10: admiral.environment.v1.GetEnvironmentResponse
+	(*ListEnvironmentsRequest)(nil),           // 11: admiral.environment.v1.ListEnvironmentsRequest
+	(*ListEnvironmentsResponse)(nil),          // 12: admiral.environment.v1.ListEnvironmentsResponse
+	(*UpdateEnvironmentRequest)(nil),          // 13: admiral.environment.v1.UpdateEnvironmentRequest
+	(*UpdateEnvironmentResponse)(nil),         // 14: admiral.environment.v1.UpdateEnvironmentResponse
+	(*DeleteEnvironmentRequest)(nil),          // 15: admiral.environment.v1.DeleteEnvironmentRequest
+	(*DeleteEnvironmentResponse)(nil),         // 16: admiral.environment.v1.DeleteEnvironmentResponse
+	(*ListEnvironmentVariablesRequest)(nil),   // 17: admiral.environment.v1.ListEnvironmentVariablesRequest
+	(*ListEnvironmentVariablesResponse)(nil),  // 18: admiral.environment.v1.ListEnvironmentVariablesResponse
+	(*EnvironmentComponent)(nil),              // 19: admiral.environment.v1.EnvironmentComponent
+	(*ListEnvironmentComponentsRequest)(nil),  // 20: admiral.environment.v1.ListEnvironmentComponentsRequest
+	(*ListEnvironmentComponentsResponse)(nil), // 21: admiral.environment.v1.ListEnvironmentComponentsResponse
+	nil,                            // 22: admiral.environment.v1.Environment.LabelsEntry
+	nil,                            // 23: admiral.environment.v1.CreateEnvironmentRequest.LabelsEntry
+	(*timestamppb.Timestamp)(nil),  // 24: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),            // 25: admiral.common.v1.ActorRef
+	(*fieldmaskpb.FieldMask)(nil),  // 26: google.protobuf.FieldMask
+	(*v11.Variable)(nil),           // 27: admiral.variable.v1.Variable
+	(v12.ComponentDesiredState)(0), // 28: admiral.component.v1.ComponentDesiredState
+	(v13.ModuleType)(0),            // 29: admiral.module.v1.ModuleType
+	(v14.RevisionStatus)(0),        // 30: admiral.run.v1.RevisionStatus
 }
 var file_admiral_environment_v1_environment_proto_depIdxs = []int32{
 	2,  // 0: admiral.environment.v1.WorkloadTarget.kubernetes:type_name -> admiral.environment.v1.KubernetesConfig
 	3,  // 1: admiral.environment.v1.InfrastructureTarget.terraform:type_name -> admiral.environment.v1.TerraformConfig
 	4,  // 2: admiral.environment.v1.Environment.workload_targets:type_name -> admiral.environment.v1.WorkloadTarget
 	5,  // 3: admiral.environment.v1.Environment.infrastructure_targets:type_name -> admiral.environment.v1.InfrastructureTarget
-	17, // 4: admiral.environment.v1.Environment.labels:type_name -> admiral.environment.v1.Environment.LabelsEntry
-	19, // 5: admiral.environment.v1.Environment.last_deployed_at:type_name -> google.protobuf.Timestamp
-	20, // 6: admiral.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
-	19, // 7: admiral.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
-	19, // 8: admiral.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
+	22, // 4: admiral.environment.v1.Environment.labels:type_name -> admiral.environment.v1.Environment.LabelsEntry
+	24, // 5: admiral.environment.v1.Environment.last_deployed_at:type_name -> google.protobuf.Timestamp
+	25, // 6: admiral.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
+	24, // 7: admiral.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
+	24, // 8: admiral.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
 	4,  // 9: admiral.environment.v1.CreateEnvironmentRequest.workload_targets:type_name -> admiral.environment.v1.WorkloadTarget
 	5,  // 10: admiral.environment.v1.CreateEnvironmentRequest.infrastructure_targets:type_name -> admiral.environment.v1.InfrastructureTarget
-	18, // 11: admiral.environment.v1.CreateEnvironmentRequest.labels:type_name -> admiral.environment.v1.CreateEnvironmentRequest.LabelsEntry
+	23, // 11: admiral.environment.v1.CreateEnvironmentRequest.labels:type_name -> admiral.environment.v1.CreateEnvironmentRequest.LabelsEntry
 	6,  // 12: admiral.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
 	6,  // 13: admiral.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
 	6,  // 14: admiral.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.environment.v1.Environment
 	6,  // 15: admiral.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.environment.v1.Environment
-	21, // 16: admiral.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	26, // 16: admiral.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
 	6,  // 17: admiral.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.environment.v1.Environment
-	7,  // 18: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.environment.v1.CreateEnvironmentRequest
-	9,  // 19: admiral.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.environment.v1.GetEnvironmentRequest
-	11, // 20: admiral.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.environment.v1.ListEnvironmentsRequest
-	13, // 21: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.environment.v1.UpdateEnvironmentRequest
-	15, // 22: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.environment.v1.DeleteEnvironmentRequest
-	8,  // 23: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.environment.v1.CreateEnvironmentResponse
-	10, // 24: admiral.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.environment.v1.GetEnvironmentResponse
-	12, // 25: admiral.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.environment.v1.ListEnvironmentsResponse
-	14, // 26: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.environment.v1.UpdateEnvironmentResponse
-	16, // 27: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.environment.v1.DeleteEnvironmentResponse
-	23, // [23:28] is the sub-list for method output_type
-	18, // [18:23] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	27, // 18: admiral.environment.v1.ListEnvironmentVariablesResponse.variables:type_name -> admiral.variable.v1.Variable
+	28, // 19: admiral.environment.v1.EnvironmentComponent.desired_state:type_name -> admiral.component.v1.ComponentDesiredState
+	29, // 20: admiral.environment.v1.EnvironmentComponent.module_type:type_name -> admiral.module.v1.ModuleType
+	30, // 21: admiral.environment.v1.EnvironmentComponent.last_revision_status:type_name -> admiral.run.v1.RevisionStatus
+	24, // 22: admiral.environment.v1.EnvironmentComponent.last_deployed_at:type_name -> google.protobuf.Timestamp
+	19, // 23: admiral.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.environment.v1.EnvironmentComponent
+	7,  // 24: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.environment.v1.CreateEnvironmentRequest
+	9,  // 25: admiral.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.environment.v1.GetEnvironmentRequest
+	11, // 26: admiral.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.environment.v1.ListEnvironmentsRequest
+	13, // 27: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.environment.v1.UpdateEnvironmentRequest
+	15, // 28: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.environment.v1.DeleteEnvironmentRequest
+	17, // 29: admiral.environment.v1.EnvironmentAPI.ListEnvironmentVariables:input_type -> admiral.environment.v1.ListEnvironmentVariablesRequest
+	20, // 30: admiral.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.environment.v1.ListEnvironmentComponentsRequest
+	8,  // 31: admiral.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.environment.v1.CreateEnvironmentResponse
+	10, // 32: admiral.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.environment.v1.GetEnvironmentResponse
+	12, // 33: admiral.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.environment.v1.ListEnvironmentsResponse
+	14, // 34: admiral.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.environment.v1.UpdateEnvironmentResponse
+	16, // 35: admiral.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.environment.v1.DeleteEnvironmentResponse
+	18, // 36: admiral.environment.v1.EnvironmentAPI.ListEnvironmentVariables:output_type -> admiral.environment.v1.ListEnvironmentVariablesResponse
+	21, // 37: admiral.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.environment.v1.ListEnvironmentComponentsResponse
+	31, // [31:38] is the sub-list for method output_type
+	24, // [24:31] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_admiral_environment_v1_environment_proto_init() }
@@ -1319,7 +1734,7 @@ func file_admiral_environment_v1_environment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_environment_v1_environment_proto_rawDesc), len(file_admiral_environment_v1_environment_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   17,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

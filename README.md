@@ -38,17 +38,15 @@ func main() {
 	// c.Authentication().MethodName(ctx, req)
 	// c.ChangeSet().MethodName(ctx, req)
 	// c.Cluster().MethodName(ctx, req)
-	// c.Component().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
-	// c.Deployment().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
 	// c.Module().MethodName(ctx, req)
+	// c.Run().MethodName(ctx, req)
 	// c.Runner().MethodName(ctx, req)
 	// c.Source().MethodName(ctx, req)
 	// c.State().MethodName(ctx, req)
 	// c.User().MethodName(ctx, req)
-	// c.Variable().MethodName(ctx, req)
 }
 ```
 
@@ -60,17 +58,15 @@ func main() {
 | AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/authentication/v1` |
 | ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/changeset/v1` |
 | ClusterAPI | `Cluster()` | `go.admiral.io/sdk/proto/admiral/cluster/v1` |
-| ComponentAPI | `Component()` | `go.admiral.io/sdk/proto/admiral/component/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/credential/v1` |
-| DeploymentAPI | `Deployment()` | `go.admiral.io/sdk/proto/admiral/deployment/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/healthcheck/v1` |
 | ModuleAPI | `Module()` | `go.admiral.io/sdk/proto/admiral/module/v1` |
+| RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/run/v1` |
 | RunnerAPI | `Runner()` | `go.admiral.io/sdk/proto/admiral/runner/v1` |
 | SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/source/v1` |
 | StateAPI | `State()` | `go.admiral.io/sdk/proto/admiral/state/v1` |
 | UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/user/v1` |
-| VariableAPI | `Variable()` | `go.admiral.io/sdk/proto/admiral/variable/v1` |
 
 ## Example
 

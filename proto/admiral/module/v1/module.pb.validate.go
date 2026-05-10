@@ -74,6 +74,8 @@ func (m *Module) validate(all bool) error {
 
 	// no validation rules for Labels
 
+	// no validation rules for SourceName
+
 	if all {
 		switch v := interface{}(m.GetCreatedBy()).(type) {
 		case interface{ ValidateAll() error }:

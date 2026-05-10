@@ -10,7 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
 	v1 "go.admiral.io/sdk/proto/admiral/common/v1"
-	v11 "go.admiral.io/sdk/proto/admiral/deployment/v1"
+	v11 "go.admiral.io/sdk/proto/admiral/run/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -108,7 +108,7 @@ const (
 	JobStatus_JOB_STATUS_SUCCEEDED JobStatus = 4
 	// Job failed. See JobResult.error_message for details.
 	JobStatus_JOB_STATUS_FAILED JobStatus = 5
-	// Job was canceled (e.g., parent deployment was canceled).
+	// Job was canceled (e.g., parent run was canceled).
 	JobStatus_JOB_STATUS_CANCELED JobStatus = 6
 )
 
@@ -290,13 +290,12 @@ func (JobPhase) EnumDescriptor() ([]byte, []int) {
 // Engine identifies which infrastructure-as-code binary executes the job.
 // Deliberately narrow: only the terraform-semantic engines Admiral manages as
 // first-class citizens. Wrapper tools (e.g., terragrunt) and non-terraform-
-// semantic engines (Pulumi, CDK) are intentionally out of scope -- users
+// semantic engines (Pulumi, CDK) are intentionally out of scope; users
 // shell out to them via hooks if needed.
 type Engine int32
 
 const (
-	// Default value. Servers should treat this as ENGINE_TERRAFORM for
-	// backwards compatibility with bundles written before this field existed.
+	// Default value. Must not be used.
 	Engine_ENGINE_UNSPECIFIED Engine = 0
 	// HashiCorp Terraform.
 	Engine_ENGINE_TERRAFORM Engine = 1
@@ -346,13 +345,15 @@ func (Engine) EnumDescriptor() ([]byte, []int) {
 }
 
 // HookInterpreter selects which language the runner uses to execute a hook's
-// script body. Deliberately narrow today -- the enum exists primarily as
+// script body. Deliberately narrow today; the enum exists primarily as
 // forward plumbing so non-shell interpreters (Python, Node, etc.) can be
-// added without a breaking change if real demand emerges.
+// added without a breaking change if real demand emerges. Server-side
+// SetDefaults() applies HOOK_INTERPRETER_BASH when a hook is created with
+// the field unset; UNSPECIFIED on the wire is rejected.
 type HookInterpreter int32
 
 const (
-	// Default. The runner treats this as HOOK_INTERPRETER_BASH.
+	// Default value. Must not be used.
 	HookInterpreter_HOOK_INTERPRETER_UNSPECIFIED HookInterpreter = 0
 	// Script is executed via `bash -c`. Requires bash to be present in the
 	// agent image (the official base image ships it).
@@ -400,7 +401,7 @@ func (HookInterpreter) EnumDescriptor() ([]byte, []int) {
 
 // Runner represents a registered infrastructure execution runner within a
 // tenant. Runners claim and execute infrastructure operations (plan, apply,
-// destroy) dispatched by the deployment engine, using the terraform-semantic
+// destroy) dispatched by the run engine, using the terraform-semantic
 // engine selected per job (Terraform or OpenTofu).
 type Runner struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -418,14 +419,14 @@ type Runner struct {
 	Labels map[string]string `protobuf:"bytes,4,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Derived health status based on heartbeat recency and capacity.
 	HealthStatus RunnerHealthStatus `protobuf:"varint,5,opt,name=health_status,json=healthStatus,proto3,enum=admiral.runner.v1.RunnerHealthStatus" json:"health_status,omitempty"`
-	// When the runner record was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the runner record was last updated via UpdateRunner. Heartbeats do
-	// not bump this field -- liveness state is exposed separately via
-	// RunnerStatus and health_status.
-	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// The user or agent who created this runner (server-populated from token).
-	CreatedBy     *v1.ActorRef `protobuf:"bytes,8,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedBy *v1.ActorRef `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	// When the runner record was created.
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// When the runner record was last updated via UpdateRunner. Heartbeats do
+	// not bump this field; liveness state is exposed separately via
+	// RunnerStatus and health_status.
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -495,6 +496,13 @@ func (x *Runner) GetHealthStatus() RunnerHealthStatus {
 	return RunnerHealthStatus_RUNNER_HEALTH_STATUS_UNSPECIFIED
 }
 
+func (x *Runner) GetCreatedBy() *v1.ActorRef {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return nil
+}
+
 func (x *Runner) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -509,24 +517,17 @@ func (x *Runner) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Runner) GetCreatedBy() *v1.ActorRef {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return nil
-}
-
 // RunnerStatus contains capacity and telemetry metrics for a runner, as
 // reported via Heartbeat. This message is used in both the push payload
 // (HeartbeatRequest) and the read response (GetRunnerStatusResponse).
 //
-// Server-derived fields (health_status) are NOT included here -- they live
+// Server-derived fields (health_status) are NOT included here. They live
 // on the Runner record and are returned alongside this message in
 // GetRunnerStatusResponse.
 //
 // Runner capabilities (which engines are installed, which credentials are
 // available, etc.) are operator-declared on the Runner record at registration
-// time -- they are NOT self-reported here. Heartbeat is purely for liveness
+// time; they are NOT self-reported here. Heartbeat is purely for liveness
 // and capacity signals that change at runtime.
 type RunnerStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -541,7 +542,7 @@ type RunnerStatus struct {
 	// reads and includes it on each tick. Gives the server visibility into
 	// job progress for stuck-job detection and admin dashboards.
 	//
-	// This is the complete set of jobs currently in flight on the instance --
+	// This is the complete set of jobs currently in flight on the instance;
 	// the runner does not cap or sample this list. `len(active_job_details)`
 	// equals `active_jobs` on every heartbeat.
 	ActiveJobDetails []*ActiveJobInfo `protobuf:"bytes,4,rep,name=active_job_details,json=activeJobDetails,proto3" json:"active_job_details,omitempty"`
@@ -673,7 +674,7 @@ func (x *ActiveJobInfo) GetStartedAt() *timestamppb.Timestamp {
 }
 
 // Job represents an infrastructure execution job assigned to a runner.
-// Jobs bridge the Deployment/Revision system and the Runner execution plane.
+// Jobs bridge the Run/Revision system and the Runner execution plane.
 type Job struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the job (UUID).
@@ -682,18 +683,18 @@ type Job struct {
 	RunnerId string `protobuf:"bytes,2,opt,name=runner_id,json=runnerId,proto3" json:"runner_id,omitempty"`
 	// The revision this job belongs to (UUID).
 	RevisionId string `protobuf:"bytes,3,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
-	// The deployment this job belongs to (UUID). Denormalized for convenience.
-	DeploymentId string `protobuf:"bytes,4,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
+	// The run this job belongs to (UUID). Denormalized for convenience.
+	RunId string `protobuf:"bytes,4,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
 	// The type of infrastructure operation to execute.
 	JobType JobType `protobuf:"varint,5,opt,name=job_type,json=jobType,proto3,enum=admiral.runner.v1.JobType" json:"job_type,omitempty"`
 	// Current lifecycle status of the job.
 	Status JobStatus `protobuf:"varint,6,opt,name=status,proto3,enum=admiral.runner.v1.JobStatus" json:"status,omitempty"`
-	// When the job was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the runner started executing the job.
-	StartedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	StartedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	// When the job finished (succeeded, failed, or canceled).
-	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	CompletedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	// When the job was created.
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -749,9 +750,9 @@ func (x *Job) GetRevisionId() string {
 	return ""
 }
 
-func (x *Job) GetDeploymentId() string {
+func (x *Job) GetRunId() string {
 	if x != nil {
-		return x.DeploymentId
+		return x.RunId
 	}
 	return ""
 }
@@ -770,13 +771,6 @@ func (x *Job) GetStatus() JobStatus {
 	return JobStatus_JOB_STATUS_UNSPECIFIED
 }
 
-func (x *Job) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
 func (x *Job) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartedAt
@@ -791,13 +785,20 @@ func (x *Job) GetCompletedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Job) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
 // JobBundle contains everything a runner needs to execute an infrastructure
 // operation. Fetched separately from ClaimJob to keep the claim response
 // lightweight.
 type JobBundle struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Signed URL to download the rendered artifact bundle (tar.gz containing
-	// the rendered infrastructure source tree -- `.tf` files, auto-loaded
+	// the rendered infrastructure source tree: `.tf` files, auto-loaded
 	// tfvars, etc.). Time-limited.
 	ArtifactUrl string `protobuf:"bytes,1,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
 	// SHA-256 checksum of the artifact bundle for integrity verification.
@@ -807,7 +808,7 @@ type JobBundle struct {
 	// execution context).
 	//
 	// Encoding contract: the runner writes the map verbatim as HCL
-	// `key = value` lines -- it does NOT re-quote strings or JSON-encode
+	// `key = value` lines; it does NOT re-quote strings or JSON-encode
 	// complex types. The server is responsible for producing the correct HCL
 	// literal for each variable's type (e.g., a string is already double-quoted,
 	// a list is already `["a", "b"]`). Keys must match the infrastructure
@@ -820,8 +821,9 @@ type JobBundle struct {
 	// configuration for state storage. Engine-agnostic in shape; the engine's
 	// own backend implementation consumes it.
 	BackendConfig string `protobuf:"bytes,5,opt,name=backend_config,json=backendConfig,proto3" json:"backend_config,omitempty"`
-	// Which engine should execute this job. ENGINE_UNSPECIFIED means the
-	// runner's default (currently terraform) is used.
+	// Required. The infrastructure-as-code engine the runner should execute.
+	// Server populates from the module's declared engine; UNSPECIFIED on the
+	// wire is rejected.
 	Engine Engine `protobuf:"varint,6,opt,name=engine,proto3,enum=admiral.runner.v1.Engine" json:"engine,omitempty"`
 	// Version of the selected engine (e.g., "1.7.5"). When empty, the runner
 	// uses whichever version it has pre-installed by default. When set, the
@@ -955,7 +957,7 @@ func (x *JobBundle) GetHooks() *Hooks {
 }
 
 // Hook is a single script hook delivered with a JobBundle. Scripts are
-// inlined by the server -- the runner never fetches them from elsewhere.
+// inlined by the server; the runner never fetches them from elsewhere.
 type Hook struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The script body to execute. Passed to the selected interpreter (see
@@ -969,9 +971,9 @@ type Hook struct {
 	// Optional human-friendly name used in log lines and error messages
 	// (e.g., "vault-login"). Not required to be unique.
 	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	// Which interpreter runs `script`. UNSPECIFIED falls back to the runner's
-	// default (currently bash). Unknown / unsupported values at runtime are
-	// treated as a hook failure.
+	// Required. Which interpreter runs `script`. Server populates from the
+	// hook config; UNSPECIFIED on the wire is rejected. Unknown / unsupported
+	// values at runtime are treated as a hook failure.
 	Interpreter   HookInterpreter `protobuf:"varint,4,opt,name=interpreter,proto3,enum=admiral.runner.v1.HookInterpreter" json:"interpreter,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1046,7 +1048,7 @@ func (x *Hook) GetInterpreter() HookInterpreter {
 //     of sibling failures, and individual non-zero exits are logged but do
 //     not fail the job.
 //   - `after_run` always runs, even when the engine command or any other
-//     hook failed -- it is the runner's `finally` block. Also run-all.
+//     hook failed. It is the runner's `finally` block. Also run-all.
 type Hooks struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Scripts to run before the init phase (`terraform init` / `tofu init`).
@@ -1398,9 +1400,9 @@ type CreateRunnerResponse struct {
 	// The created runner. Health status will be PENDING until the runner
 	// begins heartbeating.
 	Runner *Runner `protobuf:"bytes,1,opt,name=runner,proto3" json:"runner,omitempty"`
-	// The raw Agent Token secret (e.g., "adms_pL2mN5oQ8rS1..."). This value
-	// is shown exactly once and cannot be retrieved again. Deploy this token to
-	// the runner binary for authentication.
+	// The raw Service Access Token secret (e.g., "adms_pL2mN5oQ8rS1...").
+	// This value is shown exactly once and cannot be retrieved again. Deploy
+	// this token to the runner binary for authentication.
 	//
 	// To create additional tokens (e.g., for rotation), use
 	// CreateRunnerToken (POST /v1/runners/{runner_id}/tokens).
@@ -1555,9 +1557,9 @@ type ListRunnersRequest struct {
 	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
 	//
 	// Filterable fields:
-	//   - `name` -- filter by runner name.
-	//   - `health_status` -- filter by health status.
-	//   - `labels.key` -- filter by label key.
+	//   - `name`: filter by runner name.
+	//   - `health_status`: filter by health status.
+	//   - `labels.key`: filter by label key.
 	//
 	// Example: `field['name'] = 'aws-prod' AND field['health_status'] = 'HEALTHY'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -2106,8 +2108,8 @@ type ListRunnerTokensRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `name` -- filter by token name.
-	//   - `status` -- filter by token status (ACTIVE, REVOKED).
+	//   - `name`: filter by token name.
+	//   - `status`: filter by token status (ACTIVE, REVOKED).
 	//
 	// Example: `field['status'] = 'ACTIVE'`
 	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -2235,8 +2237,8 @@ func (x *ListRunnerTokensResponse) GetNextPageToken() string {
 // GetRunnerTokenRequest identifies a runner SAT to retrieve. Token IDs are
 // globally unique, so no runner scoping is required in the path; the server
 // resolves the parent runner from the token ID. Authorization is enforced
-// via the `runner:read` scope on the caller's token, not by path prefix --
-// a leaked token ID alone does not grant access.
+// via the `runner:read` scope on the caller's token, not by path prefix.
+// A leaked token ID alone does not grant access.
 type GetRunnerTokenRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the token (UUID).
@@ -2331,8 +2333,8 @@ func (x *GetRunnerTokenResponse) GetAccessToken() *v1.AccessToken {
 // RevokeRunnerTokenRequest identifies a runner SAT to revoke. Token IDs are
 // globally unique, so no runner scoping is required in the path; the server
 // resolves the parent runner from the token ID. Authorization is enforced
-// via the `runner:write` scope on the caller's token, not by path prefix --
-// a leaked token ID alone does not grant revocation.
+// via the `runner:write` scope on the caller's token, not by path prefix.
+// A leaked token ID alone does not grant revocation.
 type RevokeRunnerTokenRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the token to revoke (UUID).
@@ -2425,7 +2427,7 @@ func (x *RevokeRunnerTokenResponse) GetAccessToken() *v1.AccessToken {
 }
 
 // HeartbeatRequest contains the runner's alive signal and current capacity.
-// The runner is identified by the SAT's binding -- no runner_id is required.
+// The runner is identified by the SAT's binding; no runner_id is required.
 type HeartbeatRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Current capacity and telemetry metrics.
@@ -2434,7 +2436,7 @@ type HeartbeatRequest struct {
 	// instances sharing the same SAT. The server uses this to track heartbeats
 	// per instance and aggregate capacity metrics across all instances of the
 	// same runner. A new instance_id is generated each time the runner process
-	// starts -- it is not persisted across restarts.
+	// starts; it is not persisted across restarts.
 	InstanceId    string `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2541,7 +2543,7 @@ func (x *HeartbeatResponse) GetNextHeartbeatSeconds() int32 {
 }
 
 // ClaimJobRequest is sent by the runner to poll for available work.
-// The runner is identified by the SAT's binding -- no runner_id is required.
+// The runner is identified by the SAT's binding; no runner_id is required.
 type ClaimJobRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2581,7 +2583,7 @@ func (*ClaimJobRequest) Descriptor() ([]byte, []int) {
 // ClaimJobResponse contains the next job to execute, if any.
 type ClaimJobResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The job to execute. Absent if no work is available -- the runner should
+	// The job to execute. Absent if no work is available; the runner should
 	// wait and poll again after its configured interval.
 	Job           *Job `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2828,9 +2830,9 @@ type ListRunnerJobsRequest struct {
 	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
 	// Filterable fields:
-	//   - `status` -- filter by job status (PENDING, ASSIGNED, RUNNING, etc.).
-	//   - `job_type` -- filter by job type (PLAN, APPLY, DESTROY_PLAN, DESTROY_APPLY).
-	//   - `deployment_id` -- jobs for a specific deployment (UUID).
+	//   - `status`: filter by job status (PENDING, ASSIGNED, RUNNING, etc.).
+	//   - `job_type`: filter by job type (PLAN, APPLY, DESTROY_PLAN, DESTROY_APPLY).
+	//   - `run_id`: jobs for a specific run (UUID).
 	//
 	// Example: `field['status'] = 'RUNNING'`
 	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -2959,19 +2961,19 @@ var File_admiral_runner_v1_runner_proto protoreflect.FileDescriptor
 
 const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\n" +
-	"\x1eadmiral/runner/v1/runner.proto\x12\x11admiral.runner.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a&admiral/deployment/v1/deployment.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa1\x04\n" +
+	"\x1eadmiral/runner/v1/runner.proto\x12\x11admiral.runner.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x18admiral/run/v1/run.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa1\x04\n" +
 	"\x06Runner\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12V\n" +
 	"\x06labels\x18\x04 \x03(\v2%.admiral.runner.v1.Runner.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12J\n" +
-	"\rhealth_status\x18\x05 \x01(\x0e2%.admiral.runner.v1.RunnerHealthStatusR\fhealthStatus\x129\n" +
+	"\rhealth_status\x18\x05 \x01(\x0e2%.admiral.runner.v1.RunnerHealthStatusR\fhealthStatus\x12:\n" +
 	"\n" +
-	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_by\x18\x06 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12:\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"created_by\x18\b \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x1a9\n" +
+	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc9\x01\n" +
@@ -2985,27 +2987,27 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x06job_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x05jobId\x121\n" +
 	"\x05phase\x18\x02 \x01(\x0e2\x1b.admiral.runner.v1.JobPhaseR\x05phase\x129\n" +
 	"\n" +
-	"started_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xc2\x03\n" +
+	"started_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xb4\x03\n" +
 	"\x03Job\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12%\n" +
 	"\trunner_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\brunnerId\x12)\n" +
 	"\vrevision_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
-	"revisionId\x12-\n" +
-	"\rdeployment_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fdeploymentId\x125\n" +
+	"revisionId\x12\x1f\n" +
+	"\x06run_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x05runId\x125\n" +
 	"\bjob_type\x18\x05 \x01(\x0e2\x1a.admiral.runner.v1.JobTypeR\ajobType\x124\n" +
 	"\x06status\x18\x06 \x01(\x0e2\x1c.admiral.runner.v1.JobStatusR\x06status\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"started_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
+	"\fcompleted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x129\n" +
 	"\n" +
-	"started_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\x88\x05\n" +
+	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x92\x05\n" +
 	"\tJobBundle\x12!\n" +
 	"\fartifact_url\x18\x01 \x01(\tR\vartifactUrl\x12+\n" +
 	"\x11artifact_checksum\x18\x02 \x01(\tR\x10artifactChecksum\x12I\n" +
 	"\tvariables\x18\x03 \x03(\v2+.admiral.runner.v1.JobBundle.VariablesEntryR\tvariables\x12\\\n" +
 	"\x10provider_configs\x18\x04 \x03(\v21.admiral.runner.v1.JobBundle.ProviderConfigsEntryR\x0fproviderConfigs\x12%\n" +
-	"\x0ebackend_config\x18\x05 \x01(\tR\rbackendConfig\x121\n" +
-	"\x06engine\x18\x06 \x01(\x0e2\x19.admiral.runner.v1.EngineR\x06engine\x12%\n" +
+	"\x0ebackend_config\x18\x05 \x01(\tR\rbackendConfig\x12;\n" +
+	"\x06engine\x18\x06 \x01(\x0e2\x19.admiral.runner.v1.EngineB\b\xbaH\x05\x82\x01\x02 \x00R\x06engine\x12%\n" +
 	"\x0eengine_version\x18\a \x01(\tR\rengineVersion\x12+\n" +
 	"\x11working_directory\x18\b \x01(\tR\x10workingDirectory\x12\"\n" +
 	"\rplan_file_url\x18\t \x01(\tR\vplanFileUrl\x12.\n" +
@@ -3016,13 +3018,13 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1aB\n" +
 	"\x14ProviderConfigsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc4\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xce\x01\n" +
 	"\x04Hook\x12#\n" +
 	"\x06script\x18\x01 \x01(\tB\v\xbaH\br\x06\x10\x01\x18\x80\x80\x04R\x06script\x123\n" +
 	"\x0ftimeout_seconds\x18\x02 \x01(\x05B\n" +
 	"\xbaH\a\x1a\x05\x18\x90\x1c(\x00R\x0etimeoutSeconds\x12\x1c\n" +
-	"\x04name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x01R\x04name\x12D\n" +
-	"\vinterpreter\x18\x04 \x01(\x0e2\".admiral.runner.v1.HookInterpreterR\vinterpreter\"\x97\x03\n" +
+	"\x04name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x01R\x04name\x12N\n" +
+	"\vinterpreter\x18\x04 \x01(\x0e2\".admiral.runner.v1.HookInterpreterB\b\xbaH\x05\x82\x01\x02 \x00R\vinterpreter\"\x97\x03\n" +
 	"\x05Hooks\x128\n" +
 	"\vbefore_init\x18\x01 \x03(\v2\x17.admiral.runner.v1.HookR\n" +
 	"beforeInit\x126\n" +
@@ -3039,12 +3041,12 @@ const file_admiral_runner_v1_runner_proto_rawDesc = "" +
 	"\fEngineOutput\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1c\n" +
-	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xc4\x03\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xbd\x03\n" +
 	"\tJobResult\x124\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1c.admiral.runner.v1.JobStatusR\x06status\x12\x1f\n" +
 	"\vplan_output\x18\x02 \x01(\tR\n" +
-	"planOutput\x12G\n" +
-	"\fplan_summary\x18\x03 \x01(\v2$.admiral.deployment.v1.ChangeSummaryR\vplanSummary\x12#\n" +
+	"planOutput\x12@\n" +
+	"\fplan_summary\x18\x03 \x01(\v2\x1d.admiral.run.v1.ChangeSummaryR\vplanSummary\x12#\n" +
 	"\rerror_message\x18\x04 \x01(\tR\ferrorMessage\x12\x19\n" +
 	"\blogs_url\x18\x05 \x01(\tR\alogsUrl\x125\n" +
 	"\bduration\x18\x06 \x01(\v2\x19.google.protobuf.DurationR\bduration\x12C\n" +
@@ -3289,9 +3291,9 @@ var file_admiral_runner_v1_runner_proto_goTypes = []any{
 	nil,                               // 47: admiral.runner.v1.JobBundle.ProviderConfigsEntry
 	nil,                               // 48: admiral.runner.v1.JobResult.OutputsEntry
 	nil,                               // 49: admiral.runner.v1.CreateRunnerRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),     // 50: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),               // 51: admiral.common.v1.ActorRef
-	(*v11.ChangeSummary)(nil),         // 52: admiral.deployment.v1.ChangeSummary
+	(*v1.ActorRef)(nil),               // 50: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),     // 51: google.protobuf.Timestamp
+	(*v11.ChangeSummary)(nil),         // 52: admiral.run.v1.ChangeSummary
 	(*durationpb.Duration)(nil),       // 53: google.protobuf.Duration
 	(*fieldmaskpb.FieldMask)(nil),     // 54: google.protobuf.FieldMask
 	(*v1.AccessToken)(nil),            // 55: admiral.common.v1.AccessToken
@@ -3299,17 +3301,17 @@ var file_admiral_runner_v1_runner_proto_goTypes = []any{
 var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
 	45, // 0: admiral.runner.v1.Runner.labels:type_name -> admiral.runner.v1.Runner.LabelsEntry
 	0,  // 1: admiral.runner.v1.Runner.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
-	50, // 2: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
-	50, // 3: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
-	51, // 4: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
+	50, // 2: admiral.runner.v1.Runner.created_by:type_name -> admiral.common.v1.ActorRef
+	51, // 3: admiral.runner.v1.Runner.created_at:type_name -> google.protobuf.Timestamp
+	51, // 4: admiral.runner.v1.Runner.updated_at:type_name -> google.protobuf.Timestamp
 	8,  // 5: admiral.runner.v1.RunnerStatus.active_job_details:type_name -> admiral.runner.v1.ActiveJobInfo
 	3,  // 6: admiral.runner.v1.ActiveJobInfo.phase:type_name -> admiral.runner.v1.JobPhase
-	50, // 7: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
+	51, // 7: admiral.runner.v1.ActiveJobInfo.started_at:type_name -> google.protobuf.Timestamp
 	2,  // 8: admiral.runner.v1.Job.job_type:type_name -> admiral.runner.v1.JobType
 	1,  // 9: admiral.runner.v1.Job.status:type_name -> admiral.runner.v1.JobStatus
-	50, // 10: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	50, // 11: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	50, // 12: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
+	51, // 10: admiral.runner.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	51, // 11: admiral.runner.v1.Job.completed_at:type_name -> google.protobuf.Timestamp
+	51, // 12: admiral.runner.v1.Job.created_at:type_name -> google.protobuf.Timestamp
 	46, // 13: admiral.runner.v1.JobBundle.variables:type_name -> admiral.runner.v1.JobBundle.VariablesEntry
 	47, // 14: admiral.runner.v1.JobBundle.provider_configs:type_name -> admiral.runner.v1.JobBundle.ProviderConfigsEntry
 	4,  // 15: admiral.runner.v1.JobBundle.engine:type_name -> admiral.runner.v1.Engine
@@ -3323,7 +3325,7 @@ var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
 	11, // 23: admiral.runner.v1.Hooks.after_apply:type_name -> admiral.runner.v1.Hook
 	11, // 24: admiral.runner.v1.Hooks.after_run:type_name -> admiral.runner.v1.Hook
 	1,  // 25: admiral.runner.v1.JobResult.status:type_name -> admiral.runner.v1.JobStatus
-	52, // 26: admiral.runner.v1.JobResult.plan_summary:type_name -> admiral.deployment.v1.ChangeSummary
+	52, // 26: admiral.runner.v1.JobResult.plan_summary:type_name -> admiral.run.v1.ChangeSummary
 	53, // 27: admiral.runner.v1.JobResult.duration:type_name -> google.protobuf.Duration
 	48, // 28: admiral.runner.v1.JobResult.outputs:type_name -> admiral.runner.v1.JobResult.OutputsEntry
 	49, // 29: admiral.runner.v1.CreateRunnerRequest.labels:type_name -> admiral.runner.v1.CreateRunnerRequest.LabelsEntry
@@ -3335,8 +3337,8 @@ var file_admiral_runner_v1_runner_proto_depIdxs = []int32{
 	6,  // 35: admiral.runner.v1.UpdateRunnerResponse.runner:type_name -> admiral.runner.v1.Runner
 	0,  // 36: admiral.runner.v1.GetRunnerStatusResponse.health_status:type_name -> admiral.runner.v1.RunnerHealthStatus
 	7,  // 37: admiral.runner.v1.GetRunnerStatusResponse.status:type_name -> admiral.runner.v1.RunnerStatus
-	50, // 38: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	50, // 39: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
+	51, // 38: admiral.runner.v1.GetRunnerStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
+	51, // 39: admiral.runner.v1.CreateRunnerTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
 	55, // 40: admiral.runner.v1.CreateRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
 	55, // 41: admiral.runner.v1.ListRunnerTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
 	55, // 42: admiral.runner.v1.GetRunnerTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken

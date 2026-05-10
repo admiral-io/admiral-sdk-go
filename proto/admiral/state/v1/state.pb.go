@@ -51,7 +51,7 @@ type State struct {
 	// MD5 hash of the state data. Used by Terraform for integrity checks
 	// and conditional updates.
 	Md5 string `protobuf:"bytes,6,opt,name=md5,proto3" json:"md5,omitempty"`
-	// Terraform state lineage -- a UUID generated on first init. All
+	// Terraform state lineage. A UUID generated on first init. All
 	// subsequent writes must match this lineage to prevent cross-state
 	// contamination.
 	Lineage string `protobuf:"bytes,7,opt,name=lineage,proto3" json:"lineage,omitempty"`
@@ -307,7 +307,7 @@ type StateLock struct {
 	//
 	// This value is set by the Terraform client and is informational only.
 	Operation string `protobuf:"bytes,2,opt,name=operation,proto3" json:"operation,omitempty"`
-	// Identifier of who holds the lock. Populated by Terraform -- typically
+	// Identifier of who holds the lock. Populated by Terraform; typically
 	// the format "username@hostname" (e.g., "deploy@prod-runner-01").
 	// This field is informational only; its format is controlled by Terraform.
 	Who string `protobuf:"bytes,3,opt,name=who,proto3" json:"who,omitempty"`
@@ -399,7 +399,7 @@ type StateVersion struct {
 	// Size of the state data in bytes.
 	SizeBytes int64 `protobuf:"varint,4,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
 	// The job that produced this state version (UUID). Absent for state that
-	// was written outside the normal job lifecycle -- for example, state
+	// was written outside the normal job lifecycle. For example, state
 	// uploaded directly via an admin migration tool, or state that existed
 	// before Admiral began managing the component.
 	JobId *string `protobuf:"bytes,5,opt,name=job_id,json=jobId,proto3,oneof" json:"job_id,omitempty"`
@@ -532,7 +532,7 @@ func (x *GetStateRequest) GetJobId() string {
 type GetStateResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The raw Terraform state data (JSON-encoded). Empty if no state exists
-	// yet (fresh init -- Terraform handles this gracefully).
+	// yet (fresh init; Terraform handles this gracefully).
 	Data          []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1002,12 +1002,12 @@ func (x *GetCurrentStateResponse) GetState() *State {
 // ListStatesRequest contains pagination and filter parameters.
 type ListStatesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression using the PEG filter DSL.
+	// Filter expression to narrow results. Uses the Admiral filter DSL.
 	//
-	// Common filter fields:
-	//   - `component_id` -- states for a specific component (UUID).
-	//   - `environment_id` -- states for a specific environment (UUID).
-	//   - `application_id` -- states for all components belonging to an
+	// Filterable fields:
+	//   - `component_id`: states for a specific component (UUID).
+	//   - `environment_id`: states for a specific environment (UUID).
+	//   - `application_id`: states for all components belonging to an
 	//     application (UUID). The server resolves the application's components
 	//     and returns states for all of them. Can be combined with
 	//     `environment_id`.
@@ -1302,7 +1302,7 @@ func (x *GetStateVersionRequest) GetSerial() int64 {
 }
 
 // GetStateVersionResponse contains the full state data at a historical serial.
-// Returns both the version metadata and the raw data separately -- the
+// Returns both the version metadata and the raw data separately. The
 // StateVersion message intentionally omits data to keep ListStateVersions
 // lightweight.
 type GetStateVersionResponse struct {
@@ -1456,7 +1456,7 @@ func (*ForceUnlockStateResponse) Descriptor() ([]byte, []int) {
 type DeleteStateRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique identifier of the state record to delete (UUID).
-	// Fails if the state is currently locked -- force-unlock first.
+	// Fails if the state is currently locked. Force-unlock first.
 	StateId       string `protobuf:"bytes,1,opt,name=state_id,json=stateId,proto3" json:"state_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
