@@ -379,6 +379,7 @@ type Credential struct {
 	// (e.g., "Read-only access to the platform team's GitHub org").
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// The type of external system and authentication mechanism.
+	// Immutable after creation.
 	Type CredentialType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.credential.v1.CredentialType" json:"type,omitempty"`
 	// Auth material corresponding to `type`. Sensitive fields are write-only
 	// and masked in responses.
@@ -493,7 +494,8 @@ func (x *Credential) GetUpdatedAt() *timestamppb.Timestamp {
 type CreateCredentialRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// URL-safe, human-readable identifier (e.g., "github-org", "ecr-prod").
-	// Must be unique within the tenant.
+	// Unique within the tenant. Lowercase alphanumeric and hyphens only, must
+	// start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional description of the credential's purpose.
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -667,7 +669,7 @@ func (x *GetCredentialRequest) GetCredentialId() string {
 // GetCredentialResponse contains the credential record.
 type GetCredentialResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The credential record. Sensitive fields are masked.
+	// The retrieved credential. Sensitive fields are masked.
 	Credential    *Credential `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -713,7 +715,8 @@ func (x *GetCredentialResponse) GetCredential() *Credential {
 // ListCredentialsRequest contains pagination and filter parameters.
 type ListCredentialsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
 	//   - `name`: filter by credential name.
@@ -722,7 +725,8 @@ type ListCredentialsRequest struct {
 	//
 	// Example: `field['type'] = 'BEARER_TOKEN'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of credentials to return per page.
+	// Maximum number of credentials to return per page. Defaults to 50 when
+	// omitted or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -845,8 +849,9 @@ type UpdateCredentialRequest struct {
 	// When updating auth_config, the entire auth config is replaced.
 	// Omitting auth_config from the update_mask leaves credentials unchanged.
 	Credential *Credential `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
-	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `name`, `description`, `auth_config`, `labels`.
+	// The set of fields to update. Optional; if omitted, all populated fields
+	// are updated. Pass `*` for full replacement. Supported fields: `name`,
+	// `description`, `auth_config`, `labels`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1030,50 +1035,49 @@ var File_admiral_credential_v1_credential_proto protoreflect.FileDescriptor
 
 const file_admiral_credential_v1_credential_proto_rawDesc = "" +
 	"\n" +
-	"&admiral/credential/v1/credential.proto\x12\x15admiral.credential.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"M\n" +
+	"&admiral/credential/v1/credential.proto\x12\x15admiral.credential.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"W\n" +
 	"\n" +
-	"SSHKeyAuth\x12\x1f\n" +
-	"\vprivate_key\x18\x01 \x01(\tR\n" +
-	"privateKey\x12\x1e\n" +
+	"SSHKeyAuth\x12$\n" +
+	"\vprivate_key\x18\x01 \x01(\tB\x03\xe0A\x04R\n" +
+	"privateKey\x12#\n" +
 	"\n" +
-	"passphrase\x18\x02 \x01(\tR\n" +
-	"passphrase\"L\n" +
+	"passphrase\x18\x02 \x01(\tB\x03\xe0A\x04R\n" +
+	"passphrase\"Q\n" +
 	"\tBasicAuth\x12#\n" +
-	"\busername\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\busername\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"'\n" +
-	"\x0fBearerTokenAuth\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"\xe5\x01\n" +
+	"\busername\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\busername\x12\x1f\n" +
+	"\bpassword\x18\x02 \x01(\tB\x03\xe0A\x04R\bpassword\",\n" +
+	"\x0fBearerTokenAuth\x12\x19\n" +
+	"\x05token\x18\x01 \x01(\tB\x03\xe0A\x04R\x05token\"\xe5\x01\n" +
 	"\n" +
 	"AuthConfig\x12<\n" +
 	"\assh_key\x18\x01 \x01(\v2!.admiral.credential.v1.SSHKeyAuthH\x00R\x06sshKey\x12A\n" +
 	"\n" +
 	"basic_auth\x18\x02 \x01(\v2 .admiral.credential.v1.BasicAuthH\x00R\tbasicAuth\x12K\n" +
 	"\fbearer_token\x18\x03 \x01(\v2&.admiral.credential.v1.BearerTokenAuthH\x00R\vbearerTokenB\t\n" +
-	"\avariant\"\xe0\x04\n" +
+	"\avariant\"\xf7\x04\n" +
 	"\n" +
-	"Credential\x12\x18\n" +
-	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"Credential\x12\x1b\n" +
+	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x129\n" +
-	"\x04type\x18\x04 \x01(\x0e2%.admiral.credential.v1.CredentialTypeR\x04type\x12B\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12>\n" +
+	"\x04type\x18\x04 \x01(\x0e2%.admiral.credential.v1.CredentialTypeB\x03\xe0A\x05R\x04type\x12B\n" +
 	"\vauth_config\x18\x05 \x01(\v2!.admiral.credential.v1.AuthConfigR\n" +
 	"authConfig\x12^\n" +
-	"\x06labels\x18\x06 \x03(\v2-.admiral.credential.v1.Credential.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
+	"\x06labels\x18\x06 \x03(\v2-.admiral.credential.v1.Credential.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12?\n" +
 	"\n" +
-	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xba\x03\n" +
-	"\x17CreateCredentialRequest\x12@\n" +
-	"\x04name\x18\x01 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12E\n" +
-	"\x04type\x18\x03 \x01(\x0e2%.admiral.credential.v1.CredentialTypeB\n" +
-	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12B\n" +
-	"\vauth_config\x18\x04 \x01(\v2!.admiral.credential.v1.AuthConfigR\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc5\x03\n" +
+	"\x17CreateCredentialRequest\x12C\n" +
+	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
+	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12H\n" +
+	"\x04type\x18\x03 \x01(\x0e2%.admiral.credential.v1.CredentialTypeB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12G\n" +
+	"\vauth_config\x18\x04 \x01(\v2!.admiral.credential.v1.AuthConfigB\x03\xe0A\x02R\n" +
 	"authConfig\x12k\n" +
 	"\x06labels\x18\x05 \x03(\v2:.admiral.credential.v1.CreateCredentialRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
@@ -1082,9 +1086,9 @@ const file_admiral_credential_v1_credential_proto_rawDesc = "" +
 	"\x18CreateCredentialResponse\x12A\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2!.admiral.credential.v1.CredentialR\n" +
-	"credential\"E\n" +
-	"\x14GetCredentialRequest\x12-\n" +
-	"\rcredential_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fcredentialId\"Z\n" +
+	"credential\"H\n" +
+	"\x14GetCredentialRequest\x120\n" +
+	"\rcredential_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\fcredentialId\"Z\n" +
 	"\x15GetCredentialResponse\x12A\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2!.admiral.credential.v1.CredentialR\n" +
@@ -1096,19 +1100,19 @@ const file_admiral_credential_v1_credential_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"\x86\x01\n" +
 	"\x17ListCredentialsResponse\x12C\n" +
 	"\vcredentials\x18\x01 \x03(\v2!.admiral.credential.v1.CredentialR\vcredentials\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa1\x01\n" +
-	"\x17UpdateCredentialRequest\x12I\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa4\x01\n" +
+	"\x17UpdateCredentialRequest\x12L\n" +
 	"\n" +
-	"credential\x18\x01 \x01(\v2!.admiral.credential.v1.CredentialB\x06\xbaH\x03\xc8\x01\x01R\n" +
+	"credential\x18\x01 \x01(\v2!.admiral.credential.v1.CredentialB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\n" +
 	"credential\x12;\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"]\n" +
 	"\x18UpdateCredentialResponse\x12A\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2!.admiral.credential.v1.CredentialR\n" +
-	"credential\"H\n" +
-	"\x17DeleteCredentialRequest\x12-\n" +
-	"\rcredential_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\fcredentialId\"\x1a\n" +
+	"credential\"K\n" +
+	"\x17DeleteCredentialRequest\x120\n" +
+	"\rcredential_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\fcredentialId\"\x1a\n" +
 	"\x18DeleteCredentialResponse*\x90\x01\n" +
 	"\x0eCredentialType\x12\x1f\n" +
 	"\x1bCREDENTIAL_TYPE_UNSPECIFIED\x10\x00\x12\x1b\n" +

@@ -34,7 +34,7 @@ const (
 	TokenType_TOKEN_TYPE_UNSPECIFIED TokenType = 0
 	// Personal Access Token, bound to a user.
 	TokenType_TOKEN_TYPE_PAT TokenType = 1
-	// Service Access Token, bound to a cluster or runner.
+	// Service Access Token, bound to an agent.
 	TokenType_TOKEN_TYPE_SAT TokenType = 2
 )
 
@@ -87,10 +87,9 @@ const (
 	BindingType_BINDING_TYPE_UNSPECIFIED BindingType = 0
 	// Token is bound to a user (PATs).
 	BindingType_BINDING_TYPE_USER BindingType = 1
-	// Token is bound to a cluster (SATs).
-	BindingType_BINDING_TYPE_CLUSTER BindingType = 2
-	// Token is bound to a runner (SATs).
-	BindingType_BINDING_TYPE_RUNNER BindingType = 3
+	// Token is bound to an agent (SATs). The agent's kind (TERRAFORM or
+	// KUBERNETES) is carried on the agent itself.
+	BindingType_BINDING_TYPE_AGENT BindingType = 2
 )
 
 // Enum value maps for BindingType.
@@ -98,14 +97,12 @@ var (
 	BindingType_name = map[int32]string{
 		0: "BINDING_TYPE_UNSPECIFIED",
 		1: "BINDING_TYPE_USER",
-		2: "BINDING_TYPE_CLUSTER",
-		3: "BINDING_TYPE_RUNNER",
+		2: "BINDING_TYPE_AGENT",
 	}
 	BindingType_value = map[string]int32{
 		"BINDING_TYPE_UNSPECIFIED": 0,
 		"BINDING_TYPE_USER":        1,
-		"BINDING_TYPE_CLUSTER":     2,
-		"BINDING_TYPE_RUNNER":      3,
+		"BINDING_TYPE_AGENT":       2,
 	}
 )
 
@@ -146,9 +143,6 @@ const (
 	AccessTokenStatus_ACCESS_TOKEN_STATUS_ACTIVE AccessTokenStatus = 1
 	// The token has been permanently revoked and cannot be used.
 	AccessTokenStatus_ACCESS_TOKEN_STATUS_REVOKED AccessTokenStatus = 2
-	// The token is being rotated. Both old and new tokens are valid
-	// until the grace period expires.
-	AccessTokenStatus_ACCESS_TOKEN_STATUS_ROTATING AccessTokenStatus = 3
 )
 
 // Enum value maps for AccessTokenStatus.
@@ -157,13 +151,11 @@ var (
 		0: "ACCESS_TOKEN_STATUS_UNSPECIFIED",
 		1: "ACCESS_TOKEN_STATUS_ACTIVE",
 		2: "ACCESS_TOKEN_STATUS_REVOKED",
-		3: "ACCESS_TOKEN_STATUS_ROTATING",
 	}
 	AccessTokenStatus_value = map[string]int32{
 		"ACCESS_TOKEN_STATUS_UNSPECIFIED": 0,
 		"ACCESS_TOKEN_STATUS_ACTIVE":      1,
 		"ACCESS_TOKEN_STATUS_REVOKED":     2,
-		"ACCESS_TOKEN_STATUS_ROTATING":    3,
 	}
 )
 
@@ -201,10 +193,10 @@ func (AccessTokenStatus) EnumDescriptor() ([]byte, []int) {
 //   - **Personal Access Tokens (PATs)**: bound to a user, created by that
 //     user via UserAPI. Scopes are user-selected at creation time. Intended
 //     for CLI, CI, and human-driven automation.
-//   - **Service Access Tokens (SATs)**: bound to a cluster or runner,
-//     created by administrators via ClusterAPI / RunnerAPI. Scopes are
-//     auto-assigned from the resource type. Intended for long-lived agents
-//     that authenticate as the cluster or runner itself.
+//   - **Service Access Tokens (SATs)**: bound to an agent, created by
+//     administrators via AgentAPI. Scopes are auto-assigned from the agent's
+//     kind. Intended for long-lived agents that authenticate as the agent
+//     itself.
 //
 // The raw token secret is returned exactly once, in the `plain_text_token`
 // field of the Create response. This message carries only metadata; the
@@ -212,9 +204,8 @@ func (AccessTokenStatus) EnumDescriptor() ([]byte, []int) {
 // `token_prefix` is safe to log and display.
 //
 // Token CRUD is managed by each parent resource's API:
-//   - PATs:         UserAPI    (/v1/user/tokens)
-//   - Cluster SATs: ClusterAPI (/v1/clusters/{id}/tokens)
-//   - Runner SATs:  RunnerAPI  (/v1/runners/{id}/tokens)
+//   - PATs: UserAPI  (/api/v1/user/tokens)
+//   - SATs: AgentAPI (/api/v1/agents/{id}/tokens)
 //
 // IDP-issued JWTs (OAuth2/OIDC sessions) are not represented here; they are
 // resolved by separate middleware.
@@ -241,7 +232,8 @@ type AccessToken struct {
 	Status AccessTokenStatus `protobuf:"varint,6,opt,name=status,proto3,enum=admiral.common.v1.AccessTokenStatus" json:"status,omitempty"`
 	// The kind of resource this token is bound to.
 	BindingType BindingType `protobuf:"varint,7,opt,name=binding_type,json=bindingType,proto3,enum=admiral.common.v1.BindingType" json:"binding_type,omitempty"`
-	// The ID of the resource this token is bound to (UUID).
+	// The ID of the resource this token is bound to (UUID): the user ID for
+	// PATs, the agent ID for SATs.
 	BindingId string `protobuf:"bytes,8,opt,name=binding_id,json=bindingId,proto3" json:"binding_id,omitempty"`
 	// When the token expires. If unset, the token does not expire.
 	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
@@ -409,17 +401,15 @@ const file_admiral_common_v1_token_proto_rawDesc = "" +
 	"\tTokenType\x12\x1a\n" +
 	"\x16TOKEN_TYPE_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eTOKEN_TYPE_PAT\x10\x01\x12\x12\n" +
-	"\x0eTOKEN_TYPE_SAT\x10\x02*u\n" +
+	"\x0eTOKEN_TYPE_SAT\x10\x02*Z\n" +
 	"\vBindingType\x12\x1c\n" +
 	"\x18BINDING_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
-	"\x11BINDING_TYPE_USER\x10\x01\x12\x18\n" +
-	"\x14BINDING_TYPE_CLUSTER\x10\x02\x12\x17\n" +
-	"\x13BINDING_TYPE_RUNNER\x10\x03*\x9b\x01\n" +
+	"\x11BINDING_TYPE_USER\x10\x01\x12\x16\n" +
+	"\x12BINDING_TYPE_AGENT\x10\x02*y\n" +
 	"\x11AccessTokenStatus\x12#\n" +
 	"\x1fACCESS_TOKEN_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aACCESS_TOKEN_STATUS_ACTIVE\x10\x01\x12\x1f\n" +
-	"\x1bACCESS_TOKEN_STATUS_REVOKED\x10\x02\x12 \n" +
-	"\x1cACCESS_TOKEN_STATUS_ROTATING\x10\x03B\xbd\x01\n" +
+	"\x1bACCESS_TOKEN_STATUS_REVOKED\x10\x02B\xbd\x01\n" +
 	"\x15com.admiral.common.v1B\n" +
 	"TokenProtoP\x01Z2go.admiral.io/sdk/proto/admiral/common/v1;commonv1\xa2\x02\x03ACX\xaa\x02\x11Admiral.Common.V1\xca\x02\x11Admiral\\Common\\V1\xe2\x02\x1dAdmiral\\Common\\V1\\GPBMetadata\xea\x02\x13Admiral::Common::V1b\x06proto3"
 

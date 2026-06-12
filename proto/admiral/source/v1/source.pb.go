@@ -30,7 +30,7 @@ const (
 // SourceType identifies the fetch protocol: how Admiral's Fetcher layer
 // retrieves content from the source URL. Types are carved by wire protocol,
 // not by content semantics. "This is a Terraform module" vs "this is a Helm
-// chart" is a Module/Component concern, not a Source concern.
+// chart" is a Catalog/Component concern, not a Source concern.
 type SourceType int32
 
 const (
@@ -38,7 +38,7 @@ const (
 	SourceType_SOURCE_TYPE_UNSPECIFIED SourceType = 0
 	// Git repository over smart HTTP(S) or SSH. Any repo regardless of what
 	// it contains: Terraform modules, Helm charts, Kustomize overlays, raw
-	// manifests, plain source code. Module/Component decides how to interpret.
+	// manifests, plain source code. Catalog/Component decides how to interpret.
 	SourceType_SOURCE_TYPE_GIT SourceType = 1
 	// Terraform Module/Provider Registry Protocol. A JSON HTTP API for version
 	// discovery and download (public registry.terraform.io, HCP Terraform,
@@ -104,6 +104,71 @@ func (SourceType) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{0}
 }
 
+// SourceRefKind classifies a discovered ref by what it is, so a single
+// version list can carry branches, tags, and registry versions together and
+// the consumer can bucket them. The kind also signals mutability: BRANCH is a
+// moving pointer that re-resolves over time, while TAG, SEMVER, and DIGEST are
+// conventionally stable.
+type SourceRefKind int32
+
+const (
+	// Default. The backend did not classify the ref.
+	SourceRefKind_SOURCE_REF_KIND_UNSPECIFIED SourceRefKind = 0
+	// A Git tag. Conventionally immutable.
+	SourceRefKind_SOURCE_REF_KIND_TAG SourceRefKind = 1
+	// A Git branch. A moving pointer; resolves to a different commit over time.
+	SourceRefKind_SOURCE_REF_KIND_BRANCH SourceRefKind = 2
+	// A registry semantic version (Terraform module or Helm chart). Immutable.
+	SourceRefKind_SOURCE_REF_KIND_SEMVER SourceRefKind = 3
+	// An OCI content digest. Immutable and content-addressed.
+	SourceRefKind_SOURCE_REF_KIND_DIGEST SourceRefKind = 4
+)
+
+// Enum value maps for SourceRefKind.
+var (
+	SourceRefKind_name = map[int32]string{
+		0: "SOURCE_REF_KIND_UNSPECIFIED",
+		1: "SOURCE_REF_KIND_TAG",
+		2: "SOURCE_REF_KIND_BRANCH",
+		3: "SOURCE_REF_KIND_SEMVER",
+		4: "SOURCE_REF_KIND_DIGEST",
+	}
+	SourceRefKind_value = map[string]int32{
+		"SOURCE_REF_KIND_UNSPECIFIED": 0,
+		"SOURCE_REF_KIND_TAG":         1,
+		"SOURCE_REF_KIND_BRANCH":      2,
+		"SOURCE_REF_KIND_SEMVER":      3,
+		"SOURCE_REF_KIND_DIGEST":      4,
+	}
+)
+
+func (x SourceRefKind) Enum() *SourceRefKind {
+	p := new(SourceRefKind)
+	*p = x
+	return p
+}
+
+func (x SourceRefKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SourceRefKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_source_v1_source_proto_enumTypes[1].Descriptor()
+}
+
+func (SourceRefKind) Type() protoreflect.EnumType {
+	return &file_admiral_source_v1_source_proto_enumTypes[1]
+}
+
+func (x SourceRefKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SourceRefKind.Descriptor instead.
+func (SourceRefKind) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{1}
+}
+
 // SourceTestStatus reports the outcome of the last TestSource invocation.
 type SourceTestStatus int32
 
@@ -142,11 +207,11 @@ func (x SourceTestStatus) String() string {
 }
 
 func (SourceTestStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_source_v1_source_proto_enumTypes[1].Descriptor()
+	return file_admiral_source_v1_source_proto_enumTypes[2].Descriptor()
 }
 
 func (SourceTestStatus) Type() protoreflect.EnumType {
-	return &file_admiral_source_v1_source_proto_enumTypes[1]
+	return &file_admiral_source_v1_source_proto_enumTypes[2]
 }
 
 func (x SourceTestStatus) Number() protoreflect.EnumNumber {
@@ -155,7 +220,7 @@ func (x SourceTestStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SourceTestStatus.Descriptor instead.
 func (SourceTestStatus) EnumDescriptor() ([]byte, []int) {
-	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{1}
+	return file_admiral_source_v1_source_proto_rawDescGZIP(), []int{2}
 }
 
 // TerraformConfig identifies a module within a Terraform registry.
@@ -358,20 +423,29 @@ func (*SourceConfig_Terraform) isSourceConfig_Variant() {}
 
 func (*SourceConfig_Helm) isSourceConfig_Variant() {}
 
-// SourceVersion represents an available version of a source artifact, as
-// reported by the external system (registry, repository, Git tags).
+// SourceVersion represents an available ref of a source artifact, as reported
+// by the external system (registry versions, Git branches and tags, OCI tags).
 type SourceVersion struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Version identifier. For registry sources, this is a semver string
-	// (e.g., "1.2.3"). For Git sources, this is a tag name (e.g., "v1.2.3").
-	// For OCI, this is a tag.
+	// (e.g., "1.2.3"). For Git sources, this is a branch or tag name
+	// (e.g., "main", "v1.2.3"). For OCI, this is a tag.
 	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 	// When this version was published or tagged. May not be available for all
 	// source types.
 	PublishedAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=published_at,json=publishedAt,proto3" json:"published_at,omitempty"`
 	// Optional description or release notes for this version. Typically only
 	// available from registry sources.
-	Description   string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// What kind of ref this is. Lets a single list carry mixed kinds (branches,
+	// tags, registry versions) so consumers can bucket them.
+	Kind SourceRefKind `protobuf:"varint,4,opt,name=kind,proto3,enum=admiral.source.v1.SourceRefKind" json:"kind,omitempty"`
+	// The immutable handle this ref currently points to: a Git commit SHA for
+	// BRANCH and TAG, an OCI digest for a tag. Empty when not applicable (registry
+	// SEMVER, where `version` is already the immutable identifier) or not cheaply
+	// resolvable. For a BRANCH this is a snapshot that changes as the branch
+	// moves; pinning by `resolved` captures an exact, reproducible point.
+	Resolved      string `protobuf:"bytes,5,opt,name=resolved,proto3" json:"resolved,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -427,12 +501,25 @@ func (x *SourceVersion) GetDescription() string {
 	return ""
 }
 
+func (x *SourceVersion) GetKind() SourceRefKind {
+	if x != nil {
+		return x.Kind
+	}
+	return SourceRefKind_SOURCE_REF_KIND_UNSPECIFIED
+}
+
+func (x *SourceVersion) GetResolved() string {
+	if x != nil {
+		return x.Resolved
+	}
+	return ""
+}
+
 // Source represents a fetchable artifact definition: a pointer to an external
 // module, chart, or manifest set that Admiral can fetch, inspect, and render
 // into deployment snapshots.
 //
-// Sources are tenant-scoped and optionally marked as catalog entries (curated,
-// pre-approved artifacts managed by platform engineers).
+// Sources are tenant-scoped.
 type Source struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the source (UUID).
@@ -444,7 +531,7 @@ type Source struct {
 	// Optional longer-form description of the source's purpose
 	// (e.g., "Corporate-approved RDS module with encryption and backups").
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// The kind of artifact and fetch protocol.
+	// The kind of artifact and fetch protocol. Immutable after creation.
 	Type SourceType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.source.v1.SourceType" json:"type,omitempty"`
 	// Base URL for the source. The meaning varies by source type:
 	//   - GIT: Git repo URL (https:// or git@host:...)
@@ -458,10 +545,6 @@ type Source struct {
 	// Optional. Null for public sources that require no authentication
 	// (e.g., public Terraform registry, public Helm repos).
 	CredentialId *string `protobuf:"bytes,6,opt,name=credential_id,json=credentialId,proto3,oneof" json:"credential_id,omitempty"`
-	// Whether this source is a curated catalog entry. Catalog sources are managed
-	// by platform engineers and may be the only sources available to developers
-	// if the organization enforces catalog-only policy.
-	Catalog bool `protobuf:"varint,7,opt,name=catalog,proto3" json:"catalog,omitempty"`
 	// Type-specific configuration. Only set for source types whose location is
 	// not fully expressed by `url` alone (currently TERRAFORM and HELM, which
 	// both host multiple artifacts and need a selector). Other source types
@@ -472,17 +555,17 @@ type Source struct {
 	Labels map[string]string `protobuf:"bytes,9,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Outcome of the most recent TestSource invocation. Reflects whether the
 	// attached credential successfully authenticated against `url` the last time
-	// a test was run. Absent if the source has never been tested.
-	LastTestStatus *SourceTestStatus `protobuf:"varint,11,opt,name=last_test_status,json=lastTestStatus,proto3,enum=admiral.source.v1.SourceTestStatus,oneof" json:"last_test_status,omitempty"`
+	// a test was run. UNSPECIFIED if the source has never been tested.
+	LastTestStatus SourceTestStatus `protobuf:"varint,11,opt,name=last_test_status,json=lastTestStatus,proto3,enum=admiral.source.v1.SourceTestStatus" json:"last_test_status,omitempty"`
 	// Human-readable error message from the most recent failed TestSource.
 	// Empty when `last_test_status` is SUCCESS or unset.
 	LastTestError string `protobuf:"bytes,12,opt,name=last_test_error,json=lastTestError,proto3" json:"last_test_error,omitempty"`
-	// When TestSource was last invoked against this source. Absent if never
-	// tested.
+	// When TestSource was last explicitly invoked against this source. Absent if
+	// never tested. This reflects the last on-demand test, not the last time the
+	// source was used in a deployment fetch/render.
 	LastTestedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=last_tested_at,json=lastTestedAt,proto3" json:"last_tested_at,omitempty"`
 	// Display name of the attached credential. Denormalized for display.
-	// Empty when `credential_id` is unset (public sources). Read-only;
-	// ignored on writes.
+	// Empty when `credential_id` is unset (public sources).
 	CredentialName string `protobuf:"bytes,14,opt,name=credential_name,json=credentialName,proto3" json:"credential_name,omitempty"`
 	// The user or agent who created this source (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,15,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
@@ -566,13 +649,6 @@ func (x *Source) GetCredentialId() string {
 	return ""
 }
 
-func (x *Source) GetCatalog() bool {
-	if x != nil {
-		return x.Catalog
-	}
-	return false
-}
-
 func (x *Source) GetSourceConfig() *SourceConfig {
 	if x != nil {
 		return x.SourceConfig
@@ -588,8 +664,8 @@ func (x *Source) GetLabels() map[string]string {
 }
 
 func (x *Source) GetLastTestStatus() SourceTestStatus {
-	if x != nil && x.LastTestStatus != nil {
-		return *x.LastTestStatus
+	if x != nil {
+		return x.LastTestStatus
 	}
 	return SourceTestStatus_SOURCE_TEST_STATUS_UNSPECIFIED
 }
@@ -639,7 +715,9 @@ func (x *Source) GetUpdatedAt() *timestamppb.Timestamp {
 // CreateSourceRequest contains the parameters for creating a new source.
 type CreateSourceRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// URL-safe, human-readable identifier. Must be unique within the tenant.
+	// URL-safe, human-readable identifier (e.g., "corporate-rds", "nginx-chart").
+	// Unique within the tenant. Lowercase alphanumeric and hyphens only, must
+	// start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional description of the source's purpose.
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
@@ -650,8 +728,6 @@ type CreateSourceRequest struct {
 	// Reference to the credential providing authentication (UUID). Optional for
 	// public sources.
 	CredentialId *string `protobuf:"bytes,5,opt,name=credential_id,json=credentialId,proto3,oneof" json:"credential_id,omitempty"`
-	// Whether this is a curated catalog entry.
-	Catalog bool `protobuf:"varint,6,opt,name=catalog,proto3" json:"catalog,omitempty"`
 	// Type-specific configuration. Only required for TERRAFORM and HELM;
 	// omit for GIT, OCI, HTTP.
 	SourceConfig *SourceConfig `protobuf:"bytes,7,opt,name=source_config,json=sourceConfig,proto3" json:"source_config,omitempty"`
@@ -724,13 +800,6 @@ func (x *CreateSourceRequest) GetCredentialId() string {
 		return *x.CredentialId
 	}
 	return ""
-}
-
-func (x *CreateSourceRequest) GetCatalog() bool {
-	if x != nil {
-		return x.Catalog
-	}
-	return false
 }
 
 func (x *CreateSourceRequest) GetSourceConfig() *SourceConfig {
@@ -842,7 +911,7 @@ func (x *GetSourceRequest) GetSourceId() string {
 // GetSourceResponse contains the source record.
 type GetSourceResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The source record.
+	// The retrieved source.
 	Source        *Source `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -888,21 +957,18 @@ func (x *GetSourceResponse) GetSource() *Source {
 // ListSourcesRequest contains pagination and filter parameters.
 type ListSourcesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
-	//
-	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
-	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
-	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
 	//   - `name`: filter by source name.
 	//   - `type`: filter by source type (GIT, TERRAFORM, HELM, OCI, HTTP).
-	//   - `catalog`: filter by catalog status (true/false).
 	//   - `labels.key`: filter by label key.
 	//
-	// Example: `field['type'] = 'TERRAFORM' AND field['catalog'] = 'true'`
+	// Example: `field['type'] = 'TERRAFORM' AND field['labels.team'] = 'platform'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of sources to return per page.
+	// Maximum number of sources to return per page. Defaults to 50 when omitted
+	// or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -1022,9 +1088,9 @@ type UpdateSourceRequest struct {
 	// The source with updated fields. Only fields specified in `update_mask`
 	// are updated.
 	Source *Source `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
-	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `name`, `description`, `url`, `credential_id`, `catalog`,
-	// `source_config`, `labels`.
+	// The set of fields to update. Optional; if omitted, all populated fields
+	// are updated. Pass `*` for full replacement. Supported fields: `name`,
+	// `description`, `url`, `credential_id`, `source_config`, `labels`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1124,7 +1190,7 @@ func (x *UpdateSourceResponse) GetSource() *Source {
 type DeleteSourceRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier of the source to delete (UUID).
-	// Fails if any modules still reference this source.
+	// Fails if any components still reference this source.
 	SourceId      string `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1321,7 +1387,8 @@ type ListSourceVersionsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier of the source to query versions for (UUID).
 	SourceId string `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
-	// Maximum number of versions to return. Defaults to 50.
+	// Maximum number of versions to return per page. Defaults to 50 when omitted
+	// or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token for fetching additional versions.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -1439,57 +1506,60 @@ var File_admiral_source_v1_source_proto protoreflect.FileDescriptor
 
 const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\n" +
-	"\x1eadmiral/source/v1/source.proto\x12\x11admiral.source.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x83\x01\n" +
-	"\x0fTerraformConfig\x12%\n" +
-	"\tnamespace\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\tnamespace\x12(\n" +
-	"\vmodule_name\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\n" +
-	"moduleName\x12\x1f\n" +
-	"\x06system\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06system\"4\n" +
+	"\x1eadmiral/source/v1/source.proto\x12\x11admiral.source.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8c\x01\n" +
+	"\x0fTerraformConfig\x12(\n" +
+	"\tnamespace\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\tnamespace\x12+\n" +
+	"\vmodule_name\x18\x02 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\n" +
+	"moduleName\x12\"\n" +
+	"\x06system\x18\x03 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x06system\"7\n" +
 	"\n" +
-	"HelmConfig\x12&\n" +
+	"HelmConfig\x12)\n" +
 	"\n" +
-	"chart_name\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\tchartName\"\x92\x01\n" +
+	"chart_name\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\tchartName\"\x92\x01\n" +
 	"\fSourceConfig\x12B\n" +
 	"\tterraform\x18\x01 \x01(\v2\".admiral.source.v1.TerraformConfigH\x00R\tterraform\x123\n" +
 	"\x04helm\x18\x02 \x01(\v2\x1d.admiral.source.v1.HelmConfigH\x00R\x04helmB\t\n" +
-	"\avariant\"\x8a\x01\n" +
+	"\avariant\"\xdc\x01\n" +
 	"\rSourceVersion\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12=\n" +
 	"\fpublished_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"\xc5\a\n" +
-	"\x06Source\x12\x18\n" +
-	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x124\n" +
+	"\x04kind\x18\x04 \x01(\x0e2 .admiral.source.v1.SourceRefKindR\x04kind\x12\x1a\n" +
+	"\bresolved\x18\x05 \x01(\tR\bresolved\"\xbc\a\n" +
+	"\x06Source\x12\x1b\n" +
+	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x121\n" +
-	"\x04type\x18\x04 \x01(\x0e2\x1d.admiral.source.v1.SourceTypeR\x04type\x12\x19\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x126\n" +
+	"\x04type\x18\x04 \x01(\x0e2\x1d.admiral.source.v1.SourceTypeB\x03\xe0A\x05R\x04type\x12\x19\n" +
 	"\x03url\x18\x05 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x03url\x122\n" +
-	"\rcredential_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\fcredentialId\x88\x01\x01\x12\x18\n" +
-	"\acatalog\x18\a \x01(\bR\acatalog\x12D\n" +
+	"\rcredential_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\fcredentialId\x88\x01\x01\x12D\n" +
 	"\rsource_config\x18\b \x01(\v2\x1f.admiral.source.v1.SourceConfigR\fsourceConfig\x12V\n" +
 	"\x06labels\x18\t \x03(\v2%.admiral.source.v1.Source.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12R\n" +
-	"\x10last_test_status\x18\v \x01(\x0e2#.admiral.source.v1.SourceTestStatusH\x01R\x0elastTestStatus\x88\x01\x01\x12&\n" +
-	"\x0flast_test_error\x18\f \x01(\tR\rlastTestError\x12@\n" +
-	"\x0elast_tested_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\flastTestedAt\x12'\n" +
-	"\x0fcredential_name\x18\x0e \x01(\tR\x0ecredentialName\x12:\n" +
+	"\x10last_test_status\x18\v \x01(\x0e2#.admiral.source.v1.SourceTestStatusB\x03\xe0A\x03R\x0elastTestStatus\x12+\n" +
+	"\x0flast_test_error\x18\f \x01(\tB\x03\xe0A\x03R\rlastTestError\x12E\n" +
+	"\x0elast_tested_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\flastTestedAt\x12,\n" +
+	"\x0fcredential_name\x18\x0e \x01(\tB\x03\xe0A\x03R\x0ecredentialName\x12?\n" +
 	"\n" +
-	"created_by\x18\x0f \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\x0f \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
-	"created_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x10\n" +
-	"\x0e_credential_idB\x13\n" +
-	"\x11_last_test_status\"\xa3\x04\n" +
-	"\x13CreateSourceRequest\x12@\n" +
-	"\x04name\x18\x01 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12=\n" +
-	"\x04type\x18\x03 \x01(\x0e2\x1d.admiral.source.v1.SourceTypeB\n" +
-	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12\x19\n" +
-	"\x03url\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x03url\x122\n" +
-	"\rcredential_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\fcredentialId\x88\x01\x01\x12\x18\n" +
-	"\acatalog\x18\x06 \x01(\bR\acatalog\x12D\n" +
+	"\x0e_credential_id\"\x92\x04\n" +
+	"\x13CreateSourceRequest\x12C\n" +
+	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
+	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12@\n" +
+	"\x04type\x18\x03 \x01(\x0e2\x1d.admiral.source.v1.SourceTypeB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12\x1c\n" +
+	"\x03url\x18\x04 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x03url\x122\n" +
+	"\rcredential_id\x18\x05 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\fcredentialId\x88\x01\x01\x12D\n" +
 	"\rsource_config\x18\a \x01(\v2\x1f.admiral.source.v1.SourceConfigR\fsourceConfig\x12c\n" +
 	"\x06labels\x18\b \x03(\v22.admiral.source.v1.CreateSourceRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
@@ -1497,9 +1567,9 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x10\n" +
 	"\x0e_credential_id\"I\n" +
 	"\x14CreateSourceResponse\x121\n" +
-	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"9\n" +
-	"\x10GetSourceRequest\x12%\n" +
-	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"F\n" +
+	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"<\n" +
+	"\x10GetSourceRequest\x12(\n" +
+	"\tsource_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"F\n" +
 	"\x11GetSourceResponse\x121\n" +
 	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"}\n" +
 	"\x12ListSourcesRequest\x12 \n" +
@@ -1509,24 +1579,24 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"r\n" +
 	"\x13ListSourcesResponse\x123\n" +
 	"\asources\x18\x01 \x03(\v2\x19.admiral.source.v1.SourceR\asources\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x8d\x01\n" +
-	"\x13UpdateSourceRequest\x129\n" +
-	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceB\x06\xbaH\x03\xc8\x01\x01R\x06source\x12;\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x90\x01\n" +
+	"\x13UpdateSourceRequest\x12<\n" +
+	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x06source\x12;\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"I\n" +
 	"\x14UpdateSourceResponse\x121\n" +
-	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"<\n" +
-	"\x13DeleteSourceRequest\x12%\n" +
-	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"\x16\n" +
-	"\x14DeleteSourceResponse\":\n" +
-	"\x11TestSourceRequest\x12%\n" +
-	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"\x9a\x01\n" +
+	"\x06source\x18\x01 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"?\n" +
+	"\x13DeleteSourceRequest\x12(\n" +
+	"\tsource_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"\x16\n" +
+	"\x14DeleteSourceResponse\"=\n" +
+	"\x11TestSourceRequest\x12(\n" +
+	"\tsource_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\"\x9a\x01\n" +
 	"\x12TestSourceResponse\x12;\n" +
 	"\x06status\x18\x01 \x01(\x0e2#.admiral.source.v1.SourceTestStatusR\x06status\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x121\n" +
-	"\x06source\x18\x03 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"\x89\x01\n" +
-	"\x19ListSourceVersionsRequest\x12%\n" +
-	"\tsource_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\x12&\n" +
+	"\x06source\x18\x03 \x01(\v2\x19.admiral.source.v1.SourceR\x06source\"\x8c\x01\n" +
+	"\x19ListSourceVersionsRequest\x12(\n" +
+	"\tsource_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\bsourceId\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"\x82\x01\n" +
@@ -1540,7 +1610,13 @@ const file_admiral_source_v1_source_proto_rawDesc = "" +
 	"\x15SOURCE_TYPE_TERRAFORM\x10\x02\x12\x14\n" +
 	"\x10SOURCE_TYPE_HELM\x10\x03\x12\x13\n" +
 	"\x0fSOURCE_TYPE_OCI\x10\x04\x12\x14\n" +
-	"\x10SOURCE_TYPE_HTTP\x10\x05*v\n" +
+	"\x10SOURCE_TYPE_HTTP\x10\x05*\x9d\x01\n" +
+	"\rSourceRefKind\x12\x1f\n" +
+	"\x1bSOURCE_REF_KIND_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13SOURCE_REF_KIND_TAG\x10\x01\x12\x1a\n" +
+	"\x16SOURCE_REF_KIND_BRANCH\x10\x02\x12\x1a\n" +
+	"\x16SOURCE_REF_KIND_SEMVER\x10\x03\x12\x1a\n" +
+	"\x16SOURCE_REF_KIND_DIGEST\x10\x04*v\n" +
 	"\x10SourceTestStatus\x12\"\n" +
 	"\x1eSOURCE_TEST_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aSOURCE_TEST_STATUS_SUCCESS\x10\x01\x12\x1e\n" +
@@ -1583,79 +1659,81 @@ func file_admiral_source_v1_source_proto_rawDescGZIP() []byte {
 	return file_admiral_source_v1_source_proto_rawDescData
 }
 
-var file_admiral_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_admiral_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_admiral_source_v1_source_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_admiral_source_v1_source_proto_goTypes = []any{
 	(SourceType)(0),                    // 0: admiral.source.v1.SourceType
-	(SourceTestStatus)(0),              // 1: admiral.source.v1.SourceTestStatus
-	(*TerraformConfig)(nil),            // 2: admiral.source.v1.TerraformConfig
-	(*HelmConfig)(nil),                 // 3: admiral.source.v1.HelmConfig
-	(*SourceConfig)(nil),               // 4: admiral.source.v1.SourceConfig
-	(*SourceVersion)(nil),              // 5: admiral.source.v1.SourceVersion
-	(*Source)(nil),                     // 6: admiral.source.v1.Source
-	(*CreateSourceRequest)(nil),        // 7: admiral.source.v1.CreateSourceRequest
-	(*CreateSourceResponse)(nil),       // 8: admiral.source.v1.CreateSourceResponse
-	(*GetSourceRequest)(nil),           // 9: admiral.source.v1.GetSourceRequest
-	(*GetSourceResponse)(nil),          // 10: admiral.source.v1.GetSourceResponse
-	(*ListSourcesRequest)(nil),         // 11: admiral.source.v1.ListSourcesRequest
-	(*ListSourcesResponse)(nil),        // 12: admiral.source.v1.ListSourcesResponse
-	(*UpdateSourceRequest)(nil),        // 13: admiral.source.v1.UpdateSourceRequest
-	(*UpdateSourceResponse)(nil),       // 14: admiral.source.v1.UpdateSourceResponse
-	(*DeleteSourceRequest)(nil),        // 15: admiral.source.v1.DeleteSourceRequest
-	(*DeleteSourceResponse)(nil),       // 16: admiral.source.v1.DeleteSourceResponse
-	(*TestSourceRequest)(nil),          // 17: admiral.source.v1.TestSourceRequest
-	(*TestSourceResponse)(nil),         // 18: admiral.source.v1.TestSourceResponse
-	(*ListSourceVersionsRequest)(nil),  // 19: admiral.source.v1.ListSourceVersionsRequest
-	(*ListSourceVersionsResponse)(nil), // 20: admiral.source.v1.ListSourceVersionsResponse
-	nil,                                // 21: admiral.source.v1.Source.LabelsEntry
-	nil,                                // 22: admiral.source.v1.CreateSourceRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil),      // 23: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),                // 24: admiral.common.v1.ActorRef
-	(*fieldmaskpb.FieldMask)(nil),      // 25: google.protobuf.FieldMask
+	(SourceRefKind)(0),                 // 1: admiral.source.v1.SourceRefKind
+	(SourceTestStatus)(0),              // 2: admiral.source.v1.SourceTestStatus
+	(*TerraformConfig)(nil),            // 3: admiral.source.v1.TerraformConfig
+	(*HelmConfig)(nil),                 // 4: admiral.source.v1.HelmConfig
+	(*SourceConfig)(nil),               // 5: admiral.source.v1.SourceConfig
+	(*SourceVersion)(nil),              // 6: admiral.source.v1.SourceVersion
+	(*Source)(nil),                     // 7: admiral.source.v1.Source
+	(*CreateSourceRequest)(nil),        // 8: admiral.source.v1.CreateSourceRequest
+	(*CreateSourceResponse)(nil),       // 9: admiral.source.v1.CreateSourceResponse
+	(*GetSourceRequest)(nil),           // 10: admiral.source.v1.GetSourceRequest
+	(*GetSourceResponse)(nil),          // 11: admiral.source.v1.GetSourceResponse
+	(*ListSourcesRequest)(nil),         // 12: admiral.source.v1.ListSourcesRequest
+	(*ListSourcesResponse)(nil),        // 13: admiral.source.v1.ListSourcesResponse
+	(*UpdateSourceRequest)(nil),        // 14: admiral.source.v1.UpdateSourceRequest
+	(*UpdateSourceResponse)(nil),       // 15: admiral.source.v1.UpdateSourceResponse
+	(*DeleteSourceRequest)(nil),        // 16: admiral.source.v1.DeleteSourceRequest
+	(*DeleteSourceResponse)(nil),       // 17: admiral.source.v1.DeleteSourceResponse
+	(*TestSourceRequest)(nil),          // 18: admiral.source.v1.TestSourceRequest
+	(*TestSourceResponse)(nil),         // 19: admiral.source.v1.TestSourceResponse
+	(*ListSourceVersionsRequest)(nil),  // 20: admiral.source.v1.ListSourceVersionsRequest
+	(*ListSourceVersionsResponse)(nil), // 21: admiral.source.v1.ListSourceVersionsResponse
+	nil,                                // 22: admiral.source.v1.Source.LabelsEntry
+	nil,                                // 23: admiral.source.v1.CreateSourceRequest.LabelsEntry
+	(*timestamppb.Timestamp)(nil),      // 24: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                // 25: admiral.common.v1.ActorRef
+	(*fieldmaskpb.FieldMask)(nil),      // 26: google.protobuf.FieldMask
 }
 var file_admiral_source_v1_source_proto_depIdxs = []int32{
-	2,  // 0: admiral.source.v1.SourceConfig.terraform:type_name -> admiral.source.v1.TerraformConfig
-	3,  // 1: admiral.source.v1.SourceConfig.helm:type_name -> admiral.source.v1.HelmConfig
-	23, // 2: admiral.source.v1.SourceVersion.published_at:type_name -> google.protobuf.Timestamp
-	0,  // 3: admiral.source.v1.Source.type:type_name -> admiral.source.v1.SourceType
-	4,  // 4: admiral.source.v1.Source.source_config:type_name -> admiral.source.v1.SourceConfig
-	21, // 5: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
-	1,  // 6: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
-	23, // 7: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
-	24, // 8: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
-	23, // 9: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
-	23, // 10: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 11: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType
-	4,  // 12: admiral.source.v1.CreateSourceRequest.source_config:type_name -> admiral.source.v1.SourceConfig
-	22, // 13: admiral.source.v1.CreateSourceRequest.labels:type_name -> admiral.source.v1.CreateSourceRequest.LabelsEntry
-	6,  // 14: admiral.source.v1.CreateSourceResponse.source:type_name -> admiral.source.v1.Source
-	6,  // 15: admiral.source.v1.GetSourceResponse.source:type_name -> admiral.source.v1.Source
-	6,  // 16: admiral.source.v1.ListSourcesResponse.sources:type_name -> admiral.source.v1.Source
-	6,  // 17: admiral.source.v1.UpdateSourceRequest.source:type_name -> admiral.source.v1.Source
-	25, // 18: admiral.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
-	6,  // 19: admiral.source.v1.UpdateSourceResponse.source:type_name -> admiral.source.v1.Source
-	1,  // 20: admiral.source.v1.TestSourceResponse.status:type_name -> admiral.source.v1.SourceTestStatus
-	6,  // 21: admiral.source.v1.TestSourceResponse.source:type_name -> admiral.source.v1.Source
-	5,  // 22: admiral.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.source.v1.SourceVersion
-	7,  // 23: admiral.source.v1.SourceAPI.CreateSource:input_type -> admiral.source.v1.CreateSourceRequest
-	9,  // 24: admiral.source.v1.SourceAPI.GetSource:input_type -> admiral.source.v1.GetSourceRequest
-	11, // 25: admiral.source.v1.SourceAPI.ListSources:input_type -> admiral.source.v1.ListSourcesRequest
-	13, // 26: admiral.source.v1.SourceAPI.UpdateSource:input_type -> admiral.source.v1.UpdateSourceRequest
-	15, // 27: admiral.source.v1.SourceAPI.DeleteSource:input_type -> admiral.source.v1.DeleteSourceRequest
-	17, // 28: admiral.source.v1.SourceAPI.TestSource:input_type -> admiral.source.v1.TestSourceRequest
-	19, // 29: admiral.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.source.v1.ListSourceVersionsRequest
-	8,  // 30: admiral.source.v1.SourceAPI.CreateSource:output_type -> admiral.source.v1.CreateSourceResponse
-	10, // 31: admiral.source.v1.SourceAPI.GetSource:output_type -> admiral.source.v1.GetSourceResponse
-	12, // 32: admiral.source.v1.SourceAPI.ListSources:output_type -> admiral.source.v1.ListSourcesResponse
-	14, // 33: admiral.source.v1.SourceAPI.UpdateSource:output_type -> admiral.source.v1.UpdateSourceResponse
-	16, // 34: admiral.source.v1.SourceAPI.DeleteSource:output_type -> admiral.source.v1.DeleteSourceResponse
-	18, // 35: admiral.source.v1.SourceAPI.TestSource:output_type -> admiral.source.v1.TestSourceResponse
-	20, // 36: admiral.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.source.v1.ListSourceVersionsResponse
-	30, // [30:37] is the sub-list for method output_type
-	23, // [23:30] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	3,  // 0: admiral.source.v1.SourceConfig.terraform:type_name -> admiral.source.v1.TerraformConfig
+	4,  // 1: admiral.source.v1.SourceConfig.helm:type_name -> admiral.source.v1.HelmConfig
+	24, // 2: admiral.source.v1.SourceVersion.published_at:type_name -> google.protobuf.Timestamp
+	1,  // 3: admiral.source.v1.SourceVersion.kind:type_name -> admiral.source.v1.SourceRefKind
+	0,  // 4: admiral.source.v1.Source.type:type_name -> admiral.source.v1.SourceType
+	5,  // 5: admiral.source.v1.Source.source_config:type_name -> admiral.source.v1.SourceConfig
+	22, // 6: admiral.source.v1.Source.labels:type_name -> admiral.source.v1.Source.LabelsEntry
+	2,  // 7: admiral.source.v1.Source.last_test_status:type_name -> admiral.source.v1.SourceTestStatus
+	24, // 8: admiral.source.v1.Source.last_tested_at:type_name -> google.protobuf.Timestamp
+	25, // 9: admiral.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
+	24, // 10: admiral.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
+	24, // 11: admiral.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 12: admiral.source.v1.CreateSourceRequest.type:type_name -> admiral.source.v1.SourceType
+	5,  // 13: admiral.source.v1.CreateSourceRequest.source_config:type_name -> admiral.source.v1.SourceConfig
+	23, // 14: admiral.source.v1.CreateSourceRequest.labels:type_name -> admiral.source.v1.CreateSourceRequest.LabelsEntry
+	7,  // 15: admiral.source.v1.CreateSourceResponse.source:type_name -> admiral.source.v1.Source
+	7,  // 16: admiral.source.v1.GetSourceResponse.source:type_name -> admiral.source.v1.Source
+	7,  // 17: admiral.source.v1.ListSourcesResponse.sources:type_name -> admiral.source.v1.Source
+	7,  // 18: admiral.source.v1.UpdateSourceRequest.source:type_name -> admiral.source.v1.Source
+	26, // 19: admiral.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
+	7,  // 20: admiral.source.v1.UpdateSourceResponse.source:type_name -> admiral.source.v1.Source
+	2,  // 21: admiral.source.v1.TestSourceResponse.status:type_name -> admiral.source.v1.SourceTestStatus
+	7,  // 22: admiral.source.v1.TestSourceResponse.source:type_name -> admiral.source.v1.Source
+	6,  // 23: admiral.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.source.v1.SourceVersion
+	8,  // 24: admiral.source.v1.SourceAPI.CreateSource:input_type -> admiral.source.v1.CreateSourceRequest
+	10, // 25: admiral.source.v1.SourceAPI.GetSource:input_type -> admiral.source.v1.GetSourceRequest
+	12, // 26: admiral.source.v1.SourceAPI.ListSources:input_type -> admiral.source.v1.ListSourcesRequest
+	14, // 27: admiral.source.v1.SourceAPI.UpdateSource:input_type -> admiral.source.v1.UpdateSourceRequest
+	16, // 28: admiral.source.v1.SourceAPI.DeleteSource:input_type -> admiral.source.v1.DeleteSourceRequest
+	18, // 29: admiral.source.v1.SourceAPI.TestSource:input_type -> admiral.source.v1.TestSourceRequest
+	20, // 30: admiral.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.source.v1.ListSourceVersionsRequest
+	9,  // 31: admiral.source.v1.SourceAPI.CreateSource:output_type -> admiral.source.v1.CreateSourceResponse
+	11, // 32: admiral.source.v1.SourceAPI.GetSource:output_type -> admiral.source.v1.GetSourceResponse
+	13, // 33: admiral.source.v1.SourceAPI.ListSources:output_type -> admiral.source.v1.ListSourcesResponse
+	15, // 34: admiral.source.v1.SourceAPI.UpdateSource:output_type -> admiral.source.v1.UpdateSourceResponse
+	17, // 35: admiral.source.v1.SourceAPI.DeleteSource:output_type -> admiral.source.v1.DeleteSourceResponse
+	19, // 36: admiral.source.v1.SourceAPI.TestSource:output_type -> admiral.source.v1.TestSourceResponse
+	21, // 37: admiral.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.source.v1.ListSourceVersionsResponse
+	31, // [31:38] is the sub-list for method output_type
+	24, // [24:31] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_admiral_source_v1_source_proto_init() }
@@ -1674,7 +1752,7 @@ func file_admiral_source_v1_source_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_source_v1_source_proto_rawDesc), len(file_admiral_source_v1_source_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      3,
 			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,

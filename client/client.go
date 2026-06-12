@@ -8,18 +8,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	agentv1 "go.admiral.io/sdk/proto/admiral/agent/v1"
 	applicationv1 "go.admiral.io/sdk/proto/admiral/application/v1"
 	authenticationv1 "go.admiral.io/sdk/proto/admiral/authentication/v1"
+	catalogv1 "go.admiral.io/sdk/proto/admiral/catalog/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/changeset/v1"
-	clusterv1 "go.admiral.io/sdk/proto/admiral/cluster/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/credential/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/healthcheck/v1"
-	modulev1 "go.admiral.io/sdk/proto/admiral/module/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/run/v1"
-	runnerv1 "go.admiral.io/sdk/proto/admiral/runner/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/source/v1"
-	statev1 "go.admiral.io/sdk/proto/admiral/state/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/user/v1"
 )
 
@@ -32,18 +30,16 @@ type Client struct {
 	logger         Logger
 	authToken      string
 	tokenValidator TokenValidator
+	agent agentv1.AgentAPIClient
 	application applicationv1.ApplicationAPIClient
 	authentication authenticationv1.AuthenticationAPIClient
+	catalog catalogv1.CatalogAPIClient
 	changeSet changesetv1.ChangeSetAPIClient
-	cluster clusterv1.ClusterAPIClient
 	credential credentialv1.CredentialAPIClient
 	environment environmentv1.EnvironmentAPIClient
 	healthcheck healthcheckv1.HealthcheckAPIClient
-	module modulev1.ModuleAPIClient
 	run runv1.RunAPIClient
-	runner runnerv1.RunnerAPIClient
 	source sourcev1.SourceAPIClient
-	state statev1.StateAPIClient
 	user userv1.UserAPIClient
 }
 
@@ -85,20 +81,23 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		logger:         cfg.Logger,
 		authToken:      cfg.AuthToken,
 		tokenValidator: cfg.TokenValidator,
+		agent: agentv1.NewAgentAPIClient(conn),
 		application: applicationv1.NewApplicationAPIClient(conn),
 		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
+		catalog: catalogv1.NewCatalogAPIClient(conn),
 		changeSet: changesetv1.NewChangeSetAPIClient(conn),
-		cluster: clusterv1.NewClusterAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
 		environment: environmentv1.NewEnvironmentAPIClient(conn),
 		healthcheck: healthcheckv1.NewHealthcheckAPIClient(conn),
-		module: modulev1.NewModuleAPIClient(conn),
 		run: runv1.NewRunAPIClient(conn),
-		runner: runnerv1.NewRunnerAPIClient(conn),
 		source: sourcev1.NewSourceAPIClient(conn),
-		state: statev1.NewStateAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
 	}, nil
+}
+
+// Agent returns the AgentAPI client.
+func (c *Client) Agent() agentv1.AgentAPIClient {
+	return c.agent
 }
 
 // Application returns the ApplicationAPI client.
@@ -111,14 +110,14 @@ func (c *Client) Authentication() authenticationv1.AuthenticationAPIClient {
 	return c.authentication
 }
 
+// Catalog returns the CatalogAPI client.
+func (c *Client) Catalog() catalogv1.CatalogAPIClient {
+	return c.catalog
+}
+
 // ChangeSet returns the ChangeSetAPI client.
 func (c *Client) ChangeSet() changesetv1.ChangeSetAPIClient {
 	return c.changeSet
-}
-
-// Cluster returns the ClusterAPI client.
-func (c *Client) Cluster() clusterv1.ClusterAPIClient {
-	return c.cluster
 }
 
 // Credential returns the CredentialAPI client.
@@ -136,29 +135,14 @@ func (c *Client) Healthcheck() healthcheckv1.HealthcheckAPIClient {
 	return c.healthcheck
 }
 
-// Module returns the ModuleAPI client.
-func (c *Client) Module() modulev1.ModuleAPIClient {
-	return c.module
-}
-
 // Run returns the RunAPI client.
 func (c *Client) Run() runv1.RunAPIClient {
 	return c.run
 }
 
-// Runner returns the RunnerAPI client.
-func (c *Client) Runner() runnerv1.RunnerAPIClient {
-	return c.runner
-}
-
 // Source returns the SourceAPI client.
 func (c *Client) Source() sourcev1.SourceAPIClient {
 	return c.source
-}
-
-// State returns the StateAPI client.
-func (c *Client) State() statev1.StateAPIClient {
-	return c.state
 }
 
 // User returns the UserAPI client.

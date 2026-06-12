@@ -136,11 +136,12 @@ func (x *Application) GetUpdatedAt() *timestamppb.Timestamp {
 // CreateApplicationRequest contains the parameters for creating a new application.
 type CreateApplicationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// URL-safe, human-readable identifier (e.g., "inventory-api"). Must be unique
-	// within the tenant. Lowercase alphanumeric and hyphens only.
+	// URL-safe, human-readable identifier (e.g., "inventory-api"). Unique within
+	// the tenant. Lowercase alphanumeric and hyphens only, must start with a
+	// letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional longer-form description of the application's purpose.
-	Description *string `protobuf:"bytes,2,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	// Arbitrary key-value labels for organizing and filtering applications.
 	Labels        map[string]string `protobuf:"bytes,3,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
@@ -185,8 +186,8 @@ func (x *CreateApplicationRequest) GetName() string {
 }
 
 func (x *CreateApplicationRequest) GetDescription() string {
-	if x != nil && x.Description != nil {
-		return *x.Description
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
@@ -293,7 +294,7 @@ func (x *GetApplicationRequest) GetApplicationId() string {
 // GetApplicationResponse contains the application record.
 type GetApplicationResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The application record.
+	// The retrieved application.
 	Application   *Application `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -339,11 +340,8 @@ func (x *GetApplicationResponse) GetApplication() *Application {
 // ListApplicationsRequest contains pagination and filter parameters.
 type ListApplicationsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
-	//
-	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
-	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
-	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
 	//   - `name`: filter by application name.
@@ -351,7 +349,8 @@ type ListApplicationsRequest struct {
 	//
 	// Example: `field['name'] = 'inventory-api' AND field['labels.team'] = 'logistics'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of applications to return per page.
+	// Maximum number of applications to return per page. Defaults to 50 when
+	// omitted or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -468,11 +467,12 @@ func (x *ListApplicationsResponse) GetNextPageToken() string {
 // UpdateApplicationRequest contains the application fields to update.
 type UpdateApplicationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The application with updated fields.
-	// Only fields specified in `update_mask` are updated.
+	// The application with updated fields. Its `id` identifies the application;
+	// only fields named in `update_mask` are applied.
 	Application *Application `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
-	// The set of fields to update. If unset, all mutable fields are updated.
-	// Supported fields: `name`, `description`, `labels`.
+	// The set of fields to update. Optional; if omitted, all populated fields
+	// are updated. Pass `*` for full replacement. Supported fields: `name`,
+	// `description`, `labels`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -665,33 +665,32 @@ var File_admiral_application_v1_application_proto protoreflect.FileDescriptor
 
 const file_admiral_application_v1_application_proto_rawDesc = "" +
 	"\n" +
-	"(admiral/application/v1/application.proto\x12\x16admiral.application.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe4\x03\n" +
-	"\vApplication\x12\x18\n" +
-	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"(admiral/application/v1/application.proto\x12\x16admiral.application.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf6\x03\n" +
+	"\vApplication\x12\x1b\n" +
+	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12`\n" +
-	"\x06labels\x18\x04 \x03(\v2/.admiral.application.v1.Application.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12:\n" +
+	"\x06labels\x18\x04 \x03(\v2/.admiral.application.v1.Application.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12?\n" +
 	"\n" +
-	"created_by\x18\x05 \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\x05 \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
-	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x1a9\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xc7\x02\n" +
-	"\x18CreateApplicationRequest\x12@\n" +
-	"\x04name\x18\x01 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12/\n" +
-	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bH\x00R\vdescription\x88\x01\x01\x12m\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb5\x02\n" +
+	"\x18CreateApplicationRequest\x12C\n" +
+	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
+	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12m\n" +
 	"\x06labels\x18\x03 \x03(\v2<.admiral.application.v1.CreateApplicationRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x0e\n" +
-	"\f_description\"b\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"b\n" +
 	"\x19CreateApplicationResponse\x12E\n" +
-	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"H\n" +
-	"\x15GetApplicationRequest\x12/\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\"_\n" +
+	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"K\n" +
+	"\x15GetApplicationRequest\x122\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\"_\n" +
 	"\x16GetApplicationResponse\x12E\n" +
 	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"\x82\x01\n" +
 	"\x17ListApplicationsRequest\x12 \n" +
@@ -701,15 +700,15 @@ const file_admiral_application_v1_application_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8b\x01\n" +
 	"\x18ListApplicationsResponse\x12G\n" +
 	"\fapplications\x18\x01 \x03(\v2#.admiral.application.v1.ApplicationR\fapplications\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa6\x01\n" +
-	"\x18UpdateApplicationRequest\x12M\n" +
-	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationB\x06\xbaH\x03\xc8\x01\x01R\vapplication\x12;\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa9\x01\n" +
+	"\x18UpdateApplicationRequest\x12P\n" +
+	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\vapplication\x12;\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"b\n" +
 	"\x19UpdateApplicationResponse\x12E\n" +
-	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"a\n" +
-	"\x18DeleteApplicationRequest\x12/\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12\x14\n" +
+	"\vapplication\x18\x01 \x01(\v2#.admiral.application.v1.ApplicationR\vapplication\"d\n" +
+	"\x18DeleteApplicationRequest\x122\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12\x14\n" +
 	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
 	"\x19DeleteApplicationResponse2\xc9\b\n" +
 	"\x0eApplicationAPI\x12\xd0\x01\n" +
@@ -797,7 +796,6 @@ func file_admiral_application_v1_application_proto_init() {
 	if File_admiral_application_v1_application_proto != nil {
 		return
 	}
-	file_admiral_application_v1_application_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -58,12 +58,6 @@ type RunAPIClient interface {
 	// The server resolves all components (with environment overrides applied),
 	// builds the dependency DAG, and begins rendering and executing revisions.
 	//
-	// To destroy all resources in an environment (e.g., before deleting the
-	// environment), set `destroy` to true. This runs the engine's destroy
-	// operation (e.g., `terraform destroy` / `tofu destroy`) for infrastructure
-	// components and deletes workload resources from the cluster, in reverse
-	// dependency order.
-	//
 	// Concurrency: only one run can be active per application+environment
 	// at a time. If a run is already in an active state (PENDING, QUEUED,
 	// PLANNING, PLANNED, or APPLYING), the new run is queued and will start
@@ -107,10 +101,10 @@ type RunAPIClient interface {
 	//
 	// Scope: `run:write`
 	RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error)
-	// ApplyRun transitions a run from plan phase to apply phase. All
-	// revisions currently in AWAITING_APPROVAL status get an APPLY job
-	// dispatched to their assigned runner. This is the explicit human approval
-	// gate between plan output and infrastructure mutation.
+	// ApplyRun transitions a run from plan phase to apply phase. Revisions
+	// currently in PLANNED status get an APPLY job dispatched to their
+	// assigned TERRAFORM agent. This is the single authorization gate per changeset;
+	// downstream layers auto-continue plan->apply without re-prompting.
 	//
 	// Scope: `run:write`
 	ApplyRun(context.Context, *connect.Request[v1.ApplyRunRequest]) (*connect.Response[v1.ApplyRunResponse], error)
@@ -237,12 +231,6 @@ type RunAPIHandler interface {
 	// The server resolves all components (with environment overrides applied),
 	// builds the dependency DAG, and begins rendering and executing revisions.
 	//
-	// To destroy all resources in an environment (e.g., before deleting the
-	// environment), set `destroy` to true. This runs the engine's destroy
-	// operation (e.g., `terraform destroy` / `tofu destroy`) for infrastructure
-	// components and deletes workload resources from the cluster, in reverse
-	// dependency order.
-	//
 	// Concurrency: only one run can be active per application+environment
 	// at a time. If a run is already in an active state (PENDING, QUEUED,
 	// PLANNING, PLANNED, or APPLYING), the new run is queued and will start
@@ -286,10 +274,10 @@ type RunAPIHandler interface {
 	//
 	// Scope: `run:write`
 	RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error)
-	// ApplyRun transitions a run from plan phase to apply phase. All
-	// revisions currently in AWAITING_APPROVAL status get an APPLY job
-	// dispatched to their assigned runner. This is the explicit human approval
-	// gate between plan output and infrastructure mutation.
+	// ApplyRun transitions a run from plan phase to apply phase. Revisions
+	// currently in PLANNED status get an APPLY job dispatched to their
+	// assigned TERRAFORM agent. This is the single authorization gate per changeset;
+	// downstream layers auto-continue plan->apply without re-prompting.
 	//
 	// Scope: `run:write`
 	ApplyRun(context.Context, *connect.Request[v1.ApplyRunRequest]) (*connect.Response[v1.ApplyRunResponse], error)

@@ -64,7 +64,7 @@ type SourceAPIClient interface {
 	// Scope: `source:read`
 	GetSource(context.Context, *connect.Request[v1.GetSourceRequest]) (*connect.Response[v1.GetSourceResponse], error)
 	// ListSources returns a paginated list of sources within the caller's tenant.
-	// Use the filter to scope by type, catalog status, or labels.
+	// Use the filter to scope by type or labels.
 	//
 	// Scope: `source:read`
 	ListSources(context.Context, *connect.Request[v1.ListSourcesRequest]) (*connect.Response[v1.ListSourcesResponse], error)
@@ -97,8 +97,9 @@ type SourceAPIClient interface {
 	//
 	// For Terraform registry sources, this calls the Module Registry Protocol's
 	// version listing endpoint. For Helm repositories, it parses the index.yaml.
-	// For OCI sources, it lists tags. For Git sources, it lists tags via
-	// ls-remote.
+	// For OCI sources, it lists tags. For Git sources, it lists branches and
+	// tags via ls-remote, each annotated with the commit it currently resolves
+	// to.
 	//
 	// This operation queries the external system in real time and may take
 	// several seconds.
@@ -223,7 +224,7 @@ type SourceAPIHandler interface {
 	// Scope: `source:read`
 	GetSource(context.Context, *connect.Request[v1.GetSourceRequest]) (*connect.Response[v1.GetSourceResponse], error)
 	// ListSources returns a paginated list of sources within the caller's tenant.
-	// Use the filter to scope by type, catalog status, or labels.
+	// Use the filter to scope by type or labels.
 	//
 	// Scope: `source:read`
 	ListSources(context.Context, *connect.Request[v1.ListSourcesRequest]) (*connect.Response[v1.ListSourcesResponse], error)
@@ -256,8 +257,9 @@ type SourceAPIHandler interface {
 	//
 	// For Terraform registry sources, this calls the Module Registry Protocol's
 	// version listing endpoint. For Helm repositories, it parses the index.yaml.
-	// For OCI sources, it lists tags. For Git sources, it lists tags via
-	// ls-remote.
+	// For OCI sources, it lists tags. For Git sources, it lists branches and
+	// tags via ls-remote, each annotated with the commit it currently resolves
+	// to.
 	//
 	// This operation queries the external system in real time and may take
 	// several seconds.

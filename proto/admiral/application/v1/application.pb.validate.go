@@ -253,11 +253,9 @@ func (m *CreateApplicationRequest) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for Labels
+	// no validation rules for Description
 
-	if m.Description != nil {
-		// no validation rules for Description
-	}
+	// no validation rules for Labels
 
 	if len(errors) > 0 {
 		return CreateApplicationRequestMultiError(errors)

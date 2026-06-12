@@ -186,10 +186,10 @@ type Variable struct {
 	Description string `protobuf:"bytes,6,opt,name=description,proto3" json:"description,omitempty"`
 	// The application this variable belongs to (UUID). Always set; variables
 	// are env-scoped and inherit their app from the environment.
-	ApplicationId *string `protobuf:"bytes,7,opt,name=application_id,json=applicationId,proto3,oneof" json:"application_id,omitempty"`
+	ApplicationId string `protobuf:"bytes,7,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
 	// The environment this variable is scoped to (UUID). Always set; variables
 	// are env-scoped.
-	EnvironmentId *string `protobuf:"bytes,8,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
+	EnvironmentId string `protobuf:"bytes,8,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	// How the variable was created. USER for change-set-managed variables,
 	// INFRASTRUCTURE for variables produced by engine output capture (Terraform
 	// or OpenTofu). Server-populated.
@@ -277,15 +277,15 @@ func (x *Variable) GetDescription() string {
 }
 
 func (x *Variable) GetApplicationId() string {
-	if x != nil && x.ApplicationId != nil {
-		return *x.ApplicationId
+	if x != nil {
+		return x.ApplicationId
 	}
 	return ""
 }
 
 func (x *Variable) GetEnvironmentId() string {
-	if x != nil && x.EnvironmentId != nil {
-		return *x.EnvironmentId
+	if x != nil {
+		return x.EnvironmentId
 	}
 	return ""
 }
@@ -322,16 +322,16 @@ var File_admiral_variable_v1_variable_proto protoreflect.FileDescriptor
 
 const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x04\n" +
+	"\"admiral/variable/v1/variable.proto\x12\x13admiral.variable.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc9\x04\n" +
 	"\bVariable\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12;\n" +
 	"\x03key\x18\x02 \x01(\tB)\xbaH&r$\x10\x01\x18?2\x1e^[A-Za-z_][A-Za-z0-9_.]{0,62}$R\x03key\x12\x14\n" +
 	"\x05value\x18\x03 \x01(\tR\x05value\x12\x1c\n" +
 	"\tsensitive\x18\x04 \x01(\bR\tsensitive\x125\n" +
 	"\x04type\x18\x05 \x01(\x0e2!.admiral.variable.v1.VariableTypeR\x04type\x12*\n" +
-	"\vdescription\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x124\n" +
-	"\x0eapplication_id\x18\a \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationId\x88\x01\x01\x124\n" +
-	"\x0eenvironment_id\x18\b \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\renvironmentId\x88\x01\x01\x12;\n" +
+	"\vdescription\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12/\n" +
+	"\x0eapplication_id\x18\a \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
+	"\x0eenvironment_id\x18\b \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12;\n" +
 	"\x06source\x18\t \x01(\x0e2#.admiral.variable.v1.VariableSourceR\x06source\x12:\n" +
 	"\n" +
 	"created_by\x18\n" +
@@ -339,9 +339,7 @@ const file_admiral_variable_v1_variable_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x11\n" +
-	"\x0f_application_idB\x11\n" +
-	"\x0f_environment_id*o\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt*o\n" +
 	"\x0eVariableSource\x12\x1f\n" +
 	"\x1bVARIABLE_SOURCE_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14VARIABLE_SOURCE_USER\x10\x01\x12\"\n" +
@@ -393,7 +391,6 @@ func file_admiral_variable_v1_variable_proto_init() {
 	if File_admiral_variable_v1_variable_proto != nil {
 		return
 	}
-	file_admiral_variable_v1_variable_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -137,7 +137,7 @@ type ChangeSetAPIClient interface {
 	// overwrites the prior entry.
 	//
 	// The `change_type` field selects the operation:
-	//   - CREATE: add a new component. Requires `module_id`. Rejects if a
+	//   - CREATE: add a new component. Requires `catalog_item_id`. Rejects if a
 	//     component with the same name already exists in the application.
 	//   - UPDATE: change an existing component. The name must match an
 	//     existing component in the application. Only non-empty optional
@@ -402,7 +402,7 @@ type ChangeSetAPIHandler interface {
 	// overwrites the prior entry.
 	//
 	// The `change_type` field selects the operation:
-	//   - CREATE: add a new component. Requires `module_id`. Rejects if a
+	//   - CREATE: add a new component. Requires `catalog_item_id`. Rejects if a
 	//     component with the same name already exists in the application.
 	//   - UPDATE: change an existing component. The name must match an
 	//     existing component in the application. Only non-empty optional

@@ -141,6 +141,112 @@ var _ interface {
 	ErrorName() string
 } = ComponentOutputValidationError{}
 
+// Validate checks the field values on ComponentInput with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ComponentInput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ComponentInput with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ComponentInputMultiError,
+// or nil if none found.
+func (m *ComponentInput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ComponentInput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for ValueTemplate
+
+	// no validation rules for Description
+
+	if len(errors) > 0 {
+		return ComponentInputMultiError(errors)
+	}
+
+	return nil
+}
+
+// ComponentInputMultiError is an error wrapping multiple validation errors
+// returned by ComponentInput.ValidateAll() if the designated constraints
+// aren't met.
+type ComponentInputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ComponentInputMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ComponentInputMultiError) AllErrors() []error { return m }
+
+// ComponentInputValidationError is the validation error returned by
+// ComponentInput.Validate if the designated constraints aren't met.
+type ComponentInputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ComponentInputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ComponentInputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ComponentInputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ComponentInputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ComponentInputValidationError) ErrorName() string { return "ComponentInputValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ComponentInputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sComponentInput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ComponentInputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ComponentInputValidationError{}
+
 // Validate checks the field values on Component with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -175,13 +281,9 @@ func (m *Component) validate(all bool) error {
 
 	// no validation rules for Kind
 
-	// no validation rules for DesiredState
-
 	// no validation rules for DeletionProtection
 
-	// no validation rules for ModuleId
-
-	// no validation rules for Version
+	// no validation rules for Ref
 
 	// no validation rules for ValuesTemplate
 
@@ -306,6 +408,69 @@ func (m *Component) validate(all bool) error {
 		}
 	}
 
+	for idx, item := range m.GetInputs() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ComponentValidationError{
+						field:  fmt.Sprintf("Inputs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ComponentValidationError{
+						field:  fmt.Sprintf("Inputs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ComponentValidationError{
+					field:  fmt.Sprintf("Inputs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetTarget()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ComponentValidationError{
+					field:  "Target",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ComponentValidationError{
+					field:  "Target",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTarget()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ComponentValidationError{
+				field:  "Target",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ComponentMultiError(errors)
 	}
@@ -382,3 +547,107 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ComponentValidationError{}
+
+// Validate checks the field values on ComponentTarget with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ComponentTarget) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ComponentTarget with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ComponentTargetMultiError, or nil if none found.
+func (m *ComponentTarget) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ComponentTarget) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for AgentId
+
+	// no validation rules for Namespace
+
+	if len(errors) > 0 {
+		return ComponentTargetMultiError(errors)
+	}
+
+	return nil
+}
+
+// ComponentTargetMultiError is an error wrapping multiple validation errors
+// returned by ComponentTarget.ValidateAll() if the designated constraints
+// aren't met.
+type ComponentTargetMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ComponentTargetMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ComponentTargetMultiError) AllErrors() []error { return m }
+
+// ComponentTargetValidationError is the validation error returned by
+// ComponentTarget.Validate if the designated constraints aren't met.
+type ComponentTargetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ComponentTargetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ComponentTargetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ComponentTargetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ComponentTargetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ComponentTargetValidationError) ErrorName() string { return "ComponentTargetValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ComponentTargetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sComponentTarget.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ComponentTargetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ComponentTargetValidationError{}
