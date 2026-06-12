@@ -483,6 +483,10 @@ func (m *SourceVersion) validate(all bool) error {
 
 	// no validation rules for Description
 
+	// no validation rules for Kind
+
+	// no validation rules for Resolved
+
 	if len(errors) > 0 {
 		return SourceVersionMultiError(errors)
 	}
@@ -592,8 +596,6 @@ func (m *Source) validate(all bool) error {
 
 	// no validation rules for Url
 
-	// no validation rules for Catalog
-
 	if all {
 		switch v := interface{}(m.GetSourceConfig()).(type) {
 		case interface{ ValidateAll() error }:
@@ -624,6 +626,8 @@ func (m *Source) validate(all bool) error {
 	}
 
 	// no validation rules for Labels
+
+	// no validation rules for LastTestStatus
 
 	// no validation rules for LastTestError
 
@@ -749,10 +753,6 @@ func (m *Source) validate(all bool) error {
 		// no validation rules for CredentialId
 	}
 
-	if m.LastTestStatus != nil {
-		// no validation rules for LastTestStatus
-	}
-
 	if len(errors) > 0 {
 		return SourceMultiError(errors)
 	}
@@ -859,8 +859,6 @@ func (m *CreateSourceRequest) validate(all bool) error {
 	// no validation rules for Type
 
 	// no validation rules for Url
-
-	// no validation rules for Catalog
 
 	if all {
 		switch v := interface{}(m.GetSourceConfig()).(type) {

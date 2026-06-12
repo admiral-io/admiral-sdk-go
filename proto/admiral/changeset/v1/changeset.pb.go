@@ -10,7 +10,8 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
 	v1 "go.admiral.io/sdk/proto/admiral/common/v1"
-	v11 "go.admiral.io/sdk/proto/admiral/variable/v1"
+	v11 "go.admiral.io/sdk/proto/admiral/component/v1"
+	v12 "go.admiral.io/sdk/proto/admiral/variable/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -94,8 +95,8 @@ type ChangeSetEntryType int32
 const (
 	// Default value. Must not be used.
 	ChangeSetEntryType_CHANGE_SET_ENTRY_TYPE_UNSPECIFIED ChangeSetEntryType = 0
-	// Add a new component. Requires module_id; rejects if a component with the
-	// same name already exists in the (application, environment) pair.
+	// Add a new component. Requires catalog_item_id; rejects if a component with
+	// the same name already exists in the (application, environment) pair.
 	ChangeSetEntryType_CHANGE_SET_ENTRY_TYPE_CREATE ChangeSetEntryType = 1
 	// Change an existing component. The name must match an existing component
 	// in the (application, environment) pair. Only non-empty optional fields
@@ -236,9 +237,11 @@ type ChangeSet struct {
 	Title string `protobuf:"bytes,6,opt,name=title,proto3" json:"title,omitempty"`
 	// Optional longer description of what the change set proposes.
 	Description string `protobuf:"bytes,7,opt,name=description,proto3" json:"description,omitempty"`
-	// The run that closed this change set (UUID). Populated when status
-	// transitions to DEPLOYED. Empty otherwise.
-	RunId string `protobuf:"bytes,8,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
+	// The run that deployed this change set (UUID). Populated when status
+	// transitions to DEPLOYED. Empty otherwise. Note: many runs may target a
+	// change set over its life (via runs.change_set_id); this is the single run
+	// that closed it.
+	DeployRunId string `protobuf:"bytes,8,opt,name=deploy_run_id,json=deployRunId,proto3" json:"deploy_run_id,omitempty"`
 	// Component entries proposed by this change set. Populated by GetChangeSet;
 	// empty in ListChangeSets responses.
 	Entries []*ChangeSetEntry `protobuf:"bytes,9,rep,name=entries,proto3" json:"entries,omitempty"`
@@ -250,10 +253,8 @@ type ChangeSet struct {
 	// over `id` for user-facing references; lookups accept either form.
 	DisplayId string `protobuf:"bytes,11,opt,name=display_id,json=displayId,proto3" json:"display_id,omitempty"`
 	// Display name of the parent application. Denormalized for display.
-	// Read-only; ignored on writes.
 	ApplicationName string `protobuf:"bytes,12,opt,name=application_name,json=applicationName,proto3" json:"application_name,omitempty"`
 	// Display name of the parent environment. Denormalized for display.
-	// Read-only; ignored on writes.
 	EnvironmentName string `protobuf:"bytes,13,opt,name=environment_name,json=environmentName,proto3" json:"environment_name,omitempty"`
 	// The user or agent that created this change set
 	// (server-populated from token).
@@ -346,9 +347,9 @@ func (x *ChangeSet) GetDescription() string {
 	return ""
 }
 
-func (x *ChangeSet) GetRunId() string {
+func (x *ChangeSet) GetDeployRunId() string {
 	if x != nil {
-		return x.RunId
+		return x.DeployRunId
 	}
 	return ""
 }
@@ -414,7 +415,7 @@ func (x *ChangeSet) GetUpdatedAt() *timestamppb.Timestamp {
 // Patch semantics: optional fields that are absent mean "no change relative
 // to the component's current state at deploy time." Required fields per
 // `change_type`:
-//   - CREATE: `module_id` required; `component_id` must be empty.
+//   - CREATE: `catalog_item_id` required; `component_id` must be empty.
 //   - UPDATE: `component_id` required; at least one optional field set.
 //   - DESTROY / ORPHAN: `component_id` required; no patch fields allowed.
 type ChangeSetEntry struct {
@@ -433,13 +434,14 @@ type ChangeSetEntry struct {
 	ComponentName string `protobuf:"bytes,4,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
 	// The change type.
 	ChangeType ChangeSetEntryType `protobuf:"varint,5,opt,name=change_type,json=changeType,proto3,enum=admiral.changeset.v1.ChangeSetEntryType" json:"change_type,omitempty"`
-	// The module to deploy (UUID). Required for CREATE; optional for UPDATE
-	// (if changing the module); not allowed for DESTROY/ORPHAN.
-	ModuleId *string `protobuf:"bytes,6,opt,name=module_id,json=moduleId,proto3,oneof" json:"module_id,omitempty"`
-	// Optional ref override (e.g., tag, branch, or commit SHA). For UPDATE
-	// entries, absent means "no change to version."
-	Version *string `protobuf:"bytes,7,opt,name=version,proto3,oneof" json:"version,omitempty"`
-	// Values template for module inputs. For UPDATE entries, absent means
+	// The catalog item to deploy (UUID). Required for CREATE; optional for UPDATE
+	// (if changing the catalog item); not allowed for DESTROY/ORPHAN.
+	CatalogItemId *string `protobuf:"bytes,6,opt,name=catalog_item_id,json=catalogItemId,proto3,oneof" json:"catalog_item_id,omitempty"`
+	// The git ref / version selector to deploy (e.g., tag, branch, or commit SHA).
+	// On CREATE, defaults to the catalog item's ref when absent. For UPDATE
+	// entries, absent means "no change to ref."
+	Ref *string `protobuf:"bytes,7,opt,name=ref,proto3,oneof" json:"ref,omitempty"`
+	// Values template for catalog item inputs. For UPDATE entries, absent means
 	// "no change to values_template."
 	ValuesTemplate *string `protobuf:"bytes,8,opt,name=values_template,json=valuesTemplate,proto3,oneof" json:"values_template,omitempty"`
 	// Explicit dependencies (component names). Whatever the client sends is
@@ -450,13 +452,17 @@ type ChangeSetEntry struct {
 	// Optional description for the proposed change (e.g., "Bump to v2.1.0
 	// for performance fix"). For UPDATE entries, absent means "no change."
 	Description *string `protobuf:"bytes,10,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	// Display name of the referenced module. Denormalized for display.
+	// Display name of the referenced catalog item. Denormalized for display.
 	// Read-only; ignored on writes.
-	ModuleName string `protobuf:"bytes,11,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
+	CatalogItemName string `protobuf:"bytes,11,opt,name=catalog_item_name,json=catalogItemName,proto3" json:"catalog_item_name,omitempty"`
 	// When the entry was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the entry was last replaced.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Resolved placement for the component: the agent it deploys on (plus a
+	// namespace for WORKLOAD components). Copied onto the component at deploy
+	// time; the environment is no longer the source of truth for placement.
+	Target        *v11.ComponentTarget `protobuf:"bytes,14,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -526,16 +532,16 @@ func (x *ChangeSetEntry) GetChangeType() ChangeSetEntryType {
 	return ChangeSetEntryType_CHANGE_SET_ENTRY_TYPE_UNSPECIFIED
 }
 
-func (x *ChangeSetEntry) GetModuleId() string {
-	if x != nil && x.ModuleId != nil {
-		return *x.ModuleId
+func (x *ChangeSetEntry) GetCatalogItemId() string {
+	if x != nil && x.CatalogItemId != nil {
+		return *x.CatalogItemId
 	}
 	return ""
 }
 
-func (x *ChangeSetEntry) GetVersion() string {
-	if x != nil && x.Version != nil {
-		return *x.Version
+func (x *ChangeSetEntry) GetRef() string {
+	if x != nil && x.Ref != nil {
+		return *x.Ref
 	}
 	return ""
 }
@@ -561,9 +567,9 @@ func (x *ChangeSetEntry) GetDescription() string {
 	return ""
 }
 
-func (x *ChangeSetEntry) GetModuleName() string {
+func (x *ChangeSetEntry) GetCatalogItemName() string {
 	if x != nil {
-		return x.ModuleName
+		return x.CatalogItemName
 	}
 	return ""
 }
@@ -578,6 +584,13 @@ func (x *ChangeSetEntry) GetCreatedAt() *timestamppb.Timestamp {
 func (x *ChangeSetEntry) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *ChangeSetEntry) GetTarget() *v11.ComponentTarget {
+	if x != nil {
+		return x.Target
 	}
 	return nil
 }
@@ -600,7 +613,7 @@ type ChangeSetVariableEntry struct {
 	Value *string `protobuf:"bytes,4,opt,name=value,proto3,oneof" json:"value,omitempty"`
 	// How the value should be interpreted by the rendering engine and
 	// displayed in the UI.
-	Type v11.VariableType `protobuf:"varint,5,opt,name=type,proto3,enum=admiral.variable.v1.VariableType" json:"type,omitempty"`
+	Type v12.VariableType `protobuf:"varint,5,opt,name=type,proto3,enum=admiral.variable.v1.VariableType" json:"type,omitempty"`
 	// When true, the value is encrypted at rest and masked in API responses.
 	Sensitive bool `protobuf:"varint,6,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
 	// When the variable entry was created or last replaced.
@@ -667,11 +680,11 @@ func (x *ChangeSetVariableEntry) GetValue() string {
 	return ""
 }
 
-func (x *ChangeSetVariableEntry) GetType() v11.VariableType {
+func (x *ChangeSetVariableEntry) GetType() v12.VariableType {
 	if x != nil {
 		return x.Type
 	}
-	return v11.VariableType(0)
+	return v12.VariableType(0)
 }
 
 func (x *ChangeSetVariableEntry) GetSensitive() bool {
@@ -905,11 +918,8 @@ func (x *GetChangeSetResponse) GetChangeSet() *ChangeSet {
 // ListChangeSetsRequest contains pagination and filter parameters.
 type ListChangeSetsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
-	//
-	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
-	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
-	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
 	//   - `application_id`: change sets for a specific application (UUID).
@@ -918,7 +928,8 @@ type ListChangeSetsRequest struct {
 	//
 	// Example: `field['environment_id'] = '<uuid>' AND field['status'] = 'OPEN'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of change sets to return per page.
+	// Maximum number of change sets to return per page. Defaults to 50 when
+	// omitted or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -1037,10 +1048,12 @@ func (x *ListChangeSetsResponse) GetNextPageToken() string {
 // UpdateChangeSetRequest updates a change set's mutable metadata.
 type UpdateChangeSetRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The change set with updated fields. Only fields listed in `update_mask`
-	// are applied.
+	// The change set with updated fields. Its `id` identifies the change set;
+	// only fields named in `update_mask` are applied.
 	ChangeSet *ChangeSet `protobuf:"bytes,1,opt,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
-	// The set of fields to update. Supported fields: `title`, `description`.
+	// The set of fields to update. Optional; if omitted, all populated fields
+	// are updated. Pass `*` for full replacement. Supported fields: `title`,
+	// `description`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1363,17 +1376,21 @@ type SetEntryRequest struct {
 	ComponentName string `protobuf:"bytes,2,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
 	// The change type.
 	ChangeType ChangeSetEntryType `protobuf:"varint,3,opt,name=change_type,json=changeType,proto3,enum=admiral.changeset.v1.ChangeSetEntryType" json:"change_type,omitempty"`
-	// The module to deploy (UUID). Required for CREATE; optional for UPDATE.
+	// The catalog item to deploy (UUID). Required for CREATE; optional for UPDATE.
 	// Not allowed for DESTROY/ORPHAN.
-	ModuleId *string `protobuf:"bytes,4,opt,name=module_id,json=moduleId,proto3,oneof" json:"module_id,omitempty"`
-	// Optional ref override.
-	Version *string `protobuf:"bytes,5,opt,name=version,proto3,oneof" json:"version,omitempty"`
-	// Values template for module inputs.
+	CatalogItemId *string `protobuf:"bytes,4,opt,name=catalog_item_id,json=catalogItemId,proto3,oneof" json:"catalog_item_id,omitempty"`
+	// The git ref / version selector to deploy.
+	Ref *string `protobuf:"bytes,5,opt,name=ref,proto3,oneof" json:"ref,omitempty"`
+	// Values template for catalog item inputs.
 	ValuesTemplate *string `protobuf:"bytes,6,opt,name=values_template,json=valuesTemplate,proto3,oneof" json:"values_template,omitempty"`
 	// Explicit dependencies (component names). Empty list clears.
 	DependsOn []string `protobuf:"bytes,7,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
 	// Optional description of the proposed change.
-	Description   *string `protobuf:"bytes,8,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Description *string `protobuf:"bytes,8,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	// Resolved placement for the component, by kind. Required for CREATE (the
+	// component needs a placement); for UPDATE, absent means "no change to
+	// placement." Replaces the former per-environment target defaults.
+	Target        *v11.ComponentTarget `protobuf:"bytes,9,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1429,16 +1446,16 @@ func (x *SetEntryRequest) GetChangeType() ChangeSetEntryType {
 	return ChangeSetEntryType_CHANGE_SET_ENTRY_TYPE_UNSPECIFIED
 }
 
-func (x *SetEntryRequest) GetModuleId() string {
-	if x != nil && x.ModuleId != nil {
-		return *x.ModuleId
+func (x *SetEntryRequest) GetCatalogItemId() string {
+	if x != nil && x.CatalogItemId != nil {
+		return *x.CatalogItemId
 	}
 	return ""
 }
 
-func (x *SetEntryRequest) GetVersion() string {
-	if x != nil && x.Version != nil {
-		return *x.Version
+func (x *SetEntryRequest) GetRef() string {
+	if x != nil && x.Ref != nil {
+		return *x.Ref
 	}
 	return ""
 }
@@ -1462,6 +1479,13 @@ func (x *SetEntryRequest) GetDescription() string {
 		return *x.Description
 	}
 	return ""
+}
+
+func (x *SetEntryRequest) GetTarget() *v11.ComponentTarget {
+	if x != nil {
+		return x.Target
+	}
+	return nil
 }
 
 // SetEntryResponse contains the created or replaced entry.
@@ -1614,7 +1638,7 @@ type SetVariableRequest struct {
 	// The value to set on apply. For COMPLEX type, must be valid JSON.
 	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
 	// How the value should be interpreted. Defaults to STRING when unspecified.
-	Type v11.VariableType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.variable.v1.VariableType" json:"type,omitempty"`
+	Type v12.VariableType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.variable.v1.VariableType" json:"type,omitempty"`
 	// When true, the value is encrypted at rest and masked in API responses.
 	Sensitive     bool `protobuf:"varint,5,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1672,11 +1696,11 @@ func (x *SetVariableRequest) GetValue() string {
 	return ""
 }
 
-func (x *SetVariableRequest) GetType() v11.VariableType {
+func (x *SetVariableRequest) GetType() v12.VariableType {
 	if x != nil {
 		return x.Type
 	}
-	return v11.VariableType(0)
+	return v12.VariableType(0)
 }
 
 func (x *SetVariableRequest) GetSensitive() bool {
@@ -1999,19 +2023,19 @@ func (x *ChangeSetDiff) GetDownstream() []*DownstreamImpact {
 
 // EntryDiff describes a single component entry's effect.
 //
-// For CREATE entries, `module`/`values`/`depends_on_added` describe the
+// For CREATE entries, `catalog_item`/`values`/`depends_on_added` describe the
 // proposed new component; the `_old` halves are absent.
 // For UPDATE entries, only fields the entry actually changes appear; absent
 // patch fields mean "no change."
-// For DESTROY/ORPHAN entries, `module`/`values`/`depends_on_*` are absent.
+// For DESTROY/ORPHAN entries, `catalog_item`/`values`/`depends_on_*` are absent.
 type EntryDiff struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Component name this entry targets.
 	ComponentName string `protobuf:"bytes,1,opt,name=component_name,json=componentName,proto3" json:"component_name,omitempty"`
 	// Change kind.
 	ChangeType ChangeSetEntryType `protobuf:"varint,2,opt,name=change_type,json=changeType,proto3,enum=admiral.changeset.v1.ChangeSetEntryType" json:"change_type,omitempty"`
-	// Module / version delta. Absent when neither field changes.
-	Module *ModuleVersionDiff `protobuf:"bytes,3,opt,name=module,proto3,oneof" json:"module,omitempty"`
+	// Catalog item / version delta. Absent when neither field changes.
+	CatalogItem *CatalogItemVersionDiff `protobuf:"bytes,3,opt,name=catalog_item,json=catalogItem,proto3,oneof" json:"catalog_item,omitempty"`
 	// Per-key value-template deltas. Today this contains a single ValueDiff
 	// keyed `values_template` carrying the full template text so reviewers
 	// can read the new template.
@@ -2072,9 +2096,9 @@ func (x *EntryDiff) GetChangeType() ChangeSetEntryType {
 	return ChangeSetEntryType_CHANGE_SET_ENTRY_TYPE_UNSPECIFIED
 }
 
-func (x *EntryDiff) GetModule() *ModuleVersionDiff {
+func (x *EntryDiff) GetCatalogItem() *CatalogItemVersionDiff {
 	if x != nil {
-		return x.Module
+		return x.CatalogItem
 	}
 	return nil
 }
@@ -2114,42 +2138,42 @@ func (x *EntryDiff) GetDescriptionNew() string {
 	return ""
 }
 
-// ModuleVersionDiff describes a module-id and/or version change on an entry.
-// Absent halves mean "unset." Both halves can be absent for CREATE entries
-// whose module fields aren't being changed (caller still emits the new
-// values).
-type ModuleVersionDiff struct {
+// CatalogItemVersionDiff describes a catalog-item-id and/or version change on
+// an entry. Absent halves mean "unset." Both halves can be absent for CREATE
+// entries whose catalog item fields aren't being changed (caller still emits
+// the new values).
+type CatalogItemVersionDiff struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Module UUID before the change.
-	ModuleIdOld *string `protobuf:"bytes,1,opt,name=module_id_old,json=moduleIdOld,proto3,oneof" json:"module_id_old,omitempty"`
-	// Module UUID after the change.
-	ModuleIdNew *string `protobuf:"bytes,2,opt,name=module_id_new,json=moduleIdNew,proto3,oneof" json:"module_id_new,omitempty"`
-	// Module name before the change (denormalized for display).
-	ModuleNameOld *string `protobuf:"bytes,3,opt,name=module_name_old,json=moduleNameOld,proto3,oneof" json:"module_name_old,omitempty"`
-	// Module name after the change (denormalized for display).
-	ModuleNameNew *string `protobuf:"bytes,4,opt,name=module_name_new,json=moduleNameNew,proto3,oneof" json:"module_name_new,omitempty"`
-	// Version (ref override) before the change.
-	VersionOld *string `protobuf:"bytes,5,opt,name=version_old,json=versionOld,proto3,oneof" json:"version_old,omitempty"`
-	// Version (ref override) after the change.
-	VersionNew    *string `protobuf:"bytes,6,opt,name=version_new,json=versionNew,proto3,oneof" json:"version_new,omitempty"`
+	// Catalog item UUID before the change.
+	CatalogItemIdOld *string `protobuf:"bytes,1,opt,name=catalog_item_id_old,json=catalogItemIdOld,proto3,oneof" json:"catalog_item_id_old,omitempty"`
+	// Catalog item UUID after the change.
+	CatalogItemIdNew *string `protobuf:"bytes,2,opt,name=catalog_item_id_new,json=catalogItemIdNew,proto3,oneof" json:"catalog_item_id_new,omitempty"`
+	// Catalog item name before the change (denormalized for display).
+	CatalogItemNameOld *string `protobuf:"bytes,3,opt,name=catalog_item_name_old,json=catalogItemNameOld,proto3,oneof" json:"catalog_item_name_old,omitempty"`
+	// Catalog item name after the change (denormalized for display).
+	CatalogItemNameNew *string `protobuf:"bytes,4,opt,name=catalog_item_name_new,json=catalogItemNameNew,proto3,oneof" json:"catalog_item_name_new,omitempty"`
+	// Ref (git ref / version selector) before the change.
+	RefOld *string `protobuf:"bytes,5,opt,name=ref_old,json=refOld,proto3,oneof" json:"ref_old,omitempty"`
+	// Ref (git ref / version selector) after the change.
+	RefNew        *string `protobuf:"bytes,6,opt,name=ref_new,json=refNew,proto3,oneof" json:"ref_new,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ModuleVersionDiff) Reset() {
-	*x = ModuleVersionDiff{}
+func (x *CatalogItemVersionDiff) Reset() {
+	*x = CatalogItemVersionDiff{}
 	mi := &file_admiral_changeset_v1_changeset_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ModuleVersionDiff) String() string {
+func (x *CatalogItemVersionDiff) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ModuleVersionDiff) ProtoMessage() {}
+func (*CatalogItemVersionDiff) ProtoMessage() {}
 
-func (x *ModuleVersionDiff) ProtoReflect() protoreflect.Message {
+func (x *CatalogItemVersionDiff) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_changeset_v1_changeset_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2161,49 +2185,49 @@ func (x *ModuleVersionDiff) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ModuleVersionDiff.ProtoReflect.Descriptor instead.
-func (*ModuleVersionDiff) Descriptor() ([]byte, []int) {
+// Deprecated: Use CatalogItemVersionDiff.ProtoReflect.Descriptor instead.
+func (*CatalogItemVersionDiff) Descriptor() ([]byte, []int) {
 	return file_admiral_changeset_v1_changeset_proto_rawDescGZIP(), []int{27}
 }
 
-func (x *ModuleVersionDiff) GetModuleIdOld() string {
-	if x != nil && x.ModuleIdOld != nil {
-		return *x.ModuleIdOld
+func (x *CatalogItemVersionDiff) GetCatalogItemIdOld() string {
+	if x != nil && x.CatalogItemIdOld != nil {
+		return *x.CatalogItemIdOld
 	}
 	return ""
 }
 
-func (x *ModuleVersionDiff) GetModuleIdNew() string {
-	if x != nil && x.ModuleIdNew != nil {
-		return *x.ModuleIdNew
+func (x *CatalogItemVersionDiff) GetCatalogItemIdNew() string {
+	if x != nil && x.CatalogItemIdNew != nil {
+		return *x.CatalogItemIdNew
 	}
 	return ""
 }
 
-func (x *ModuleVersionDiff) GetModuleNameOld() string {
-	if x != nil && x.ModuleNameOld != nil {
-		return *x.ModuleNameOld
+func (x *CatalogItemVersionDiff) GetCatalogItemNameOld() string {
+	if x != nil && x.CatalogItemNameOld != nil {
+		return *x.CatalogItemNameOld
 	}
 	return ""
 }
 
-func (x *ModuleVersionDiff) GetModuleNameNew() string {
-	if x != nil && x.ModuleNameNew != nil {
-		return *x.ModuleNameNew
+func (x *CatalogItemVersionDiff) GetCatalogItemNameNew() string {
+	if x != nil && x.CatalogItemNameNew != nil {
+		return *x.CatalogItemNameNew
 	}
 	return ""
 }
 
-func (x *ModuleVersionDiff) GetVersionOld() string {
-	if x != nil && x.VersionOld != nil {
-		return *x.VersionOld
+func (x *CatalogItemVersionDiff) GetRefOld() string {
+	if x != nil && x.RefOld != nil {
+		return *x.RefOld
 	}
 	return ""
 }
 
-func (x *ModuleVersionDiff) GetVersionNew() string {
-	if x != nil && x.VersionNew != nil {
-		return *x.VersionNew
+func (x *CatalogItemVersionDiff) GetRefNew() string {
+	if x != nil && x.RefNew != nil {
+		return *x.RefNew
 	}
 	return ""
 }
@@ -2444,53 +2468,51 @@ var File_admiral_changeset_v1_changeset_proto protoreflect.FileDescriptor
 
 const file_admiral_changeset_v1_changeset_proto_rawDesc = "" +
 	"\n" +
-	"$admiral/changeset/v1/changeset.proto\x12\x14admiral.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\"admiral/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8f\x06\n" +
-	"\tChangeSet\x12\x18\n" +
-	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
-	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
-	"\x0eenvironment_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12=\n" +
-	"\x06status\x18\x04 \x01(\x0e2%.admiral.changeset.v1.ChangeSetStatusR\x06status\x12$\n" +
-	"\x0ecopied_from_id\x18\x05 \x01(\tR\fcopiedFromId\x12\x1e\n" +
+	"$admiral/changeset/v1/changeset.proto\x12\x14admiral.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a$admiral/component/v1/component.proto\x1a\"admiral/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdc\x06\n" +
+	"\tChangeSet\x12\x1b\n" +
+	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x122\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x122\n" +
+	"\x0eenvironment_id\x18\x03 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12B\n" +
+	"\x06status\x18\x04 \x01(\x0e2%.admiral.changeset.v1.ChangeSetStatusB\x03\xe0A\x03R\x06status\x12)\n" +
+	"\x0ecopied_from_id\x18\x05 \x01(\tB\x03\xe0A\x03R\fcopiedFromId\x12\x1e\n" +
 	"\x05title\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x05title\x12*\n" +
-	"\vdescription\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\vdescription\x12\x15\n" +
-	"\x06run_id\x18\b \x01(\tR\x05runId\x12>\n" +
-	"\aentries\x18\t \x03(\v2$.admiral.changeset.v1.ChangeSetEntryR\aentries\x12W\n" +
+	"\vdescription\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\vdescription\x12'\n" +
+	"\rdeploy_run_id\x18\b \x01(\tB\x03\xe0A\x03R\vdeployRunId\x12C\n" +
+	"\aentries\x18\t \x03(\v2$.admiral.changeset.v1.ChangeSetEntryB\x03\xe0A\x03R\aentries\x12\\\n" +
 	"\x10variable_entries\x18\n" +
-	" \x03(\v2,.admiral.changeset.v1.ChangeSetVariableEntryR\x0fvariableEntries\x12\x1d\n" +
+	" \x03(\v2,.admiral.changeset.v1.ChangeSetVariableEntryB\x03\xe0A\x03R\x0fvariableEntries\x12\"\n" +
 	"\n" +
-	"display_id\x18\v \x01(\tR\tdisplayId\x12)\n" +
-	"\x10application_name\x18\f \x01(\tR\x0fapplicationName\x12)\n" +
-	"\x10environment_name\x18\r \x01(\tR\x0fenvironmentName\x12:\n" +
+	"display_id\x18\v \x01(\tB\x03\xe0A\x03R\tdisplayId\x12.\n" +
+	"\x10application_name\x18\f \x01(\tB\x03\xe0A\x03R\x0fapplicationName\x12.\n" +
+	"\x10environment_name\x18\r \x01(\tB\x03\xe0A\x03R\x0fenvironmentName\x12?\n" +
 	"\n" +
-	"created_by\x18\x0e \x01(\v2\x1b.admiral.common.v1.ActorRefR\tcreatedBy\x129\n" +
+	"created_by\x18\x0e \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
-	"created_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xce\x05\n" +
+	"updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\"\x9d\x06\n" +
 	"\x0eChangeSetEntry\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12,\n" +
 	"\rchange_set_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\vchangeSetId\x12!\n" +
 	"\fcomponent_id\x18\x03 \x01(\tR\vcomponentId\x12S\n" +
 	"\x0ecomponent_name\x18\x04 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\rcomponentName\x12I\n" +
 	"\vchange_type\x18\x05 \x01(\x0e2(.admiral.changeset.v1.ChangeSetEntryTypeR\n" +
-	"changeType\x12*\n" +
-	"\tmodule_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bmoduleId\x88\x01\x01\x12'\n" +
-	"\aversion\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x01R\aversion\x88\x01\x01\x127\n" +
+	"changeType\x125\n" +
+	"\x0fcatalog_item_id\x18\x06 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rcatalogItemId\x88\x01\x01\x12\x1f\n" +
+	"\x03ref\x18\a \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x01R\x03ref\x88\x01\x01\x127\n" +
 	"\x0fvalues_template\x18\b \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04H\x02R\x0evaluesTemplate\x88\x01\x01\x12\x1d\n" +
 	"\n" +
 	"depends_on\x18\t \x03(\tR\tdependsOn\x12/\n" +
 	"\vdescription\x18\n" +
-	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\bH\x03R\vdescription\x88\x01\x01\x12\x1f\n" +
-	"\vmodule_name\x18\v \x01(\tR\n" +
-	"moduleName\x129\n" +
+	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\bH\x03R\vdescription\x88\x01\x01\x12*\n" +
+	"\x11catalog_item_name\x18\v \x01(\tR\x0fcatalogItemName\x129\n" +
 	"\n" +
 	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\f\n" +
-	"\n" +
-	"_module_idB\n" +
-	"\n" +
-	"\b_versionB\x12\n" +
+	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12=\n" +
+	"\x06target\x18\x0e \x01(\v2%.admiral.component.v1.ComponentTargetR\x06targetB\x12\n" +
+	"\x10_catalog_item_idB\x06\n" +
+	"\x04_refB\x12\n" +
 	"\x10_values_templateB\x0e\n" +
 	"\f_description\"\xd1\x02\n" +
 	"\x16ChangeSetVariableEntry\x12\x18\n" +
@@ -2502,17 +2524,18 @@ const file_admiral_changeset_v1_changeset_proto_rawDesc = "" +
 	"\tsensitive\x18\x06 \x01(\bR\tsensitive\x129\n" +
 	"\n" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB\b\n" +
-	"\x06_value\"\xc6\x01\n" +
-	"\x16CreateChangeSetRequest\x12/\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1e\n" +
+	"\x06_value\"\xcc\x01\n" +
+	"\x16CreateChangeSetRequest\x122\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x122\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1e\n" +
 	"\x05title\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x05title\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\vdescription\"Y\n" +
 	"\x17CreateChangeSetResponse\x12>\n" +
 	"\n" +
-	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"B\n" +
-	"\x13GetChangeSetRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\"V\n" +
+	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"E\n" +
+	"\x13GetChangeSetRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\"V\n" +
 	"\x14GetChangeSetResponse\x12>\n" +
 	"\n" +
 	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"\x80\x01\n" +
@@ -2524,66 +2547,73 @@ const file_admiral_changeset_v1_changeset_proto_rawDesc = "" +
 	"\x16ListChangeSetsResponse\x12@\n" +
 	"\vchange_sets\x18\x01 \x03(\v2\x1f.admiral.changeset.v1.ChangeSetR\n" +
 	"changeSets\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x9d\x01\n" +
-	"\x16UpdateChangeSetRequest\x12F\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa0\x01\n" +
+	"\x16UpdateChangeSetRequest\x12I\n" +
 	"\n" +
-	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetB\x06\xbaH\x03\xc8\x01\x01R\tchangeSet\x12;\n" +
+	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\tchangeSet\x12;\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"Y\n" +
 	"\x17UpdateChangeSetResponse\x12>\n" +
 	"\n" +
-	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"F\n" +
-	"\x17DiscardChangeSetRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\"Z\n" +
+	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"I\n" +
+	"\x17DiscardChangeSetRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\"Z\n" +
 	"\x18DiscardChangeSetResponse\x12>\n" +
 	"\n" +
-	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"\xc0\x01\n" +
-	"\x14CopyChangeSetRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1e\n" +
+	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"\xc6\x01\n" +
+	"\x14CopyChangeSetRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\x122\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x1e\n" +
 	"\x05title\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x05title\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\vdescription\"W\n" +
 	"\x15CopyChangeSetResponse\x12>\n" +
 	"\n" +
-	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"\x84\x04\n" +
-	"\x0fSetEntryRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12S\n" +
-	"\x0ecomponent_name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\rcomponentName\x12S\n" +
-	"\vchange_type\x18\x03 \x01(\x0e2(.admiral.changeset.v1.ChangeSetEntryTypeB\b\xbaH\x05\x82\x01\x02 \x00R\n" +
-	"changeType\x12*\n" +
-	"\tmodule_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\bmoduleId\x88\x01\x01\x12'\n" +
-	"\aversion\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x01R\aversion\x88\x01\x01\x127\n" +
+	"change_set\x18\x01 \x01(\v2\x1f.admiral.changeset.v1.ChangeSetR\tchangeSet\"\xd3\x04\n" +
+	"\x0fSetEntryRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12V\n" +
+	"\x0ecomponent_name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\rcomponentName\x12X\n" +
+	"\vchange_type\x18\x03 \x01(\x0e2(.admiral.changeset.v1.ChangeSetEntryTypeB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\n" +
+	"changeType\x125\n" +
+	"\x0fcatalog_item_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rcatalogItemId\x88\x01\x01\x12\x1f\n" +
+	"\x03ref\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x01R\x03ref\x88\x01\x01\x127\n" +
 	"\x0fvalues_template\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04H\x02R\x0evaluesTemplate\x88\x01\x01\x12\x1d\n" +
 	"\n" +
 	"depends_on\x18\a \x03(\tR\tdependsOn\x12/\n" +
-	"\vdescription\x18\b \x01(\tB\b\xbaH\x05r\x03\x18\x80\bH\x03R\vdescription\x88\x01\x01B\f\n" +
-	"\n" +
-	"_module_idB\n" +
-	"\n" +
-	"\b_versionB\x12\n" +
+	"\vdescription\x18\b \x01(\tB\b\xbaH\x05r\x03\x18\x80\bH\x03R\vdescription\x88\x01\x01\x12=\n" +
+	"\x06target\x18\t \x01(\v2%.admiral.component.v1.ComponentTargetR\x06targetB\x12\n" +
+	"\x10_catalog_item_idB\x06\n" +
+	"\x04_refB\x12\n" +
 	"\x10_values_templateB\x0e\n" +
 	"\f_description\"N\n" +
 	"\x10SetEntryResponse\x12:\n" +
-	"\x05entry\x18\x01 \x01(\v2$.admiral.changeset.v1.ChangeSetEntryR\x05entry\"\x96\x01\n" +
-	"\x12RemoveEntryRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12S\n" +
-	"\x0ecomponent_name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\rcomponentName\"\x15\n" +
-	"\x13RemoveEntryResponse\"\xf1\x01\n" +
-	"\x12SetVariableRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12:\n" +
-	"\x03key\x18\x02 \x01(\tB(\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\x12\x1d\n" +
-	"\x05value\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05value\x125\n" +
+	"\x05entry\x18\x01 \x01(\v2$.admiral.changeset.v1.ChangeSetEntryR\x05entry\"\x9c\x01\n" +
+	"\x12RemoveEntryRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12V\n" +
+	"\x0ecomponent_name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\rcomponentName\"\x15\n" +
+	"\x13RemoveEntryResponse\"\xfa\x01\n" +
+	"\x12SetVariableRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12=\n" +
+	"\x03key\x18\x02 \x01(\tB+\xe0A\x02\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\x12 \n" +
+	"\x05value\x18\x03 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05value\x125\n" +
 	"\x04type\x18\x04 \x01(\x0e2!.admiral.variable.v1.VariableTypeR\x04type\x12\x1c\n" +
 	"\tsensitive\x18\x05 \x01(\bR\tsensitive\"j\n" +
 	"\x13SetVariableResponse\x12S\n" +
-	"\x0evariable_entry\x18\x01 \x01(\v2,.admiral.changeset.v1.ChangeSetVariableEntryR\rvariableEntry\"\x80\x01\n" +
-	"\x15RemoveVariableRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12:\n" +
-	"\x03key\x18\x02 \x01(\tB(\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\"m\n" +
+	"\x0evariable_entry\x18\x01 \x01(\v2,.admiral.changeset.v1.ChangeSetVariableEntryR\rvariableEntry\"\x86\x01\n" +
+	"\x15RemoveVariableRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\x12=\n" +
+	"\x03key\x18\x02 \x01(\tB+\xe0A\x02\xbaH%r#\x10\x01\x18?2\x1d^[A-Za-z_][A-Za-z0-9_]{0,62}$R\x03key\"m\n" +
 	"\x16RemoveVariableResponse\x12S\n" +
-	"\x0evariable_entry\x18\x01 \x01(\v2,.admiral.changeset.v1.ChangeSetVariableEntryR\rvariableEntry\"C\n" +
-	"\x14DiffChangeSetRequest\x12+\n" +
-	"\rchange_set_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\vchangeSetId\"P\n" +
+	"\x0evariable_entry\x18\x01 \x01(\v2,.admiral.changeset.v1.ChangeSetVariableEntryR\rvariableEntry\"F\n" +
+	"\x14DiffChangeSetRequest\x12.\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\vchangeSetId\"P\n" +
 	"\x15DiffChangeSetResponse\x127\n" +
 	"\x04diff\x18\x01 \x01(\v2#.admiral.changeset.v1.ChangeSetDiffR\x04diff\"\xd4\x01\n" +
 	"\rChangeSetDiff\x129\n" +
@@ -2591,35 +2621,35 @@ const file_admiral_changeset_v1_changeset_proto_rawDesc = "" +
 	"\tvariables\x18\x02 \x03(\v2\".admiral.changeset.v1.VariableDiffR\tvariables\x12F\n" +
 	"\n" +
 	"downstream\x18\x03 \x03(\v2&.admiral.changeset.v1.DownstreamImpactR\n" +
-	"downstream\"\xe3\x03\n" +
+	"downstream\"\xf9\x03\n" +
 	"\tEntryDiff\x12%\n" +
 	"\x0ecomponent_name\x18\x01 \x01(\tR\rcomponentName\x12I\n" +
 	"\vchange_type\x18\x02 \x01(\x0e2(.admiral.changeset.v1.ChangeSetEntryTypeR\n" +
-	"changeType\x12D\n" +
-	"\x06module\x18\x03 \x01(\v2'.admiral.changeset.v1.ModuleVersionDiffH\x00R\x06module\x88\x01\x01\x127\n" +
+	"changeType\x12T\n" +
+	"\fcatalog_item\x18\x03 \x01(\v2,.admiral.changeset.v1.CatalogItemVersionDiffH\x00R\vcatalogItem\x88\x01\x01\x127\n" +
 	"\x06values\x18\x04 \x03(\v2\x1f.admiral.changeset.v1.ValueDiffR\x06values\x12(\n" +
 	"\x10depends_on_added\x18\x05 \x03(\tR\x0edependsOnAdded\x12,\n" +
 	"\x12depends_on_removed\x18\x06 \x03(\tR\x10dependsOnRemoved\x12,\n" +
 	"\x0fdescription_old\x18\a \x01(\tH\x01R\x0edescriptionOld\x88\x01\x01\x12,\n" +
-	"\x0fdescription_new\x18\b \x01(\tH\x02R\x0edescriptionNew\x88\x01\x01B\t\n" +
-	"\a_moduleB\x12\n" +
+	"\x0fdescription_new\x18\b \x01(\tH\x02R\x0edescriptionNew\x88\x01\x01B\x0f\n" +
+	"\r_catalog_itemB\x12\n" +
 	"\x10_description_oldB\x12\n" +
-	"\x10_description_new\"\xf7\x02\n" +
-	"\x11ModuleVersionDiff\x12'\n" +
-	"\rmodule_id_old\x18\x01 \x01(\tH\x00R\vmoduleIdOld\x88\x01\x01\x12'\n" +
-	"\rmodule_id_new\x18\x02 \x01(\tH\x01R\vmoduleIdNew\x88\x01\x01\x12+\n" +
-	"\x0fmodule_name_old\x18\x03 \x01(\tH\x02R\rmoduleNameOld\x88\x01\x01\x12+\n" +
-	"\x0fmodule_name_new\x18\x04 \x01(\tH\x03R\rmoduleNameNew\x88\x01\x01\x12$\n" +
-	"\vversion_old\x18\x05 \x01(\tH\x04R\n" +
-	"versionOld\x88\x01\x01\x12$\n" +
-	"\vversion_new\x18\x06 \x01(\tH\x05R\n" +
-	"versionNew\x88\x01\x01B\x10\n" +
-	"\x0e_module_id_oldB\x10\n" +
-	"\x0e_module_id_newB\x12\n" +
-	"\x10_module_name_oldB\x12\n" +
-	"\x10_module_name_newB\x0e\n" +
-	"\f_version_oldB\x0e\n" +
-	"\f_version_new\"\xc0\x01\n" +
+	"\x10_description_new\"\xa8\x03\n" +
+	"\x16CatalogItemVersionDiff\x122\n" +
+	"\x13catalog_item_id_old\x18\x01 \x01(\tH\x00R\x10catalogItemIdOld\x88\x01\x01\x122\n" +
+	"\x13catalog_item_id_new\x18\x02 \x01(\tH\x01R\x10catalogItemIdNew\x88\x01\x01\x126\n" +
+	"\x15catalog_item_name_old\x18\x03 \x01(\tH\x02R\x12catalogItemNameOld\x88\x01\x01\x126\n" +
+	"\x15catalog_item_name_new\x18\x04 \x01(\tH\x03R\x12catalogItemNameNew\x88\x01\x01\x12\x1c\n" +
+	"\aref_old\x18\x05 \x01(\tH\x04R\x06refOld\x88\x01\x01\x12\x1c\n" +
+	"\aref_new\x18\x06 \x01(\tH\x05R\x06refNew\x88\x01\x01B\x16\n" +
+	"\x14_catalog_item_id_oldB\x16\n" +
+	"\x14_catalog_item_id_newB\x18\n" +
+	"\x16_catalog_item_name_oldB\x18\n" +
+	"\x16_catalog_item_name_newB\n" +
+	"\n" +
+	"\b_ref_oldB\n" +
+	"\n" +
+	"\b_ref_new\"\xc0\x01\n" +
 	"\tValueDiff\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12E\n" +
 	"\vchange_type\x18\x02 \x01(\x0e2$.admiral.changeset.v1.DiffChangeTypeR\n" +
@@ -2753,14 +2783,15 @@ var file_admiral_changeset_v1_changeset_proto_goTypes = []any{
 	(*DiffChangeSetResponse)(nil),    // 27: admiral.changeset.v1.DiffChangeSetResponse
 	(*ChangeSetDiff)(nil),            // 28: admiral.changeset.v1.ChangeSetDiff
 	(*EntryDiff)(nil),                // 29: admiral.changeset.v1.EntryDiff
-	(*ModuleVersionDiff)(nil),        // 30: admiral.changeset.v1.ModuleVersionDiff
+	(*CatalogItemVersionDiff)(nil),   // 30: admiral.changeset.v1.CatalogItemVersionDiff
 	(*ValueDiff)(nil),                // 31: admiral.changeset.v1.ValueDiff
 	(*VariableDiff)(nil),             // 32: admiral.changeset.v1.VariableDiff
 	(*DownstreamImpact)(nil),         // 33: admiral.changeset.v1.DownstreamImpact
 	(*v1.ActorRef)(nil),              // 34: admiral.common.v1.ActorRef
 	(*timestamppb.Timestamp)(nil),    // 35: google.protobuf.Timestamp
-	(v11.VariableType)(0),            // 36: admiral.variable.v1.VariableType
-	(*fieldmaskpb.FieldMask)(nil),    // 37: google.protobuf.FieldMask
+	(*v11.ComponentTarget)(nil),      // 36: admiral.component.v1.ComponentTarget
+	(v12.VariableType)(0),            // 37: admiral.variable.v1.VariableType
+	(*fieldmaskpb.FieldMask)(nil),    // 38: google.protobuf.FieldMask
 }
 var file_admiral_changeset_v1_changeset_proto_depIdxs = []int32{
 	0,  // 0: admiral.changeset.v1.ChangeSet.status:type_name -> admiral.changeset.v1.ChangeSetStatus
@@ -2772,57 +2803,59 @@ var file_admiral_changeset_v1_changeset_proto_depIdxs = []int32{
 	1,  // 6: admiral.changeset.v1.ChangeSetEntry.change_type:type_name -> admiral.changeset.v1.ChangeSetEntryType
 	35, // 7: admiral.changeset.v1.ChangeSetEntry.created_at:type_name -> google.protobuf.Timestamp
 	35, // 8: admiral.changeset.v1.ChangeSetEntry.updated_at:type_name -> google.protobuf.Timestamp
-	36, // 9: admiral.changeset.v1.ChangeSetVariableEntry.type:type_name -> admiral.variable.v1.VariableType
-	35, // 10: admiral.changeset.v1.ChangeSetVariableEntry.created_at:type_name -> google.protobuf.Timestamp
-	3,  // 11: admiral.changeset.v1.CreateChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
-	3,  // 12: admiral.changeset.v1.GetChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
-	3,  // 13: admiral.changeset.v1.ListChangeSetsResponse.change_sets:type_name -> admiral.changeset.v1.ChangeSet
-	3,  // 14: admiral.changeset.v1.UpdateChangeSetRequest.change_set:type_name -> admiral.changeset.v1.ChangeSet
-	37, // 15: admiral.changeset.v1.UpdateChangeSetRequest.update_mask:type_name -> google.protobuf.FieldMask
-	3,  // 16: admiral.changeset.v1.UpdateChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
-	3,  // 17: admiral.changeset.v1.DiscardChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
-	3,  // 18: admiral.changeset.v1.CopyChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
-	1,  // 19: admiral.changeset.v1.SetEntryRequest.change_type:type_name -> admiral.changeset.v1.ChangeSetEntryType
-	4,  // 20: admiral.changeset.v1.SetEntryResponse.entry:type_name -> admiral.changeset.v1.ChangeSetEntry
-	36, // 21: admiral.changeset.v1.SetVariableRequest.type:type_name -> admiral.variable.v1.VariableType
-	5,  // 22: admiral.changeset.v1.SetVariableResponse.variable_entry:type_name -> admiral.changeset.v1.ChangeSetVariableEntry
-	5,  // 23: admiral.changeset.v1.RemoveVariableResponse.variable_entry:type_name -> admiral.changeset.v1.ChangeSetVariableEntry
-	28, // 24: admiral.changeset.v1.DiffChangeSetResponse.diff:type_name -> admiral.changeset.v1.ChangeSetDiff
-	29, // 25: admiral.changeset.v1.ChangeSetDiff.entries:type_name -> admiral.changeset.v1.EntryDiff
-	32, // 26: admiral.changeset.v1.ChangeSetDiff.variables:type_name -> admiral.changeset.v1.VariableDiff
-	33, // 27: admiral.changeset.v1.ChangeSetDiff.downstream:type_name -> admiral.changeset.v1.DownstreamImpact
-	1,  // 28: admiral.changeset.v1.EntryDiff.change_type:type_name -> admiral.changeset.v1.ChangeSetEntryType
-	30, // 29: admiral.changeset.v1.EntryDiff.module:type_name -> admiral.changeset.v1.ModuleVersionDiff
-	31, // 30: admiral.changeset.v1.EntryDiff.values:type_name -> admiral.changeset.v1.ValueDiff
-	2,  // 31: admiral.changeset.v1.ValueDiff.change_type:type_name -> admiral.changeset.v1.DiffChangeType
-	2,  // 32: admiral.changeset.v1.VariableDiff.change_type:type_name -> admiral.changeset.v1.DiffChangeType
-	6,  // 33: admiral.changeset.v1.ChangeSetAPI.CreateChangeSet:input_type -> admiral.changeset.v1.CreateChangeSetRequest
-	8,  // 34: admiral.changeset.v1.ChangeSetAPI.GetChangeSet:input_type -> admiral.changeset.v1.GetChangeSetRequest
-	10, // 35: admiral.changeset.v1.ChangeSetAPI.ListChangeSets:input_type -> admiral.changeset.v1.ListChangeSetsRequest
-	12, // 36: admiral.changeset.v1.ChangeSetAPI.UpdateChangeSet:input_type -> admiral.changeset.v1.UpdateChangeSetRequest
-	14, // 37: admiral.changeset.v1.ChangeSetAPI.DiscardChangeSet:input_type -> admiral.changeset.v1.DiscardChangeSetRequest
-	26, // 38: admiral.changeset.v1.ChangeSetAPI.DiffChangeSet:input_type -> admiral.changeset.v1.DiffChangeSetRequest
-	16, // 39: admiral.changeset.v1.ChangeSetAPI.CopyChangeSet:input_type -> admiral.changeset.v1.CopyChangeSetRequest
-	18, // 40: admiral.changeset.v1.ChangeSetAPI.SetEntry:input_type -> admiral.changeset.v1.SetEntryRequest
-	20, // 41: admiral.changeset.v1.ChangeSetAPI.RemoveEntry:input_type -> admiral.changeset.v1.RemoveEntryRequest
-	22, // 42: admiral.changeset.v1.ChangeSetAPI.SetVariable:input_type -> admiral.changeset.v1.SetVariableRequest
-	24, // 43: admiral.changeset.v1.ChangeSetAPI.RemoveVariable:input_type -> admiral.changeset.v1.RemoveVariableRequest
-	7,  // 44: admiral.changeset.v1.ChangeSetAPI.CreateChangeSet:output_type -> admiral.changeset.v1.CreateChangeSetResponse
-	9,  // 45: admiral.changeset.v1.ChangeSetAPI.GetChangeSet:output_type -> admiral.changeset.v1.GetChangeSetResponse
-	11, // 46: admiral.changeset.v1.ChangeSetAPI.ListChangeSets:output_type -> admiral.changeset.v1.ListChangeSetsResponse
-	13, // 47: admiral.changeset.v1.ChangeSetAPI.UpdateChangeSet:output_type -> admiral.changeset.v1.UpdateChangeSetResponse
-	15, // 48: admiral.changeset.v1.ChangeSetAPI.DiscardChangeSet:output_type -> admiral.changeset.v1.DiscardChangeSetResponse
-	27, // 49: admiral.changeset.v1.ChangeSetAPI.DiffChangeSet:output_type -> admiral.changeset.v1.DiffChangeSetResponse
-	17, // 50: admiral.changeset.v1.ChangeSetAPI.CopyChangeSet:output_type -> admiral.changeset.v1.CopyChangeSetResponse
-	19, // 51: admiral.changeset.v1.ChangeSetAPI.SetEntry:output_type -> admiral.changeset.v1.SetEntryResponse
-	21, // 52: admiral.changeset.v1.ChangeSetAPI.RemoveEntry:output_type -> admiral.changeset.v1.RemoveEntryResponse
-	23, // 53: admiral.changeset.v1.ChangeSetAPI.SetVariable:output_type -> admiral.changeset.v1.SetVariableResponse
-	25, // 54: admiral.changeset.v1.ChangeSetAPI.RemoveVariable:output_type -> admiral.changeset.v1.RemoveVariableResponse
-	44, // [44:55] is the sub-list for method output_type
-	33, // [33:44] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	36, // 9: admiral.changeset.v1.ChangeSetEntry.target:type_name -> admiral.component.v1.ComponentTarget
+	37, // 10: admiral.changeset.v1.ChangeSetVariableEntry.type:type_name -> admiral.variable.v1.VariableType
+	35, // 11: admiral.changeset.v1.ChangeSetVariableEntry.created_at:type_name -> google.protobuf.Timestamp
+	3,  // 12: admiral.changeset.v1.CreateChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
+	3,  // 13: admiral.changeset.v1.GetChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
+	3,  // 14: admiral.changeset.v1.ListChangeSetsResponse.change_sets:type_name -> admiral.changeset.v1.ChangeSet
+	3,  // 15: admiral.changeset.v1.UpdateChangeSetRequest.change_set:type_name -> admiral.changeset.v1.ChangeSet
+	38, // 16: admiral.changeset.v1.UpdateChangeSetRequest.update_mask:type_name -> google.protobuf.FieldMask
+	3,  // 17: admiral.changeset.v1.UpdateChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
+	3,  // 18: admiral.changeset.v1.DiscardChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
+	3,  // 19: admiral.changeset.v1.CopyChangeSetResponse.change_set:type_name -> admiral.changeset.v1.ChangeSet
+	1,  // 20: admiral.changeset.v1.SetEntryRequest.change_type:type_name -> admiral.changeset.v1.ChangeSetEntryType
+	36, // 21: admiral.changeset.v1.SetEntryRequest.target:type_name -> admiral.component.v1.ComponentTarget
+	4,  // 22: admiral.changeset.v1.SetEntryResponse.entry:type_name -> admiral.changeset.v1.ChangeSetEntry
+	37, // 23: admiral.changeset.v1.SetVariableRequest.type:type_name -> admiral.variable.v1.VariableType
+	5,  // 24: admiral.changeset.v1.SetVariableResponse.variable_entry:type_name -> admiral.changeset.v1.ChangeSetVariableEntry
+	5,  // 25: admiral.changeset.v1.RemoveVariableResponse.variable_entry:type_name -> admiral.changeset.v1.ChangeSetVariableEntry
+	28, // 26: admiral.changeset.v1.DiffChangeSetResponse.diff:type_name -> admiral.changeset.v1.ChangeSetDiff
+	29, // 27: admiral.changeset.v1.ChangeSetDiff.entries:type_name -> admiral.changeset.v1.EntryDiff
+	32, // 28: admiral.changeset.v1.ChangeSetDiff.variables:type_name -> admiral.changeset.v1.VariableDiff
+	33, // 29: admiral.changeset.v1.ChangeSetDiff.downstream:type_name -> admiral.changeset.v1.DownstreamImpact
+	1,  // 30: admiral.changeset.v1.EntryDiff.change_type:type_name -> admiral.changeset.v1.ChangeSetEntryType
+	30, // 31: admiral.changeset.v1.EntryDiff.catalog_item:type_name -> admiral.changeset.v1.CatalogItemVersionDiff
+	31, // 32: admiral.changeset.v1.EntryDiff.values:type_name -> admiral.changeset.v1.ValueDiff
+	2,  // 33: admiral.changeset.v1.ValueDiff.change_type:type_name -> admiral.changeset.v1.DiffChangeType
+	2,  // 34: admiral.changeset.v1.VariableDiff.change_type:type_name -> admiral.changeset.v1.DiffChangeType
+	6,  // 35: admiral.changeset.v1.ChangeSetAPI.CreateChangeSet:input_type -> admiral.changeset.v1.CreateChangeSetRequest
+	8,  // 36: admiral.changeset.v1.ChangeSetAPI.GetChangeSet:input_type -> admiral.changeset.v1.GetChangeSetRequest
+	10, // 37: admiral.changeset.v1.ChangeSetAPI.ListChangeSets:input_type -> admiral.changeset.v1.ListChangeSetsRequest
+	12, // 38: admiral.changeset.v1.ChangeSetAPI.UpdateChangeSet:input_type -> admiral.changeset.v1.UpdateChangeSetRequest
+	14, // 39: admiral.changeset.v1.ChangeSetAPI.DiscardChangeSet:input_type -> admiral.changeset.v1.DiscardChangeSetRequest
+	26, // 40: admiral.changeset.v1.ChangeSetAPI.DiffChangeSet:input_type -> admiral.changeset.v1.DiffChangeSetRequest
+	16, // 41: admiral.changeset.v1.ChangeSetAPI.CopyChangeSet:input_type -> admiral.changeset.v1.CopyChangeSetRequest
+	18, // 42: admiral.changeset.v1.ChangeSetAPI.SetEntry:input_type -> admiral.changeset.v1.SetEntryRequest
+	20, // 43: admiral.changeset.v1.ChangeSetAPI.RemoveEntry:input_type -> admiral.changeset.v1.RemoveEntryRequest
+	22, // 44: admiral.changeset.v1.ChangeSetAPI.SetVariable:input_type -> admiral.changeset.v1.SetVariableRequest
+	24, // 45: admiral.changeset.v1.ChangeSetAPI.RemoveVariable:input_type -> admiral.changeset.v1.RemoveVariableRequest
+	7,  // 46: admiral.changeset.v1.ChangeSetAPI.CreateChangeSet:output_type -> admiral.changeset.v1.CreateChangeSetResponse
+	9,  // 47: admiral.changeset.v1.ChangeSetAPI.GetChangeSet:output_type -> admiral.changeset.v1.GetChangeSetResponse
+	11, // 48: admiral.changeset.v1.ChangeSetAPI.ListChangeSets:output_type -> admiral.changeset.v1.ListChangeSetsResponse
+	13, // 49: admiral.changeset.v1.ChangeSetAPI.UpdateChangeSet:output_type -> admiral.changeset.v1.UpdateChangeSetResponse
+	15, // 50: admiral.changeset.v1.ChangeSetAPI.DiscardChangeSet:output_type -> admiral.changeset.v1.DiscardChangeSetResponse
+	27, // 51: admiral.changeset.v1.ChangeSetAPI.DiffChangeSet:output_type -> admiral.changeset.v1.DiffChangeSetResponse
+	17, // 52: admiral.changeset.v1.ChangeSetAPI.CopyChangeSet:output_type -> admiral.changeset.v1.CopyChangeSetResponse
+	19, // 53: admiral.changeset.v1.ChangeSetAPI.SetEntry:output_type -> admiral.changeset.v1.SetEntryResponse
+	21, // 54: admiral.changeset.v1.ChangeSetAPI.RemoveEntry:output_type -> admiral.changeset.v1.RemoveEntryResponse
+	23, // 55: admiral.changeset.v1.ChangeSetAPI.SetVariable:output_type -> admiral.changeset.v1.SetVariableResponse
+	25, // 56: admiral.changeset.v1.ChangeSetAPI.RemoveVariable:output_type -> admiral.changeset.v1.RemoveVariableResponse
+	46, // [46:57] is the sub-list for method output_type
+	35, // [35:46] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_admiral_changeset_v1_changeset_proto_init() }

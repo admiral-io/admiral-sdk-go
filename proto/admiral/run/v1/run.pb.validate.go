@@ -95,8 +95,6 @@ func (m *Run) validate(all bool) error {
 
 	// no validation rules for Message
 
-	// no validation rules for Destroy
-
 	// no validation rules for SourceRunId
 
 	// no validation rules for ChangeSetId
@@ -429,13 +427,9 @@ func (m *Revision) validate(all bool) error {
 
 	// no validation rules for SourceId
 
-	// no validation rules for Version
+	// no validation rules for Ref
 
 	// no validation rules for ResolvedValues
-
-	// no validation rules for ArtifactChecksum
-
-	// no validation rules for ArtifactUrl
 
 	if all {
 		switch v := interface{}(m.GetPlanSummary()).(type) {
@@ -528,8 +522,6 @@ func (m *Revision) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for ModuleId
-
 	// no validation rules for WorkingDirectory
 
 	if all {
@@ -560,6 +552,10 @@ func (m *Revision) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for ResolvedCommit
+
+	// no validation rules for Type
 
 	if len(errors) > 0 {
 		return RevisionMultiError(errors)
@@ -660,11 +656,13 @@ func (m *ChangeSummary) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Additions
+	// no validation rules for Creates
 
-	// no validation rules for Changes
+	// no validation rules for Updates
 
-	// no validation rules for Destructions
+	// no validation rules for Deletes
+
+	// no validation rules for Noops
 
 	if len(errors) > 0 {
 		return ChangeSummaryMultiError(errors)
@@ -744,6 +742,428 @@ var _ interface {
 	ErrorName() string
 } = ChangeSummaryValidationError{}
 
+// Validate checks the field values on EngineOutput with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *EngineOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on EngineOutput with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in EngineOutputMultiError, or
+// nil if none found.
+func (m *EngineOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EngineOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Value
+
+	// no validation rules for Type
+
+	// no validation rules for Sensitive
+
+	if len(errors) > 0 {
+		return EngineOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// EngineOutputMultiError is an error wrapping multiple validation errors
+// returned by EngineOutput.ValidateAll() if the designated constraints aren't met.
+type EngineOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EngineOutputMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EngineOutputMultiError) AllErrors() []error { return m }
+
+// EngineOutputValidationError is the validation error returned by
+// EngineOutput.Validate if the designated constraints aren't met.
+type EngineOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EngineOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EngineOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EngineOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EngineOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EngineOutputValidationError) ErrorName() string { return "EngineOutputValidationError" }
+
+// Error satisfies the builtin error interface
+func (e EngineOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEngineOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EngineOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EngineOutputValidationError{}
+
+// Validate checks the field values on ArtifactRef with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ArtifactRef) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ArtifactRef with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ArtifactRefMultiError, or
+// nil if none found.
+func (m *ArtifactRef) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ArtifactRef) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Kind
+
+	// no validation rules for Key
+
+	// no validation rules for Checksum
+
+	if len(errors) > 0 {
+		return ArtifactRefMultiError(errors)
+	}
+
+	return nil
+}
+
+// ArtifactRefMultiError is an error wrapping multiple validation errors
+// returned by ArtifactRef.ValidateAll() if the designated constraints aren't met.
+type ArtifactRefMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ArtifactRefMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ArtifactRefMultiError) AllErrors() []error { return m }
+
+// ArtifactRefValidationError is the validation error returned by
+// ArtifactRef.Validate if the designated constraints aren't met.
+type ArtifactRefValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ArtifactRefValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ArtifactRefValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ArtifactRefValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ArtifactRefValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ArtifactRefValidationError) ErrorName() string { return "ArtifactRefValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ArtifactRefValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sArtifactRef.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ArtifactRefValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ArtifactRefValidationError{}
+
+// Validate checks the field values on ExecutionReport with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ExecutionReport) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ExecutionReport with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ExecutionReportMultiError, or nil if none found.
+func (m *ExecutionReport) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ExecutionReport) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Status
+
+	// no validation rules for ErrorMessage
+
+	if all {
+		switch v := interface{}(m.GetSummary()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ExecutionReportValidationError{
+					field:  "Summary",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ExecutionReportValidationError{
+					field:  "Summary",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSummary()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ExecutionReportValidationError{
+				field:  "Summary",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	{
+		sorted_keys := make([]string, len(m.GetOutputs()))
+		i := 0
+		for key := range m.GetOutputs() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetOutputs()[key]
+			_ = val
+
+			// no validation rules for Outputs[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, ExecutionReportValidationError{
+							field:  fmt.Sprintf("Outputs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, ExecutionReportValidationError{
+							field:  fmt.Sprintf("Outputs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return ExecutionReportValidationError{
+						field:  fmt.Sprintf("Outputs[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetArtifact()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ExecutionReportValidationError{
+					field:  "Artifact",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ExecutionReportValidationError{
+					field:  "Artifact",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetArtifact()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ExecutionReportValidationError{
+				field:  "Artifact",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Transcript
+
+	// no validation rules for Detail
+
+	if len(errors) > 0 {
+		return ExecutionReportMultiError(errors)
+	}
+
+	return nil
+}
+
+// ExecutionReportMultiError is an error wrapping multiple validation errors
+// returned by ExecutionReport.ValidateAll() if the designated constraints
+// aren't met.
+type ExecutionReportMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ExecutionReportMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ExecutionReportMultiError) AllErrors() []error { return m }
+
+// ExecutionReportValidationError is the validation error returned by
+// ExecutionReport.Validate if the designated constraints aren't met.
+type ExecutionReportValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ExecutionReportValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ExecutionReportValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ExecutionReportValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ExecutionReportValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ExecutionReportValidationError) ErrorName() string { return "ExecutionReportValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ExecutionReportValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sExecutionReport.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ExecutionReportValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ExecutionReportValidationError{}
+
 // Validate checks the field values on CreateRunRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -771,8 +1191,6 @@ func (m *CreateRunRequest) validate(all bool) error {
 	// no validation rules for EnvironmentId
 
 	// no validation rules for Message
-
-	// no validation rules for Destroy
 
 	// no validation rules for SourceRunId
 

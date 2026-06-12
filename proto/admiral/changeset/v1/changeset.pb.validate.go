@@ -75,7 +75,7 @@ func (m *ChangeSet) validate(all bool) error {
 
 	// no validation rules for Description
 
-	// no validation rules for RunId
+	// no validation rules for DeployRunId
 
 	for idx, item := range m.GetEntries() {
 		_, _ = idx, item
@@ -347,7 +347,7 @@ func (m *ChangeSetEntry) validate(all bool) error {
 
 	// no validation rules for ChangeType
 
-	// no validation rules for ModuleName
+	// no validation rules for CatalogItemName
 
 	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
@@ -407,12 +407,41 @@ func (m *ChangeSetEntry) validate(all bool) error {
 		}
 	}
 
-	if m.ModuleId != nil {
-		// no validation rules for ModuleId
+	if all {
+		switch v := interface{}(m.GetTarget()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ChangeSetEntryValidationError{
+					field:  "Target",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ChangeSetEntryValidationError{
+					field:  "Target",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTarget()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ChangeSetEntryValidationError{
+				field:  "Target",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
-	if m.Version != nil {
-		// no validation rules for Version
+	if m.CatalogItemId != nil {
+		// no validation rules for CatalogItemId
+	}
+
+	if m.Ref != nil {
+		// no validation rules for Ref
 	}
 
 	if m.ValuesTemplate != nil {
@@ -2163,12 +2192,41 @@ func (m *SetEntryRequest) validate(all bool) error {
 
 	// no validation rules for ChangeType
 
-	if m.ModuleId != nil {
-		// no validation rules for ModuleId
+	if all {
+		switch v := interface{}(m.GetTarget()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SetEntryRequestValidationError{
+					field:  "Target",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SetEntryRequestValidationError{
+					field:  "Target",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTarget()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SetEntryRequestValidationError{
+				field:  "Target",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
-	if m.Version != nil {
-		// no validation rules for Version
+	if m.CatalogItemId != nil {
+		// no validation rules for CatalogItemId
+	}
+
+	if m.Ref != nil {
+		// no validation rules for Ref
 	}
 
 	if m.ValuesTemplate != nil {
@@ -3571,14 +3629,14 @@ func (m *EntryDiff) validate(all bool) error {
 
 	}
 
-	if m.Module != nil {
+	if m.CatalogItem != nil {
 
 		if all {
-			switch v := interface{}(m.GetModule()).(type) {
+			switch v := interface{}(m.GetCatalogItem()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, EntryDiffValidationError{
-						field:  "Module",
+						field:  "CatalogItem",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -3586,16 +3644,16 @@ func (m *EntryDiff) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, EntryDiffValidationError{
-						field:  "Module",
+						field:  "CatalogItem",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetModule()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetCatalogItem()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return EntryDiffValidationError{
-					field:  "Module",
+					field:  "CatalogItem",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -3689,66 +3747,66 @@ var _ interface {
 	ErrorName() string
 } = EntryDiffValidationError{}
 
-// Validate checks the field values on ModuleVersionDiff with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *ModuleVersionDiff) Validate() error {
+// Validate checks the field values on CatalogItemVersionDiff with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CatalogItemVersionDiff) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ModuleVersionDiff with the rules
+// ValidateAll checks the field values on CatalogItemVersionDiff with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ModuleVersionDiffMultiError, or nil if none found.
-func (m *ModuleVersionDiff) ValidateAll() error {
+// CatalogItemVersionDiffMultiError, or nil if none found.
+func (m *CatalogItemVersionDiff) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ModuleVersionDiff) validate(all bool) error {
+func (m *CatalogItemVersionDiff) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if m.ModuleIdOld != nil {
-		// no validation rules for ModuleIdOld
+	if m.CatalogItemIdOld != nil {
+		// no validation rules for CatalogItemIdOld
 	}
 
-	if m.ModuleIdNew != nil {
-		// no validation rules for ModuleIdNew
+	if m.CatalogItemIdNew != nil {
+		// no validation rules for CatalogItemIdNew
 	}
 
-	if m.ModuleNameOld != nil {
-		// no validation rules for ModuleNameOld
+	if m.CatalogItemNameOld != nil {
+		// no validation rules for CatalogItemNameOld
 	}
 
-	if m.ModuleNameNew != nil {
-		// no validation rules for ModuleNameNew
+	if m.CatalogItemNameNew != nil {
+		// no validation rules for CatalogItemNameNew
 	}
 
-	if m.VersionOld != nil {
-		// no validation rules for VersionOld
+	if m.RefOld != nil {
+		// no validation rules for RefOld
 	}
 
-	if m.VersionNew != nil {
-		// no validation rules for VersionNew
+	if m.RefNew != nil {
+		// no validation rules for RefNew
 	}
 
 	if len(errors) > 0 {
-		return ModuleVersionDiffMultiError(errors)
+		return CatalogItemVersionDiffMultiError(errors)
 	}
 
 	return nil
 }
 
-// ModuleVersionDiffMultiError is an error wrapping multiple validation errors
-// returned by ModuleVersionDiff.ValidateAll() if the designated constraints
-// aren't met.
-type ModuleVersionDiffMultiError []error
+// CatalogItemVersionDiffMultiError is an error wrapping multiple validation
+// errors returned by CatalogItemVersionDiff.ValidateAll() if the designated
+// constraints aren't met.
+type CatalogItemVersionDiffMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ModuleVersionDiffMultiError) Error() string {
+func (m CatalogItemVersionDiffMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -3757,11 +3815,11 @@ func (m ModuleVersionDiffMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ModuleVersionDiffMultiError) AllErrors() []error { return m }
+func (m CatalogItemVersionDiffMultiError) AllErrors() []error { return m }
 
-// ModuleVersionDiffValidationError is the validation error returned by
-// ModuleVersionDiff.Validate if the designated constraints aren't met.
-type ModuleVersionDiffValidationError struct {
+// CatalogItemVersionDiffValidationError is the validation error returned by
+// CatalogItemVersionDiff.Validate if the designated constraints aren't met.
+type CatalogItemVersionDiffValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -3769,24 +3827,24 @@ type ModuleVersionDiffValidationError struct {
 }
 
 // Field function returns field value.
-func (e ModuleVersionDiffValidationError) Field() string { return e.field }
+func (e CatalogItemVersionDiffValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ModuleVersionDiffValidationError) Reason() string { return e.reason }
+func (e CatalogItemVersionDiffValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ModuleVersionDiffValidationError) Cause() error { return e.cause }
+func (e CatalogItemVersionDiffValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ModuleVersionDiffValidationError) Key() bool { return e.key }
+func (e CatalogItemVersionDiffValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ModuleVersionDiffValidationError) ErrorName() string {
-	return "ModuleVersionDiffValidationError"
+func (e CatalogItemVersionDiffValidationError) ErrorName() string {
+	return "CatalogItemVersionDiffValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ModuleVersionDiffValidationError) Error() string {
+func (e CatalogItemVersionDiffValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -3798,14 +3856,14 @@ func (e ModuleVersionDiffValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sModuleVersionDiff.%s: %s%s",
+		"invalid %sCatalogItemVersionDiff.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ModuleVersionDiffValidationError{}
+var _ error = CatalogItemVersionDiffValidationError{}
 
 var _ interface {
 	Field() string
@@ -3813,7 +3871,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ModuleVersionDiffValidationError{}
+} = CatalogItemVersionDiffValidationError{}
 
 // Validate checks the field values on ValueDiff with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

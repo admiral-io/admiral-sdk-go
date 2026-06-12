@@ -7,6 +7,7 @@
 package authenticationv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -26,8 +27,9 @@ const (
 // LoginRequest contains parameters for initiating the OAuth2 flow.
 type LoginRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The URL to redirect to after successful authentication. Must be a relative
-	// path (no scheme or host). Baked into the signed state nonce.
+	// Relative path to redirect to after successful authentication. Must begin
+	// with "/" and must not be protocol-relative ("//host") or absolute (no
+	// scheme or host). Empty redirects to "/". Baked into the signed state nonce.
 	RedirectUrl   string `protobuf:"bytes,1,opt,name=redirect_url,json=redirectUrl,proto3" json:"redirect_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -231,16 +233,16 @@ var File_admiral_authentication_v1_authentication_proto protoreflect.FileDescrip
 
 const file_admiral_authentication_v1_authentication_proto_rawDesc = "" +
 	"\n" +
-	".admiral/authentication/v1/authentication.proto\x12\x19admiral.authentication.v1\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\"1\n" +
-	"\fLoginRequest\x12!\n" +
-	"\fredirect_url\x18\x01 \x01(\tR\vredirectUrl\"*\n" +
+	".admiral/authentication/v1/authentication.proto\x12\x19admiral.authentication.v1\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\"N\n" +
+	"\fLoginRequest\x12>\n" +
+	"\fredirect_url\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x18\x80\x102\x11^(/([^/\\\\].*)?)?$R\vredirectUrl\"*\n" +
 	"\rLoginResponse\x12\x19\n" +
-	"\bauth_url\x18\x01 \x01(\tR\aauthUrl\"~\n" +
-	"\x0fCallbackRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x14\n" +
-	"\x05state\x18\x02 \x01(\tR\x05state\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\x12+\n" +
-	"\x11error_description\x18\x04 \x01(\tR\x10errorDescription\"\x12\n" +
+	"\bauth_url\x18\x01 \x01(\tR\aauthUrl\"\xa6\x01\n" +
+	"\x0fCallbackRequest\x12\x1c\n" +
+	"\x04code\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\x04code\x12\x1e\n" +
+	"\x05state\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80@R\x05state\x12\x1e\n" +
+	"\x05error\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x05error\x125\n" +
+	"\x11error_description\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x10R\x10errorDescription\"\x12\n" +
 	"\x10CallbackResponse2\xd1\x02\n" +
 	"\x11AuthenticationAPI\x12\x99\x01\n" +
 	"\x05Login\x12'.admiral.authentication.v1.LoginRequest\x1a(.admiral.authentication.v1.LoginResponse\"=\xbaG'\n" +

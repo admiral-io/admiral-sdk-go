@@ -34,18 +34,16 @@ func main() {
 	defer c.Close()
 
 	// Access services via accessors
+	// c.Agent().MethodName(ctx, req)
 	// c.Application().MethodName(ctx, req)
 	// c.Authentication().MethodName(ctx, req)
+	// c.Catalog().MethodName(ctx, req)
 	// c.ChangeSet().MethodName(ctx, req)
-	// c.Cluster().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
-	// c.Module().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
-	// c.Runner().MethodName(ctx, req)
 	// c.Source().MethodName(ctx, req)
-	// c.State().MethodName(ctx, req)
 	// c.User().MethodName(ctx, req)
 }
 ```
@@ -54,18 +52,16 @@ func main() {
 
 | Service | Accessor | Import |
 |---------|----------|--------|
+| AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/agent/v1` |
 | ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/application/v1` |
 | AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/authentication/v1` |
+| CatalogAPI | `Catalog()` | `go.admiral.io/sdk/proto/admiral/catalog/v1` |
 | ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/changeset/v1` |
-| ClusterAPI | `Cluster()` | `go.admiral.io/sdk/proto/admiral/cluster/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/credential/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/healthcheck/v1` |
-| ModuleAPI | `Module()` | `go.admiral.io/sdk/proto/admiral/module/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/run/v1` |
-| RunnerAPI | `Runner()` | `go.admiral.io/sdk/proto/admiral/runner/v1` |
 | SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/source/v1` |
-| StateAPI | `State()` | `go.admiral.io/sdk/proto/admiral/state/v1` |
 | UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/user/v1` |
 
 ## Example
@@ -79,7 +75,7 @@ import (
 	"log"
 
 	"go.admiral.io/sdk/client"
-	applicationv1 "go.admiral.io/sdk/proto/admiral/application/v1"
+	agentv1 "go.admiral.io/sdk/proto/admiral/agent/v1"
 )
 
 func main() {
@@ -100,7 +96,7 @@ func main() {
 	}
 
 	// Call a service method
-	resp, err := c.Application().ListMethod(ctx, &applicationv1.ListMethodRequest{})
+	resp, err := c.Agent().ListMethod(ctx, &agentv1.ListMethodRequest{})
 	if err != nil {
 		log.Fatal("Request failed:", err)
 	}

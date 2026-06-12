@@ -86,71 +86,6 @@ func (ComponentKind) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{0}
 }
 
-// ComponentDesiredState is the lifecycle state operators can drive a
-// component into. ACTIVE is the steady-state; DESTROY/ORPHAN are operator
-// intent recorded by a change set entry; DESTROYED is the terminal state
-// reached after a successful destroy revision applies.
-type ComponentDesiredState int32
-
-const (
-	// Default value. Must not be used.
-	ComponentDesiredState_COMPONENT_DESIRED_STATE_UNSPECIFIED ComponentDesiredState = 0
-	// The component is managed and reconciled to its current HEAD.
-	ComponentDesiredState_COMPONENT_DESIRED_STATE_ACTIVE ComponentDesiredState = 1
-	// The next run will run terraform destroy / equivalent for this component.
-	ComponentDesiredState_COMPONENT_DESIRED_STATE_DESTROY ComponentDesiredState = 2
-	// The component is detached from management; the underlying infrastructure
-	// is left intact.
-	ComponentDesiredState_COMPONENT_DESIRED_STATE_ORPHAN ComponentDesiredState = 3
-	// Terminal state reached after a successful destroy revision applies.
-	ComponentDesiredState_COMPONENT_DESIRED_STATE_DESTROYED ComponentDesiredState = 4
-)
-
-// Enum value maps for ComponentDesiredState.
-var (
-	ComponentDesiredState_name = map[int32]string{
-		0: "COMPONENT_DESIRED_STATE_UNSPECIFIED",
-		1: "COMPONENT_DESIRED_STATE_ACTIVE",
-		2: "COMPONENT_DESIRED_STATE_DESTROY",
-		3: "COMPONENT_DESIRED_STATE_ORPHAN",
-		4: "COMPONENT_DESIRED_STATE_DESTROYED",
-	}
-	ComponentDesiredState_value = map[string]int32{
-		"COMPONENT_DESIRED_STATE_UNSPECIFIED": 0,
-		"COMPONENT_DESIRED_STATE_ACTIVE":      1,
-		"COMPONENT_DESIRED_STATE_DESTROY":     2,
-		"COMPONENT_DESIRED_STATE_ORPHAN":      3,
-		"COMPONENT_DESIRED_STATE_DESTROYED":   4,
-	}
-)
-
-func (x ComponentDesiredState) Enum() *ComponentDesiredState {
-	p := new(ComponentDesiredState)
-	*p = x
-	return p
-}
-
-func (x ComponentDesiredState) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (ComponentDesiredState) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_component_v1_component_proto_enumTypes[1].Descriptor()
-}
-
-func (ComponentDesiredState) Type() protoreflect.EnumType {
-	return &file_admiral_component_v1_component_proto_enumTypes[1]
-}
-
-func (x ComponentDesiredState) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use ComponentDesiredState.Descriptor instead.
-func (ComponentDesiredState) EnumDescriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{1}
-}
-
 // ComponentOutput declares a named output value produced by a component.
 //
 // For infrastructure components (Terraform), outputs are auto-discovered from
@@ -237,6 +172,81 @@ func (x *ComponentOutput) GetDescription() string {
 	return ""
 }
 
+// ComponentInput is the symmetric half of ComponentOutput: a declared input
+// the component consumes, with the template expression that binds its value.
+// The declared inputs are the edge spec of the dependency DAG -- they make
+// impact scoping precise (which components reference a changed variable or an
+// upstream output). Today component inputs are bound through the single
+// values_template; this typed declaration is additive and is consumed by the
+// impact-scoping work (see the execution-model doc, section 11).
+type ComponentInput struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Input name. Must be a valid identifier (lowercase alphanumeric and
+	// underscores, e.g. "database_url", "region").
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Template expression that binds this input's value -- typically a reference
+	// to an environment variable or an upstream component's output, e.g.
+	//
+	//	"{{ .var.region }}"
+	//	"{{ .component.db.outputs.connection_string }}"
+	ValueTemplate string `protobuf:"bytes,2,opt,name=value_template,json=valueTemplate,proto3" json:"value_template,omitempty"`
+	// Optional description of the input's purpose.
+	Description   string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentInput) Reset() {
+	*x = ComponentInput{}
+	mi := &file_admiral_component_v1_component_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentInput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentInput) ProtoMessage() {}
+
+func (x *ComponentInput) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_component_v1_component_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentInput.ProtoReflect.Descriptor instead.
+func (*ComponentInput) Descriptor() ([]byte, []int) {
+	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ComponentInput) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ComponentInput) GetValueTemplate() string {
+	if x != nil {
+		return x.ValueTemplate
+	}
+	return ""
+}
+
+func (x *ComponentInput) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
 // Component represents a named, deployable unit within an application+environment
 // pair. It binds a module to a specific environment with configuration (values
 // template) that maps variables and other component outputs into the module's
@@ -274,17 +284,12 @@ type Component struct {
 	// the referenced module's type when the component is created, but stored
 	// explicitly for filtering and to determine execution behavior.
 	Kind ComponentKind `protobuf:"varint,6,opt,name=kind,proto3,enum=admiral.component.v1.ComponentKind" json:"kind,omitempty"`
-	// The desired lifecycle state of this component.
-	DesiredState ComponentDesiredState `protobuf:"varint,7,opt,name=desired_state,json=desiredState,proto3,enum=admiral.component.v1.ComponentDesiredState" json:"desired_state,omitempty"`
-	// When true, DESTROY operations are rejected for this component.
+	// When true, destroy operations are rejected for this component.
 	DeletionProtection bool `protobuf:"varint,8,opt,name=deletion_protection,json=deletionProtection,proto3" json:"deletion_protection,omitempty"`
-	// The module this component deploys (UUID). References a Module defined
-	// via the ModuleAPI. The module's source, ref, root, and path are inherited.
-	ModuleId string `protobuf:"bytes,9,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
-	// Optional ref override for the module's default ref. When empty, the
-	// module's ref is used. When set, overrides the module's ref at deploy time
-	// (e.g., pin a specific tag, branch, or commit SHA for this component).
-	Version string `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
+	// The git ref / version selector this component deploys (branch, tag, or
+	// commit SHA for git; version string for package sources). Seeded from the
+	// catalog item's ref at create time and owned thereafter (copy-not-link).
+	Ref string `protobuf:"bytes,10,opt,name=ref,proto3" json:"ref,omitempty"`
 	// Values template that maps configuration into the module's expected inputs.
 	// This is a JSON-encoded object where keys are the module input names and
 	// values are either literal values or template expressions.
@@ -335,14 +340,22 @@ type Component struct {
 	// When the component was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the component was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Declared inputs this component consumes -- the symmetric half of outputs.
+	// Additive: the edge spec the impact-scoping work reads. Binding still flows
+	// through values_template today.
+	Inputs []*ComponentInput `protobuf:"bytes,17,rep,name=inputs,proto3" json:"inputs,omitempty"`
+	// Resolved placement: where this component deploys. Copied onto the component
+	// from the reviewed Change at deploy time (copy-not-link); the run snapshots
+	// it onto the revision. Exactly one shape is populated, by `kind`.
+	Target        *ComponentTarget `protobuf:"bytes,20,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Component) Reset() {
 	*x = Component{}
-	mi := &file_admiral_component_v1_component_proto_msgTypes[1]
+	mi := &file_admiral_component_v1_component_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -354,7 +367,7 @@ func (x *Component) String() string {
 func (*Component) ProtoMessage() {}
 
 func (x *Component) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_component_v1_component_proto_msgTypes[1]
+	mi := &file_admiral_component_v1_component_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -367,7 +380,7 @@ func (x *Component) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Component.ProtoReflect.Descriptor instead.
 func (*Component) Descriptor() ([]byte, []int) {
-	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{1}
+	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Component) GetId() string {
@@ -412,13 +425,6 @@ func (x *Component) GetKind() ComponentKind {
 	return ComponentKind_COMPONENT_KIND_UNSPECIFIED
 }
 
-func (x *Component) GetDesiredState() ComponentDesiredState {
-	if x != nil {
-		return x.DesiredState
-	}
-	return ComponentDesiredState_COMPONENT_DESIRED_STATE_UNSPECIFIED
-}
-
 func (x *Component) GetDeletionProtection() bool {
 	if x != nil {
 		return x.DeletionProtection
@@ -426,16 +432,9 @@ func (x *Component) GetDeletionProtection() bool {
 	return false
 }
 
-func (x *Component) GetModuleId() string {
+func (x *Component) GetRef() string {
 	if x != nil {
-		return x.ModuleId
-	}
-	return ""
-}
-
-func (x *Component) GetVersion() string {
-	if x != nil {
-		return x.Version
+		return x.Ref
 	}
 	return ""
 }
@@ -482,6 +481,79 @@ func (x *Component) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Component) GetInputs() []*ComponentInput {
+	if x != nil {
+		return x.Inputs
+	}
+	return nil
+}
+
+func (x *Component) GetTarget() *ComponentTarget {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
+// ComponentTarget is a component's resolved placement on an agent, selected by
+// the component's kind. Authored on a Changeset Change and copied onto the
+// component (it is the source of truth at runtime, not the environment).
+type ComponentTarget struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The agent this component is placed on (UUID). A KUBERNETES agent for
+	// WORKLOAD components; a TERRAFORM agent for INFRASTRUCTURE components.
+	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	// WORKLOAD only: the target namespace (defaults to the environment name
+	// when empty).
+	Namespace     string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentTarget) Reset() {
+	*x = ComponentTarget{}
+	mi := &file_admiral_component_v1_component_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentTarget) ProtoMessage() {}
+
+func (x *ComponentTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_component_v1_component_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentTarget.ProtoReflect.Descriptor instead.
+func (*ComponentTarget) Descriptor() ([]byte, []int) {
+	return file_admiral_component_v1_component_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ComponentTarget) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+func (x *ComponentTarget) GetNamespace() string {
+	if x != nil {
+		return x.Namespace
+	}
+	return ""
+}
+
 var File_admiral_component_v1_component_proto protoreflect.FileDescriptor
 
 const file_admiral_component_v1_component_proto_rawDesc = "" +
@@ -491,19 +563,22 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
 	"\x0evalue_template\x18\x02 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xc2\x06\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xa6\x01\n" +
+	"\x0eComponentInput\x125\n" +
+	"\x04name\x18\x01 \x01(\tB!\xbaH\x1er\x1c\x10\x01\x18?2\x16^[a-z][a-z0-9_]{0,62}$R\x04name\x121\n" +
+	"\x0evalue_template\x18\x02 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x01\x18\x80 R\rvalueTemplate\x12*\n" +
+	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\"\xbe\x06\n" +
 	"\tComponent\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
 	"\x0eenvironment_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12@\n" +
 	"\x04name\x18\x04 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x127\n" +
-	"\x04kind\x18\x06 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12P\n" +
-	"\rdesired_state\x18\a \x01(\x0e2+.admiral.component.v1.ComponentDesiredStateR\fdesiredState\x12/\n" +
-	"\x13deletion_protection\x18\b \x01(\bR\x12deletionProtection\x12%\n" +
-	"\tmodule_id\x18\t \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\bmoduleId\x12\"\n" +
-	"\aversion\x18\n" +
-	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\aversion\x122\n" +
+	"\x04kind\x18\x06 \x01(\x0e2#.admiral.component.v1.ComponentKindR\x04kind\x12/\n" +
+	"\x13deletion_protection\x18\b \x01(\bR\x12deletionProtection\x12\x1a\n" +
+	"\x03ref\x18\n" +
+	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x03ref\x122\n" +
 	"\x0fvalues_template\x18\v \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\x0evaluesTemplate\x12\x1d\n" +
 	"\n" +
 	"depends_on\x18\f \x03(\tR\tdependsOn\x12?\n" +
@@ -513,17 +588,16 @@ const file_admiral_component_v1_component_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt*o\n" +
+	"updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12<\n" +
+	"\x06inputs\x18\x11 \x03(\v2$.admiral.component.v1.ComponentInputR\x06inputs\x12=\n" +
+	"\x06target\x18\x14 \x01(\v2%.admiral.component.v1.ComponentTargetR\x06target\"J\n" +
+	"\x0fComponentTarget\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x1c\n" +
+	"\tnamespace\x18\x02 \x01(\tR\tnamespace*o\n" +
 	"\rComponentKind\x12\x1e\n" +
 	"\x1aCOMPONENT_KIND_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dCOMPONENT_KIND_INFRASTRUCTURE\x10\x01\x12\x1b\n" +
-	"\x17COMPONENT_KIND_WORKLOAD\x10\x02*\xd4\x01\n" +
-	"\x15ComponentDesiredState\x12'\n" +
-	"#COMPONENT_DESIRED_STATE_UNSPECIFIED\x10\x00\x12\"\n" +
-	"\x1eCOMPONENT_DESIRED_STATE_ACTIVE\x10\x01\x12#\n" +
-	"\x1fCOMPONENT_DESIRED_STATE_DESTROY\x10\x02\x12\"\n" +
-	"\x1eCOMPONENT_DESIRED_STATE_ORPHAN\x10\x03\x12%\n" +
-	"!COMPONENT_DESIRED_STATE_DESTROYED\x10\x04B\xd6\x01\n" +
+	"\x17COMPONENT_KIND_WORKLOAD\x10\x02B\xd6\x01\n" +
 	"\x18com.admiral.component.v1B\x0eComponentProtoP\x01Z8go.admiral.io/sdk/proto/admiral/component/v1;componentv1\xa2\x02\x03ACX\xaa\x02\x14Admiral.Component.V1\xca\x02\x14Admiral\\Component\\V1\xe2\x02 Admiral\\Component\\V1\\GPBMetadata\xea\x02\x16Admiral::Component::V1b\x06proto3"
 
 var (
@@ -538,28 +612,30 @@ func file_admiral_component_v1_component_proto_rawDescGZIP() []byte {
 	return file_admiral_component_v1_component_proto_rawDescData
 }
 
-var file_admiral_component_v1_component_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_admiral_component_v1_component_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_admiral_component_v1_component_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_admiral_component_v1_component_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_admiral_component_v1_component_proto_goTypes = []any{
 	(ComponentKind)(0),            // 0: admiral.component.v1.ComponentKind
-	(ComponentDesiredState)(0),    // 1: admiral.component.v1.ComponentDesiredState
-	(*ComponentOutput)(nil),       // 2: admiral.component.v1.ComponentOutput
+	(*ComponentOutput)(nil),       // 1: admiral.component.v1.ComponentOutput
+	(*ComponentInput)(nil),        // 2: admiral.component.v1.ComponentInput
 	(*Component)(nil),             // 3: admiral.component.v1.Component
-	(*v1.ActorRef)(nil),           // 4: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*ComponentTarget)(nil),       // 4: admiral.component.v1.ComponentTarget
+	(*v1.ActorRef)(nil),           // 5: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
 }
 var file_admiral_component_v1_component_proto_depIdxs = []int32{
 	0, // 0: admiral.component.v1.Component.kind:type_name -> admiral.component.v1.ComponentKind
-	1, // 1: admiral.component.v1.Component.desired_state:type_name -> admiral.component.v1.ComponentDesiredState
-	2, // 2: admiral.component.v1.Component.outputs:type_name -> admiral.component.v1.ComponentOutput
-	4, // 3: admiral.component.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
-	5, // 4: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp
-	5, // 5: admiral.component.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	1, // 1: admiral.component.v1.Component.outputs:type_name -> admiral.component.v1.ComponentOutput
+	5, // 2: admiral.component.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
+	6, // 3: admiral.component.v1.Component.created_at:type_name -> google.protobuf.Timestamp
+	6, // 4: admiral.component.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
+	2, // 5: admiral.component.v1.Component.inputs:type_name -> admiral.component.v1.ComponentInput
+	4, // 6: admiral.component.v1.Component.target:type_name -> admiral.component.v1.ComponentTarget
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_admiral_component_v1_component_proto_init() }
@@ -572,8 +648,8 @@ func file_admiral_component_v1_component_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_component_v1_component_proto_rawDesc), len(file_admiral_component_v1_component_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

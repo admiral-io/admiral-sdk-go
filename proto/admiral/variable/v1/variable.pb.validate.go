@@ -69,6 +69,10 @@ func (m *Variable) validate(all bool) error {
 
 	// no validation rules for Description
 
+	// no validation rules for ApplicationId
+
+	// no validation rules for EnvironmentId
+
 	// no validation rules for Source
 
 	if all {
@@ -156,14 +160,6 @@ func (m *Variable) validate(all bool) error {
 				cause:  err,
 			}
 		}
-	}
-
-	if m.ApplicationId != nil {
-		// no validation rules for ApplicationId
-	}
-
-	if m.EnvironmentId != nil {
-		// no validation rules for EnvironmentId
 	}
 
 	if len(errors) > 0 {

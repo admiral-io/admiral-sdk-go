@@ -62,6 +62,14 @@ const (
 	// system marked it terminal; the user did not. Distinct from CANCELED to
 	// keep the audit trail honest about who initiated the transition.
 	RunStatus_RUN_STATUS_SUPERSEDED RunStatus = 10
+	// At least one revision's apply stalled with an unknown outcome and requires
+	// reconciliation before the run can proceed. Not terminal; not auto-advanced.
+	// (Set by the liveness/STALE reaper; see Phase D.)
+	RunStatus_RUN_STATUS_STALE RunStatus = 11
+	// At least one revision has planned and is awaiting explicit approval before
+	// its apply runs (gating policy != auto-continue). Not terminal; the user is
+	// the gatekeeper. (Set by the gating flow; see the per-env gating policy.)
+	RunStatus_RUN_STATUS_AWAITING_APPROVAL RunStatus = 12
 )
 
 // Enum value maps for RunStatus.
@@ -78,19 +86,23 @@ var (
 		8:  "RUN_STATUS_FAILED",
 		9:  "RUN_STATUS_CANCELED",
 		10: "RUN_STATUS_SUPERSEDED",
+		11: "RUN_STATUS_STALE",
+		12: "RUN_STATUS_AWAITING_APPROVAL",
 	}
 	RunStatus_value = map[string]int32{
-		"RUN_STATUS_UNSPECIFIED":      0,
-		"RUN_STATUS_PENDING":          1,
-		"RUN_STATUS_QUEUED":           2,
-		"RUN_STATUS_PLANNING":         3,
-		"RUN_STATUS_PLANNED":          4,
-		"RUN_STATUS_APPLYING":         5,
-		"RUN_STATUS_SUCCEEDED":        6,
-		"RUN_STATUS_PARTIALLY_FAILED": 7,
-		"RUN_STATUS_FAILED":           8,
-		"RUN_STATUS_CANCELED":         9,
-		"RUN_STATUS_SUPERSEDED":       10,
+		"RUN_STATUS_UNSPECIFIED":       0,
+		"RUN_STATUS_PENDING":           1,
+		"RUN_STATUS_QUEUED":            2,
+		"RUN_STATUS_PLANNING":          3,
+		"RUN_STATUS_PLANNED":           4,
+		"RUN_STATUS_APPLYING":          5,
+		"RUN_STATUS_SUCCEEDED":         6,
+		"RUN_STATUS_PARTIALLY_FAILED":  7,
+		"RUN_STATUS_FAILED":            8,
+		"RUN_STATUS_CANCELED":          9,
+		"RUN_STATUS_SUPERSEDED":        10,
+		"RUN_STATUS_STALE":             11,
+		"RUN_STATUS_AWAITING_APPROVAL": 12,
 	}
 )
 
@@ -135,13 +147,14 @@ const (
 	// completed and it will begin shortly.
 	RevisionStatus_REVISION_STATUS_QUEUED RevisionStatus = 2
 	// (Infrastructure only) The engine's plan is being generated
-	// (`terraform plan` / `tofu plan`). Transitions to AWAITING_APPROVAL on
-	// success or FAILED on error.
+	// (`terraform plan` / `tofu plan`). Transitions to PLANNED on success
+	// or FAILED on error.
 	RevisionStatus_REVISION_STATUS_PLANNING RevisionStatus = 3
-	// (Infrastructure only) Plan completed successfully and is awaiting an
-	// explicit apply (via ApplyRun). The plan output is available on the
-	// revision for review.
-	RevisionStatus_REVISION_STATUS_AWAITING_APPROVAL RevisionStatus = 4
+	// (Infrastructure only) Plan completed successfully. Under the Option B
+	// auto-continue model, this state is transient: the apply is dispatched
+	// immediately if the parent run is already APPLYING (user authorized at
+	// the changeset level). The plan output is available for review.
+	RevisionStatus_REVISION_STATUS_PLANNED RevisionStatus = 4
 	// The revision is being applied. For infrastructure, this is the engine's
 	// apply phase (`terraform apply` / `tofu apply`). For workloads, this is
 	// applying manifests to the target cluster.
@@ -161,6 +174,20 @@ const (
 	// (a newer plan landed for the same change set, or the change set was
 	// edited). System-driven; distinct from CANCELED.
 	RevisionStatus_REVISION_STATUS_SUPERSEDED RevisionStatus = 10
+	// The revision cannot plan yet because its values_template references
+	// outputs of an upstream revision that has not been applied. Analogous to
+	// terraform's "(known after apply)": the inputs to this plan are
+	// unknowable until upstream apply completes. Transitions to QUEUED once
+	// the upstream apply lands and outputs are captured.
+	RevisionStatus_REVISION_STATUS_DEFERRED RevisionStatus = 11
+	// The revision's apply stalled with an unknown outcome (never started, still
+	// running, or done-but-unreported). Cannot auto-retry; requires
+	// reconciliation against real state or an audited operator override. (Set by
+	// the liveness/STALE reaper; see Phase D.)
+	RevisionStatus_REVISION_STATUS_STALE RevisionStatus = 12
+	// The revision has planned and is awaiting explicit approval before its
+	// apply runs (gating policy != auto-continue). (Set by the gating flow.)
+	RevisionStatus_REVISION_STATUS_AWAITING_APPROVAL RevisionStatus = 13
 )
 
 // Enum value maps for RevisionStatus.
@@ -170,26 +197,32 @@ var (
 		1:  "REVISION_STATUS_PENDING",
 		2:  "REVISION_STATUS_QUEUED",
 		3:  "REVISION_STATUS_PLANNING",
-		4:  "REVISION_STATUS_AWAITING_APPROVAL",
+		4:  "REVISION_STATUS_PLANNED",
 		5:  "REVISION_STATUS_APPLYING",
 		6:  "REVISION_STATUS_SUCCEEDED",
 		7:  "REVISION_STATUS_FAILED",
 		8:  "REVISION_STATUS_BLOCKED",
 		9:  "REVISION_STATUS_CANCELED",
 		10: "REVISION_STATUS_SUPERSEDED",
+		11: "REVISION_STATUS_DEFERRED",
+		12: "REVISION_STATUS_STALE",
+		13: "REVISION_STATUS_AWAITING_APPROVAL",
 	}
 	RevisionStatus_value = map[string]int32{
 		"REVISION_STATUS_UNSPECIFIED":       0,
 		"REVISION_STATUS_PENDING":           1,
 		"REVISION_STATUS_QUEUED":            2,
 		"REVISION_STATUS_PLANNING":          3,
-		"REVISION_STATUS_AWAITING_APPROVAL": 4,
+		"REVISION_STATUS_PLANNED":           4,
 		"REVISION_STATUS_APPLYING":          5,
 		"REVISION_STATUS_SUCCEEDED":         6,
 		"REVISION_STATUS_FAILED":            7,
 		"REVISION_STATUS_BLOCKED":           8,
 		"REVISION_STATUS_CANCELED":          9,
 		"REVISION_STATUS_SUPERSEDED":        10,
+		"REVISION_STATUS_DEFERRED":          11,
+		"REVISION_STATUS_STALE":             12,
+		"REVISION_STATUS_AWAITING_APPROVAL": 13,
 	}
 )
 
@@ -402,6 +435,117 @@ func (RevisionPhase) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{4}
 }
 
+// ArtifactKind types an artifact a phase produces or consumes.
+type ArtifactKind int32
+
+const (
+	// Default value. Must not be used.
+	ArtifactKind_ARTIFACT_KIND_UNSPECIFIED ArtifactKind = 0
+	// The packaged source tree a terraform phase executes over.
+	ArtifactKind_ARTIFACT_KIND_SOURCE_BUNDLE ArtifactKind = 1
+	// The binary plan a terraform plan produces and apply consumes.
+	ArtifactKind_ARTIFACT_KIND_PLAN ArtifactKind = 2
+	// The rendered Kubernetes manifests a workload applies.
+	ArtifactKind_ARTIFACT_KIND_MANIFEST_BUNDLE ArtifactKind = 3
+)
+
+// Enum value maps for ArtifactKind.
+var (
+	ArtifactKind_name = map[int32]string{
+		0: "ARTIFACT_KIND_UNSPECIFIED",
+		1: "ARTIFACT_KIND_SOURCE_BUNDLE",
+		2: "ARTIFACT_KIND_PLAN",
+		3: "ARTIFACT_KIND_MANIFEST_BUNDLE",
+	}
+	ArtifactKind_value = map[string]int32{
+		"ARTIFACT_KIND_UNSPECIFIED":     0,
+		"ARTIFACT_KIND_SOURCE_BUNDLE":   1,
+		"ARTIFACT_KIND_PLAN":            2,
+		"ARTIFACT_KIND_MANIFEST_BUNDLE": 3,
+	}
+)
+
+func (x ArtifactKind) Enum() *ArtifactKind {
+	p := new(ArtifactKind)
+	*p = x
+	return p
+}
+
+func (x ArtifactKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ArtifactKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_run_v1_run_proto_enumTypes[5].Descriptor()
+}
+
+func (ArtifactKind) Type() protoreflect.EnumType {
+	return &file_admiral_run_v1_run_proto_enumTypes[5]
+}
+
+func (x ArtifactKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ArtifactKind.Descriptor instead.
+func (ArtifactKind) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{5}
+}
+
+// ExecutionStatus is the terminal outcome an executor reports for a phase.
+// Non-terminal progress (RUNNING) is observed server-side, not reported here.
+type ExecutionStatus int32
+
+const (
+	// Default value. Must not be used.
+	ExecutionStatus_EXECUTION_STATUS_UNSPECIFIED ExecutionStatus = 0
+	// The phase completed successfully.
+	ExecutionStatus_EXECUTION_STATUS_SUCCEEDED ExecutionStatus = 1
+	// The phase failed. See error_message.
+	ExecutionStatus_EXECUTION_STATUS_FAILED ExecutionStatus = 2
+)
+
+// Enum value maps for ExecutionStatus.
+var (
+	ExecutionStatus_name = map[int32]string{
+		0: "EXECUTION_STATUS_UNSPECIFIED",
+		1: "EXECUTION_STATUS_SUCCEEDED",
+		2: "EXECUTION_STATUS_FAILED",
+	}
+	ExecutionStatus_value = map[string]int32{
+		"EXECUTION_STATUS_UNSPECIFIED": 0,
+		"EXECUTION_STATUS_SUCCEEDED":   1,
+		"EXECUTION_STATUS_FAILED":      2,
+	}
+)
+
+func (x ExecutionStatus) Enum() *ExecutionStatus {
+	p := new(ExecutionStatus)
+	*p = x
+	return p
+}
+
+func (x ExecutionStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ExecutionStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_run_v1_run_proto_enumTypes[6].Descriptor()
+}
+
+func (ExecutionStatus) Type() protoreflect.EnumType {
+	return &file_admiral_run_v1_run_proto_enumTypes[6]
+}
+
+func (x ExecutionStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ExecutionStatus.Descriptor instead.
+func (ExecutionStatus) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{6}
+}
+
 // Run represents a single execution against an application+environment.
 // Each run produces one Revision per component. The run tracks the composite
 // status across all revisions and provides the audit trail for what was
@@ -427,12 +571,6 @@ type Run struct {
 	// Optional message describing the run (e.g., "Deploying v2.1.0
 	// with new caching layer" or "Rolling back to stable after API errors").
 	Message string `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
-	// Whether this is a destroy run. Destroy runs tear down all resources in
-	// the environment: the engine's destroy phase for infra components
-	// (`terraform destroy` / `tofu destroy`), resource deletion for workload
-	// components. Executed in reverse dependency order. Required before an
-	// environment with active resources can be deleted.
-	Destroy bool `protobuf:"varint,7,opt,name=destroy,proto3" json:"destroy,omitempty"`
 	// If this run was created as a rollback from a prior run, this field
 	// contains the source run's UUID. Empty for normal runs.
 	SourceRunId string `protobuf:"bytes,8,opt,name=source_run_id,json=sourceRunId,proto3" json:"source_run_id,omitempty"`
@@ -537,13 +675,6 @@ func (x *Run) GetMessage() string {
 		return x.Message
 	}
 	return ""
-}
-
-func (x *Run) GetDestroy() bool {
-	if x != nil {
-		return x.Destroy
-	}
-	return false
 }
 
 func (x *Run) GetSourceRunId() string {
@@ -727,7 +858,7 @@ func (x *RevisionSummary) GetPending() int32 {
 //   - Rendering produces the infrastructure source tree (.tf files and
 //     auto-loaded tfvars) with resolved variable values.
 //   - The engine's plan and apply phases are executed by the assigned
-//     runner (see JobBundle.engine for engine selection).
+//     TERRAFORM agent (see JobBundle.engine for engine selection).
 //   - The plan output is stored for visibility.
 //   - Each component has its own state, stored via the configured backend.
 //
@@ -761,8 +892,8 @@ type Revision struct {
 	// the module's source binding is later edited. Execution today resolves
 	// fetch location through the live module; this field is the audit anchor.
 	SourceId string `protobuf:"bytes,9,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
-	// The version deployed (after override resolution).
-	Version string `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
+	// The git ref / version selector deployed (the component's ref at snapshot).
+	Ref string `protobuf:"bytes,10,opt,name=ref,proto3" json:"ref,omitempty"`
 	// The resolved values template snapshot: the values_template with all
 	// variable references and component output references fully resolved.
 	// Stored for audit: shows exactly what inputs were used. Sensitive
@@ -774,15 +905,8 @@ type Revision struct {
 	// Component IDs that are blocking this revision. Only populated when
 	// status is BLOCKED; indicates which upstream components failed.
 	BlockedBy []string `protobuf:"bytes,13,rep,name=blocked_by,json=blockedBy,proto3" json:"blocked_by,omitempty"`
-	// SHA-256 checksum of the rendered artifact bundle (tar.gz).
-	ArtifactChecksum string `protobuf:"bytes,14,opt,name=artifact_checksum,json=artifactChecksum,proto3" json:"artifact_checksum,omitempty"`
-	// Storage location of the rendered artifact bundle. Internal reference
-	// used by agents/runners to fetch the bundle.
-	ArtifactUrl string `protobuf:"bytes,15,opt,name=artifact_url,json=artifactUrl,proto3" json:"artifact_url,omitempty"`
-	// (Infrastructure only) The number of resources the plan will add,
-	// change, and destroy. Populated after planning completes. Engine-agnostic:
-	// applies to Terraform, OpenTofu, or any future engine that models changes
-	// as create/update/delete counts.
+	// The normalized change counts (creates/updates/deletes/noops) this
+	// revision's plan computed. Populated after planning. Engine-agnostic.
 	PlanSummary *ChangeSummary `protobuf:"bytes,16,opt,name=plan_summary,json=planSummary,proto3" json:"plan_summary,omitempty"`
 	// Phase labels for which a transcript has been stored, in the order they
 	// ran. Populated as each phase completes (a revision that planned and then
@@ -798,16 +922,20 @@ type Revision struct {
 	StartedAt *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	// When the revision finished (succeeded, failed, or canceled).
 	CompletedAt *timestamppb.Timestamp `protobuf:"bytes,21,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
-	// The module used for this revision (UUID, after override resolution).
-	// Captures which module produced the source_id and version, needed for
-	// rollback (re-deploying from a prior revision's snapshot).
-	ModuleId string `protobuf:"bytes,22,opt,name=module_id,json=moduleId,proto3" json:"module_id,omitempty"`
 	// Subdirectory within the delivered archive where the executor runs.
-	// Empty means the archive root. Populated from the module's path field
-	// at snapshot time so that relative module references resolve correctly.
+	// Empty means the archive root. Populated from the catalog item's path field
+	// at snapshot time so that relative references resolve correctly.
 	WorkingDirectory string `protobuf:"bytes,23,opt,name=working_directory,json=workingDirectory,proto3" json:"working_directory,omitempty"`
 	// When the revision was created (same as run created_at).
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,24,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,24,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// The concrete commit this revision resolved its ref to and pinned -- the
+	// reproducibility anchor. `ref` is the intent (e.g. `main`); this is what
+	// actually deployed. Populated when resolution is wired (a later WP).
+	ResolvedCommit string `protobuf:"bytes,25,opt,name=resolved_commit,json=resolvedCommit,proto3" json:"resolved_commit,omitempty"`
+	// The deploy/engine type this revision runs (TERRAFORM/HELM/KUSTOMIZE/
+	// MANIFEST), denormalized from the component at snapshot. Selects the
+	// executor: the orchestration layer routes by this type, not by kind.
+	Type          string `protobuf:"bytes,26,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -905,9 +1033,9 @@ func (x *Revision) GetSourceId() string {
 	return ""
 }
 
-func (x *Revision) GetVersion() string {
+func (x *Revision) GetRef() string {
 	if x != nil {
-		return x.Version
+		return x.Ref
 	}
 	return ""
 }
@@ -931,20 +1059,6 @@ func (x *Revision) GetBlockedBy() []string {
 		return x.BlockedBy
 	}
 	return nil
-}
-
-func (x *Revision) GetArtifactChecksum() string {
-	if x != nil {
-		return x.ArtifactChecksum
-	}
-	return ""
-}
-
-func (x *Revision) GetArtifactUrl() string {
-	if x != nil {
-		return x.ArtifactUrl
-	}
-	return ""
 }
 
 func (x *Revision) GetPlanSummary() *ChangeSummary {
@@ -989,13 +1103,6 @@ func (x *Revision) GetCompletedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Revision) GetModuleId() string {
-	if x != nil {
-		return x.ModuleId
-	}
-	return ""
-}
-
 func (x *Revision) GetWorkingDirectory() string {
 	if x != nil {
 		return x.WorkingDirectory
@@ -1010,17 +1117,34 @@ func (x *Revision) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// ChangeSummary provides resource change counts from an infrastructure plan.
-// Engine-agnostic. The "+N / ~N / -N" shape is universal across Terraform,
-// OpenTofu, and similar engines.
+func (x *Revision) GetResolvedCommit() string {
+	if x != nil {
+		return x.ResolvedCommit
+	}
+	return ""
+}
+
+func (x *Revision) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+// ChangeSummary is the normalized, executor-agnostic count of what an
+// execution does: creates, updates, deletes, and no-ops. Every executor maps
+// its native result onto this shape -- terraform's +/~/- plan counts and
+// kubernetes server-side-apply created/configured/deleted.
 type ChangeSummary struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Number of resources to be created.
-	Additions int32 `protobuf:"varint,1,opt,name=additions,proto3" json:"additions,omitempty"`
+	Creates int32 `protobuf:"varint,1,opt,name=creates,proto3" json:"creates,omitempty"`
 	// Number of resources to be updated in place.
-	Changes int32 `protobuf:"varint,2,opt,name=changes,proto3" json:"changes,omitempty"`
-	// Number of resources to be destroyed.
-	Destructions  int32 `protobuf:"varint,3,opt,name=destructions,proto3" json:"destructions,omitempty"`
+	Updates int32 `protobuf:"varint,2,opt,name=updates,proto3" json:"updates,omitempty"`
+	// Number of resources to be deleted.
+	Deletes int32 `protobuf:"varint,3,opt,name=deletes,proto3" json:"deletes,omitempty"`
+	// Number of resources left unchanged (no-op).
+	Noops         int32 `protobuf:"varint,4,opt,name=noops,proto3" json:"noops,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1055,25 +1179,275 @@ func (*ChangeSummary) Descriptor() ([]byte, []int) {
 	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ChangeSummary) GetAdditions() int32 {
+func (x *ChangeSummary) GetCreates() int32 {
 	if x != nil {
-		return x.Additions
+		return x.Creates
 	}
 	return 0
 }
 
-func (x *ChangeSummary) GetChanges() int32 {
+func (x *ChangeSummary) GetUpdates() int32 {
 	if x != nil {
-		return x.Changes
+		return x.Updates
 	}
 	return 0
 }
 
-func (x *ChangeSummary) GetDestructions() int32 {
+func (x *ChangeSummary) GetDeletes() int32 {
 	if x != nil {
-		return x.Destructions
+		return x.Deletes
 	}
 	return 0
+}
+
+func (x *ChangeSummary) GetNoops() int32 {
+	if x != nil {
+		return x.Noops
+	}
+	return 0
+}
+
+// EngineOutput is a single output value captured from an executor after a
+// successful apply (e.g. `terraform output -json`). Engine-agnostic: the
+// (value, type, sensitive) shape generalizes across executors. Lives in run/v1
+// so it can be shared by the TERRAFORM and KUBERNETES agent report paths via
+// ExecutionReport.
+type EngineOutput struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The output value, serialized as a string. Complex values (lists, maps)
+	// are JSON-encoded.
+	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// Engine type descriptor (e.g. "string", "number", "list(string)").
+	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Whether the executor marked this output as sensitive.
+	Sensitive     bool `protobuf:"varint,3,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EngineOutput) Reset() {
+	*x = EngineOutput{}
+	mi := &file_admiral_run_v1_run_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EngineOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EngineOutput) ProtoMessage() {}
+
+func (x *EngineOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_run_v1_run_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EngineOutput.ProtoReflect.Descriptor instead.
+func (*EngineOutput) Descriptor() ([]byte, []int) {
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *EngineOutput) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *EngineOutput) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *EngineOutput) GetSensitive() bool {
+	if x != nil {
+		return x.Sensitive
+	}
+	return false
+}
+
+// ArtifactRef addresses one artifact an execution produced: its kind, the
+// storage key where the bytes live, and a checksum for fail-closed
+// verification.
+type ArtifactRef struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The kind of artifact.
+	Kind ArtifactKind `protobuf:"varint,1,opt,name=kind,proto3,enum=admiral.run.v1.ArtifactKind" json:"kind,omitempty"`
+	// Storage key (object-storage path) where the artifact bytes live.
+	Key string `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// SHA-256 checksum of the artifact for integrity verification. May be empty
+	// for artifacts not yet verified.
+	Checksum      string `protobuf:"bytes,3,opt,name=checksum,proto3" json:"checksum,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArtifactRef) Reset() {
+	*x = ArtifactRef{}
+	mi := &file_admiral_run_v1_run_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArtifactRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArtifactRef) ProtoMessage() {}
+
+func (x *ArtifactRef) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_run_v1_run_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArtifactRef.ProtoReflect.Descriptor instead.
+func (*ArtifactRef) Descriptor() ([]byte, []int) {
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ArtifactRef) GetKind() ArtifactKind {
+	if x != nil {
+		return x.Kind
+	}
+	return ArtifactKind_ARTIFACT_KIND_UNSPECIFIED
+}
+
+func (x *ArtifactRef) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *ArtifactRef) GetChecksum() string {
+	if x != nil {
+		return x.Checksum
+	}
+	return ""
+}
+
+// ExecutionReport is the executor-agnostic outcome of one revision phase --
+// the single report shape every executor maps its native result onto. It
+// supersedes the terraform-shaped JobResult and the kubernetes RevisionResult:
+// the TERRAFORM and KUBERNETES agents both report via this message.
+type ExecutionReport struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Terminal status of the phase.
+	Status ExecutionStatus `protobuf:"varint,1,opt,name=status,proto3,enum=admiral.run.v1.ExecutionStatus" json:"status,omitempty"`
+	// Error message if the phase failed. Empty on success.
+	ErrorMessage string `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	// Normalized change counts (create/update/delete/noop).
+	Summary *ChangeSummary `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
+	// Outputs captured after a successful apply. Keys are output names.
+	Outputs map[string]*EngineOutput `protobuf:"bytes,4,rep,name=outputs,proto3" json:"outputs,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Optional reference to an artifact this phase produced (e.g. a terraform
+	// PLAN). Recorded into the revision's artifact set when present.
+	Artifact *ArtifactRef `protobuf:"bytes,5,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	// The phase's human-readable execution log (e.g. terraform plan/apply
+	// output). Persisted as the phase transcript. (Interim: live log streaming
+	// moves to a dedicated channel in a later phase.)
+	Transcript string `protobuf:"bytes,6,opt,name=transcript,proto3" json:"transcript,omitempty"`
+	// Opaque, per-executor richness, never branched on by the orchestration
+	// layer. JSON-encoded.
+	Detail        []byte `protobuf:"bytes,7,opt,name=detail,proto3" json:"detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecutionReport) Reset() {
+	*x = ExecutionReport{}
+	mi := &file_admiral_run_v1_run_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecutionReport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecutionReport) ProtoMessage() {}
+
+func (x *ExecutionReport) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_run_v1_run_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecutionReport.ProtoReflect.Descriptor instead.
+func (*ExecutionReport) Descriptor() ([]byte, []int) {
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ExecutionReport) GetStatus() ExecutionStatus {
+	if x != nil {
+		return x.Status
+	}
+	return ExecutionStatus_EXECUTION_STATUS_UNSPECIFIED
+}
+
+func (x *ExecutionReport) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+func (x *ExecutionReport) GetSummary() *ChangeSummary {
+	if x != nil {
+		return x.Summary
+	}
+	return nil
+}
+
+func (x *ExecutionReport) GetOutputs() map[string]*EngineOutput {
+	if x != nil {
+		return x.Outputs
+	}
+	return nil
+}
+
+func (x *ExecutionReport) GetArtifact() *ArtifactRef {
+	if x != nil {
+		return x.Artifact
+	}
+	return nil
+}
+
+func (x *ExecutionReport) GetTranscript() string {
+	if x != nil {
+		return x.Transcript
+	}
+	return ""
+}
+
+func (x *ExecutionReport) GetDetail() []byte {
+	if x != nil {
+		return x.Detail
+	}
+	return nil
 }
 
 // CreateRunRequest triggers a new run.
@@ -1085,14 +1459,9 @@ type CreateRunRequest struct {
 	EnvironmentId string `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	// Optional message describing this run.
 	Message string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	// Destroy all resources in the environment. Runs the engine's destroy
-	// phase (`terraform destroy` / `tofu destroy`) for infra components and
-	// deletes workload resources from the cluster, in reverse dependency
-	// order. Required before deleting an environment that has active resources.
-	Destroy bool `protobuf:"varint,4,opt,name=destroy,proto3" json:"destroy,omitempty"`
 	// Optional: run from a prior run's configuration snapshots instead of
 	// from the current component HEAD. When set, each revision is seeded
-	// from the source run's revision for the same component (module_id,
+	// from the source run's revision for the same component (catalog_item_id,
 	// version, resolved_values, source_id, working_directory). This is the
 	// rollback mechanism: re-plan and re-apply a known-good configuration
 	// against the current infrastructure state.
@@ -1108,7 +1477,7 @@ type CreateRunRequest struct {
 
 func (x *CreateRunRequest) Reset() {
 	*x = CreateRunRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[4]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1120,7 +1489,7 @@ func (x *CreateRunRequest) String() string {
 func (*CreateRunRequest) ProtoMessage() {}
 
 func (x *CreateRunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[4]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1133,7 +1502,7 @@ func (x *CreateRunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRunRequest.ProtoReflect.Descriptor instead.
 func (*CreateRunRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{4}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateRunRequest) GetApplicationId() string {
@@ -1155,13 +1524,6 @@ func (x *CreateRunRequest) GetMessage() string {
 		return x.Message
 	}
 	return ""
-}
-
-func (x *CreateRunRequest) GetDestroy() bool {
-	if x != nil {
-		return x.Destroy
-	}
-	return false
 }
 
 func (x *CreateRunRequest) GetSourceRunId() string {
@@ -1189,7 +1551,7 @@ type CreateRunResponse struct {
 
 func (x *CreateRunResponse) Reset() {
 	*x = CreateRunResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[5]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1201,7 +1563,7 @@ func (x *CreateRunResponse) String() string {
 func (*CreateRunResponse) ProtoMessage() {}
 
 func (x *CreateRunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[5]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1214,7 +1576,7 @@ func (x *CreateRunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRunResponse.ProtoReflect.Descriptor instead.
 func (*CreateRunResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{5}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateRunResponse) GetRun() *Run {
@@ -1235,7 +1597,7 @@ type GetRunRequest struct {
 
 func (x *GetRunRequest) Reset() {
 	*x = GetRunRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[6]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1247,7 +1609,7 @@ func (x *GetRunRequest) String() string {
 func (*GetRunRequest) ProtoMessage() {}
 
 func (x *GetRunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[6]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1260,7 +1622,7 @@ func (x *GetRunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunRequest.ProtoReflect.Descriptor instead.
 func (*GetRunRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{6}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetRunRequest) GetRunId() string {
@@ -1281,7 +1643,7 @@ type GetRunResponse struct {
 
 func (x *GetRunResponse) Reset() {
 	*x = GetRunResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[7]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1293,7 +1655,7 @@ func (x *GetRunResponse) String() string {
 func (*GetRunResponse) ProtoMessage() {}
 
 func (x *GetRunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[7]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1306,7 +1668,7 @@ func (x *GetRunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRunResponse.ProtoReflect.Descriptor instead.
 func (*GetRunResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{7}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetRunResponse) GetRun() *Run {
@@ -1319,11 +1681,8 @@ func (x *GetRunResponse) GetRun() *Run {
 // ListRunsRequest contains pagination and filter parameters.
 type ListRunsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
-	//
-	// Syntax: `field['name'] = 'value'` with AND/OR/NOT, comparison operators
-	// (=, !=, <, >, <=, >=, ~=), and predicates (IN, BETWEEN, CONTAINS,
-	// STARTS_WITH, ENDS_WITH, IS NULL, EXISTS).
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
 	//   - `application_id`: runs for a specific application (UUID).
@@ -1333,7 +1692,8 @@ type ListRunsRequest struct {
 	//
 	// Example: `field['environment_id'] = '<uuid>' AND field['status'] = 'SUCCEEDED'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of runs to return per page.
+	// Maximum number of runs to return per page. Defaults to 50 when omitted or
+	// 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -1343,7 +1703,7 @@ type ListRunsRequest struct {
 
 func (x *ListRunsRequest) Reset() {
 	*x = ListRunsRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[8]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1355,7 +1715,7 @@ func (x *ListRunsRequest) String() string {
 func (*ListRunsRequest) ProtoMessage() {}
 
 func (x *ListRunsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[8]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1368,7 +1728,7 @@ func (x *ListRunsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunsRequest.ProtoReflect.Descriptor instead.
 func (*ListRunsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{8}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListRunsRequest) GetFilter() string {
@@ -1405,7 +1765,7 @@ type ListRunsResponse struct {
 
 func (x *ListRunsResponse) Reset() {
 	*x = ListRunsResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[9]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1417,7 +1777,7 @@ func (x *ListRunsResponse) String() string {
 func (*ListRunsResponse) ProtoMessage() {}
 
 func (x *ListRunsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[9]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1430,7 +1790,7 @@ func (x *ListRunsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRunsResponse.ProtoReflect.Descriptor instead.
 func (*ListRunsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{9}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListRunsResponse) GetRuns() []*Run {
@@ -1460,7 +1820,7 @@ type CancelRunRequest struct {
 
 func (x *CancelRunRequest) Reset() {
 	*x = CancelRunRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[10]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1472,7 +1832,7 @@ func (x *CancelRunRequest) String() string {
 func (*CancelRunRequest) ProtoMessage() {}
 
 func (x *CancelRunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[10]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1485,7 +1845,7 @@ func (x *CancelRunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelRunRequest.ProtoReflect.Descriptor instead.
 func (*CancelRunRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{10}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CancelRunRequest) GetRunId() string {
@@ -1513,7 +1873,7 @@ type CancelRunResponse struct {
 
 func (x *CancelRunResponse) Reset() {
 	*x = CancelRunResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[11]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1525,7 +1885,7 @@ func (x *CancelRunResponse) String() string {
 func (*CancelRunResponse) ProtoMessage() {}
 
 func (x *CancelRunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[11]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1538,7 +1898,7 @@ func (x *CancelRunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelRunResponse.ProtoReflect.Descriptor instead.
 func (*CancelRunResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{11}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CancelRunResponse) GetRun() *Run {
@@ -1561,7 +1921,7 @@ type GetRevisionRequest struct {
 
 func (x *GetRevisionRequest) Reset() {
 	*x = GetRevisionRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[12]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1573,7 +1933,7 @@ func (x *GetRevisionRequest) String() string {
 func (*GetRevisionRequest) ProtoMessage() {}
 
 func (x *GetRevisionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[12]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1586,7 +1946,7 @@ func (x *GetRevisionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRevisionRequest.ProtoReflect.Descriptor instead.
 func (*GetRevisionRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{12}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetRevisionRequest) GetRunId() string {
@@ -1614,7 +1974,7 @@ type GetRevisionResponse struct {
 
 func (x *GetRevisionResponse) Reset() {
 	*x = GetRevisionResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[13]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1626,7 +1986,7 @@ func (x *GetRevisionResponse) String() string {
 func (*GetRevisionResponse) ProtoMessage() {}
 
 func (x *GetRevisionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[13]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1639,7 +1999,7 @@ func (x *GetRevisionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRevisionResponse.ProtoReflect.Descriptor instead.
 func (*GetRevisionResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{13}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetRevisionResponse) GetRevision() *Revision {
@@ -1654,7 +2014,8 @@ type ListRevisionsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Identifier of the run. UUID or `run-<suffix>` display ID.
 	RunId string `protobuf:"bytes,1,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
-	// Maximum number of revisions to return per page.
+	// Maximum number of revisions to return per page. Defaults to 50 when
+	// omitted or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -1664,7 +2025,7 @@ type ListRevisionsRequest struct {
 
 func (x *ListRevisionsRequest) Reset() {
 	*x = ListRevisionsRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[14]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1676,7 +2037,7 @@ func (x *ListRevisionsRequest) String() string {
 func (*ListRevisionsRequest) ProtoMessage() {}
 
 func (x *ListRevisionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[14]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1689,7 +2050,7 @@ func (x *ListRevisionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRevisionsRequest.ProtoReflect.Descriptor instead.
 func (*ListRevisionsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{14}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListRevisionsRequest) GetRunId() string {
@@ -1726,7 +2087,7 @@ type ListRevisionsResponse struct {
 
 func (x *ListRevisionsResponse) Reset() {
 	*x = ListRevisionsResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[15]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1738,7 +2099,7 @@ func (x *ListRevisionsResponse) String() string {
 func (*ListRevisionsResponse) ProtoMessage() {}
 
 func (x *ListRevisionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[15]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1751,7 +2112,7 @@ func (x *ListRevisionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRevisionsResponse.ProtoReflect.Descriptor instead.
 func (*ListRevisionsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{15}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListRevisionsResponse) GetRevisions() []*Revision {
@@ -1781,7 +2142,7 @@ type RetryRevisionRequest struct {
 
 func (x *RetryRevisionRequest) Reset() {
 	*x = RetryRevisionRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[16]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1793,7 +2154,7 @@ func (x *RetryRevisionRequest) String() string {
 func (*RetryRevisionRequest) ProtoMessage() {}
 
 func (x *RetryRevisionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[16]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1806,7 +2167,7 @@ func (x *RetryRevisionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryRevisionRequest.ProtoReflect.Descriptor instead.
 func (*RetryRevisionRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{16}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RetryRevisionRequest) GetRunId() string {
@@ -1836,7 +2197,7 @@ type RetryRevisionResponse struct {
 
 func (x *RetryRevisionResponse) Reset() {
 	*x = RetryRevisionResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[17]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1848,7 +2209,7 @@ func (x *RetryRevisionResponse) String() string {
 func (*RetryRevisionResponse) ProtoMessage() {}
 
 func (x *RetryRevisionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[17]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1861,7 +2222,7 @@ func (x *RetryRevisionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryRevisionResponse.ProtoReflect.Descriptor instead.
 func (*RetryRevisionResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{17}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *RetryRevisionResponse) GetRevision() *Revision {
@@ -1884,7 +2245,7 @@ type ApplyRunRequest struct {
 
 func (x *ApplyRunRequest) Reset() {
 	*x = ApplyRunRequest{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[18]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1896,7 +2257,7 @@ func (x *ApplyRunRequest) String() string {
 func (*ApplyRunRequest) ProtoMessage() {}
 
 func (x *ApplyRunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[18]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1909,7 +2270,7 @@ func (x *ApplyRunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyRunRequest.ProtoReflect.Descriptor instead.
 func (*ApplyRunRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{18}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ApplyRunRequest) GetRunId() string {
@@ -1930,7 +2291,7 @@ func (x *ApplyRunRequest) GetMessage() string {
 type ApplyRunResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The run with status advanced to APPLYING. Revisions that were
-	// AWAITING_APPROVAL are now APPLYING.
+	// PLANNED are now APPLYING.
 	Run           *Run `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1938,7 +2299,7 @@ type ApplyRunResponse struct {
 
 func (x *ApplyRunResponse) Reset() {
 	*x = ApplyRunResponse{}
-	mi := &file_admiral_run_v1_run_proto_msgTypes[19]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1950,7 +2311,7 @@ func (x *ApplyRunResponse) String() string {
 func (*ApplyRunResponse) ProtoMessage() {}
 
 func (x *ApplyRunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_run_v1_run_proto_msgTypes[19]
+	mi := &file_admiral_run_v1_run_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1963,7 +2324,7 @@ func (x *ApplyRunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyRunResponse.ProtoReflect.Descriptor instead.
 func (*ApplyRunResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{19}
+	return file_admiral_run_v1_run_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ApplyRunResponse) GetRun() *Run {
@@ -1977,15 +2338,14 @@ var File_admiral_run_v1_run_proto protoreflect.FileDescriptor
 
 const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"\n" +
-	"\x18admiral/run/v1/run.proto\x12\x0eadmiral.run.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x92\x06\n" +
+	"\x18admiral/run/v1/run.proto\x12\x0eadmiral.run.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf8\x05\n" +
 	"\x03Run\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12/\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
 	"\x0eenvironment_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x121\n" +
 	"\x06status\x18\x04 \x01(\x0e2\x19.admiral.run.v1.RunStatusR\x06status\x12>\n" +
 	"\ftriggered_by\x18\x05 \x01(\v2\x1b.admiral.common.v1.ActorRefR\vtriggeredBy\x12\"\n" +
-	"\amessage\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\x18\n" +
-	"\adestroy\x18\a \x01(\bR\adestroy\x12\"\n" +
+	"\amessage\x18\x06 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\"\n" +
 	"\rsource_run_id\x18\b \x01(\tR\vsourceRunId\x12\"\n" +
 	"\rchange_set_id\x18\t \x01(\tR\vchangeSetId\x12J\n" +
 	"\x10revision_summary\x18\n" +
@@ -2006,7 +2366,7 @@ const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"\ablocked\x18\x04 \x01(\x05R\ablocked\x12\x18\n" +
 	"\arunning\x18\x05 \x01(\x05R\arunning\x12\x1a\n" +
 	"\bcanceled\x18\x06 \x01(\x05R\bcanceled\x12\x18\n" +
-	"\apending\x18\a \x01(\x05R\apending\"\xb9\b\n" +
+	"\apending\x18\a \x01(\x05R\apending\"\x81\b\n" +
 	"\bRevision\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x1f\n" +
 	"\x06run_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x05runId\x12+\n" +
@@ -2017,16 +2377,14 @@ const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"\vchange_type\x18\a \x01(\x0e2\".admiral.run.v1.RevisionChangeTypeR\n" +
 	"changeType\x120\n" +
 	"\x14previous_revision_id\x18\b \x01(\tR\x12previousRevisionId\x12\x1b\n" +
-	"\tsource_id\x18\t \x01(\tR\bsourceId\x12\x18\n" +
-	"\aversion\x18\n" +
-	" \x01(\tR\aversion\x12'\n" +
+	"\tsource_id\x18\t \x01(\tR\bsourceId\x12\x10\n" +
+	"\x03ref\x18\n" +
+	" \x01(\tR\x03ref\x12'\n" +
 	"\x0fresolved_values\x18\v \x01(\tR\x0eresolvedValues\x12\x1d\n" +
 	"\n" +
 	"depends_on\x18\f \x03(\tR\tdependsOn\x12\x1d\n" +
 	"\n" +
-	"blocked_by\x18\r \x03(\tR\tblockedBy\x12+\n" +
-	"\x11artifact_checksum\x18\x0e \x01(\tR\x10artifactChecksum\x12!\n" +
-	"\fartifact_url\x18\x0f \x01(\tR\vartifactUrl\x12@\n" +
+	"blocked_by\x18\r \x03(\tR\tblockedBy\x12@\n" +
 	"\fplan_summary\x18\x10 \x01(\v2\x1d.admiral.run.v1.ChangeSummaryR\vplanSummary\x12H\n" +
 	"\x10available_phases\x18\x11 \x03(\x0e2\x1d.admiral.run.v1.RevisionPhaseR\x0favailablePhases\x12#\n" +
 	"\rerror_message\x18\x12 \x01(\tR\ferrorMessage\x12\x1f\n" +
@@ -2034,26 +2392,49 @@ const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"retryCount\x129\n" +
 	"\n" +
 	"started_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
-	"\fcompleted_at\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12\x1b\n" +
-	"\tmodule_id\x18\x16 \x01(\tR\bmoduleId\x12+\n" +
+	"\fcompleted_at\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12+\n" +
 	"\x11working_directory\x18\x17 \x01(\tR\x10workingDirectory\x129\n" +
 	"\n" +
-	"created_at\x18\x18 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"k\n" +
-	"\rChangeSummary\x12\x1c\n" +
-	"\tadditions\x18\x01 \x01(\x05R\tadditions\x12\x18\n" +
-	"\achanges\x18\x02 \x01(\x05R\achanges\x12\"\n" +
-	"\fdestructions\x18\x03 \x01(\x05R\fdestructions\"\xfa\x01\n" +
-	"\x10CreateRunRequest\x12/\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12/\n" +
-	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\"\n" +
-	"\amessage\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\x18\n" +
-	"\adestroy\x18\x04 \x01(\bR\adestroy\x12\"\n" +
+	"created_at\x18\x18 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12'\n" +
+	"\x0fresolved_commit\x18\x19 \x01(\tR\x0eresolvedCommit\x12\x12\n" +
+	"\x04type\x18\x1a \x01(\tR\x04type\"s\n" +
+	"\rChangeSummary\x12\x18\n" +
+	"\acreates\x18\x01 \x01(\x05R\acreates\x12\x18\n" +
+	"\aupdates\x18\x02 \x01(\x05R\aupdates\x12\x18\n" +
+	"\adeletes\x18\x03 \x01(\x05R\adeletes\x12\x14\n" +
+	"\x05noops\x18\x04 \x01(\x05R\x05noops\"V\n" +
+	"\fEngineOutput\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x1c\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"m\n" +
+	"\vArtifactRef\x120\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\x1c.admiral.run.v1.ArtifactKindR\x04kind\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x12\x1a\n" +
+	"\bchecksum\x18\x03 \x01(\tR\bchecksum\"\xbb\x03\n" +
+	"\x0fExecutionReport\x127\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x1f.admiral.run.v1.ExecutionStatusR\x06status\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x127\n" +
+	"\asummary\x18\x03 \x01(\v2\x1d.admiral.run.v1.ChangeSummaryR\asummary\x12F\n" +
+	"\aoutputs\x18\x04 \x03(\v2,.admiral.run.v1.ExecutionReport.OutputsEntryR\aoutputs\x127\n" +
+	"\bartifact\x18\x05 \x01(\v2\x1b.admiral.run.v1.ArtifactRefR\bartifact\x12\x1e\n" +
+	"\n" +
+	"transcript\x18\x06 \x01(\tR\n" +
+	"transcript\x12\x16\n" +
+	"\x06detail\x18\a \x01(\fR\x06detail\x1aX\n" +
+	"\fOutputsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x122\n" +
+	"\x05value\x18\x02 \x01(\v2\x1c.admiral.run.v1.EngineOutputR\x05value:\x028\x01\"\xe6\x01\n" +
+	"\x10CreateRunRequest\x122\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x122\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\"\n" +
+	"\amessage\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\x12\"\n" +
 	"\rsource_run_id\x18\x05 \x01(\tR\vsourceRunId\x12\"\n" +
 	"\rchange_set_id\x18\x06 \x01(\tR\vchangeSetId\":\n" +
 	"\x11CreateRunResponse\x12%\n" +
-	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run\"/\n" +
-	"\rGetRunRequest\x12\x1e\n" +
-	"\x06run_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05runId\"7\n" +
+	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run\"2\n" +
+	"\rGetRunRequest\x12!\n" +
+	"\x06run_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05runId\"7\n" +
 	"\x0eGetRunResponse\x12%\n" +
 	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run\"z\n" +
 	"\x0fListRunsRequest\x12 \n" +
@@ -2063,37 +2444,42 @@ const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"c\n" +
 	"\x10ListRunsResponse\x12'\n" +
 	"\x04runs\x18\x01 \x03(\v2\x13.admiral.run.v1.RunR\x04runs\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"T\n" +
-	"\x10CancelRunRequest\x12\x1e\n" +
-	"\x06run_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05runId\x12 \n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"W\n" +
+	"\x10CancelRunRequest\x12!\n" +
+	"\x06run_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05runId\x12 \n" +
 	"\x06reason\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06reason\":\n" +
 	"\x11CancelRunResponse\x12%\n" +
-	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run\"_\n" +
-	"\x12GetRevisionRequest\x12\x1e\n" +
-	"\x06run_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05runId\x12)\n" +
-	"\vrevision_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
+	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run\"e\n" +
+	"\x12GetRevisionRequest\x12!\n" +
+	"\x06run_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05runId\x12,\n" +
+	"\vrevision_id\x18\x02 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\n" +
 	"revisionId\"K\n" +
 	"\x13GetRevisionResponse\x124\n" +
-	"\brevision\x18\x01 \x01(\v2\x18.admiral.run.v1.RevisionR\brevision\"}\n" +
-	"\x14ListRevisionsRequest\x12\x1e\n" +
-	"\x06run_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05runId\x12&\n" +
+	"\brevision\x18\x01 \x01(\v2\x18.admiral.run.v1.RevisionR\brevision\"\x80\x01\n" +
+	"\x14ListRevisionsRequest\x12!\n" +
+	"\x06run_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05runId\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"w\n" +
 	"\x15ListRevisionsResponse\x126\n" +
 	"\trevisions\x18\x01 \x03(\v2\x18.admiral.run.v1.RevisionR\trevisions\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"a\n" +
-	"\x14RetryRevisionRequest\x12\x1e\n" +
-	"\x06run_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05runId\x12)\n" +
-	"\vrevision_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"g\n" +
+	"\x14RetryRevisionRequest\x12!\n" +
+	"\x06run_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05runId\x12,\n" +
+	"\vrevision_id\x18\x02 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\n" +
 	"revisionId\"M\n" +
 	"\x15RetryRevisionResponse\x124\n" +
-	"\brevision\x18\x01 \x01(\v2\x18.admiral.run.v1.RevisionR\brevision\"U\n" +
-	"\x0fApplyRunRequest\x12\x1e\n" +
-	"\x06run_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x05runId\x12\"\n" +
+	"\brevision\x18\x01 \x01(\v2\x18.admiral.run.v1.RevisionR\brevision\"X\n" +
+	"\x0fApplyRunRequest\x12!\n" +
+	"\x06run_id\x18\x01 \x01(\tB\n" +
+	"\xe0A\x02\xbaH\x04r\x02\x10\x01R\x05runId\x12\"\n" +
 	"\amessage\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\amessage\"9\n" +
 	"\x10ApplyRunResponse\x12%\n" +
-	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run*\xa6\x02\n" +
+	"\x03run\x18\x01 \x01(\v2\x13.admiral.run.v1.RunR\x03run*\xde\x02\n" +
 	"\tRunStatus\x12\x1a\n" +
 	"\x16RUN_STATUS_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12RUN_STATUS_PENDING\x10\x01\x12\x15\n" +
@@ -2106,20 +2492,25 @@ const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"\x11RUN_STATUS_FAILED\x10\b\x12\x17\n" +
 	"\x13RUN_STATUS_CANCELED\x10\t\x12\x19\n" +
 	"\x15RUN_STATUS_SUPERSEDED\x10\n" +
-	"*\xe3\x02\n" +
+	"\x12\x14\n" +
+	"\x10RUN_STATUS_STALE\x10\v\x12 \n" +
+	"\x1cRUN_STATUS_AWAITING_APPROVAL\x10\f*\xb9\x03\n" +
 	"\x0eRevisionStatus\x12\x1f\n" +
 	"\x1bREVISION_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17REVISION_STATUS_PENDING\x10\x01\x12\x1a\n" +
 	"\x16REVISION_STATUS_QUEUED\x10\x02\x12\x1c\n" +
-	"\x18REVISION_STATUS_PLANNING\x10\x03\x12%\n" +
-	"!REVISION_STATUS_AWAITING_APPROVAL\x10\x04\x12\x1c\n" +
+	"\x18REVISION_STATUS_PLANNING\x10\x03\x12\x1b\n" +
+	"\x17REVISION_STATUS_PLANNED\x10\x04\x12\x1c\n" +
 	"\x18REVISION_STATUS_APPLYING\x10\x05\x12\x1d\n" +
 	"\x19REVISION_STATUS_SUCCEEDED\x10\x06\x12\x1a\n" +
 	"\x16REVISION_STATUS_FAILED\x10\a\x12\x1b\n" +
 	"\x17REVISION_STATUS_BLOCKED\x10\b\x12\x1c\n" +
 	"\x18REVISION_STATUS_CANCELED\x10\t\x12\x1e\n" +
 	"\x1aREVISION_STATUS_SUPERSEDED\x10\n" +
-	"*k\n" +
+	"\x12\x1c\n" +
+	"\x18REVISION_STATUS_DEFERRED\x10\v\x12\x19\n" +
+	"\x15REVISION_STATUS_STALE\x10\f\x12%\n" +
+	"!REVISION_STATUS_AWAITING_APPROVAL\x10\r*k\n" +
 	"\fRevisionKind\x12\x1d\n" +
 	"\x19REVISION_KIND_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cREVISION_KIND_INFRASTRUCTURE\x10\x01\x12\x1a\n" +
@@ -2135,7 +2526,16 @@ const file_admiral_run_v1_run_proto_rawDesc = "" +
 	"\rRevisionPhase\x12\x1e\n" +
 	"\x1aREVISION_PHASE_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13REVISION_PHASE_PLAN\x10\x01\x12\x18\n" +
-	"\x14REVISION_PHASE_APPLY\x10\x022\xc8\n" +
+	"\x14REVISION_PHASE_APPLY\x10\x02*\x89\x01\n" +
+	"\fArtifactKind\x12\x1d\n" +
+	"\x19ARTIFACT_KIND_UNSPECIFIED\x10\x00\x12\x1f\n" +
+	"\x1bARTIFACT_KIND_SOURCE_BUNDLE\x10\x01\x12\x16\n" +
+	"\x12ARTIFACT_KIND_PLAN\x10\x02\x12!\n" +
+	"\x1dARTIFACT_KIND_MANIFEST_BUNDLE\x10\x03*p\n" +
+	"\x0fExecutionStatus\x12 \n" +
+	"\x1cEXECUTION_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
+	"\x1aEXECUTION_STATUS_SUCCEEDED\x10\x01\x12\x1b\n" +
+	"\x17EXECUTION_STATUS_FAILED\x10\x022\xc8\n" +
 	"\n" +
 	"\x06RunAPI\x12\x8f\x01\n" +
 	"\tCreateRun\x12 .admiral.run.v1.CreateRunRequest\x1a!.admiral.run.v1.CreateRunResponse\"=\xbaG\x14\n" +
@@ -2180,80 +2580,92 @@ func file_admiral_run_v1_run_proto_rawDescGZIP() []byte {
 	return file_admiral_run_v1_run_proto_rawDescData
 }
 
-var file_admiral_run_v1_run_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_admiral_run_v1_run_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_admiral_run_v1_run_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+var file_admiral_run_v1_run_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_admiral_run_v1_run_proto_goTypes = []any{
 	(RunStatus)(0),                // 0: admiral.run.v1.RunStatus
 	(RevisionStatus)(0),           // 1: admiral.run.v1.RevisionStatus
 	(RevisionKind)(0),             // 2: admiral.run.v1.RevisionKind
 	(RevisionChangeType)(0),       // 3: admiral.run.v1.RevisionChangeType
 	(RevisionPhase)(0),            // 4: admiral.run.v1.RevisionPhase
-	(*Run)(nil),                   // 5: admiral.run.v1.Run
-	(*RevisionSummary)(nil),       // 6: admiral.run.v1.RevisionSummary
-	(*Revision)(nil),              // 7: admiral.run.v1.Revision
-	(*ChangeSummary)(nil),         // 8: admiral.run.v1.ChangeSummary
-	(*CreateRunRequest)(nil),      // 9: admiral.run.v1.CreateRunRequest
-	(*CreateRunResponse)(nil),     // 10: admiral.run.v1.CreateRunResponse
-	(*GetRunRequest)(nil),         // 11: admiral.run.v1.GetRunRequest
-	(*GetRunResponse)(nil),        // 12: admiral.run.v1.GetRunResponse
-	(*ListRunsRequest)(nil),       // 13: admiral.run.v1.ListRunsRequest
-	(*ListRunsResponse)(nil),      // 14: admiral.run.v1.ListRunsResponse
-	(*CancelRunRequest)(nil),      // 15: admiral.run.v1.CancelRunRequest
-	(*CancelRunResponse)(nil),     // 16: admiral.run.v1.CancelRunResponse
-	(*GetRevisionRequest)(nil),    // 17: admiral.run.v1.GetRevisionRequest
-	(*GetRevisionResponse)(nil),   // 18: admiral.run.v1.GetRevisionResponse
-	(*ListRevisionsRequest)(nil),  // 19: admiral.run.v1.ListRevisionsRequest
-	(*ListRevisionsResponse)(nil), // 20: admiral.run.v1.ListRevisionsResponse
-	(*RetryRevisionRequest)(nil),  // 21: admiral.run.v1.RetryRevisionRequest
-	(*RetryRevisionResponse)(nil), // 22: admiral.run.v1.RetryRevisionResponse
-	(*ApplyRunRequest)(nil),       // 23: admiral.run.v1.ApplyRunRequest
-	(*ApplyRunResponse)(nil),      // 24: admiral.run.v1.ApplyRunResponse
-	(*v1.ActorRef)(nil),           // 25: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil), // 26: google.protobuf.Timestamp
+	(ArtifactKind)(0),             // 5: admiral.run.v1.ArtifactKind
+	(ExecutionStatus)(0),          // 6: admiral.run.v1.ExecutionStatus
+	(*Run)(nil),                   // 7: admiral.run.v1.Run
+	(*RevisionSummary)(nil),       // 8: admiral.run.v1.RevisionSummary
+	(*Revision)(nil),              // 9: admiral.run.v1.Revision
+	(*ChangeSummary)(nil),         // 10: admiral.run.v1.ChangeSummary
+	(*EngineOutput)(nil),          // 11: admiral.run.v1.EngineOutput
+	(*ArtifactRef)(nil),           // 12: admiral.run.v1.ArtifactRef
+	(*ExecutionReport)(nil),       // 13: admiral.run.v1.ExecutionReport
+	(*CreateRunRequest)(nil),      // 14: admiral.run.v1.CreateRunRequest
+	(*CreateRunResponse)(nil),     // 15: admiral.run.v1.CreateRunResponse
+	(*GetRunRequest)(nil),         // 16: admiral.run.v1.GetRunRequest
+	(*GetRunResponse)(nil),        // 17: admiral.run.v1.GetRunResponse
+	(*ListRunsRequest)(nil),       // 18: admiral.run.v1.ListRunsRequest
+	(*ListRunsResponse)(nil),      // 19: admiral.run.v1.ListRunsResponse
+	(*CancelRunRequest)(nil),      // 20: admiral.run.v1.CancelRunRequest
+	(*CancelRunResponse)(nil),     // 21: admiral.run.v1.CancelRunResponse
+	(*GetRevisionRequest)(nil),    // 22: admiral.run.v1.GetRevisionRequest
+	(*GetRevisionResponse)(nil),   // 23: admiral.run.v1.GetRevisionResponse
+	(*ListRevisionsRequest)(nil),  // 24: admiral.run.v1.ListRevisionsRequest
+	(*ListRevisionsResponse)(nil), // 25: admiral.run.v1.ListRevisionsResponse
+	(*RetryRevisionRequest)(nil),  // 26: admiral.run.v1.RetryRevisionRequest
+	(*RetryRevisionResponse)(nil), // 27: admiral.run.v1.RetryRevisionResponse
+	(*ApplyRunRequest)(nil),       // 28: admiral.run.v1.ApplyRunRequest
+	(*ApplyRunResponse)(nil),      // 29: admiral.run.v1.ApplyRunResponse
+	nil,                           // 30: admiral.run.v1.ExecutionReport.OutputsEntry
+	(*v1.ActorRef)(nil),           // 31: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil), // 32: google.protobuf.Timestamp
 }
 var file_admiral_run_v1_run_proto_depIdxs = []int32{
 	0,  // 0: admiral.run.v1.Run.status:type_name -> admiral.run.v1.RunStatus
-	25, // 1: admiral.run.v1.Run.triggered_by:type_name -> admiral.common.v1.ActorRef
-	6,  // 2: admiral.run.v1.Run.revision_summary:type_name -> admiral.run.v1.RevisionSummary
-	26, // 3: admiral.run.v1.Run.completed_at:type_name -> google.protobuf.Timestamp
-	26, // 4: admiral.run.v1.Run.created_at:type_name -> google.protobuf.Timestamp
+	31, // 1: admiral.run.v1.Run.triggered_by:type_name -> admiral.common.v1.ActorRef
+	8,  // 2: admiral.run.v1.Run.revision_summary:type_name -> admiral.run.v1.RevisionSummary
+	32, // 3: admiral.run.v1.Run.completed_at:type_name -> google.protobuf.Timestamp
+	32, // 4: admiral.run.v1.Run.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 5: admiral.run.v1.Revision.kind:type_name -> admiral.run.v1.RevisionKind
 	1,  // 6: admiral.run.v1.Revision.status:type_name -> admiral.run.v1.RevisionStatus
 	3,  // 7: admiral.run.v1.Revision.change_type:type_name -> admiral.run.v1.RevisionChangeType
-	8,  // 8: admiral.run.v1.Revision.plan_summary:type_name -> admiral.run.v1.ChangeSummary
+	10, // 8: admiral.run.v1.Revision.plan_summary:type_name -> admiral.run.v1.ChangeSummary
 	4,  // 9: admiral.run.v1.Revision.available_phases:type_name -> admiral.run.v1.RevisionPhase
-	26, // 10: admiral.run.v1.Revision.started_at:type_name -> google.protobuf.Timestamp
-	26, // 11: admiral.run.v1.Revision.completed_at:type_name -> google.protobuf.Timestamp
-	26, // 12: admiral.run.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
-	5,  // 13: admiral.run.v1.CreateRunResponse.run:type_name -> admiral.run.v1.Run
-	5,  // 14: admiral.run.v1.GetRunResponse.run:type_name -> admiral.run.v1.Run
-	5,  // 15: admiral.run.v1.ListRunsResponse.runs:type_name -> admiral.run.v1.Run
-	5,  // 16: admiral.run.v1.CancelRunResponse.run:type_name -> admiral.run.v1.Run
-	7,  // 17: admiral.run.v1.GetRevisionResponse.revision:type_name -> admiral.run.v1.Revision
-	7,  // 18: admiral.run.v1.ListRevisionsResponse.revisions:type_name -> admiral.run.v1.Revision
-	7,  // 19: admiral.run.v1.RetryRevisionResponse.revision:type_name -> admiral.run.v1.Revision
-	5,  // 20: admiral.run.v1.ApplyRunResponse.run:type_name -> admiral.run.v1.Run
-	9,  // 21: admiral.run.v1.RunAPI.CreateRun:input_type -> admiral.run.v1.CreateRunRequest
-	11, // 22: admiral.run.v1.RunAPI.GetRun:input_type -> admiral.run.v1.GetRunRequest
-	13, // 23: admiral.run.v1.RunAPI.ListRuns:input_type -> admiral.run.v1.ListRunsRequest
-	15, // 24: admiral.run.v1.RunAPI.CancelRun:input_type -> admiral.run.v1.CancelRunRequest
-	17, // 25: admiral.run.v1.RunAPI.GetRevision:input_type -> admiral.run.v1.GetRevisionRequest
-	19, // 26: admiral.run.v1.RunAPI.ListRevisions:input_type -> admiral.run.v1.ListRevisionsRequest
-	21, // 27: admiral.run.v1.RunAPI.RetryRevision:input_type -> admiral.run.v1.RetryRevisionRequest
-	23, // 28: admiral.run.v1.RunAPI.ApplyRun:input_type -> admiral.run.v1.ApplyRunRequest
-	10, // 29: admiral.run.v1.RunAPI.CreateRun:output_type -> admiral.run.v1.CreateRunResponse
-	12, // 30: admiral.run.v1.RunAPI.GetRun:output_type -> admiral.run.v1.GetRunResponse
-	14, // 31: admiral.run.v1.RunAPI.ListRuns:output_type -> admiral.run.v1.ListRunsResponse
-	16, // 32: admiral.run.v1.RunAPI.CancelRun:output_type -> admiral.run.v1.CancelRunResponse
-	18, // 33: admiral.run.v1.RunAPI.GetRevision:output_type -> admiral.run.v1.GetRevisionResponse
-	20, // 34: admiral.run.v1.RunAPI.ListRevisions:output_type -> admiral.run.v1.ListRevisionsResponse
-	22, // 35: admiral.run.v1.RunAPI.RetryRevision:output_type -> admiral.run.v1.RetryRevisionResponse
-	24, // 36: admiral.run.v1.RunAPI.ApplyRun:output_type -> admiral.run.v1.ApplyRunResponse
-	29, // [29:37] is the sub-list for method output_type
-	21, // [21:29] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	32, // 10: admiral.run.v1.Revision.started_at:type_name -> google.protobuf.Timestamp
+	32, // 11: admiral.run.v1.Revision.completed_at:type_name -> google.protobuf.Timestamp
+	32, // 12: admiral.run.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
+	5,  // 13: admiral.run.v1.ArtifactRef.kind:type_name -> admiral.run.v1.ArtifactKind
+	6,  // 14: admiral.run.v1.ExecutionReport.status:type_name -> admiral.run.v1.ExecutionStatus
+	10, // 15: admiral.run.v1.ExecutionReport.summary:type_name -> admiral.run.v1.ChangeSummary
+	30, // 16: admiral.run.v1.ExecutionReport.outputs:type_name -> admiral.run.v1.ExecutionReport.OutputsEntry
+	12, // 17: admiral.run.v1.ExecutionReport.artifact:type_name -> admiral.run.v1.ArtifactRef
+	7,  // 18: admiral.run.v1.CreateRunResponse.run:type_name -> admiral.run.v1.Run
+	7,  // 19: admiral.run.v1.GetRunResponse.run:type_name -> admiral.run.v1.Run
+	7,  // 20: admiral.run.v1.ListRunsResponse.runs:type_name -> admiral.run.v1.Run
+	7,  // 21: admiral.run.v1.CancelRunResponse.run:type_name -> admiral.run.v1.Run
+	9,  // 22: admiral.run.v1.GetRevisionResponse.revision:type_name -> admiral.run.v1.Revision
+	9,  // 23: admiral.run.v1.ListRevisionsResponse.revisions:type_name -> admiral.run.v1.Revision
+	9,  // 24: admiral.run.v1.RetryRevisionResponse.revision:type_name -> admiral.run.v1.Revision
+	7,  // 25: admiral.run.v1.ApplyRunResponse.run:type_name -> admiral.run.v1.Run
+	11, // 26: admiral.run.v1.ExecutionReport.OutputsEntry.value:type_name -> admiral.run.v1.EngineOutput
+	14, // 27: admiral.run.v1.RunAPI.CreateRun:input_type -> admiral.run.v1.CreateRunRequest
+	16, // 28: admiral.run.v1.RunAPI.GetRun:input_type -> admiral.run.v1.GetRunRequest
+	18, // 29: admiral.run.v1.RunAPI.ListRuns:input_type -> admiral.run.v1.ListRunsRequest
+	20, // 30: admiral.run.v1.RunAPI.CancelRun:input_type -> admiral.run.v1.CancelRunRequest
+	22, // 31: admiral.run.v1.RunAPI.GetRevision:input_type -> admiral.run.v1.GetRevisionRequest
+	24, // 32: admiral.run.v1.RunAPI.ListRevisions:input_type -> admiral.run.v1.ListRevisionsRequest
+	26, // 33: admiral.run.v1.RunAPI.RetryRevision:input_type -> admiral.run.v1.RetryRevisionRequest
+	28, // 34: admiral.run.v1.RunAPI.ApplyRun:input_type -> admiral.run.v1.ApplyRunRequest
+	15, // 35: admiral.run.v1.RunAPI.CreateRun:output_type -> admiral.run.v1.CreateRunResponse
+	17, // 36: admiral.run.v1.RunAPI.GetRun:output_type -> admiral.run.v1.GetRunResponse
+	19, // 37: admiral.run.v1.RunAPI.ListRuns:output_type -> admiral.run.v1.ListRunsResponse
+	21, // 38: admiral.run.v1.RunAPI.CancelRun:output_type -> admiral.run.v1.CancelRunResponse
+	23, // 39: admiral.run.v1.RunAPI.GetRevision:output_type -> admiral.run.v1.GetRevisionResponse
+	25, // 40: admiral.run.v1.RunAPI.ListRevisions:output_type -> admiral.run.v1.ListRevisionsResponse
+	27, // 41: admiral.run.v1.RunAPI.RetryRevision:output_type -> admiral.run.v1.RetryRevisionResponse
+	29, // 42: admiral.run.v1.RunAPI.ApplyRun:output_type -> admiral.run.v1.ApplyRunResponse
+	35, // [35:43] is the sub-list for method output_type
+	27, // [27:35] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_admiral_run_v1_run_proto_init() }
@@ -2266,8 +2678,8 @@ func file_admiral_run_v1_run_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_run_v1_run_proto_rawDesc), len(file_admiral_run_v1_run_proto_rawDesc)),
-			NumEnums:      5,
-			NumMessages:   20,
+			NumEnums:      7,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

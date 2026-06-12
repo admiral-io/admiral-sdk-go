@@ -324,8 +324,8 @@ func (x *GetUserResponse) GetUser() *User {
 type CreatePersonalAccessTokenRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// URL-safe, human-readable identifier for the token (e.g., "postman-testing").
-	// Must be unique per user within the tenant. Lowercase alphanumeric and
-	// hyphens only.
+	// Unique per user within the tenant. Lowercase alphanumeric and hyphens only,
+	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// The scopes to grant this token. Must be valid scopes allowed for PATs.
 	// The server enforces that issued scopes are a subset of the caller's own
@@ -394,7 +394,7 @@ type CreatePersonalAccessTokenResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The created token metadata.
 	AccessToken *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	// The raw token secret (e.g., "adm_pat_7kH3mNqR2xFb..."). This value is
+	// The raw token secret (e.g., "admp_7kH3mNqR2xFb..."). This value is
 	// shown exactly once and cannot be retrieved again. Store it securely.
 	PlainTextToken string `protobuf:"bytes,2,opt,name=plain_text_token,json=plainTextToken,proto3" json:"plain_text_token,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -448,15 +448,17 @@ func (x *CreatePersonalAccessTokenResponse) GetPlainTextToken() string {
 // ListPersonalAccessTokensRequest contains pagination and filter parameters.
 type ListPersonalAccessTokensRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL.
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
 	//   - `name`: filter by token name.
-	//   - `status`: filter by token status (ACTIVE, REVOKED, EXPIRED).
+	//   - `status`: filter by token status (ACTIVE, REVOKED).
 	//
 	// Example: `field['status'] = 'ACTIVE'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of tokens to return per page.
+	// Maximum number of tokens to return per page. Defaults to 50 when omitted
+	// or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
 	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -873,7 +875,7 @@ var File_admiral_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_admiral_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x1aadmiral/user/v1/user.proto\x12\x0fadmiral.user.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1cgoogle/api/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x03\n" +
+	"\x1aadmiral/user/v1/user.proto\x12\x0fadmiral.user.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x03\n" +
 	"\x04User\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12%\n" +
@@ -895,13 +897,13 @@ const file_admiral_user_v1_user_proto_rawDesc = "" +
 	"\v_avatar_url\"\x0e\n" +
 	"\fGetMeRequest\":\n" +
 	"\rGetMeResponse\x12)\n" +
-	"\x04user\x18\x01 \x01(\v2\x15.admiral.user.v1.UserR\x04user\"3\n" +
-	"\x0eGetUserRequest\x12!\n" +
-	"\auser_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06userId\"<\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.admiral.user.v1.UserR\x04user\"6\n" +
+	"\x0eGetUserRequest\x12$\n" +
+	"\auser_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x06userId\"<\n" +
 	"\x0fGetUserResponse\x12)\n" +
-	"\x04user\x18\x01 \x01(\v2\x15.admiral.user.v1.UserR\x04user\"\xca\x01\n" +
-	" CreatePersonalAccessTokenRequest\x12@\n" +
-	"\x04name\x18\x01 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12)\n" +
+	"\x04user\x18\x01 \x01(\v2\x15.admiral.user.v1.UserR\x04user\"\xcd\x01\n" +
+	" CreatePersonalAccessTokenRequest\x12C\n" +
+	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12)\n" +
 	"\x06scopes\x18\x02 \x03(\tB\x11\xbaH\x0e\x92\x01\v\x10\xff\x01\"\x06r\x04\x10\x01\x18@R\x06scopes\x129\n" +
 	"\n" +
 	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x90\x01\n" +
@@ -915,20 +917,20 @@ const file_admiral_user_v1_user_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8f\x01\n" +
 	" ListPersonalAccessTokensResponse\x12C\n" +
 	"\raccess_tokens\x18\x01 \x03(\v2\x1e.admiral.common.v1.AccessTokenR\faccessTokens\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"D\n" +
-	"\x1dGetPersonalAccessTokenRequest\x12#\n" +
-	"\btoken_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"c\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"G\n" +
+	"\x1dGetPersonalAccessTokenRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"c\n" +
 	"\x1eGetPersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"\xc2\x01\n" +
-	" UpdatePersonalAccessTokenRequest\x12#\n" +
-	"\btoken_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\atokenId\x12E\n" +
+	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"\xc5\x01\n" +
+	" UpdatePersonalAccessTokenRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\x12E\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$H\x00R\x04name\x88\x01\x01\x12)\n" +
 	"\x06scopes\x18\x03 \x03(\tB\x11\xbaH\x0e\x92\x01\v\x10\xff\x01\"\x06r\x04\x10\x01\x18@R\x06scopesB\a\n" +
 	"\x05_name\"f\n" +
 	"!UpdatePersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"G\n" +
-	" RevokePersonalAccessTokenRequest\x12#\n" +
-	"\btoken_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"f\n" +
+	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"J\n" +
+	" RevokePersonalAccessTokenRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"f\n" +
 	"!RevokePersonalAccessTokenResponse\x12A\n" +
 	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken2\xfe\v\n" +
 	"\aUserAPI\x12\x8b\x01\n" +
