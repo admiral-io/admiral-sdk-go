@@ -52,17 +52,17 @@ func main() {
 
 | Service | Accessor | Import |
 |---------|----------|--------|
-| AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/agent/v1` |
-| ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/application/v1` |
-| AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/authentication/v1` |
-| CatalogAPI | `Catalog()` | `go.admiral.io/sdk/proto/admiral/catalog/v1` |
-| ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/changeset/v1` |
-| CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/credential/v1` |
-| EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/environment/v1` |
-| HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/healthcheck/v1` |
-| RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/run/v1` |
-| SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/source/v1` |
-| UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/user/v1` |
+| AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
+| ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/api/application/v1` |
+| AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/api/authentication/v1` |
+| CatalogAPI | `Catalog()` | `go.admiral.io/sdk/proto/admiral/api/catalog/v1` |
+| ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/api/changeset/v1` |
+| CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/api/credential/v1` |
+| EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/api/environment/v1` |
+| HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/api/healthcheck/v1` |
+| RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |
+| SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/api/source/v1` |
+| UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/api/user/v1` |
 
 ## Example
 
@@ -75,7 +75,7 @@ import (
 	"log"
 
 	"go.admiral.io/sdk/client"
-	agentv1 "go.admiral.io/sdk/proto/admiral/agent/v1"
+	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
 )
 
 func main() {
