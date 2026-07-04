@@ -710,25 +710,25 @@ const file_admiral_api_application_v1_application_proto_rawDesc = "" +
 	"\x18DeleteApplicationRequest\x122\n" +
 	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12\x14\n" +
 	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
-	"\x19DeleteApplicationResponse2\xf1\b\n" +
-	"\x0eApplicationAPI\x12\xd8\x01\n" +
-	"\x11CreateApplication\x124.admiral.api.application.v1.CreateApplicationRequest\x1a5.admiral.api.application.v1.CreateApplicationResponse\"V\xbaG%\n" +
+	"\x19DeleteApplicationResponse2\xdd\b\n" +
+	"\x0eApplicationAPI\x12\xd4\x01\n" +
+	"\x11CreateApplication\x124.admiral.api.application.v1.CreateApplicationRequest\x1a5.admiral.api.application.v1.CreateApplicationResponse\"R\xbaG%\n" +
 	"\fApplications\x12\x15Create an application\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/applications\x12\xde\x01\n" +
-	"\x0eGetApplication\x121.admiral.api.application.v1.GetApplicationRequest\x1a2.admiral.api.application.v1.GetApplicationResponse\"e\xbaG'\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/applications\x12\xda\x01\n" +
+	"\x0eGetApplication\x121.admiral.api.application.v1.GetApplicationRequest\x1a2.admiral.api.application.v1.GetApplicationResponse\"a\xbaG'\n" +
 	"\fApplications\x12\x17Retrieve an application\xa2\x97$\n" +
 	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02'\x12%/api/v1/applications/{application_id}\x12\xcd\x01\n" +
-	"\x10ListApplications\x123.admiral.api.application.v1.ListApplicationsRequest\x1a4.admiral.api.application.v1.ListApplicationsResponse\"N\xbaG!\n" +
+	"\bapp:read\x82\xd3\xe4\x93\x02#\x12!/v1/applications/{application_id}\x12\xc9\x01\n" +
+	"\x10ListApplications\x123.admiral.api.application.v1.ListApplicationsRequest\x1a4.admiral.api.application.v1.ListApplicationsResponse\"J\xbaG!\n" +
 	"\fApplications\x12\x11List applications\xa2\x97$\n" +
 	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02\x16\x12\x14/api/v1/applications\x12\xe9\x01\n" +
-	"\x11UpdateApplication\x124.admiral.api.application.v1.UpdateApplicationRequest\x1a5.admiral.api.application.v1.UpdateApplicationResponse\"g\xbaG%\n" +
+	"\bapp:read\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/applications\x12\xe5\x01\n" +
+	"\x11UpdateApplication\x124.admiral.api.application.v1.UpdateApplicationRequest\x1a5.admiral.api.application.v1.UpdateApplicationResponse\"c\xbaG%\n" +
 	"\fApplications\x12\x15Update an application\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02*:\x01*2%/api/v1/applications/{application.id}\x12\xe6\x01\n" +
-	"\x11DeleteApplication\x124.admiral.api.application.v1.DeleteApplicationRequest\x1a5.admiral.api.application.v1.DeleteApplicationResponse\"d\xbaG%\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02&:\x01*2!/v1/applications/{application.id}\x12\xe2\x01\n" +
+	"\x11DeleteApplication\x124.admiral.api.application.v1.DeleteApplicationRequest\x1a5.admiral.api.application.v1.DeleteApplicationResponse\"`\xbaG%\n" +
 	"\fApplications\x12\x15Delete an application\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02'*%/api/v1/applications/{application_id}B\xff\x01\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02#*!/v1/applications/{application_id}B\xff\x01\n" +
 	"\x1ecom.admiral.api.application.v1B\x10ApplicationProtoP\x01Z@go.admiral.io/sdk/proto/admiral/api/application/v1;applicationv1\xa2\x02\x03AAA\xaa\x02\x1aAdmiral.Api.Application.V1\xca\x02\x1aAdmiral\\Api\\Application\\V1\xe2\x02&Admiral\\Api\\Application\\V1\\GPBMetadata\xea\x02\x1dAdmiral::Api::Application::V1b\x06proto3"
 
 var (

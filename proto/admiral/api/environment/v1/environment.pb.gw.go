@@ -338,7 +338,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/CreateEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/CreateEnvironment", runtime.WithHTTPPathPattern("/v1/environments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -358,7 +358,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/GetEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/GetEnvironment", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -378,7 +378,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironments", runtime.WithHTTPPathPattern("/api/v1/environments"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironments", runtime.WithHTTPPathPattern("/v1/environments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -398,7 +398,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/UpdateEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments/{environment.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/UpdateEnvironment", runtime.WithHTTPPathPattern("/v1/environments/{environment.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -418,7 +418,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/DeleteEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/DeleteEnvironment", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -438,7 +438,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentVariables", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}/variables"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentVariables", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -458,7 +458,7 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}/components"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/components"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -516,7 +516,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/CreateEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/CreateEnvironment", runtime.WithHTTPPathPattern("/v1/environments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -533,7 +533,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/GetEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/GetEnvironment", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -550,7 +550,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironments", runtime.WithHTTPPathPattern("/api/v1/environments"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironments", runtime.WithHTTPPathPattern("/v1/environments"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -567,7 +567,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/UpdateEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments/{environment.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/UpdateEnvironment", runtime.WithHTTPPathPattern("/v1/environments/{environment.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -584,7 +584,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/DeleteEnvironment", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/DeleteEnvironment", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -601,7 +601,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentVariables", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}/variables"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentVariables", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/variables"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -618,7 +618,7 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/api/v1/environments/{environment_id}/components"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/components"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -635,13 +635,13 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_EnvironmentAPI_CreateEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "environments"}, ""))
-	pattern_EnvironmentAPI_GetEnvironment_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "environments", "environment_id"}, ""))
-	pattern_EnvironmentAPI_ListEnvironments_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "environments"}, ""))
-	pattern_EnvironmentAPI_UpdateEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "environments", "environment.id"}, ""))
-	pattern_EnvironmentAPI_DeleteEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "environments", "environment_id"}, ""))
-	pattern_EnvironmentAPI_ListEnvironmentVariables_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "environments", "environment_id", "variables"}, ""))
-	pattern_EnvironmentAPI_ListEnvironmentComponents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "environments", "environment_id", "components"}, ""))
+	pattern_EnvironmentAPI_CreateEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environments"}, ""))
+	pattern_EnvironmentAPI_GetEnvironment_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment_id"}, ""))
+	pattern_EnvironmentAPI_ListEnvironments_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environments"}, ""))
+	pattern_EnvironmentAPI_UpdateEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment.id"}, ""))
+	pattern_EnvironmentAPI_DeleteEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment_id"}, ""))
+	pattern_EnvironmentAPI_ListEnvironmentVariables_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "environments", "environment_id", "variables"}, ""))
+	pattern_EnvironmentAPI_ListEnvironmentComponents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "environments", "environment_id", "components"}, ""))
 )
 
 var (

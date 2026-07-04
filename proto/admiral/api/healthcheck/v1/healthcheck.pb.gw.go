@@ -89,7 +89,7 @@ func RegisterHealthcheckAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/api/v1/healthcheck"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/v1/healthcheck"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -167,7 +167,7 @@ func RegisterHealthcheckAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/api/v1/healthcheck"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/v1/healthcheck"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -201,7 +201,7 @@ func RegisterHealthcheckAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_HealthcheckAPI_Healthcheck_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "healthcheck"}, ""))
+	pattern_HealthcheckAPI_Healthcheck_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "healthcheck"}, ""))
 	pattern_HealthcheckAPI_Healthcheck_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"healthz"}, ""))
 )
 

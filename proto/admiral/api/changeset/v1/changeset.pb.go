@@ -2687,55 +2687,55 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\x1cDIFF_CHANGE_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16DIFF_CHANGE_TYPE_ADDED\x10\x01\x12\x1c\n" +
 	"\x18DIFF_CHANGE_TYPE_CHANGED\x10\x02\x12\x1c\n" +
-	"\x18DIFF_CHANGE_TYPE_REMOVED\x10\x032\x80\x13\n" +
-	"\fChangeSetAPI\x12\xc8\x01\n" +
-	"\x0fCreateChangeSet\x120.admiral.api.changeset.v1.CreateChangeSetRequest\x1a1.admiral.api.changeset.v1.CreateChangeSetResponse\"P\xbaG!\n" +
+	"\x18DIFF_CHANGE_TYPE_REMOVED\x10\x032\xd4\x12\n" +
+	"\fChangeSetAPI\x12\xc4\x01\n" +
+	"\x0fCreateChangeSet\x120.admiral.api.changeset.v1.CreateChangeSetRequest\x1a1.admiral.api.changeset.v1.CreateChangeSetResponse\"L\xbaG!\n" +
 	"\n" +
 	"ChangeSets\x12\x13Create a change set\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/changesets\x12\xcd\x01\n" +
-	"\fGetChangeSet\x12-.admiral.api.changeset.v1.GetChangeSetRequest\x1a..admiral.api.changeset.v1.GetChangeSetResponse\"^\xbaG#\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v1/changesets\x12\xc9\x01\n" +
+	"\fGetChangeSet\x12-.admiral.api.changeset.v1.GetChangeSetRequest\x1a..admiral.api.changeset.v1.GetChangeSetResponse\"Z\xbaG#\n" +
 	"\n" +
 	"ChangeSets\x12\x15Retrieve a change set\xa2\x97$\n" +
 	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02$\x12\"/api/v1/changesets/{change_set_id}\x12\xbe\x01\n" +
-	"\x0eListChangeSets\x12/.admiral.api.changeset.v1.ListChangeSetsRequest\x1a0.admiral.api.changeset.v1.ListChangeSetsResponse\"I\xbaG\x1e\n" +
+	"\bapp:read\x82\xd3\xe4\x93\x02 \x12\x1e/v1/changesets/{change_set_id}\x12\xba\x01\n" +
+	"\x0eListChangeSets\x12/.admiral.api.changeset.v1.ListChangeSetsRequest\x1a0.admiral.api.changeset.v1.ListChangeSetsResponse\"E\xbaG\x1e\n" +
 	"\n" +
 	"ChangeSets\x12\x10List change sets\xa2\x97$\n" +
 	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02\x14\x12\x12/api/v1/changesets\x12\xd8\x01\n" +
-	"\x0fUpdateChangeSet\x120.admiral.api.changeset.v1.UpdateChangeSetRequest\x1a1.admiral.api.changeset.v1.UpdateChangeSetResponse\"`\xbaG!\n" +
+	"\bapp:read\x82\xd3\xe4\x93\x02\x10\x12\x0e/v1/changesets\x12\xd4\x01\n" +
+	"\x0fUpdateChangeSet\x120.admiral.api.changeset.v1.UpdateChangeSetRequest\x1a1.admiral.api.changeset.v1.UpdateChangeSetResponse\"\\\xbaG!\n" +
 	"\n" +
 	"ChangeSets\x12\x13Update a change set\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02':\x01*2\"/api/v1/changesets/{change_set.id}\x12\xe4\x01\n" +
-	"\x10DiscardChangeSet\x121.admiral.api.changeset.v1.DiscardChangeSetRequest\x1a2.admiral.api.changeset.v1.DiscardChangeSetResponse\"i\xbaG\"\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02#:\x01*2\x1e/v1/changesets/{change_set.id}\x12\xe0\x01\n" +
+	"\x10DiscardChangeSet\x121.admiral.api.changeset.v1.DiscardChangeSetRequest\x1a2.admiral.api.changeset.v1.DiscardChangeSetResponse\"e\xbaG\"\n" +
 	"\n" +
 	"ChangeSets\x12\x14Discard a change set\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02/:\x01*\"*/api/v1/changesets/{change_set_id}/discard\x12\xd9\x01\n" +
-	"\rDiffChangeSet\x12..admiral.api.changeset.v1.DiffChangeSetRequest\x1a/.admiral.api.changeset.v1.DiffChangeSetResponse\"g\xbaG'\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02+:\x01*\"&/v1/changesets/{change_set_id}/discard\x12\xd5\x01\n" +
+	"\rDiffChangeSet\x12..admiral.api.changeset.v1.DiffChangeSetRequest\x1a/.admiral.api.changeset.v1.DiffChangeSetResponse\"c\xbaG'\n" +
 	"\n" +
 	"ChangeSets\x12\x19Compute a change set diff\xa2\x97$\n" +
 	"\n" +
-	"\bapp:read\x82\xd3\xe4\x93\x02)\x12'/api/v1/changesets/{change_set_id}/diff\x12\xec\x01\n" +
-	"\rCopyChangeSet\x12..admiral.api.changeset.v1.CopyChangeSetRequest\x1a/.admiral.api.changeset.v1.CopyChangeSetResponse\"z\xbaG6\n" +
+	"\bapp:read\x82\xd3\xe4\x93\x02%\x12#/v1/changesets/{change_set_id}/diff\x12\xe8\x01\n" +
+	"\rCopyChangeSet\x12..admiral.api.changeset.v1.CopyChangeSetRequest\x1a/.admiral.api.changeset.v1.CopyChangeSetResponse\"v\xbaG6\n" +
 	"\n" +
 	"ChangeSets\x12(Copy a change set to another environment\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02,:\x01*\"'/api/v1/changesets/{change_set_id}/copy\x12\xdf\x01\n" +
-	"\bSetEntry\x12).admiral.api.changeset.v1.SetEntryRequest\x1a*.admiral.api.changeset.v1.SetEntryResponse\"|\xbaG$\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/changesets/{change_set_id}/copy\x12\xdb\x01\n" +
+	"\bSetEntry\x12).admiral.api.changeset.v1.SetEntryRequest\x1a*.admiral.api.changeset.v1.SetEntryResponse\"x\xbaG$\n" +
 	"\n" +
 	"ChangeSets\x12\x16Add or update an entry\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02@:\x01*\x1a;/api/v1/changesets/{change_set_id}/entries/{component_name}\x12\xde\x01\n" +
-	"\vRemoveEntry\x12,.admiral.api.changeset.v1.RemoveEntryRequest\x1a-.admiral.api.changeset.v1.RemoveEntryResponse\"r\xbaG\x1d\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x02<:\x01*\x1a7/v1/changesets/{change_set_id}/entries/{component_name}\x12\xda\x01\n" +
+	"\vRemoveEntry\x12,.admiral.api.changeset.v1.RemoveEntryRequest\x1a-.admiral.api.changeset.v1.RemoveEntryResponse\"n\xbaG\x1d\n" +
 	"\n" +
 	"ChangeSets\x12\x0fRemove an entry\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x02=*;/api/v1/changesets/{change_set_id}/entries/{component_name}\x12\xd7\x01\n" +
-	"\vSetVariable\x12,.admiral.api.changeset.v1.SetVariableRequest\x1a-.admiral.api.changeset.v1.SetVariableResponse\"k\xbaG\x1c\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x029*7/v1/changesets/{change_set_id}/entries/{component_name}\x12\xd3\x01\n" +
+	"\vSetVariable\x12,.admiral.api.changeset.v1.SetVariableRequest\x1a-.admiral.api.changeset.v1.SetVariableResponse\"g\xbaG\x1c\n" +
 	"\n" +
 	"ChangeSets\x12\x0eSet a variable\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x027:\x01*\x1a2/api/v1/changesets/{change_set_id}/variables/{key}\x12\xe9\x01\n" +
-	"\x0eRemoveVariable\x12/.admiral.api.changeset.v1.RemoveVariableRequest\x1a0.admiral.api.changeset.v1.RemoveVariableResponse\"t\xbaG(\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x023:\x01*\x1a./v1/changesets/{change_set_id}/variables/{key}\x12\xe5\x01\n" +
+	"\x0eRemoveVariable\x12/.admiral.api.changeset.v1.RemoveVariableRequest\x1a0.admiral.api.changeset.v1.RemoveVariableResponse\"p\xbaG(\n" +
 	"\n" +
 	"ChangeSets\x12\x1aRemove a variable on apply\xa2\x97$\v\n" +
-	"\tapp:write\x82\xd3\xe4\x93\x024*2/api/v1/changesets/{change_set_id}/variables/{key}B\xef\x01\n" +
+	"\tapp:write\x82\xd3\xe4\x93\x020*./v1/changesets/{change_set_id}/variables/{key}B\xef\x01\n" +
 	"\x1ccom.admiral.api.changeset.v1B\x0eChangesetProtoP\x01Z<go.admiral.io/sdk/proto/admiral/api/changeset/v1;changesetv1\xa2\x02\x03AAC\xaa\x02\x18Admiral.Api.Changeset.V1\xca\x02\x18Admiral\\Api\\Changeset\\V1\xe2\x02$Admiral\\Api\\Changeset\\V1\\GPBMetadata\xea\x02\x1bAdmiral::Api::Changeset::V1b\x06proto3"
 
 var (

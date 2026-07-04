@@ -1041,28 +1041,28 @@ const file_admiral_api_catalog_v1_catalog_proto_rawDesc = "" +
 	"\x1bCATALOG_ITEM_TYPE_TERRAFORM\x10\x01\x12\x1a\n" +
 	"\x16CATALOG_ITEM_TYPE_HELM\x10\x02\x12\x1f\n" +
 	"\x1bCATALOG_ITEM_TYPE_KUSTOMIZE\x10\x03\x12\x1e\n" +
-	"\x1aCATALOG_ITEM_TYPE_MANIFEST\x10\x042\xb9\n" +
+	"\x1aCATALOG_ITEM_TYPE_MANIFEST\x10\x042\xa1\n" +
 	"\n" +
 	"\n" +
-	"CatalogAPI\x12\xd0\x01\n" +
-	"\x11CreateCatalogItem\x120.admiral.api.catalog.v1.CreateCatalogItemRequest\x1a1.admiral.api.catalog.v1.CreateCatalogItemResponse\"V\xbaG \n" +
+	"CatalogAPI\x12\xcc\x01\n" +
+	"\x11CreateCatalogItem\x120.admiral.api.catalog.v1.CreateCatalogItemRequest\x1a1.admiral.api.catalog.v1.CreateCatalogItemResponse\"R\xbaG \n" +
 	"\aCatalog\x12\x15Create a catalog item\xa2\x97$\x0f\n" +
-	"\rcatalog:write\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/catalog-items\x12\xd7\x01\n" +
-	"\x0eGetCatalogItem\x12-.admiral.api.catalog.v1.GetCatalogItemRequest\x1a..admiral.api.catalog.v1.GetCatalogItemResponse\"f\xbaG\"\n" +
+	"\rcatalog:write\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v1/catalog-items\x12\xd3\x01\n" +
+	"\x0eGetCatalogItem\x12-.admiral.api.catalog.v1.GetCatalogItemRequest\x1a..admiral.api.catalog.v1.GetCatalogItemResponse\"b\xbaG\"\n" +
 	"\aCatalog\x12\x17Retrieve a catalog item\xa2\x97$\x0e\n" +
-	"\fcatalog:read\x82\xd3\xe4\x93\x02)\x12'/api/v1/catalog-items/{catalog_item_id}\x12\xc6\x01\n" +
-	"\x10ListCatalogItems\x12/.admiral.api.catalog.v1.ListCatalogItemsRequest\x1a0.admiral.api.catalog.v1.ListCatalogItemsResponse\"O\xbaG\x1d\n" +
+	"\fcatalog:read\x82\xd3\xe4\x93\x02%\x12#/v1/catalog-items/{catalog_item_id}\x12\xc2\x01\n" +
+	"\x10ListCatalogItems\x12/.admiral.api.catalog.v1.ListCatalogItemsRequest\x1a0.admiral.api.catalog.v1.ListCatalogItemsResponse\"K\xbaG\x1d\n" +
 	"\aCatalog\x12\x12List catalog items\xa2\x97$\x0e\n" +
-	"\fcatalog:read\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/catalog-items\x12\xe2\x01\n" +
-	"\x11UpdateCatalogItem\x120.admiral.api.catalog.v1.UpdateCatalogItemRequest\x1a1.admiral.api.catalog.v1.UpdateCatalogItemResponse\"h\xbaG \n" +
+	"\fcatalog:read\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/catalog-items\x12\xde\x01\n" +
+	"\x11UpdateCatalogItem\x120.admiral.api.catalog.v1.UpdateCatalogItemRequest\x1a1.admiral.api.catalog.v1.UpdateCatalogItemResponse\"d\xbaG \n" +
 	"\aCatalog\x12\x15Update a catalog item\xa2\x97$\x0f\n" +
-	"\rcatalog:write\x82\xd3\xe4\x93\x02,:\x01*2'/api/v1/catalog-items/{catalog_item.id}\x12\xdf\x01\n" +
-	"\x11DeleteCatalogItem\x120.admiral.api.catalog.v1.DeleteCatalogItemRequest\x1a1.admiral.api.catalog.v1.DeleteCatalogItemResponse\"e\xbaG \n" +
+	"\rcatalog:write\x82\xd3\xe4\x93\x02(:\x01*2#/v1/catalog-items/{catalog_item.id}\x12\xdb\x01\n" +
+	"\x11DeleteCatalogItem\x120.admiral.api.catalog.v1.DeleteCatalogItemRequest\x1a1.admiral.api.catalog.v1.DeleteCatalogItemResponse\"a\xbaG \n" +
 	"\aCatalog\x12\x15Delete a catalog item\xa2\x97$\x0f\n" +
-	"\rcatalog:write\x82\xd3\xe4\x93\x02)*'/api/v1/catalog-items/{catalog_item_id}\x12\xed\x01\n" +
-	"\x12ResolveCatalogItem\x121.admiral.api.catalog.v1.ResolveCatalogItemRequest\x1a2.admiral.api.catalog.v1.ResolveCatalogItemResponse\"p\xbaG!\n" +
+	"\rcatalog:write\x82\xd3\xe4\x93\x02%*#/v1/catalog-items/{catalog_item_id}\x12\xe9\x01\n" +
+	"\x12ResolveCatalogItem\x121.admiral.api.catalog.v1.ResolveCatalogItemRequest\x1a2.admiral.api.catalog.v1.ResolveCatalogItemResponse\"l\xbaG!\n" +
 	"\aCatalog\x12\x16Resolve a catalog item\xa2\x97$\x0e\n" +
-	"\fcatalog:read\x82\xd3\xe4\x93\x024:\x01*\"//api/v1/catalog-items/{catalog_item_id}/resolveB\xdf\x01\n" +
+	"\fcatalog:read\x82\xd3\xe4\x93\x020:\x01*\"+/v1/catalog-items/{catalog_item_id}/resolveB\xdf\x01\n" +
 	"\x1acom.admiral.api.catalog.v1B\fCatalogProtoP\x01Z8go.admiral.io/sdk/proto/admiral/api/catalog/v1;catalogv1\xa2\x02\x03AAC\xaa\x02\x16Admiral.Api.Catalog.V1\xca\x02\x16Admiral\\Api\\Catalog\\V1\xe2\x02\"Admiral\\Api\\Catalog\\V1\\GPBMetadata\xea\x02\x19Admiral::Api::Catalog::V1b\x06proto3"
 
 var (

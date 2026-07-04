@@ -7,6 +7,7 @@
 package authenticationv1
 
 import (
+	_ "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -233,7 +234,7 @@ var File_admiral_api_authentication_v1_authentication_proto protoreflect.FileDes
 
 const file_admiral_api_authentication_v1_authentication_proto_rawDesc = "" +
 	"\n" +
-	"2admiral/api/authentication/v1/authentication.proto\x12\x1dadmiral.api.authentication.v1\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\"N\n" +
+	"2admiral/api/authentication/v1/authentication.proto\x12\x1dadmiral.api.authentication.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\"N\n" +
 	"\fLoginRequest\x12>\n" +
 	"\fredirect_url\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x18\x80\x102\x11^(/([^/\\\\].*)?)?$R\vredirectUrl\"*\n" +
 	"\rLoginResponse\x12\x19\n" +
@@ -243,12 +244,12 @@ const file_admiral_api_authentication_v1_authentication_proto_rawDesc = "" +
 	"\x05state\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80@R\x05state\x12\x1e\n" +
 	"\x05error\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x05error\x125\n" +
 	"\x11error_description\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x10R\x10errorDescription\"\x12\n" +
-	"\x10CallbackResponse2\xe1\x02\n" +
-	"\x11AuthenticationAPI\x12\xa1\x01\n" +
-	"\x05Login\x12+.admiral.api.authentication.v1.LoginRequest\x1a,.admiral.api.authentication.v1.LoginResponse\"=\xbaG'\n" +
-	"\x0eAuthentication\x12\x15Initiate OAuth2 login\x82\xd3\xe4\x93\x02\r\x12\v/auth/login\x12\xa7\x01\n" +
-	"\bCallback\x12..admiral.api.authentication.v1.CallbackRequest\x1a/.admiral.api.authentication.v1.CallbackResponse\":\xbaG!\n" +
-	"\x0eAuthentication\x12\x0fOAuth2 callback\x82\xd3\xe4\x93\x02\x10\x12\x0e/auth/callbackB\x97\x02\n" +
+	"\x10CallbackResponse2\xed\x02\n" +
+	"\x11AuthenticationAPI\x12\xa7\x01\n" +
+	"\x05Login\x12+.admiral.api.authentication.v1.LoginRequest\x1a,.admiral.api.authentication.v1.LoginResponse\"C\xbaG'\n" +
+	"\x0eAuthentication\x12\x15Initiate OAuth2 login\xa2\x97$\x02\x18\x01\x82\xd3\xe4\x93\x02\r\x12\v/auth/login\x12\xad\x01\n" +
+	"\bCallback\x12..admiral.api.authentication.v1.CallbackRequest\x1a/.admiral.api.authentication.v1.CallbackResponse\"@\xbaG!\n" +
+	"\x0eAuthentication\x12\x0fOAuth2 callback\xa2\x97$\x02\x18\x01\x82\xd3\xe4\x93\x02\x10\x12\x0e/auth/callbackB\x97\x02\n" +
 	"!com.admiral.api.authentication.v1B\x13AuthenticationProtoP\x01ZFgo.admiral.io/sdk/proto/admiral/api/authentication/v1;authenticationv1\xa2\x02\x03AAA\xaa\x02\x1dAdmiral.Api.Authentication.V1\xca\x02\x1dAdmiral\\Api\\Authentication\\V1\xe2\x02)Admiral\\Api\\Authentication\\V1\\GPBMetadata\xea\x02 Admiral::Api::Authentication::V1b\x06proto3"
 
 var (

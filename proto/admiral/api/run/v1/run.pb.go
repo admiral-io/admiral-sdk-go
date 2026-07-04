@@ -2535,36 +2535,38 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\x0fExecutionStatus\x12 \n" +
 	"\x1cEXECUTION_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aEXECUTION_STATUS_SUCCEEDED\x10\x01\x12\x1b\n" +
-	"\x17EXECUTION_STATUS_FAILED\x10\x022\x88\v\n" +
-	"\x06RunAPI\x12\x97\x01\n" +
-	"\tCreateRun\x12$.admiral.api.run.v1.CreateRunRequest\x1a%.admiral.api.run.v1.CreateRunResponse\"=\xbaG\x14\n" +
+	"\x17EXECUTION_STATUS_FAILED\x10\x022\xe8\n" +
+	"\n" +
+	"\x06RunAPI\x12\x93\x01\n" +
+	"\tCreateRun\x12$.admiral.api.run.v1.CreateRunRequest\x1a%.admiral.api.run.v1.CreateRunResponse\"9\xbaG\x14\n" +
 	"\x04Runs\x12\fCreate a run\xa2\x97$\v\n" +
-	"\trun:write\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/api/v1/runs\x12\x95\x01\n" +
-	"\x06GetRun\x12!.admiral.api.run.v1.GetRunRequest\x1a\".admiral.api.run.v1.GetRunResponse\"D\xbaG\x16\n" +
+	"\trun:write\x82\xd3\xe4\x93\x02\r:\x01*\"\b/v1/runs\x12\x91\x01\n" +
+	"\x06GetRun\x12!.admiral.api.run.v1.GetRunRequest\x1a\".admiral.api.run.v1.GetRunResponse\"@\xbaG\x16\n" +
 	"\x04Runs\x12\x0eRetrieve a run\xa2\x97$\n" +
 	"\n" +
-	"\brun:read\x82\xd3\xe4\x93\x02\x17\x12\x15/api/v1/runs/{run_id}\x12\x8d\x01\n" +
-	"\bListRuns\x12#.admiral.api.run.v1.ListRunsRequest\x1a$.admiral.api.run.v1.ListRunsResponse\"6\xbaG\x11\n" +
+	"\brun:read\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/runs/{run_id}\x12\x89\x01\n" +
+	"\bListRuns\x12#.admiral.api.run.v1.ListRunsRequest\x1a$.admiral.api.run.v1.ListRunsResponse\"2\xbaG\x11\n" +
 	"\x04Runs\x12\tList runs\xa2\x97$\n" +
 	"\n" +
-	"\brun:read\x82\xd3\xe4\x93\x02\x0e\x12\f/api/v1/runs\x12\xa7\x01\n" +
-	"\tCancelRun\x12$.admiral.api.run.v1.CancelRunRequest\x1a%.admiral.api.run.v1.CancelRunResponse\"M\xbaG\x14\n" +
+	"\brun:read\x82\xd3\xe4\x93\x02\n" +
+	"\x12\b/v1/runs\x12\xa3\x01\n" +
+	"\tCancelRun\x12$.admiral.api.run.v1.CancelRunRequest\x1a%.admiral.api.run.v1.CancelRunResponse\"I\xbaG\x14\n" +
 	"\x04Runs\x12\fCancel a run\xa2\x97$\v\n" +
-	"\trun:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/runs/{run_id}/cancel\x12\xca\x01\n" +
-	"\vGetRevision\x12&.admiral.api.run.v1.GetRevisionRequest\x1a'.admiral.api.run.v1.GetRevisionResponse\"j\xbaG$\n" +
+	"\trun:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/runs/{run_id}/cancel\x12\xc6\x01\n" +
+	"\vGetRevision\x12&.admiral.api.run.v1.GetRevisionRequest\x1a'.admiral.api.run.v1.GetRevisionResponse\"f\xbaG$\n" +
 	"\rRun Revisions\x12\x13Retrieve a revision\xa2\x97$\n" +
 	"\n" +
-	"\brun:read\x82\xd3\xe4\x93\x02/\x12-/api/v1/runs/{run_id}/revisions/{revision_id}\x12\xbd\x01\n" +
-	"\rListRevisions\x12(.admiral.api.run.v1.ListRevisionsRequest\x1a).admiral.api.run.v1.ListRevisionsResponse\"W\xbaG\x1f\n" +
+	"\brun:read\x82\xd3\xe4\x93\x02+\x12)/v1/runs/{run_id}/revisions/{revision_id}\x12\xb9\x01\n" +
+	"\rListRevisions\x12(.admiral.api.run.v1.ListRevisionsRequest\x1a).admiral.api.run.v1.ListRevisionsResponse\"S\xbaG\x1f\n" +
 	"\rRun Revisions\x12\x0eList revisions\xa2\x97$\n" +
 	"\n" +
-	"\brun:read\x82\xd3\xe4\x93\x02!\x12\x1f/api/v1/runs/{run_id}/revisions\x12\xd7\x01\n" +
-	"\rRetryRevision\x12(.admiral.api.run.v1.RetryRevisionRequest\x1a).admiral.api.run.v1.RetryRevisionResponse\"q\xbaG!\n" +
+	"\brun:read\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/runs/{run_id}/revisions\x12\xd3\x01\n" +
+	"\rRetryRevision\x12(.admiral.api.run.v1.RetryRevisionRequest\x1a).admiral.api.run.v1.RetryRevisionResponse\"m\xbaG!\n" +
 	"\rRun Revisions\x12\x10Retry a revision\xa2\x97$\v\n" +
-	"\trun:write\x82\xd3\xe4\x93\x028:\x01*\"3/api/v1/runs/{run_id}/revisions/{revision_id}/retry\x12\xaa\x01\n" +
-	"\bApplyRun\x12#.admiral.api.run.v1.ApplyRunRequest\x1a$.admiral.api.run.v1.ApplyRunResponse\"S\xbaG\x1b\n" +
+	"\trun:write\x82\xd3\xe4\x93\x024:\x01*\"//v1/runs/{run_id}/revisions/{revision_id}/retry\x12\xa6\x01\n" +
+	"\bApplyRun\x12#.admiral.api.run.v1.ApplyRunRequest\x1a$.admiral.api.run.v1.ApplyRunResponse\"O\xbaG\x1b\n" +
 	"\x04Runs\x12\x13Apply a planned run\xa2\x97$\v\n" +
-	"\trun:write\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/api/v1/runs/{run_id}/applyB\xbf\x01\n" +
+	"\trun:write\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/runs/{run_id}/applyB\xbf\x01\n" +
 	"\x16com.admiral.api.run.v1B\bRunProtoP\x01Z0go.admiral.io/sdk/proto/admiral/api/run/v1;runv1\xa2\x02\x03AAR\xaa\x02\x12Admiral.Api.Run.V1\xca\x02\x12Admiral\\Api\\Run\\V1\xe2\x02\x1eAdmiral\\Api\\Run\\V1\\GPBMetadata\xea\x02\x15Admiral::Api::Run::V1b\x06proto3"
 
 var (

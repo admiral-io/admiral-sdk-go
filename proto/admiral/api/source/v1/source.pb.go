@@ -1620,31 +1620,31 @@ const file_admiral_api_source_v1_source_proto_rawDesc = "" +
 	"\x10SourceTestStatus\x12\"\n" +
 	"\x1eSOURCE_TEST_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aSOURCE_TEST_STATUS_SUCCESS\x10\x01\x12\x1e\n" +
-	"\x1aSOURCE_TEST_STATUS_FAILURE\x10\x022\xbb\n" +
+	"\x1aSOURCE_TEST_STATUS_FAILURE\x10\x022\x9f\n" +
 	"\n" +
-	"\tSourceAPI\x12\xb2\x01\n" +
-	"\fCreateSource\x12*.admiral.api.source.v1.CreateSourceRequest\x1a+.admiral.api.source.v1.CreateSourceResponse\"I\xbaG\x1a\n" +
+	"\tSourceAPI\x12\xae\x01\n" +
+	"\fCreateSource\x12*.admiral.api.source.v1.CreateSourceRequest\x1a+.admiral.api.source.v1.CreateSourceResponse\"E\xbaG\x1a\n" +
 	"\aSources\x12\x0fCreate a source\xa2\x97$\x0e\n" +
-	"\fsource:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/sources\x12\xb3\x01\n" +
-	"\tGetSource\x12'.admiral.api.source.v1.GetSourceRequest\x1a(.admiral.api.source.v1.GetSourceResponse\"S\xbaG\x1c\n" +
+	"\fsource:write\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v1/sources\x12\xaf\x01\n" +
+	"\tGetSource\x12'.admiral.api.source.v1.GetSourceRequest\x1a(.admiral.api.source.v1.GetSourceResponse\"O\xbaG\x1c\n" +
 	"\aSources\x12\x11Retrieve a source\xa2\x97$\r\n" +
-	"\vsource:read\x82\xd3\xe4\x93\x02\x1d\x12\x1b/api/v1/sources/{source_id}\x12\xa8\x01\n" +
-	"\vListSources\x12).admiral.api.source.v1.ListSourcesRequest\x1a*.admiral.api.source.v1.ListSourcesResponse\"B\xbaG\x17\n" +
+	"\vsource:read\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/sources/{source_id}\x12\xa4\x01\n" +
+	"\vListSources\x12).admiral.api.source.v1.ListSourcesRequest\x1a*.admiral.api.source.v1.ListSourcesResponse\">\xbaG\x17\n" +
 	"\aSources\x12\fList sources\xa2\x97$\r\n" +
-	"\vsource:read\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/sources\x12\xbe\x01\n" +
-	"\fUpdateSource\x12*.admiral.api.source.v1.UpdateSourceRequest\x1a+.admiral.api.source.v1.UpdateSourceResponse\"U\xbaG\x1a\n" +
+	"\vsource:read\x82\xd3\xe4\x93\x02\r\x12\v/v1/sources\x12\xba\x01\n" +
+	"\fUpdateSource\x12*.admiral.api.source.v1.UpdateSourceRequest\x1a+.admiral.api.source.v1.UpdateSourceResponse\"Q\xbaG\x1a\n" +
 	"\aSources\x12\x0fUpdate a source\xa2\x97$\x0e\n" +
-	"\fsource:write\x82\xd3\xe4\x93\x02 :\x01*2\x1b/api/v1/sources/{source.id}\x12\xbb\x01\n" +
-	"\fDeleteSource\x12*.admiral.api.source.v1.DeleteSourceRequest\x1a+.admiral.api.source.v1.DeleteSourceResponse\"R\xbaG\x1a\n" +
+	"\fsource:write\x82\xd3\xe4\x93\x02\x1c:\x01*2\x17/v1/sources/{source.id}\x12\xb7\x01\n" +
+	"\fDeleteSource\x12*.admiral.api.source.v1.DeleteSourceRequest\x1a+.admiral.api.source.v1.DeleteSourceResponse\"N\xbaG\x1a\n" +
 	"\aSources\x12\x0fDelete a source\xa2\x97$\x0e\n" +
-	"\fsource:write\x82\xd3\xe4\x93\x02\x1d*\x1b/api/v1/sources/{source_id}\x12\xbb\x01\n" +
+	"\fsource:write\x82\xd3\xe4\x93\x02\x19*\x17/v1/sources/{source_id}\x12\xb7\x01\n" +
 	"\n" +
-	"TestSource\x12(.admiral.api.source.v1.TestSourceRequest\x1a).admiral.api.source.v1.TestSourceResponse\"X\xbaG\x18\n" +
+	"TestSource\x12(.admiral.api.source.v1.TestSourceRequest\x1a).admiral.api.source.v1.TestSourceResponse\"T\xbaG\x18\n" +
 	"\aSources\x12\rTest a source\xa2\x97$\x0e\n" +
-	"\fsource:write\x82\xd3\xe4\x93\x02%:\x01*\" /api/v1/sources/{source_id}/test\x12\xda\x01\n" +
-	"\x12ListSourceVersions\x120.admiral.api.source.v1.ListSourceVersionsRequest\x1a1.admiral.api.source.v1.ListSourceVersionsResponse\"_\xbaG\x1f\n" +
+	"\fsource:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/sources/{source_id}/test\x12\xd6\x01\n" +
+	"\x12ListSourceVersions\x120.admiral.api.source.v1.ListSourceVersionsRequest\x1a1.admiral.api.source.v1.ListSourceVersionsResponse\"[\xbaG\x1f\n" +
 	"\aSources\x12\x14List source versions\xa2\x97$\r\n" +
-	"\vsource:read\x82\xd3\xe4\x93\x02&\x12$/api/v1/sources/{source_id}/versionsB\xd7\x01\n" +
+	"\vsource:read\x82\xd3\xe4\x93\x02\"\x12 /v1/sources/{source_id}/versionsB\xd7\x01\n" +
 	"\x19com.admiral.api.source.v1B\vSourceProtoP\x01Z6go.admiral.io/sdk/proto/admiral/api/source/v1;sourcev1\xa2\x02\x03AAS\xaa\x02\x15Admiral.Api.Source.V1\xca\x02\x15Admiral\\Api\\Source\\V1\xe2\x02!Admiral\\Api\\Source\\V1\\GPBMetadata\xea\x02\x18Admiral::Api::Source::V1b\x06proto3"
 
 var (
