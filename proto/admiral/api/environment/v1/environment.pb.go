@@ -1115,33 +1115,33 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"!ListEnvironmentComponentsResponse\x12P\n" +
 	"\n" +
 	"components\x18\x01 \x03(\v20.admiral.api.environment.v1.EnvironmentComponentR\n" +
-	"components2\xa5\r\n" +
-	"\x0eEnvironmentAPI\x12\xd8\x01\n" +
-	"\x11CreateEnvironment\x124.admiral.api.environment.v1.CreateEnvironmentRequest\x1a5.admiral.api.environment.v1.CreateEnvironmentResponse\"V\xbaG%\n" +
+	"components2\x88\r\n" +
+	"\x0eEnvironmentAPI\x12\xd4\x01\n" +
+	"\x11CreateEnvironment\x124.admiral.api.environment.v1.CreateEnvironmentRequest\x1a5.admiral.api.environment.v1.CreateEnvironmentResponse\"R\xbaG%\n" +
 	"\fEnvironments\x12\x15Create an environment\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/environments\x12\xde\x01\n" +
-	"\x0eGetEnvironment\x121.admiral.api.environment.v1.GetEnvironmentRequest\x1a2.admiral.api.environment.v1.GetEnvironmentResponse\"e\xbaG'\n" +
+	"\tenv:write\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/environments\x12\xda\x01\n" +
+	"\x0eGetEnvironment\x121.admiral.api.environment.v1.GetEnvironmentRequest\x1a2.admiral.api.environment.v1.GetEnvironmentResponse\"a\xbaG'\n" +
 	"\fEnvironments\x12\x17Retrieve an environment\xa2\x97$\n" +
 	"\n" +
-	"\benv:read\x82\xd3\xe4\x93\x02'\x12%/api/v1/environments/{environment_id}\x12\xcd\x01\n" +
-	"\x10ListEnvironments\x123.admiral.api.environment.v1.ListEnvironmentsRequest\x1a4.admiral.api.environment.v1.ListEnvironmentsResponse\"N\xbaG!\n" +
+	"\benv:read\x82\xd3\xe4\x93\x02#\x12!/v1/environments/{environment_id}\x12\xc9\x01\n" +
+	"\x10ListEnvironments\x123.admiral.api.environment.v1.ListEnvironmentsRequest\x1a4.admiral.api.environment.v1.ListEnvironmentsResponse\"J\xbaG!\n" +
 	"\fEnvironments\x12\x11List environments\xa2\x97$\n" +
 	"\n" +
-	"\benv:read\x82\xd3\xe4\x93\x02\x16\x12\x14/api/v1/environments\x12\xe9\x01\n" +
-	"\x11UpdateEnvironment\x124.admiral.api.environment.v1.UpdateEnvironmentRequest\x1a5.admiral.api.environment.v1.UpdateEnvironmentResponse\"g\xbaG%\n" +
+	"\benv:read\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/environments\x12\xe5\x01\n" +
+	"\x11UpdateEnvironment\x124.admiral.api.environment.v1.UpdateEnvironmentRequest\x1a5.admiral.api.environment.v1.UpdateEnvironmentResponse\"c\xbaG%\n" +
 	"\fEnvironments\x12\x15Update an environment\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02*:\x01*2%/api/v1/environments/{environment.id}\x12\xe6\x01\n" +
-	"\x11DeleteEnvironment\x124.admiral.api.environment.v1.DeleteEnvironmentRequest\x1a5.admiral.api.environment.v1.DeleteEnvironmentResponse\"d\xbaG%\n" +
+	"\tenv:write\x82\xd3\xe4\x93\x02&:\x01*2!/v1/environments/{environment.id}\x12\xe2\x01\n" +
+	"\x11DeleteEnvironment\x124.admiral.api.environment.v1.DeleteEnvironmentRequest\x1a5.admiral.api.environment.v1.DeleteEnvironmentResponse\"`\xbaG%\n" +
 	"\fEnvironments\x12\x15Delete an environment\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02'*%/api/v1/environments/{environment_id}\x12\x90\x02\n" +
-	"\x18ListEnvironmentVariables\x12;.admiral.api.environment.v1.ListEnvironmentVariablesRequest\x1a<.admiral.api.environment.v1.ListEnvironmentVariablesResponse\"y\xbaG1\n" +
+	"\tenv:write\x82\xd3\xe4\x93\x02#*!/v1/environments/{environment_id}\x12\x8c\x02\n" +
+	"\x18ListEnvironmentVariables\x12;.admiral.api.environment.v1.ListEnvironmentVariablesRequest\x1a<.admiral.api.environment.v1.ListEnvironmentVariablesResponse\"u\xbaG1\n" +
 	"\fEnvironments\x12!List variables for an environment\xa2\x97$\n" +
 	"\n" +
-	"\bvar:read\x82\xd3\xe4\x93\x021\x12//api/v1/environments/{environment_id}/variables\x12\x9e\x02\n" +
-	"\x19ListEnvironmentComponents\x12<.admiral.api.environment.v1.ListEnvironmentComponentsRequest\x1a=.admiral.api.environment.v1.ListEnvironmentComponentsResponse\"\x83\x01\xbaG:\n" +
+	"\bvar:read\x82\xd3\xe4\x93\x02-\x12+/v1/environments/{environment_id}/variables\x12\x99\x02\n" +
+	"\x19ListEnvironmentComponents\x12<.admiral.api.environment.v1.ListEnvironmentComponentsRequest\x1a=.admiral.api.environment.v1.ListEnvironmentComponentsResponse\"\x7f\xbaG:\n" +
 	"\fEnvironments\x12*List components deployed to an environment\xa2\x97$\n" +
 	"\n" +
-	"\benv:read\x82\xd3\xe4\x93\x022\x120/api/v1/environments/{environment_id}/componentsB\xff\x01\n" +
+	"\benv:read\x82\xd3\xe4\x93\x02.\x12,/v1/environments/{environment_id}/componentsB\xff\x01\n" +
 	"\x1ecom.admiral.api.environment.v1B\x10EnvironmentProtoP\x01Z@go.admiral.io/sdk/proto/admiral/api/environment/v1;environmentv1\xa2\x02\x03AAE\xaa\x02\x1aAdmiral.Api.Environment.V1\xca\x02\x1aAdmiral\\Api\\Environment\\V1\xe2\x02&Admiral\\Api\\Environment\\V1\\GPBMetadata\xea\x02\x1dAdmiral::Api::Environment::V1b\x06proto3"
 
 var (

@@ -1118,23 +1118,23 @@ const file_admiral_api_credential_v1_credential_proto_rawDesc = "" +
 	"\x1bCREDENTIAL_TYPE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17CREDENTIAL_TYPE_SSH_KEY\x10\x01\x12\x1e\n" +
 	"\x1aCREDENTIAL_TYPE_BASIC_AUTH\x10\x02\x12 \n" +
-	"\x1cCREDENTIAL_TYPE_BEARER_TOKEN\x10\x032\xe4\b\n" +
-	"\rCredentialAPI\x12\xd6\x01\n" +
-	"\x10CreateCredential\x122.admiral.api.credential.v1.CreateCredentialRequest\x1a3.admiral.api.credential.v1.CreateCredentialResponse\"Y\xbaG\"\n" +
+	"\x1cCREDENTIAL_TYPE_BEARER_TOKEN\x10\x032\xd0\b\n" +
+	"\rCredentialAPI\x12\xd2\x01\n" +
+	"\x10CreateCredential\x122.admiral.api.credential.v1.CreateCredentialRequest\x1a3.admiral.api.credential.v1.CreateCredentialResponse\"U\xbaG\"\n" +
 	"\vCredentials\x12\x13Create a credential\xa2\x97$\x12\n" +
-	"\x10credential:write\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/credentials\x12\xdb\x01\n" +
-	"\rGetCredential\x12/.admiral.api.credential.v1.GetCredentialRequest\x1a0.admiral.api.credential.v1.GetCredentialResponse\"g\xbaG$\n" +
+	"\x10credential:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/credentials\x12\xd7\x01\n" +
+	"\rGetCredential\x12/.admiral.api.credential.v1.GetCredentialRequest\x1a0.admiral.api.credential.v1.GetCredentialResponse\"c\xbaG$\n" +
 	"\vCredentials\x12\x15Retrieve a credential\xa2\x97$\x11\n" +
-	"\x0fcredential:read\x82\xd3\xe4\x93\x02%\x12#/api/v1/credentials/{credential_id}\x12\xcc\x01\n" +
-	"\x0fListCredentials\x121.admiral.api.credential.v1.ListCredentialsRequest\x1a2.admiral.api.credential.v1.ListCredentialsResponse\"R\xbaG\x1f\n" +
+	"\x0fcredential:read\x82\xd3\xe4\x93\x02!\x12\x1f/v1/credentials/{credential_id}\x12\xc8\x01\n" +
+	"\x0fListCredentials\x121.admiral.api.credential.v1.ListCredentialsRequest\x1a2.admiral.api.credential.v1.ListCredentialsResponse\"N\xbaG\x1f\n" +
 	"\vCredentials\x12\x10List credentials\xa2\x97$\x11\n" +
-	"\x0fcredential:read\x82\xd3\xe4\x93\x02\x15\x12\x13/api/v1/credentials\x12\xe6\x01\n" +
-	"\x10UpdateCredential\x122.admiral.api.credential.v1.UpdateCredentialRequest\x1a3.admiral.api.credential.v1.UpdateCredentialResponse\"i\xbaG\"\n" +
+	"\x0fcredential:read\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/credentials\x12\xe2\x01\n" +
+	"\x10UpdateCredential\x122.admiral.api.credential.v1.UpdateCredentialRequest\x1a3.admiral.api.credential.v1.UpdateCredentialResponse\"e\xbaG\"\n" +
 	"\vCredentials\x12\x13Update a credential\xa2\x97$\x12\n" +
-	"\x10credential:write\x82\xd3\xe4\x93\x02(:\x01*2#/api/v1/credentials/{credential.id}\x12\xe3\x01\n" +
-	"\x10DeleteCredential\x122.admiral.api.credential.v1.DeleteCredentialRequest\x1a3.admiral.api.credential.v1.DeleteCredentialResponse\"f\xbaG\"\n" +
+	"\x10credential:write\x82\xd3\xe4\x93\x02$:\x01*2\x1f/v1/credentials/{credential.id}\x12\xdf\x01\n" +
+	"\x10DeleteCredential\x122.admiral.api.credential.v1.DeleteCredentialRequest\x1a3.admiral.api.credential.v1.DeleteCredentialResponse\"b\xbaG\"\n" +
 	"\vCredentials\x12\x13Delete a credential\xa2\x97$\x12\n" +
-	"\x10credential:write\x82\xd3\xe4\x93\x02%*#/api/v1/credentials/{credential_id}B\xf7\x01\n" +
+	"\x10credential:write\x82\xd3\xe4\x93\x02!*\x1f/v1/credentials/{credential_id}B\xf7\x01\n" +
 	"\x1dcom.admiral.api.credential.v1B\x0fCredentialProtoP\x01Z>go.admiral.io/sdk/proto/admiral/api/credential/v1;credentialv1\xa2\x02\x03AAC\xaa\x02\x19Admiral.Api.Credential.V1\xca\x02\x19Admiral\\Api\\Credential\\V1\xe2\x02%Admiral\\Api\\Credential\\V1\\GPBMetadata\xea\x02\x1cAdmiral::Api::Credential::V1b\x06proto3"
 
 var (

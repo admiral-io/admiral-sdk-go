@@ -407,7 +407,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CreateRun", runtime.WithHTTPPathPattern("/api/v1/runs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CreateRun", runtime.WithHTTPPathPattern("/v1/runs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -427,7 +427,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRun", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRun", runtime.WithHTTPPathPattern("/v1/runs/{run_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -447,7 +447,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRuns", runtime.WithHTTPPathPattern("/api/v1/runs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRuns", runtime.WithHTTPPathPattern("/v1/runs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -467,7 +467,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CancelRun", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/cancel"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CancelRun", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/cancel"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -487,7 +487,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRevision", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/revisions/{revision_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/revisions/{revision_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -507,7 +507,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRevisions", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/revisions"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRevisions", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -527,7 +527,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/RetryRevision", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/revisions/{revision_id}/retry"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/RetryRevision", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/revisions/{revision_id}/retry"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -547,7 +547,7 @@ func RegisterRunAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ApplyRun", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/apply"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ApplyRun", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/apply"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -605,7 +605,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CreateRun", runtime.WithHTTPPathPattern("/api/v1/runs"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CreateRun", runtime.WithHTTPPathPattern("/v1/runs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -622,7 +622,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRun", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRun", runtime.WithHTTPPathPattern("/v1/runs/{run_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -639,7 +639,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRuns", runtime.WithHTTPPathPattern("/api/v1/runs"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRuns", runtime.WithHTTPPathPattern("/v1/runs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -656,7 +656,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CancelRun", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/cancel"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/CancelRun", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/cancel"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -673,7 +673,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRevision", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/revisions/{revision_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/revisions/{revision_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -690,7 +690,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRevisions", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/revisions"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ListRevisions", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/revisions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -707,7 +707,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/RetryRevision", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/revisions/{revision_id}/retry"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/RetryRevision", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/revisions/{revision_id}/retry"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -724,7 +724,7 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ApplyRun", runtime.WithHTTPPathPattern("/api/v1/runs/{run_id}/apply"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.run.v1.RunAPI/ApplyRun", runtime.WithHTTPPathPattern("/v1/runs/{run_id}/apply"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -741,14 +741,14 @@ func RegisterRunAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 }
 
 var (
-	pattern_RunAPI_CreateRun_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "runs"}, ""))
-	pattern_RunAPI_GetRun_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "runs", "run_id"}, ""))
-	pattern_RunAPI_ListRuns_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "runs"}, ""))
-	pattern_RunAPI_CancelRun_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "runs", "run_id", "cancel"}, ""))
-	pattern_RunAPI_GetRevision_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "runs", "run_id", "revisions", "revision_id"}, ""))
-	pattern_RunAPI_ListRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "runs", "run_id", "revisions"}, ""))
-	pattern_RunAPI_RetryRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "runs", "run_id", "revisions", "revision_id", "retry"}, ""))
-	pattern_RunAPI_ApplyRun_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "runs", "run_id", "apply"}, ""))
+	pattern_RunAPI_CreateRun_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "runs"}, ""))
+	pattern_RunAPI_GetRun_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "runs", "run_id"}, ""))
+	pattern_RunAPI_ListRuns_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "runs"}, ""))
+	pattern_RunAPI_CancelRun_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "runs", "run_id", "cancel"}, ""))
+	pattern_RunAPI_GetRevision_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "runs", "run_id", "revisions", "revision_id"}, ""))
+	pattern_RunAPI_ListRevisions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "runs", "run_id", "revisions"}, ""))
+	pattern_RunAPI_RetryRevision_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "runs", "run_id", "revisions", "revision_id", "retry"}, ""))
+	pattern_RunAPI_ApplyRun_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "runs", "run_id", "apply"}, ""))
 )
 
 var (

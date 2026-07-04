@@ -232,7 +232,7 @@ func RegisterCredentialAPIHandlerServer(ctx context.Context, mux *runtime.ServeM
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/CreateCredential", runtime.WithHTTPPathPattern("/api/v1/credentials"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/CreateCredential", runtime.WithHTTPPathPattern("/v1/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -252,7 +252,7 @@ func RegisterCredentialAPIHandlerServer(ctx context.Context, mux *runtime.ServeM
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/GetCredential", runtime.WithHTTPPathPattern("/api/v1/credentials/{credential_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/GetCredential", runtime.WithHTTPPathPattern("/v1/credentials/{credential_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -272,7 +272,7 @@ func RegisterCredentialAPIHandlerServer(ctx context.Context, mux *runtime.ServeM
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/ListCredentials", runtime.WithHTTPPathPattern("/api/v1/credentials"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/ListCredentials", runtime.WithHTTPPathPattern("/v1/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -292,7 +292,7 @@ func RegisterCredentialAPIHandlerServer(ctx context.Context, mux *runtime.ServeM
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/UpdateCredential", runtime.WithHTTPPathPattern("/api/v1/credentials/{credential.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/UpdateCredential", runtime.WithHTTPPathPattern("/v1/credentials/{credential.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -312,7 +312,7 @@ func RegisterCredentialAPIHandlerServer(ctx context.Context, mux *runtime.ServeM
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/DeleteCredential", runtime.WithHTTPPathPattern("/api/v1/credentials/{credential_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/DeleteCredential", runtime.WithHTTPPathPattern("/v1/credentials/{credential_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -370,7 +370,7 @@ func RegisterCredentialAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/CreateCredential", runtime.WithHTTPPathPattern("/api/v1/credentials"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/CreateCredential", runtime.WithHTTPPathPattern("/v1/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -387,7 +387,7 @@ func RegisterCredentialAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/GetCredential", runtime.WithHTTPPathPattern("/api/v1/credentials/{credential_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/GetCredential", runtime.WithHTTPPathPattern("/v1/credentials/{credential_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -404,7 +404,7 @@ func RegisterCredentialAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/ListCredentials", runtime.WithHTTPPathPattern("/api/v1/credentials"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/ListCredentials", runtime.WithHTTPPathPattern("/v1/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -421,7 +421,7 @@ func RegisterCredentialAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/UpdateCredential", runtime.WithHTTPPathPattern("/api/v1/credentials/{credential.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/UpdateCredential", runtime.WithHTTPPathPattern("/v1/credentials/{credential.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -438,7 +438,7 @@ func RegisterCredentialAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/DeleteCredential", runtime.WithHTTPPathPattern("/api/v1/credentials/{credential_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.credential.v1.CredentialAPI/DeleteCredential", runtime.WithHTTPPathPattern("/v1/credentials/{credential_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -455,11 +455,11 @@ func RegisterCredentialAPIHandlerClient(ctx context.Context, mux *runtime.ServeM
 }
 
 var (
-	pattern_CredentialAPI_CreateCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "credentials"}, ""))
-	pattern_CredentialAPI_GetCredential_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "credentials", "credential_id"}, ""))
-	pattern_CredentialAPI_ListCredentials_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "credentials"}, ""))
-	pattern_CredentialAPI_UpdateCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "credentials", "credential.id"}, ""))
-	pattern_CredentialAPI_DeleteCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "credentials", "credential_id"}, ""))
+	pattern_CredentialAPI_CreateCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "credentials"}, ""))
+	pattern_CredentialAPI_GetCredential_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "credentials", "credential_id"}, ""))
+	pattern_CredentialAPI_ListCredentials_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "credentials"}, ""))
+	pattern_CredentialAPI_UpdateCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "credentials", "credential.id"}, ""))
+	pattern_CredentialAPI_DeleteCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "credentials", "credential_id"}, ""))
 )
 
 var (

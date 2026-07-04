@@ -554,7 +554,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet", runtime.WithHTTPPathPattern("/v1/changesets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -574,7 +574,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -594,7 +594,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets", runtime.WithHTTPPathPattern("/api/v1/changesets"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets", runtime.WithHTTPPathPattern("/v1/changesets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -614,7 +614,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -634,7 +634,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/discard"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/discard"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -654,7 +654,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/diff"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/diff"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -674,7 +674,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CopyChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/copy"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CopyChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/copy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -694,7 +694,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetEntry", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/entries/{component_name}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetEntry", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/entries/{component_name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -714,7 +714,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveEntry", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/entries/{component_name}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveEntry", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/entries/{component_name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -734,7 +734,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetVariable", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/variables/{key}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetVariable", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/variables/{key}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -754,7 +754,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveVariable", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/variables/{key}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveVariable", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/variables/{key}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -812,7 +812,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet", runtime.WithHTTPPathPattern("/v1/changesets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -829,7 +829,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -846,7 +846,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets", runtime.WithHTTPPathPattern("/api/v1/changesets"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets", runtime.WithHTTPPathPattern("/v1/changesets"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -863,7 +863,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -880,7 +880,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/discard"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/discard"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -897,7 +897,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/diff"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/diff"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -914,7 +914,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CopyChangeSet", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/copy"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/CopyChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/copy"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -931,7 +931,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetEntry", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/entries/{component_name}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetEntry", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/entries/{component_name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -948,7 +948,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveEntry", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/entries/{component_name}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveEntry", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/entries/{component_name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -965,7 +965,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetVariable", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/variables/{key}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/SetVariable", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/variables/{key}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -982,7 +982,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveVariable", runtime.WithHTTPPathPattern("/api/v1/changesets/{change_set_id}/variables/{key}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RemoveVariable", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/variables/{key}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -999,17 +999,17 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 }
 
 var (
-	pattern_ChangeSetAPI_CreateChangeSet_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "changesets"}, ""))
-	pattern_ChangeSetAPI_GetChangeSet_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "changesets", "change_set_id"}, ""))
-	pattern_ChangeSetAPI_ListChangeSets_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "changesets"}, ""))
-	pattern_ChangeSetAPI_UpdateChangeSet_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "changesets", "change_set.id"}, ""))
-	pattern_ChangeSetAPI_DiscardChangeSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "changesets", "change_set_id", "discard"}, ""))
-	pattern_ChangeSetAPI_DiffChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "changesets", "change_set_id", "diff"}, ""))
-	pattern_ChangeSetAPI_CopyChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "changesets", "change_set_id", "copy"}, ""))
-	pattern_ChangeSetAPI_SetEntry_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "changesets", "change_set_id", "entries", "component_name"}, ""))
-	pattern_ChangeSetAPI_RemoveEntry_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "changesets", "change_set_id", "entries", "component_name"}, ""))
-	pattern_ChangeSetAPI_SetVariable_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "changesets", "change_set_id", "variables", "key"}, ""))
-	pattern_ChangeSetAPI_RemoveVariable_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "changesets", "change_set_id", "variables", "key"}, ""))
+	pattern_ChangeSetAPI_CreateChangeSet_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "changesets"}, ""))
+	pattern_ChangeSetAPI_GetChangeSet_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "changesets", "change_set_id"}, ""))
+	pattern_ChangeSetAPI_ListChangeSets_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "changesets"}, ""))
+	pattern_ChangeSetAPI_UpdateChangeSet_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "changesets", "change_set.id"}, ""))
+	pattern_ChangeSetAPI_DiscardChangeSet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "discard"}, ""))
+	pattern_ChangeSetAPI_DiffChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "diff"}, ""))
+	pattern_ChangeSetAPI_CopyChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "copy"}, ""))
+	pattern_ChangeSetAPI_SetEntry_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "changesets", "change_set_id", "entries", "component_name"}, ""))
+	pattern_ChangeSetAPI_RemoveEntry_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "changesets", "change_set_id", "entries", "component_name"}, ""))
+	pattern_ChangeSetAPI_SetVariable_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "changesets", "change_set_id", "variables", "key"}, ""))
+	pattern_ChangeSetAPI_RemoveVariable_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "changesets", "change_set_id", "variables", "key"}, ""))
 )
 
 var (

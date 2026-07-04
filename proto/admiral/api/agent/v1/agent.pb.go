@@ -1661,94 +1661,96 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x1bAGENT_HEALTH_STATUS_HEALTHY\x10\x02\x12 \n" +
 	"\x1cAGENT_HEALTH_STATUS_DEGRADED\x10\x03\x12\x1d\n" +
 	"\x19AGENT_HEALTH_STATUS_ERROR\x10\x04\x12#\n" +
-	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\x85'\n" +
-	"\bAgentAPI\x12\xaa\x01\n" +
-	"\vCreateAgent\x12(.admiral.api.agent.v1.CreateAgentRequest\x1a).admiral.api.agent.v1.CreateAgentResponse\"F\xbaG\x19\n" +
+	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\xa5&\n" +
+	"\bAgentAPI\x12\xa6\x01\n" +
+	"\vCreateAgent\x12(.admiral.api.agent.v1.CreateAgentRequest\x1a).admiral.api.agent.v1.CreateAgentResponse\"B\xbaG\x19\n" +
 	"\x06Agents\x12\x0fCreate an agent\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/api/v1/agents\x12\xaa\x01\n" +
-	"\bGetAgent\x12%.admiral.api.agent.v1.GetAgentRequest\x1a&.admiral.api.agent.v1.GetAgentResponse\"O\xbaG\x1b\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
+	"/v1/agents\x12\xa6\x01\n" +
+	"\bGetAgent\x12%.admiral.api.agent.v1.GetAgentRequest\x1a&.admiral.api.agent.v1.GetAgentResponse\"K\xbaG\x1b\n" +
 	"\x06Agents\x12\x11Retrieve an agent\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1b\x12\x19/api/v1/agents/{agent_id}\x12\x9f\x01\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/agents/{agent_id}\x12\x9b\x01\n" +
 	"\n" +
-	"ListAgents\x12'.admiral.api.agent.v1.ListAgentsRequest\x1a(.admiral.api.agent.v1.ListAgentsResponse\">\xbaG\x15\n" +
+	"ListAgents\x12'.admiral.api.agent.v1.ListAgentsRequest\x1a(.admiral.api.agent.v1.ListAgentsResponse\":\xbaG\x15\n" +
 	"\x06Agents\x12\vList agents\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x10\x12\x0e/api/v1/agents\x12\xb5\x01\n" +
-	"\vUpdateAgent\x12(.admiral.api.agent.v1.UpdateAgentRequest\x1a).admiral.api.agent.v1.UpdateAgentResponse\"Q\xbaG\x19\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\f\x12\n" +
+	"/v1/agents\x12\xb1\x01\n" +
+	"\vUpdateAgent\x12(.admiral.api.agent.v1.UpdateAgentRequest\x1a).admiral.api.agent.v1.UpdateAgentResponse\"M\xbaG\x19\n" +
 	"\x06Agents\x12\x0fUpdate an agent\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x1e:\x01*2\x19/api/v1/agents/{agent.id}\x12\xb2\x01\n" +
-	"\vDeleteAgent\x12(.admiral.api.agent.v1.DeleteAgentRequest\x1a).admiral.api.agent.v1.DeleteAgentResponse\"N\xbaG\x19\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/agents/{agent.id}\x12\xae\x01\n" +
+	"\vDeleteAgent\x12(.admiral.api.agent.v1.DeleteAgentRequest\x1a).admiral.api.agent.v1.DeleteAgentResponse\"J\xbaG\x19\n" +
 	"\x06Agents\x12\x0fDelete an agent\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x1b*\x19/api/v1/agents/{agent_id}\x12\xc7\x01\n" +
-	"\x0eGetAgentStatus\x12+.admiral.api.agent.v1.GetAgentStatusRequest\x1a,.admiral.api.agent.v1.GetAgentStatusResponse\"Z\xbaG\x1f\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x17*\x15/v1/agents/{agent_id}\x12\xc3\x01\n" +
+	"\x0eGetAgentStatus\x12+.admiral.api.agent.v1.GetAgentStatusRequest\x1a,.admiral.api.agent.v1.GetAgentStatusResponse\"V\xbaG\x1f\n" +
 	"\x06Agents\x12\x15Retrieve agent status\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\"\x12 /api/v1/agents/{agent_id}/status\x12\x88\x02\n" +
-	"\x19ClearAgentIdentityBinding\x126.admiral.api.agent.v1.ClearAgentIdentityBindingRequest\x1a7.admiral.api.agent.v1.ClearAgentIdentityBindingResponse\"z\xbaG+\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/status\x12\x84\x02\n" +
+	"\x19ClearAgentIdentityBinding\x126.admiral.api.agent.v1.ClearAgentIdentityBindingRequest\x1a7.admiral.api.agent.v1.ClearAgentIdentityBindingResponse\"v\xbaG+\n" +
 	"\x06Agents\x12!Clear an agent's identity binding\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x025:\x01*\"0/api/v1/agents/{agent_id}/clear-identity-binding\x12\xd7\x01\n" +
-	"\x10CreateAgentToken\x12-.admiral.api.agent.v1.CreateAgentTokenRequest\x1a..admiral.api.agent.v1.CreateAgentTokenResponse\"d\xbaG%\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x021:\x01*\",/v1/agents/{agent_id}/clear-identity-binding\x12\xd3\x01\n" +
+	"\x10CreateAgentToken\x12-.admiral.api.agent.v1.CreateAgentTokenRequest\x1a..admiral.api.agent.v1.CreateAgentTokenResponse\"`\xbaG%\n" +
 	"\fAgent Tokens\x12\x15Create an agent token\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02%:\x01*\" /api/v1/agents/{agent_id}/tokens\x12\xcc\x01\n" +
-	"\x0fListAgentTokens\x12,.admiral.api.agent.v1.ListAgentTokensRequest\x1a-.admiral.api.agent.v1.ListAgentTokensResponse\"\\\xbaG!\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/agents/{agent_id}/tokens\x12\xc8\x01\n" +
+	"\x0fListAgentTokens\x12,.admiral.api.agent.v1.ListAgentTokensRequest\x1a-.admiral.api.agent.v1.ListAgentTokensResponse\"X\xbaG!\n" +
 	"\fAgent Tokens\x12\x11List agent tokens\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\"\x12 /api/v1/agents/{agent_id}/tokens\x12\xcc\x01\n" +
-	"\rGetAgentToken\x12*.admiral.api.agent.v1.GetAgentTokenRequest\x1a+.admiral.api.agent.v1.GetAgentTokenResponse\"b\xbaG'\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/tokens\x12\xc8\x01\n" +
+	"\rGetAgentToken\x12*.admiral.api.agent.v1.GetAgentTokenRequest\x1a+.admiral.api.agent.v1.GetAgentTokenResponse\"^\xbaG'\n" +
 	"\fAgent Tokens\x12\x17Retrieve an agent token\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\"\x12 /api/v1/agents/tokens/{token_id}\x12\xde\x01\n" +
-	"\x10RevokeAgentToken\x12-.admiral.api.agent.v1.RevokeAgentTokenRequest\x1a..admiral.api.agent.v1.RevokeAgentTokenResponse\"k\xbaG%\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/tokens/{token_id}\x12\xda\x01\n" +
+	"\x10RevokeAgentToken\x12-.admiral.api.agent.v1.RevokeAgentTokenRequest\x1a..admiral.api.agent.v1.RevokeAgentTokenResponse\"g\xbaG%\n" +
 	"\fAgent Tokens\x12\x15Revoke an agent token\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02,:\x01*\"'/api/v1/agents/tokens/{token_id}/revoke\x12\xbb\x01\n" +
-	"\tHeartbeat\x12&.admiral.api.agent.v1.HeartbeatRequest\x1a'.admiral.api.agent.v1.HeartbeatResponse\"]\xbaG#\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/agents/tokens/{token_id}/revoke\x12\xb7\x01\n" +
+	"\tHeartbeat\x12&.admiral.api.agent.v1.HeartbeatRequest\x1a'.admiral.api.agent.v1.HeartbeatResponse\"Y\xbaG#\n" +
 	"\vInfra Agent\x12\x14Send agent heartbeat\xa2\x97$\x11\n" +
 	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/api/v1/agent/heartbeat\x12\xb0\x01\n" +
-	"\bClaimJob\x12%.admiral.api.agent.v1.ClaimJobRequest\x1a&.admiral.api.agent.v1.ClaimJobResponse\"U\xbaG\x1a\n" +
+	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/agent/heartbeat\x12\xac\x01\n" +
+	"\bClaimJob\x12%.admiral.api.agent.v1.ClaimJobRequest\x1a&.admiral.api.agent.v1.ClaimJobResponse\"Q\xbaG\x1a\n" +
 	"\vInfra Agent\x12\vClaim a job\xa2\x97$\x11\n" +
 	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/api/v1/agent/jobs/claim\x12\xcd\x01\n" +
-	"\fGetJobBundle\x12).admiral.api.agent.v1.GetJobBundleRequest\x1a*.admiral.api.agent.v1.GetJobBundleResponse\"f\xbaG$\n" +
+	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/claim\x12\xc9\x01\n" +
+	"\fGetJobBundle\x12).admiral.api.agent.v1.GetJobBundleRequest\x1a*.admiral.api.agent.v1.GetJobBundleResponse\"b\xbaG$\n" +
 	"\vInfra Agent\x12\x15Retrieve a job bundle\xa2\x97$\x11\n" +
 	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02$\x12\"/api/v1/agent/jobs/{job_id}/bundle\x12\xd5\x01\n" +
-	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"e\xbaG \n" +
+	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02 \x12\x1e/v1/agent/jobs/{job_id}/bundle\x12\xd1\x01\n" +
+	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"a\xbaG \n" +
 	"\vInfra Agent\x12\x11Report job result\xa2\x97$\x11\n" +
 	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02':\x01*\"\"/api/v1/agent/jobs/{job_id}/result\x12\xbc\x01\n" +
-	"\rListAgentJobs\x12*.admiral.api.agent.v1.ListAgentJobsRequest\x1a+.admiral.api.agent.v1.ListAgentJobsResponse\"R\xbaG\x19\n" +
+	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/v1/agent/jobs/{job_id}/result\x12\xb8\x01\n" +
+	"\rListAgentJobs\x12*.admiral.api.agent.v1.ListAgentJobsRequest\x1a+.admiral.api.agent.v1.ListAgentJobsResponse\"N\xbaG\x19\n" +
 	"\x06Agents\x12\x0fList agent jobs\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02 \x12\x1e/api/v1/agents/{agent_id}/jobs\x12\xd4\x01\n" +
-	"\x11ReportAgentStatus\x12..admiral.api.agent.v1.ReportAgentStatusRequest\x1a/.admiral.api.agent.v1.ReportAgentStatusResponse\"^\xbaG%\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/agents/{agent_id}/jobs\x12\xd0\x01\n" +
+	"\x11ReportAgentStatus\x12..admiral.api.agent.v1.ReportAgentStatusRequest\x1a/.admiral.api.agent.v1.ReportAgentStatusResponse\"Z\xbaG%\n" +
 	"\x0eWorkload Agent\x12\x13Report agent status\xa2\x97$\x13\n" +
-	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/agent/status\x12\xea\x01\n" +
-	"\x14ReportWorkloadStatus\x121.admiral.api.agent.v1.ReportWorkloadStatusRequest\x1a2.admiral.api.agent.v1.ReportWorkloadStatusResponse\"k\xbaG(\n" +
+	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/agent/status\x12\xe6\x01\n" +
+	"\x14ReportWorkloadStatus\x121.admiral.api.agent.v1.ReportWorkloadStatusRequest\x1a2.admiral.api.agent.v1.ReportWorkloadStatusResponse\"g\xbaG(\n" +
 	"\x0eWorkload Agent\x12\x16Report workload status\xa2\x97$\x13\n" +
-	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/agent/workloads/status\x12\xef\x01\n" +
-	"\x15ReportWorkloadMetrics\x122.admiral.api.agent.v1.ReportWorkloadMetricsRequest\x1a3.admiral.api.agent.v1.ReportWorkloadMetricsResponse\"m\xbaG)\n" +
+	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v1/agent/workloads/status\x12\xeb\x01\n" +
+	"\x15ReportWorkloadMetrics\x122.admiral.api.agent.v1.ReportWorkloadMetricsRequest\x1a3.admiral.api.agent.v1.ReportWorkloadMetricsResponse\"i\xbaG)\n" +
 	"\x0eWorkload Agent\x12\x17Report workload metrics\xa2\x97$\x13\n" +
-	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/api/v1/agent/workloads/metrics\x12\xc0\x01\n" +
-	"\rListWorkloads\x12*.admiral.api.agent.v1.ListWorkloadsRequest\x1a+.admiral.api.agent.v1.ListWorkloadsResponse\"V\xbaG\x18\n" +
+	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/agent/workloads/metrics\x12\xbc\x01\n" +
+	"\rListWorkloads\x12*.admiral.api.agent.v1.ListWorkloadsRequest\x1a+.admiral.api.agent.v1.ListWorkloadsResponse\"R\xbaG\x18\n" +
 	"\x06Agents\x12\x0eList workloads\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02%\x12#/api/v1/agents/{agent_id}/workloads\x12\xcd\x01\n" +
-	"\vGetWorkload\x12(.admiral.api.agent.v1.GetWorkloadRequest\x1a).admiral.api.agent.v1.GetWorkloadResponse\"i\xbaG\x1d\n" +
+	"agent:read\x82\xd3\xe4\x93\x02!\x12\x1f/v1/agents/{agent_id}/workloads\x12\xc9\x01\n" +
+	"\vGetWorkload\x12(.admiral.api.agent.v1.GetWorkloadRequest\x1a).admiral.api.agent.v1.GetWorkloadResponse\"e\xbaG\x1d\n" +
 	"\x06Agents\x12\x13Retrieve a workload\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x023\x121/api/v1/agents/{agent_id}/workloads/{workload_id}\x12\xd2\x01\n" +
-	"\x12ListWorkloadEvents\x12/.admiral.api.agent.v1.ListWorkloadEventsRequest\x1a0.admiral.api.agent.v1.ListWorkloadEventsResponse\"Y\xbaG\x1e\n" +
+	"agent:read\x82\xd3\xe4\x93\x02/\x12-/v1/agents/{agent_id}/workloads/{workload_id}\x12\xce\x01\n" +
+	"\x12ListWorkloadEvents\x12/.admiral.api.agent.v1.ListWorkloadEventsRequest\x1a0.admiral.api.agent.v1.ListWorkloadEventsResponse\"U\xbaG\x1e\n" +
 	"\x06Agents\x12\x14List workload events\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\"\x12 /api/v1/agents/{agent_id}/events\x12\xf0\x01\n" +
-	"\x11GetRevisionBundle\x12..admiral.api.agent.v1.GetRevisionBundleRequest\x1a/.admiral.api.agent.v1.GetRevisionBundleResponse\"z\xbaG,\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/events\x12\xec\x01\n" +
+	"\x11GetRevisionBundle\x12..admiral.api.agent.v1.GetRevisionBundleRequest\x1a/.admiral.api.agent.v1.GetRevisionBundleResponse\"v\xbaG,\n" +
 	"\x0eWorkload Agent\x12\x1aRetrieve a revision bundle\xa2\x97$\x13\n" +
-	"\fagent:deploy\x12\x03sat\x82\xd3\xe4\x93\x02.\x12,/api/v1/agent/revisions/{revision_id}/bundle\x12\xf8\x01\n" +
-	"\x14ReportRevisionResult\x121.admiral.api.agent.v1.ReportRevisionResultRequest\x1a2.admiral.api.agent.v1.ReportRevisionResultResponse\"y\xbaG(\n" +
+	"\fagent:deploy\x12\x03sat\x82\xd3\xe4\x93\x02*\x12(/v1/agent/revisions/{revision_id}/bundle\x12\xf4\x01\n" +
+	"\x14ReportRevisionResult\x121.admiral.api.agent.v1.ReportRevisionResultRequest\x1a2.admiral.api.agent.v1.ReportRevisionResultResponse\"u\xbaG(\n" +
 	"\x0eWorkload Agent\x12\x16Report revision result\xa2\x97$\x13\n" +
-	"\fagent:deploy\x12\x03sat\x82\xd3\xe4\x93\x021:\x01*\",/api/v1/agent/revisions/{revision_id}/resultB\xcf\x01\n" +
+	"\fagent:deploy\x12\x03sat\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/agent/revisions/{revision_id}/resultB\xcf\x01\n" +
 	"\x18com.admiral.api.agent.v1B\n" +
 	"AgentProtoP\x01Z4go.admiral.io/sdk/proto/admiral/api/agent/v1;agentv1\xa2\x02\x03AAA\xaa\x02\x14Admiral.Api.Agent.V1\xca\x02\x14Admiral\\Api\\Agent\\V1\xe2\x02 Admiral\\Api\\Agent\\V1\\GPBMetadata\xea\x02\x17Admiral::Api::Agent::V1b\x06proto3"
 

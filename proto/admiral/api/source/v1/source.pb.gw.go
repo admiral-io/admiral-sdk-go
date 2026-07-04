@@ -330,7 +330,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/CreateSource", runtime.WithHTTPPathPattern("/api/v1/sources"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/CreateSource", runtime.WithHTTPPathPattern("/v1/sources"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -350,7 +350,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/GetSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/GetSource", runtime.WithHTTPPathPattern("/v1/sources/{source_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -370,7 +370,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSources", runtime.WithHTTPPathPattern("/api/v1/sources"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSources", runtime.WithHTTPPathPattern("/v1/sources"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -390,7 +390,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/UpdateSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/UpdateSource", runtime.WithHTTPPathPattern("/v1/sources/{source.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -410,7 +410,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/DeleteSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/DeleteSource", runtime.WithHTTPPathPattern("/v1/sources/{source_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -430,7 +430,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/TestSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}/test"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/TestSource", runtime.WithHTTPPathPattern("/v1/sources/{source_id}/test"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -450,7 +450,7 @@ func RegisterSourceAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, 
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSourceVersions", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}/versions"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSourceVersions", runtime.WithHTTPPathPattern("/v1/sources/{source_id}/versions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -508,7 +508,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/CreateSource", runtime.WithHTTPPathPattern("/api/v1/sources"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/CreateSource", runtime.WithHTTPPathPattern("/v1/sources"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -525,7 +525,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/GetSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/GetSource", runtime.WithHTTPPathPattern("/v1/sources/{source_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -542,7 +542,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSources", runtime.WithHTTPPathPattern("/api/v1/sources"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSources", runtime.WithHTTPPathPattern("/v1/sources"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -559,7 +559,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/UpdateSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/UpdateSource", runtime.WithHTTPPathPattern("/v1/sources/{source.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -576,7 +576,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/DeleteSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/DeleteSource", runtime.WithHTTPPathPattern("/v1/sources/{source_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -593,7 +593,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/TestSource", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}/test"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/TestSource", runtime.WithHTTPPathPattern("/v1/sources/{source_id}/test"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -610,7 +610,7 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSourceVersions", runtime.WithHTTPPathPattern("/api/v1/sources/{source_id}/versions"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.source.v1.SourceAPI/ListSourceVersions", runtime.WithHTTPPathPattern("/v1/sources/{source_id}/versions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -627,13 +627,13 @@ func RegisterSourceAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_SourceAPI_CreateSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "sources"}, ""))
-	pattern_SourceAPI_GetSource_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "sources", "source_id"}, ""))
-	pattern_SourceAPI_ListSources_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "sources"}, ""))
-	pattern_SourceAPI_UpdateSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "sources", "source.id"}, ""))
-	pattern_SourceAPI_DeleteSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "sources", "source_id"}, ""))
-	pattern_SourceAPI_TestSource_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "sources", "source_id", "test"}, ""))
-	pattern_SourceAPI_ListSourceVersions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "sources", "source_id", "versions"}, ""))
+	pattern_SourceAPI_CreateSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "sources"}, ""))
+	pattern_SourceAPI_GetSource_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "sources", "source_id"}, ""))
+	pattern_SourceAPI_ListSources_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "sources"}, ""))
+	pattern_SourceAPI_UpdateSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "sources", "source.id"}, ""))
+	pattern_SourceAPI_DeleteSource_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "sources", "source_id"}, ""))
+	pattern_SourceAPI_TestSource_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "sources", "source_id", "test"}, ""))
+	pattern_SourceAPI_ListSourceVersions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "sources", "source_id", "versions"}, ""))
 )
 
 var (

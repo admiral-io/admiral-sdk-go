@@ -298,7 +298,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetMe", runtime.WithHTTPPathPattern("/api/v1/user/me"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetMe", runtime.WithHTTPPathPattern("/v1/user/me"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -318,7 +318,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetUser", runtime.WithHTTPPathPattern("/api/v1/users/{user_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetUser", runtime.WithHTTPPathPattern("/v1/users/{user_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -338,7 +338,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/CreatePersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/CreatePersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -358,7 +358,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/ListPersonalAccessTokens", runtime.WithHTTPPathPattern("/api/v1/user/tokens"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/ListPersonalAccessTokens", runtime.WithHTTPPathPattern("/v1/user/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -378,7 +378,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetPersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetPersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -398,7 +398,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/UpdatePersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/UpdatePersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -418,7 +418,7 @@ func RegisterUserAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/RevokePersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens/{token_id}/revoke"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/RevokePersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens/{token_id}/revoke"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -476,7 +476,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetMe", runtime.WithHTTPPathPattern("/api/v1/user/me"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetMe", runtime.WithHTTPPathPattern("/v1/user/me"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -493,7 +493,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetUser", runtime.WithHTTPPathPattern("/api/v1/users/{user_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetUser", runtime.WithHTTPPathPattern("/v1/users/{user_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -510,7 +510,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/CreatePersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/CreatePersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -527,7 +527,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/ListPersonalAccessTokens", runtime.WithHTTPPathPattern("/api/v1/user/tokens"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/ListPersonalAccessTokens", runtime.WithHTTPPathPattern("/v1/user/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -544,7 +544,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetPersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/GetPersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -561,7 +561,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/UpdatePersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/UpdatePersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -578,7 +578,7 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/RevokePersonalAccessToken", runtime.WithHTTPPathPattern("/api/v1/user/tokens/{token_id}/revoke"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.user.v1.UserAPI/RevokePersonalAccessToken", runtime.WithHTTPPathPattern("/v1/user/tokens/{token_id}/revoke"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -595,13 +595,13 @@ func RegisterUserAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 }
 
 var (
-	pattern_UserAPI_GetMe_0                     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "user", "me"}, ""))
-	pattern_UserAPI_GetUser_0                   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "users", "user_id"}, ""))
-	pattern_UserAPI_CreatePersonalAccessToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "user", "tokens"}, ""))
-	pattern_UserAPI_ListPersonalAccessTokens_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "user", "tokens"}, ""))
-	pattern_UserAPI_GetPersonalAccessToken_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "user", "tokens", "token_id"}, ""))
-	pattern_UserAPI_UpdatePersonalAccessToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "user", "tokens", "token_id"}, ""))
-	pattern_UserAPI_RevokePersonalAccessToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "user", "tokens", "token_id", "revoke"}, ""))
+	pattern_UserAPI_GetMe_0                     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "user", "me"}, ""))
+	pattern_UserAPI_GetUser_0                   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "users", "user_id"}, ""))
+	pattern_UserAPI_CreatePersonalAccessToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "user", "tokens"}, ""))
+	pattern_UserAPI_ListPersonalAccessTokens_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "user", "tokens"}, ""))
+	pattern_UserAPI_GetPersonalAccessToken_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "user", "tokens", "token_id"}, ""))
+	pattern_UserAPI_UpdatePersonalAccessToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "user", "tokens", "token_id"}, ""))
+	pattern_UserAPI_RevokePersonalAccessToken_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "user", "tokens", "token_id", "revoke"}, ""))
 )
 
 var (

@@ -932,30 +932,30 @@ const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	" RevokePersonalAccessTokenRequest\x12&\n" +
 	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"f\n" +
 	"!RevokePersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken2\xb6\f\n" +
-	"\aUserAPI\x12\x93\x01\n" +
-	"\x05GetMe\x12!.admiral.api.user.v1.GetMeRequest\x1a\".admiral.api.user.v1.GetMeResponse\"C\xbaG%\n" +
-	"\x04User\x12\x1dRetrieve current user profile\xa2\x97$\x00\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/v1/user/me\x12\xa4\x01\n" +
-	"\aGetUser\x12#.admiral.api.user.v1.GetUserRequest\x1a$.admiral.api.user.v1.GetUserResponse\"N\xbaG\x1d\n" +
+	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken2\x9a\f\n" +
+	"\aUserAPI\x12\x8f\x01\n" +
+	"\x05GetMe\x12!.admiral.api.user.v1.GetMeRequest\x1a\".admiral.api.user.v1.GetMeResponse\"?\xbaG%\n" +
+	"\x04User\x12\x1dRetrieve current user profile\xa2\x97$\x00\x82\xd3\xe4\x93\x02\r\x12\v/v1/user/me\x12\xa0\x01\n" +
+	"\aGetUser\x12#.admiral.api.user.v1.GetUserRequest\x1a$.admiral.api.user.v1.GetUserResponse\"J\xbaG\x1d\n" +
 	"\x04User\x12\x15Retrieve a user by ID\xa2\x97$\v\n" +
-	"\tuser:read\x82\xd3\xe4\x93\x02\x19\x12\x17/api/v1/users/{user_id}\x12\xf6\x01\n" +
-	"\x19CreatePersonalAccessToken\x125.admiral.api.user.v1.CreatePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.CreatePersonalAccessTokenResponse\"j\xbaG8\n" +
+	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xf2\x01\n" +
+	"\x19CreatePersonalAccessToken\x125.admiral.api.user.v1.CreatePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.CreatePersonalAccessTokenResponse\"f\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eCreate a personal access token\xa2\x97$\r\n" +
-	"\vtoken:write\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/user/tokens\x12\xec\x01\n" +
-	"\x18ListPersonalAccessTokens\x124.admiral.api.user.v1.ListPersonalAccessTokensRequest\x1a5.admiral.api.user.v1.ListPersonalAccessTokensResponse\"c\xbaG5\n" +
+	"\vtoken:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/user/tokens\x12\xe8\x01\n" +
+	"\x18ListPersonalAccessTokens\x124.admiral.api.user.v1.ListPersonalAccessTokensRequest\x1a5.admiral.api.user.v1.ListPersonalAccessTokensResponse\"_\xbaG5\n" +
 	"\x16Personal Access Tokens\x12\x1bList personal access tokens\xa2\x97$\f\n" +
 	"\n" +
-	"token:read\x82\xd3\xe4\x93\x02\x15\x12\x13/api/v1/user/tokens\x12\xf6\x01\n" +
-	"\x16GetPersonalAccessToken\x122.admiral.api.user.v1.GetPersonalAccessTokenRequest\x1a3.admiral.api.user.v1.GetPersonalAccessTokenResponse\"s\xbaG:\n" +
+	"token:read\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/user/tokens\x12\xf2\x01\n" +
+	"\x16GetPersonalAccessToken\x122.admiral.api.user.v1.GetPersonalAccessTokenRequest\x1a3.admiral.api.user.v1.GetPersonalAccessTokenResponse\"o\xbaG:\n" +
 	"\x16Personal Access Tokens\x12 Retrieve a personal access token\xa2\x97$\f\n" +
 	"\n" +
-	"token:read\x82\xd3\xe4\x93\x02 \x12\x1e/api/v1/user/tokens/{token_id}\x12\x81\x02\n" +
-	"\x19UpdatePersonalAccessToken\x125.admiral.api.user.v1.UpdatePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.UpdatePersonalAccessTokenResponse\"u\xbaG8\n" +
+	"token:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/user/tokens/{token_id}\x12\xfd\x01\n" +
+	"\x19UpdatePersonalAccessToken\x125.admiral.api.user.v1.UpdatePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.UpdatePersonalAccessTokenResponse\"q\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eUpdate a personal access token\xa2\x97$\r\n" +
-	"\vtoken:write\x82\xd3\xe4\x93\x02#:\x01*2\x1e/api/v1/user/tokens/{token_id}\x12\x88\x02\n" +
-	"\x19RevokePersonalAccessToken\x125.admiral.api.user.v1.RevokePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.RevokePersonalAccessTokenResponse\"|\xbaG8\n" +
+	"\vtoken:write\x82\xd3\xe4\x93\x02\x1f:\x01*2\x1a/v1/user/tokens/{token_id}\x12\x84\x02\n" +
+	"\x19RevokePersonalAccessToken\x125.admiral.api.user.v1.RevokePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.RevokePersonalAccessTokenResponse\"x\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eRevoke a personal access token\xa2\x97$\r\n" +
-	"\vtoken:write\x82\xd3\xe4\x93\x02*:\x01*\"%/api/v1/user/tokens/{token_id}/revokeB\xc7\x01\n" +
+	"\vtoken:write\x82\xd3\xe4\x93\x02&:\x01*\"!/v1/user/tokens/{token_id}/revokeB\xc7\x01\n" +
 	"\x17com.admiral.api.user.v1B\tUserProtoP\x01Z2go.admiral.io/sdk/proto/admiral/api/user/v1;userv1\xa2\x02\x03AAU\xaa\x02\x13Admiral.Api.User.V1\xca\x02\x13Admiral\\Api\\User\\V1\xe2\x02\x1fAdmiral\\Api\\User\\V1\\GPBMetadata\xea\x02\x16Admiral::Api::User::V1b\x06proto3"
 
 var (

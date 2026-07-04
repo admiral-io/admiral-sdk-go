@@ -1015,7 +1015,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgent", runtime.WithHTTPPathPattern("/api/v1/agents"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgent", runtime.WithHTTPPathPattern("/v1/agents"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1035,7 +1035,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgent", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1055,7 +1055,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgents", runtime.WithHTTPPathPattern("/api/v1/agents"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgents", runtime.WithHTTPPathPattern("/v1/agents"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1075,7 +1075,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/api/v1/agents/{agent.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1095,7 +1095,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/DeleteAgent", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/DeleteAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1115,7 +1115,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentStatus", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/status"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentStatus", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1135,7 +1135,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/clear-identity-binding"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/clear-identity-binding"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1155,7 +1155,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgentToken", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/tokens"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgentToken", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1175,7 +1175,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentTokens", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/tokens"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentTokens", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1195,7 +1195,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentToken", runtime.WithHTTPPathPattern("/api/v1/agents/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentToken", runtime.WithHTTPPathPattern("/v1/agents/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1215,7 +1215,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken", runtime.WithHTTPPathPattern("/api/v1/agents/tokens/{token_id}/revoke"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken", runtime.WithHTTPPathPattern("/v1/agents/tokens/{token_id}/revoke"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1235,7 +1235,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/Heartbeat", runtime.WithHTTPPathPattern("/api/v1/agent/heartbeat"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/Heartbeat", runtime.WithHTTPPathPattern("/v1/agent/heartbeat"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1255,7 +1255,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClaimJob", runtime.WithHTTPPathPattern("/api/v1/agent/jobs/claim"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClaimJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/claim"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1275,7 +1275,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetJobBundle", runtime.WithHTTPPathPattern("/api/v1/agent/jobs/{job_id}/bundle"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetJobBundle", runtime.WithHTTPPathPattern("/v1/agent/jobs/{job_id}/bundle"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1295,7 +1295,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportJobResult", runtime.WithHTTPPathPattern("/api/v1/agent/jobs/{job_id}/result"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportJobResult", runtime.WithHTTPPathPattern("/v1/agent/jobs/{job_id}/result"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1315,7 +1315,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentJobs", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/jobs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentJobs", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/jobs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1335,7 +1335,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportAgentStatus", runtime.WithHTTPPathPattern("/api/v1/agent/status"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportAgentStatus", runtime.WithHTTPPathPattern("/v1/agent/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1355,7 +1355,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/api/v1/agent/workloads/status"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/v1/agent/workloads/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1375,7 +1375,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadMetrics", runtime.WithHTTPPathPattern("/api/v1/agent/workloads/metrics"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadMetrics", runtime.WithHTTPPathPattern("/v1/agent/workloads/metrics"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1395,7 +1395,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloads", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/workloads"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloads", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/workloads"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1415,7 +1415,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetWorkload", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/workloads/{workload_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetWorkload", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/workloads/{workload_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1435,7 +1435,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/events"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1455,7 +1455,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetRevisionBundle", runtime.WithHTTPPathPattern("/api/v1/agent/revisions/{revision_id}/bundle"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetRevisionBundle", runtime.WithHTTPPathPattern("/v1/agent/revisions/{revision_id}/bundle"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1475,7 +1475,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportRevisionResult", runtime.WithHTTPPathPattern("/api/v1/agent/revisions/{revision_id}/result"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportRevisionResult", runtime.WithHTTPPathPattern("/v1/agent/revisions/{revision_id}/result"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1533,7 +1533,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgent", runtime.WithHTTPPathPattern("/api/v1/agents"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgent", runtime.WithHTTPPathPattern("/v1/agents"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1550,7 +1550,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgent", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1567,7 +1567,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgents", runtime.WithHTTPPathPattern("/api/v1/agents"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgents", runtime.WithHTTPPathPattern("/v1/agents"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1584,7 +1584,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/api/v1/agents/{agent.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1601,7 +1601,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/DeleteAgent", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/DeleteAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1618,7 +1618,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentStatus", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/status"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentStatus", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1635,7 +1635,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/clear-identity-binding"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/clear-identity-binding"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1652,7 +1652,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgentToken", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/tokens"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateAgentToken", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1669,7 +1669,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentTokens", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/tokens"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentTokens", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/tokens"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1686,7 +1686,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentToken", runtime.WithHTTPPathPattern("/api/v1/agents/tokens/{token_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetAgentToken", runtime.WithHTTPPathPattern("/v1/agents/tokens/{token_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1703,7 +1703,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken", runtime.WithHTTPPathPattern("/api/v1/agents/tokens/{token_id}/revoke"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken", runtime.WithHTTPPathPattern("/v1/agents/tokens/{token_id}/revoke"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1720,7 +1720,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/Heartbeat", runtime.WithHTTPPathPattern("/api/v1/agent/heartbeat"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/Heartbeat", runtime.WithHTTPPathPattern("/v1/agent/heartbeat"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1737,7 +1737,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClaimJob", runtime.WithHTTPPathPattern("/api/v1/agent/jobs/claim"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ClaimJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/claim"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1754,7 +1754,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetJobBundle", runtime.WithHTTPPathPattern("/api/v1/agent/jobs/{job_id}/bundle"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetJobBundle", runtime.WithHTTPPathPattern("/v1/agent/jobs/{job_id}/bundle"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1771,7 +1771,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportJobResult", runtime.WithHTTPPathPattern("/api/v1/agent/jobs/{job_id}/result"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportJobResult", runtime.WithHTTPPathPattern("/v1/agent/jobs/{job_id}/result"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1788,7 +1788,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentJobs", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/jobs"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListAgentJobs", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/jobs"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1805,7 +1805,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportAgentStatus", runtime.WithHTTPPathPattern("/api/v1/agent/status"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportAgentStatus", runtime.WithHTTPPathPattern("/v1/agent/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1822,7 +1822,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/api/v1/agent/workloads/status"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadStatus", runtime.WithHTTPPathPattern("/v1/agent/workloads/status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1839,7 +1839,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadMetrics", runtime.WithHTTPPathPattern("/api/v1/agent/workloads/metrics"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportWorkloadMetrics", runtime.WithHTTPPathPattern("/v1/agent/workloads/metrics"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1856,7 +1856,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloads", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/workloads"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloads", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/workloads"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1873,7 +1873,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetWorkload", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/workloads/{workload_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetWorkload", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/workloads/{workload_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1890,7 +1890,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents", runtime.WithHTTPPathPattern("/api/v1/agents/{agent_id}/events"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}/events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1907,7 +1907,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetRevisionBundle", runtime.WithHTTPPathPattern("/api/v1/agent/revisions/{revision_id}/bundle"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetRevisionBundle", runtime.WithHTTPPathPattern("/v1/agent/revisions/{revision_id}/bundle"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1924,7 +1924,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportRevisionResult", runtime.WithHTTPPathPattern("/api/v1/agent/revisions/{revision_id}/result"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ReportRevisionResult", runtime.WithHTTPPathPattern("/v1/agent/revisions/{revision_id}/result"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1941,30 +1941,30 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 }
 
 var (
-	pattern_AgentAPI_CreateAgent_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "agents"}, ""))
-	pattern_AgentAPI_GetAgent_0                  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "agents", "agent_id"}, ""))
-	pattern_AgentAPI_ListAgents_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "agents"}, ""))
-	pattern_AgentAPI_UpdateAgent_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "agents", "agent.id"}, ""))
-	pattern_AgentAPI_DeleteAgent_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "agents", "agent_id"}, ""))
-	pattern_AgentAPI_GetAgentStatus_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "status"}, ""))
-	pattern_AgentAPI_ClearAgentIdentityBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "clear-identity-binding"}, ""))
-	pattern_AgentAPI_CreateAgentToken_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "tokens"}, ""))
-	pattern_AgentAPI_ListAgentTokens_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "tokens"}, ""))
-	pattern_AgentAPI_GetAgentToken_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "agents", "tokens", "token_id"}, ""))
-	pattern_AgentAPI_RevokeAgentToken_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agents", "tokens", "token_id", "revoke"}, ""))
-	pattern_AgentAPI_Heartbeat_0                 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "agent", "heartbeat"}, ""))
-	pattern_AgentAPI_ClaimJob_0                  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "agent", "jobs", "claim"}, ""))
-	pattern_AgentAPI_GetJobBundle_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agent", "jobs", "job_id", "bundle"}, ""))
-	pattern_AgentAPI_ReportJobResult_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agent", "jobs", "job_id", "result"}, ""))
-	pattern_AgentAPI_ListAgentJobs_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "jobs"}, ""))
-	pattern_AgentAPI_ReportAgentStatus_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "agent", "status"}, ""))
-	pattern_AgentAPI_ReportWorkloadStatus_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "agent", "workloads", "status"}, ""))
-	pattern_AgentAPI_ReportWorkloadMetrics_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "agent", "workloads", "metrics"}, ""))
-	pattern_AgentAPI_ListWorkloads_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "workloads"}, ""))
-	pattern_AgentAPI_GetWorkload_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "agents", "agent_id", "workloads", "workload_id"}, ""))
-	pattern_AgentAPI_ListWorkloadEvents_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "agents", "agent_id", "events"}, ""))
-	pattern_AgentAPI_GetRevisionBundle_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agent", "revisions", "revision_id", "bundle"}, ""))
-	pattern_AgentAPI_ReportRevisionResult_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "agent", "revisions", "revision_id", "result"}, ""))
+	pattern_AgentAPI_CreateAgent_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "agents"}, ""))
+	pattern_AgentAPI_GetAgent_0                  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent_id"}, ""))
+	pattern_AgentAPI_ListAgents_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "agents"}, ""))
+	pattern_AgentAPI_UpdateAgent_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent.id"}, ""))
+	pattern_AgentAPI_DeleteAgent_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent_id"}, ""))
+	pattern_AgentAPI_GetAgentStatus_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "status"}, ""))
+	pattern_AgentAPI_ClearAgentIdentityBinding_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "clear-identity-binding"}, ""))
+	pattern_AgentAPI_CreateAgentToken_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "tokens"}, ""))
+	pattern_AgentAPI_ListAgentTokens_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "tokens"}, ""))
+	pattern_AgentAPI_GetAgentToken_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "agents", "tokens", "token_id"}, ""))
+	pattern_AgentAPI_RevokeAgentToken_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agents", "tokens", "token_id", "revoke"}, ""))
+	pattern_AgentAPI_Heartbeat_0                 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "agent", "heartbeat"}, ""))
+	pattern_AgentAPI_ClaimJob_0                  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "claim"}, ""))
+	pattern_AgentAPI_GetJobBundle_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "job_id", "bundle"}, ""))
+	pattern_AgentAPI_ReportJobResult_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "job_id", "result"}, ""))
+	pattern_AgentAPI_ListAgentJobs_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "jobs"}, ""))
+	pattern_AgentAPI_ReportAgentStatus_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "agent", "status"}, ""))
+	pattern_AgentAPI_ReportWorkloadStatus_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "workloads", "status"}, ""))
+	pattern_AgentAPI_ReportWorkloadMetrics_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "workloads", "metrics"}, ""))
+	pattern_AgentAPI_ListWorkloads_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "workloads"}, ""))
+	pattern_AgentAPI_GetWorkload_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "agents", "agent_id", "workloads", "workload_id"}, ""))
+	pattern_AgentAPI_ListWorkloadEvents_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "events"}, ""))
+	pattern_AgentAPI_GetRevisionBundle_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "revisions", "revision_id", "bundle"}, ""))
+	pattern_AgentAPI_ReportRevisionResult_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "revisions", "revision_id", "result"}, ""))
 )
 
 var (

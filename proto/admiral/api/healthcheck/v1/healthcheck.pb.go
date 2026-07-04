@@ -7,6 +7,7 @@
 package healthcheckv1
 
 import (
+	_ "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "github.com/google/gnostic/openapiv3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -103,13 +104,13 @@ var File_admiral_api_healthcheck_v1_healthcheck_proto protoreflect.FileDescripto
 
 const file_admiral_api_healthcheck_v1_healthcheck_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/healthcheck/v1/healthcheck.proto\x12\x1aadmiral.api.healthcheck.v1\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\"\x14\n" +
+	",admiral/api/healthcheck/v1/healthcheck.proto\x12\x1aadmiral.api.healthcheck.v1\x1a#admiral/common/v1/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\"\x14\n" +
 	"\x12HealthcheckRequest\"\x15\n" +
-	"\x13HealthcheckResponse2\xcb\x01\n" +
-	"\x0eHealthcheckAPI\x12\xb8\x01\n" +
-	"\vHealthcheck\x12..admiral.api.healthcheck.v1.HealthcheckRequest\x1a/.admiral.api.healthcheck.v1.HealthcheckResponse\"H\xbaG\x1e\n" +
-	"\x06Health\x12\x14Check service health\x82\xd3\xe4\x93\x02!Z\n" +
-	"\x12\b/healthz\x12\x13/api/v1/healthcheckB\xff\x01\n" +
+	"\x13HealthcheckResponse2\xcd\x01\n" +
+	"\x0eHealthcheckAPI\x12\xba\x01\n" +
+	"\vHealthcheck\x12..admiral.api.healthcheck.v1.HealthcheckRequest\x1a/.admiral.api.healthcheck.v1.HealthcheckResponse\"J\xbaG\x1e\n" +
+	"\x06Health\x12\x14Check service health\xa2\x97$\x02\x18\x01\x82\xd3\xe4\x93\x02\x1dZ\n" +
+	"\x12\b/healthz\x12\x0f/v1/healthcheckB\xff\x01\n" +
 	"\x1ecom.admiral.api.healthcheck.v1B\x10HealthcheckProtoP\x01Z@go.admiral.io/sdk/proto/admiral/api/healthcheck/v1;healthcheckv1\xa2\x02\x03AAH\xaa\x02\x1aAdmiral.Api.Healthcheck.V1\xca\x02\x1aAdmiral\\Api\\Healthcheck\\V1\xe2\x02&Admiral\\Api\\Healthcheck\\V1\\GPBMetadata\xea\x02\x1dAdmiral::Api::Healthcheck::V1b\x06proto3"
 
 var (
