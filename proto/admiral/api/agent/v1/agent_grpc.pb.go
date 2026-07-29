@@ -30,51 +30,54 @@ const (
 	AgentAPI_ListAgentTokens_FullMethodName           = "/admiral.api.agent.v1.AgentAPI/ListAgentTokens"
 	AgentAPI_GetAgentToken_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/GetAgentToken"
 	AgentAPI_RevokeAgentToken_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken"
-	AgentAPI_Heartbeat_FullMethodName                 = "/admiral.api.agent.v1.AgentAPI/Heartbeat"
-	AgentAPI_ClaimJob_FullMethodName                  = "/admiral.api.agent.v1.AgentAPI/ClaimJob"
-	AgentAPI_GetJobBundle_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/GetJobBundle"
-	AgentAPI_ReportJobResult_FullMethodName           = "/admiral.api.agent.v1.AgentAPI/ReportJobResult"
 	AgentAPI_ListAgentJobs_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/ListAgentJobs"
-	AgentAPI_ReportAgentStatus_FullMethodName         = "/admiral.api.agent.v1.AgentAPI/ReportAgentStatus"
-	AgentAPI_ReportWorkloadStatus_FullMethodName      = "/admiral.api.agent.v1.AgentAPI/ReportWorkloadStatus"
-	AgentAPI_ReportWorkloadMetrics_FullMethodName     = "/admiral.api.agent.v1.AgentAPI/ReportWorkloadMetrics"
 	AgentAPI_ListWorkloads_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/ListWorkloads"
 	AgentAPI_GetWorkload_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/GetWorkload"
 	AgentAPI_ListWorkloadEvents_FullMethodName        = "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents"
-	AgentAPI_GetRevisionBundle_FullMethodName         = "/admiral.api.agent.v1.AgentAPI/GetRevisionBundle"
-	AgentAPI_ReportRevisionResult_FullMethodName      = "/admiral.api.agent.v1.AgentAPI/ReportRevisionResult"
 )
 
 // AgentAPIClient is the client API for AgentAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AgentAPI manages execution agents and their work, across both agent kinds:
+// AgentAPI is the management surface for execution agents: their lifecycle,
+// their Service Access Tokens, and read-only visibility into the work they
+// have done. It is the human-facing half of the agent contract, called with a
+// PAT from the CLI, Terraform provider, or web app.
 //
-//   - TERRAFORM agents are the execution plane for infrastructure operations (plan,
-//     apply, destroy) run by a terraform-semantic engine (Terraform or OpenTofu,
-//     selected per job via JobBundle.engine). They pull work: ClaimJob ->
-//     GetJobBundle -> execute -> ReportJobResult.
+// The execution protocol the agents themselves speak lives in AgentRuntimeAPI
+// (runtime.proto). That half is SAT-only, excluded from the public OpenAPI
+// surface, and changes with the agent binaries. Keeping the two apart means the
+// documented management contract is not versioned against the churn of job
+// bundles, hooks, and engines.
 //
-//   - KUBERNETES agents are the control plane for Kubernetes clusters. They push
-//     telemetry (ReportAgentStatus) and pull rendered manifest bundles for
-//     workload revisions (GetRevisionBundle -> apply -> ReportRevisionResult).
+// Both agent kinds are managed here and share one identity, lifecycle, and
+// token model:
 //
-// Both kinds share one identity, lifecycle, and token model. Administrators
-// create an agent via CreateAgent (passing the kind), which returns a Service
-// Access Token (SAT) for deploying the agent binary. Once the agent boots and
-// begins reporting, the server transitions its health from PENDING to HEALTHY.
+//   - TERRAFORM agents are the execution plane for infrastructure operations
+//     (plan, apply, destroy) run by a terraform-semantic engine (Terraform or
+//     OpenTofu, selected per job via JobBundle.engine).
 //
-// Admin/read routes follow /v1/agents/... (plural, with IDs). Agent-facing
-// routes use /v1/agent/... (singular, no ID; derived from the SAT binding).
+//   - KUBERNETES agents are the control plane for Kubernetes clusters,
+//     reporting workload telemetry and applying rendered manifest revisions.
 //
-// The execution-protocol messages live in companion files: jobs.proto
-// (TERRAFORM execution) and workloads.proto (KUBERNETES telemetry and
-// revision delivery).
+// Administrators create an agent via CreateAgent (passing the kind), which
+// returns a Service Access Token (SAT) for deploying the agent binary. Once the
+// agent boots and begins reporting through AgentRuntimeAPI, the server
+// transitions its health from PENDING to HEALTHY.
+//
+// Management routes follow /v1/agents/... (plural, with IDs); the runtime
+// protocol uses /v1/agent/... (singular, no ID; derived from the SAT binding).
+//
+// Message definitions live in companion files: jobs.proto (TERRAFORM execution)
+// and workloads.proto (KUBERNETES telemetry and revision delivery).
 //
 // This service is the unified successor to the former RunnerAPI (admiral.runner.v1)
 // and ClusterAPI (admiral.cluster.v1).
 type AgentAPIClient interface {
+	// ---------------------------------------------------------------------------
+	// Admin CRUD
+	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
 	// generates an initial Service Access Token (SAT). The agent starts in PENDING
 	// health status until it begins reporting.
@@ -131,6 +134,9 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(ctx context.Context, in *ClearAgentIdentityBindingRequest, opts ...grpc.CallOption) (*ClearAgentIdentityBindingResponse, error)
+	// ---------------------------------------------------------------------------
+	// Agent tokens
+	// ---------------------------------------------------------------------------
 	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
 	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
 	// be overridden. The response includes the raw token secret, shown exactly once.
@@ -161,60 +167,14 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	RevokeAgentToken(ctx context.Context, in *RevokeAgentTokenRequest, opts ...grpc.CallOption) (*RevokeAgentTokenResponse, error)
-	// Heartbeat reports that a TERRAFORM agent is alive and includes current capacity
-	// metrics. The server uses heartbeat recency to derive health status. The agent
-	// is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
-	// ClaimJob polls for the next job assigned to this TERRAFORM agent. Returns the job
-	// metadata if work is available, or an empty response if no jobs are pending.
-	// The agent is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ClaimJob(ctx context.Context, in *ClaimJobRequest, opts ...grpc.CallOption) (*ClaimJobResponse, error)
-	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated from
-	// ClaimJob to keep the claim response lightweight. The bundle contains
-	// everything the agent needs to execute: rendered infrastructure files,
-	// resolved variables, provider/backend configuration, the engine and version,
-	// and lifecycle hooks.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	GetJobBundle(ctx context.Context, in *GetJobBundleRequest, opts ...grpc.CallOption) (*GetJobBundleResponse, error)
-	// ReportJobResult reports the outcome of a completed job. The server
-	// transitions the parent Revision status accordingly (e.g., PLANNING->APPLYING,
-	// APPLYING->SUCCEEDED/FAILED).
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error)
+	// ---------------------------------------------------------------------------
+	// Read-only observability. Messages: jobs.proto, workloads.proto.
+	// ---------------------------------------------------------------------------
 	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
 	// Provides admin read-only visibility into agent workload.
 	//
 	// Scope: `agent:read`
 	ListAgentJobs(ctx context.Context, in *ListAgentJobsRequest, opts ...grpc.CallOption) (*ListAgentJobsResponse, error)
-	// ReportAgentStatus receives a combined telemetry snapshot from a KUBERNETES
-	// agent. The payload includes cluster-level metrics, per-workload status, and
-	// Kubernetes events. Admiral splits this into storage tiers on receipt and
-	// piggybacks pending workload revisions on the response. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// (Successor to the former ClusterAPI.ReportClusterStatus.)
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportAgentStatus(ctx context.Context, in *ReportAgentStatusRequest, opts ...grpc.CallOption) (*ReportAgentStatusResponse, error)
-	// ReportWorkloadStatus receives workload-only telemetry from a KUBERNETES agent,
-	// for incremental updates between full status pushes. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadStatus(ctx context.Context, in *ReportWorkloadStatusRequest, opts ...grpc.CallOption) (*ReportWorkloadStatusResponse, error)
-	// ReportWorkloadMetrics receives a batch of per-pod CPU/memory samples from a
-	// KUBERNETES agent. Admiral aggregates them pod -> workload -> cluster
-	// server-side. The agent is identified by the SAT's binding; no agent_id is
-	// required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadMetrics(ctx context.Context, in *ReportWorkloadMetricsRequest, opts ...grpc.CallOption) (*ReportWorkloadMetricsResponse, error)
 	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
 	// agent's cluster.
 	//
@@ -231,23 +191,6 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	ListWorkloadEvents(ctx context.Context, in *ListWorkloadEventsRequest, opts ...grpc.CallOption) (*ListWorkloadEventsResponse, error)
-	// GetRevisionBundle fetches the rendered manifest bundle for a workload
-	// revision. The KUBERNETES agent calls this when it detects a new or updated
-	// revision (advertised via ReportAgentStatus's pending_revision_ids). The
-	// bundle contains pre-rendered Kubernetes manifests ready for server-side apply.
-	//
-	// The agent is identified by the SAT's binding. Returns PERMISSION_DENIED if
-	// the revision's target agent does not match the SAT binding. Returns NOT_FOUND
-	// if the revision does not exist or has been canceled.
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	GetRevisionBundle(ctx context.Context, in *GetRevisionBundleRequest, opts ...grpc.CallOption) (*GetRevisionBundleResponse, error)
-	// ReportRevisionResult reports the outcome of applying a workload revision to
-	// the cluster. The server transitions the parent Revision status accordingly
-	// (APPLYING -> SUCCEEDED or FAILED).
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	ReportRevisionResult(ctx context.Context, in *ReportRevisionResultRequest, opts ...grpc.CallOption) (*ReportRevisionResultResponse, error)
 }
 
 type agentAPIClient struct {
@@ -368,80 +311,10 @@ func (c *agentAPIClient) RevokeAgentToken(ctx context.Context, in *RevokeAgentTo
 	return out, nil
 }
 
-func (c *agentAPIClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(HeartbeatResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_Heartbeat_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ClaimJob(ctx context.Context, in *ClaimJobRequest, opts ...grpc.CallOption) (*ClaimJobResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ClaimJobResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ClaimJob_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) GetJobBundle(ctx context.Context, in *GetJobBundleRequest, opts ...grpc.CallOption) (*GetJobBundleResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetJobBundleResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetJobBundle_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportJobResultResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ReportJobResult_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *agentAPIClient) ListAgentJobs(ctx context.Context, in *ListAgentJobsRequest, opts ...grpc.CallOption) (*ListAgentJobsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListAgentJobsResponse)
 	err := c.cc.Invoke(ctx, AgentAPI_ListAgentJobs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ReportAgentStatus(ctx context.Context, in *ReportAgentStatusRequest, opts ...grpc.CallOption) (*ReportAgentStatusResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportAgentStatusResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ReportAgentStatus_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ReportWorkloadStatus(ctx context.Context, in *ReportWorkloadStatusRequest, opts ...grpc.CallOption) (*ReportWorkloadStatusResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportWorkloadStatusResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ReportWorkloadStatus_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ReportWorkloadMetrics(ctx context.Context, in *ReportWorkloadMetricsRequest, opts ...grpc.CallOption) (*ReportWorkloadMetricsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportWorkloadMetricsResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ReportWorkloadMetrics_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -478,56 +351,48 @@ func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, in *ListWorkloa
 	return out, nil
 }
 
-func (c *agentAPIClient) GetRevisionBundle(ctx context.Context, in *GetRevisionBundleRequest, opts ...grpc.CallOption) (*GetRevisionBundleResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetRevisionBundleResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetRevisionBundle_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ReportRevisionResult(ctx context.Context, in *ReportRevisionResultRequest, opts ...grpc.CallOption) (*ReportRevisionResultResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportRevisionResultResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ReportRevisionResult_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AgentAPIServer is the server API for AgentAPI service.
 // All implementations should embed UnimplementedAgentAPIServer
 // for forward compatibility.
 //
-// AgentAPI manages execution agents and their work, across both agent kinds:
+// AgentAPI is the management surface for execution agents: their lifecycle,
+// their Service Access Tokens, and read-only visibility into the work they
+// have done. It is the human-facing half of the agent contract, called with a
+// PAT from the CLI, Terraform provider, or web app.
 //
-//   - TERRAFORM agents are the execution plane for infrastructure operations (plan,
-//     apply, destroy) run by a terraform-semantic engine (Terraform or OpenTofu,
-//     selected per job via JobBundle.engine). They pull work: ClaimJob ->
-//     GetJobBundle -> execute -> ReportJobResult.
+// The execution protocol the agents themselves speak lives in AgentRuntimeAPI
+// (runtime.proto). That half is SAT-only, excluded from the public OpenAPI
+// surface, and changes with the agent binaries. Keeping the two apart means the
+// documented management contract is not versioned against the churn of job
+// bundles, hooks, and engines.
 //
-//   - KUBERNETES agents are the control plane for Kubernetes clusters. They push
-//     telemetry (ReportAgentStatus) and pull rendered manifest bundles for
-//     workload revisions (GetRevisionBundle -> apply -> ReportRevisionResult).
+// Both agent kinds are managed here and share one identity, lifecycle, and
+// token model:
 //
-// Both kinds share one identity, lifecycle, and token model. Administrators
-// create an agent via CreateAgent (passing the kind), which returns a Service
-// Access Token (SAT) for deploying the agent binary. Once the agent boots and
-// begins reporting, the server transitions its health from PENDING to HEALTHY.
+//   - TERRAFORM agents are the execution plane for infrastructure operations
+//     (plan, apply, destroy) run by a terraform-semantic engine (Terraform or
+//     OpenTofu, selected per job via JobBundle.engine).
 //
-// Admin/read routes follow /v1/agents/... (plural, with IDs). Agent-facing
-// routes use /v1/agent/... (singular, no ID; derived from the SAT binding).
+//   - KUBERNETES agents are the control plane for Kubernetes clusters,
+//     reporting workload telemetry and applying rendered manifest revisions.
 //
-// The execution-protocol messages live in companion files: jobs.proto
-// (TERRAFORM execution) and workloads.proto (KUBERNETES telemetry and
-// revision delivery).
+// Administrators create an agent via CreateAgent (passing the kind), which
+// returns a Service Access Token (SAT) for deploying the agent binary. Once the
+// agent boots and begins reporting through AgentRuntimeAPI, the server
+// transitions its health from PENDING to HEALTHY.
+//
+// Management routes follow /v1/agents/... (plural, with IDs); the runtime
+// protocol uses /v1/agent/... (singular, no ID; derived from the SAT binding).
+//
+// Message definitions live in companion files: jobs.proto (TERRAFORM execution)
+// and workloads.proto (KUBERNETES telemetry and revision delivery).
 //
 // This service is the unified successor to the former RunnerAPI (admiral.runner.v1)
 // and ClusterAPI (admiral.cluster.v1).
 type AgentAPIServer interface {
+	// ---------------------------------------------------------------------------
+	// Admin CRUD
+	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
 	// generates an initial Service Access Token (SAT). The agent starts in PENDING
 	// health status until it begins reporting.
@@ -584,6 +449,9 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(context.Context, *ClearAgentIdentityBindingRequest) (*ClearAgentIdentityBindingResponse, error)
+	// ---------------------------------------------------------------------------
+	// Agent tokens
+	// ---------------------------------------------------------------------------
 	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
 	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
 	// be overridden. The response includes the raw token secret, shown exactly once.
@@ -614,60 +482,14 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:write`
 	RevokeAgentToken(context.Context, *RevokeAgentTokenRequest) (*RevokeAgentTokenResponse, error)
-	// Heartbeat reports that a TERRAFORM agent is alive and includes current capacity
-	// metrics. The server uses heartbeat recency to derive health status. The agent
-	// is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
-	// ClaimJob polls for the next job assigned to this TERRAFORM agent. Returns the job
-	// metadata if work is available, or an empty response if no jobs are pending.
-	// The agent is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error)
-	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated from
-	// ClaimJob to keep the claim response lightweight. The bundle contains
-	// everything the agent needs to execute: rendered infrastructure files,
-	// resolved variables, provider/backend configuration, the engine and version,
-	// and lifecycle hooks.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	GetJobBundle(context.Context, *GetJobBundleRequest) (*GetJobBundleResponse, error)
-	// ReportJobResult reports the outcome of a completed job. The server
-	// transitions the parent Revision status accordingly (e.g., PLANNING->APPLYING,
-	// APPLYING->SUCCEEDED/FAILED).
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error)
+	// ---------------------------------------------------------------------------
+	// Read-only observability. Messages: jobs.proto, workloads.proto.
+	// ---------------------------------------------------------------------------
 	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
 	// Provides admin read-only visibility into agent workload.
 	//
 	// Scope: `agent:read`
 	ListAgentJobs(context.Context, *ListAgentJobsRequest) (*ListAgentJobsResponse, error)
-	// ReportAgentStatus receives a combined telemetry snapshot from a KUBERNETES
-	// agent. The payload includes cluster-level metrics, per-workload status, and
-	// Kubernetes events. Admiral splits this into storage tiers on receipt and
-	// piggybacks pending workload revisions on the response. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// (Successor to the former ClusterAPI.ReportClusterStatus.)
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportAgentStatus(context.Context, *ReportAgentStatusRequest) (*ReportAgentStatusResponse, error)
-	// ReportWorkloadStatus receives workload-only telemetry from a KUBERNETES agent,
-	// for incremental updates between full status pushes. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadStatus(context.Context, *ReportWorkloadStatusRequest) (*ReportWorkloadStatusResponse, error)
-	// ReportWorkloadMetrics receives a batch of per-pod CPU/memory samples from a
-	// KUBERNETES agent. Admiral aggregates them pod -> workload -> cluster
-	// server-side. The agent is identified by the SAT's binding; no agent_id is
-	// required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadMetrics(context.Context, *ReportWorkloadMetricsRequest) (*ReportWorkloadMetricsResponse, error)
 	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
 	// agent's cluster.
 	//
@@ -684,23 +506,6 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:read`
 	ListWorkloadEvents(context.Context, *ListWorkloadEventsRequest) (*ListWorkloadEventsResponse, error)
-	// GetRevisionBundle fetches the rendered manifest bundle for a workload
-	// revision. The KUBERNETES agent calls this when it detects a new or updated
-	// revision (advertised via ReportAgentStatus's pending_revision_ids). The
-	// bundle contains pre-rendered Kubernetes manifests ready for server-side apply.
-	//
-	// The agent is identified by the SAT's binding. Returns PERMISSION_DENIED if
-	// the revision's target agent does not match the SAT binding. Returns NOT_FOUND
-	// if the revision does not exist or has been canceled.
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	GetRevisionBundle(context.Context, *GetRevisionBundleRequest) (*GetRevisionBundleResponse, error)
-	// ReportRevisionResult reports the outcome of applying a workload revision to
-	// the cluster. The server transitions the parent Revision status accordingly
-	// (APPLYING -> SUCCEEDED or FAILED).
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	ReportRevisionResult(context.Context, *ReportRevisionResultRequest) (*ReportRevisionResultResponse, error)
 }
 
 // UnimplementedAgentAPIServer should be embedded to have
@@ -743,29 +548,8 @@ func (UnimplementedAgentAPIServer) GetAgentToken(context.Context, *GetAgentToken
 func (UnimplementedAgentAPIServer) RevokeAgentToken(context.Context, *RevokeAgentTokenRequest) (*RevokeAgentTokenResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RevokeAgentToken not implemented")
 }
-func (UnimplementedAgentAPIServer) Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Heartbeat not implemented")
-}
-func (UnimplementedAgentAPIServer) ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ClaimJob not implemented")
-}
-func (UnimplementedAgentAPIServer) GetJobBundle(context.Context, *GetJobBundleRequest) (*GetJobBundleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetJobBundle not implemented")
-}
-func (UnimplementedAgentAPIServer) ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportJobResult not implemented")
-}
 func (UnimplementedAgentAPIServer) ListAgentJobs(context.Context, *ListAgentJobsRequest) (*ListAgentJobsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAgentJobs not implemented")
-}
-func (UnimplementedAgentAPIServer) ReportAgentStatus(context.Context, *ReportAgentStatusRequest) (*ReportAgentStatusResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportAgentStatus not implemented")
-}
-func (UnimplementedAgentAPIServer) ReportWorkloadStatus(context.Context, *ReportWorkloadStatusRequest) (*ReportWorkloadStatusResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportWorkloadStatus not implemented")
-}
-func (UnimplementedAgentAPIServer) ReportWorkloadMetrics(context.Context, *ReportWorkloadMetricsRequest) (*ReportWorkloadMetricsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportWorkloadMetrics not implemented")
 }
 func (UnimplementedAgentAPIServer) ListWorkloads(context.Context, *ListWorkloadsRequest) (*ListWorkloadsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListWorkloads not implemented")
@@ -775,12 +559,6 @@ func (UnimplementedAgentAPIServer) GetWorkload(context.Context, *GetWorkloadRequ
 }
 func (UnimplementedAgentAPIServer) ListWorkloadEvents(context.Context, *ListWorkloadEventsRequest) (*ListWorkloadEventsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListWorkloadEvents not implemented")
-}
-func (UnimplementedAgentAPIServer) GetRevisionBundle(context.Context, *GetRevisionBundleRequest) (*GetRevisionBundleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetRevisionBundle not implemented")
-}
-func (UnimplementedAgentAPIServer) ReportRevisionResult(context.Context, *ReportRevisionResultRequest) (*ReportRevisionResultResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportRevisionResult not implemented")
 }
 func (UnimplementedAgentAPIServer) testEmbeddedByValue() {}
 
@@ -1000,78 +778,6 @@ func _AgentAPI_RevokeAgentToken_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HeartbeatRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).Heartbeat(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_Heartbeat_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).Heartbeat(ctx, req.(*HeartbeatRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ClaimJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClaimJobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ClaimJob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ClaimJob_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ClaimJob(ctx, req.(*ClaimJobRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_GetJobBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetJobBundleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).GetJobBundle(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_GetJobBundle_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetJobBundle(ctx, req.(*GetJobBundleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ReportJobResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportJobResultRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ReportJobResult(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ReportJobResult_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ReportJobResult(ctx, req.(*ReportJobResultRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AgentAPI_ListAgentJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAgentJobsRequest)
 	if err := dec(in); err != nil {
@@ -1086,60 +792,6 @@ func _AgentAPI_ListAgentJobs_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AgentAPIServer).ListAgentJobs(ctx, req.(*ListAgentJobsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ReportAgentStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportAgentStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ReportAgentStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ReportAgentStatus_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ReportAgentStatus(ctx, req.(*ReportAgentStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ReportWorkloadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportWorkloadStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ReportWorkloadStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ReportWorkloadStatus_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ReportWorkloadStatus(ctx, req.(*ReportWorkloadStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ReportWorkloadMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportWorkloadMetricsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ReportWorkloadMetrics(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ReportWorkloadMetrics_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ReportWorkloadMetrics(ctx, req.(*ReportWorkloadMetricsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1198,42 +850,6 @@ func _AgentAPI_ListWorkloadEvents_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_GetRevisionBundle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRevisionBundleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).GetRevisionBundle(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_GetRevisionBundle_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetRevisionBundle(ctx, req.(*GetRevisionBundleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ReportRevisionResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportRevisionResultRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ReportRevisionResult(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ReportRevisionResult_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ReportRevisionResult(ctx, req.(*ReportRevisionResultRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AgentAPI_ServiceDesc is the grpc.ServiceDesc for AgentAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1286,36 +902,8 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentAPI_RevokeAgentToken_Handler,
 		},
 		{
-			MethodName: "Heartbeat",
-			Handler:    _AgentAPI_Heartbeat_Handler,
-		},
-		{
-			MethodName: "ClaimJob",
-			Handler:    _AgentAPI_ClaimJob_Handler,
-		},
-		{
-			MethodName: "GetJobBundle",
-			Handler:    _AgentAPI_GetJobBundle_Handler,
-		},
-		{
-			MethodName: "ReportJobResult",
-			Handler:    _AgentAPI_ReportJobResult_Handler,
-		},
-		{
 			MethodName: "ListAgentJobs",
 			Handler:    _AgentAPI_ListAgentJobs_Handler,
-		},
-		{
-			MethodName: "ReportAgentStatus",
-			Handler:    _AgentAPI_ReportAgentStatus_Handler,
-		},
-		{
-			MethodName: "ReportWorkloadStatus",
-			Handler:    _AgentAPI_ReportWorkloadStatus_Handler,
-		},
-		{
-			MethodName: "ReportWorkloadMetrics",
-			Handler:    _AgentAPI_ReportWorkloadMetrics_Handler,
 		},
 		{
 			MethodName: "ListWorkloads",
@@ -1328,14 +916,6 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListWorkloadEvents",
 			Handler:    _AgentAPI_ListWorkloadEvents_Handler,
-		},
-		{
-			MethodName: "GetRevisionBundle",
-			Handler:    _AgentAPI_GetRevisionBundle_Handler,
-		},
-		{
-			MethodName: "ReportRevisionResult",
-			Handler:    _AgentAPI_ReportRevisionResult_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

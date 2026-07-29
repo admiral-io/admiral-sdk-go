@@ -31,6 +31,7 @@ type Client struct {
 	authToken      string
 	tokenValidator TokenValidator
 	agent agentv1.AgentAPIClient
+	agentRuntime agentv1.AgentRuntimeAPIClient
 	application applicationv1.ApplicationAPIClient
 	authentication authenticationv1.AuthenticationAPIClient
 	catalog catalogv1.CatalogAPIClient
@@ -82,6 +83,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		authToken:      cfg.AuthToken,
 		tokenValidator: cfg.TokenValidator,
 		agent: agentv1.NewAgentAPIClient(conn),
+		agentRuntime: agentv1.NewAgentRuntimeAPIClient(conn),
 		application: applicationv1.NewApplicationAPIClient(conn),
 		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
 		catalog: catalogv1.NewCatalogAPIClient(conn),
@@ -98,6 +100,11 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 // Agent returns the AgentAPI client.
 func (c *Client) Agent() agentv1.AgentAPIClient {
 	return c.agent
+}
+
+// AgentRuntime returns the AgentRuntimeAPI client.
+func (c *Client) AgentRuntime() agentv1.AgentRuntimeAPIClient {
+	return c.agentRuntime
 }
 
 // Application returns the ApplicationAPI client.

@@ -1661,7 +1661,7 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x1bAGENT_HEALTH_STATUS_HEALTHY\x10\x02\x12 \n" +
 	"\x1cAGENT_HEALTH_STATUS_DEGRADED\x10\x03\x12\x1d\n" +
 	"\x19AGENT_HEALTH_STATUS_ERROR\x10\x04\x12#\n" +
-	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\xa5&\n" +
+	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\x8c\x17\n" +
 	"\bAgentAPI\x12\xa6\x01\n" +
 	"\vCreateAgent\x12(.admiral.api.agent.v1.CreateAgentRequest\x1a).admiral.api.agent.v1.CreateAgentResponse\"B\xbaG\x19\n" +
 	"\x06Agents\x12\x0fCreate an agent\xa2\x97$\r\n" +
@@ -1703,36 +1703,11 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/tokens/{token_id}\x12\xda\x01\n" +
 	"\x10RevokeAgentToken\x12-.admiral.api.agent.v1.RevokeAgentTokenRequest\x1a..admiral.api.agent.v1.RevokeAgentTokenResponse\"g\xbaG%\n" +
 	"\fAgent Tokens\x12\x15Revoke an agent token\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/agents/tokens/{token_id}/revoke\x12\xb7\x01\n" +
-	"\tHeartbeat\x12&.admiral.api.agent.v1.HeartbeatRequest\x1a'.admiral.api.agent.v1.HeartbeatResponse\"Y\xbaG#\n" +
-	"\vInfra Agent\x12\x14Send agent heartbeat\xa2\x97$\x11\n" +
-	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/agent/heartbeat\x12\xac\x01\n" +
-	"\bClaimJob\x12%.admiral.api.agent.v1.ClaimJobRequest\x1a&.admiral.api.agent.v1.ClaimJobResponse\"Q\xbaG\x1a\n" +
-	"\vInfra Agent\x12\vClaim a job\xa2\x97$\x11\n" +
-	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/claim\x12\xc9\x01\n" +
-	"\fGetJobBundle\x12).admiral.api.agent.v1.GetJobBundleRequest\x1a*.admiral.api.agent.v1.GetJobBundleResponse\"b\xbaG$\n" +
-	"\vInfra Agent\x12\x15Retrieve a job bundle\xa2\x97$\x11\n" +
-	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02 \x12\x1e/v1/agent/jobs/{job_id}/bundle\x12\xd1\x01\n" +
-	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"a\xbaG \n" +
-	"\vInfra Agent\x12\x11Report job result\xa2\x97$\x11\n" +
-	"\n" +
-	"agent:exec\x12\x03sat\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/v1/agent/jobs/{job_id}/result\x12\xb8\x01\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/agents/tokens/{token_id}/revoke\x12\xb8\x01\n" +
 	"\rListAgentJobs\x12*.admiral.api.agent.v1.ListAgentJobsRequest\x1a+.admiral.api.agent.v1.ListAgentJobsResponse\"N\xbaG\x19\n" +
 	"\x06Agents\x12\x0fList agent jobs\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/agents/{agent_id}/jobs\x12\xd0\x01\n" +
-	"\x11ReportAgentStatus\x12..admiral.api.agent.v1.ReportAgentStatusRequest\x1a/.admiral.api.agent.v1.ReportAgentStatusResponse\"Z\xbaG%\n" +
-	"\x0eWorkload Agent\x12\x13Report agent status\xa2\x97$\x13\n" +
-	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/agent/status\x12\xe6\x01\n" +
-	"\x14ReportWorkloadStatus\x121.admiral.api.agent.v1.ReportWorkloadStatusRequest\x1a2.admiral.api.agent.v1.ReportWorkloadStatusResponse\"g\xbaG(\n" +
-	"\x0eWorkload Agent\x12\x16Report workload status\xa2\x97$\x13\n" +
-	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v1/agent/workloads/status\x12\xeb\x01\n" +
-	"\x15ReportWorkloadMetrics\x122.admiral.api.agent.v1.ReportWorkloadMetricsRequest\x1a3.admiral.api.agent.v1.ReportWorkloadMetricsResponse\"i\xbaG)\n" +
-	"\x0eWorkload Agent\x12\x17Report workload metrics\xa2\x97$\x13\n" +
-	"\fagent:status\x12\x03sat\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/agent/workloads/metrics\x12\xbc\x01\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/agents/{agent_id}/jobs\x12\xbc\x01\n" +
 	"\rListWorkloads\x12*.admiral.api.agent.v1.ListWorkloadsRequest\x1a+.admiral.api.agent.v1.ListWorkloadsResponse\"R\xbaG\x18\n" +
 	"\x06Agents\x12\x0eList workloads\xa2\x97$\f\n" +
 	"\n" +
@@ -1744,13 +1719,7 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x12ListWorkloadEvents\x12/.admiral.api.agent.v1.ListWorkloadEventsRequest\x1a0.admiral.api.agent.v1.ListWorkloadEventsResponse\"U\xbaG\x1e\n" +
 	"\x06Agents\x12\x14List workload events\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/events\x12\xec\x01\n" +
-	"\x11GetRevisionBundle\x12..admiral.api.agent.v1.GetRevisionBundleRequest\x1a/.admiral.api.agent.v1.GetRevisionBundleResponse\"v\xbaG,\n" +
-	"\x0eWorkload Agent\x12\x1aRetrieve a revision bundle\xa2\x97$\x13\n" +
-	"\fagent:deploy\x12\x03sat\x82\xd3\xe4\x93\x02*\x12(/v1/agent/revisions/{revision_id}/bundle\x12\xf4\x01\n" +
-	"\x14ReportRevisionResult\x121.admiral.api.agent.v1.ReportRevisionResultRequest\x1a2.admiral.api.agent.v1.ReportRevisionResultResponse\"u\xbaG(\n" +
-	"\x0eWorkload Agent\x12\x16Report revision result\xa2\x97$\x13\n" +
-	"\fagent:deploy\x12\x03sat\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/agent/revisions/{revision_id}/resultB\xcf\x01\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/eventsB\xcf\x01\n" +
 	"\x18com.admiral.api.agent.v1B\n" +
 	"AgentProtoP\x01Z4go.admiral.io/sdk/proto/admiral/api/agent/v1;agentv1\xa2\x02\x03AAA\xaa\x02\x14Admiral.Api.Agent.V1\xca\x02\x14Admiral\\Api\\Agent\\V1\xe2\x02 Admiral\\Api\\Agent\\V1\\GPBMetadata\xea\x02\x17Admiral::Api::Agent::V1b\x06proto3"
 
@@ -1803,32 +1772,14 @@ var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(*TerraformAgentStatus)(nil),              // 31: admiral.api.agent.v1.TerraformAgentStatus
 	(*KubernetesAgentStatus)(nil),             // 32: admiral.api.agent.v1.KubernetesAgentStatus
 	(*v1.AccessToken)(nil),                    // 33: admiral.common.v1.AccessToken
-	(*HeartbeatRequest)(nil),                  // 34: admiral.api.agent.v1.HeartbeatRequest
-	(*ClaimJobRequest)(nil),                   // 35: admiral.api.agent.v1.ClaimJobRequest
-	(*GetJobBundleRequest)(nil),               // 36: admiral.api.agent.v1.GetJobBundleRequest
-	(*ReportJobResultRequest)(nil),            // 37: admiral.api.agent.v1.ReportJobResultRequest
-	(*ListAgentJobsRequest)(nil),              // 38: admiral.api.agent.v1.ListAgentJobsRequest
-	(*ReportAgentStatusRequest)(nil),          // 39: admiral.api.agent.v1.ReportAgentStatusRequest
-	(*ReportWorkloadStatusRequest)(nil),       // 40: admiral.api.agent.v1.ReportWorkloadStatusRequest
-	(*ReportWorkloadMetricsRequest)(nil),      // 41: admiral.api.agent.v1.ReportWorkloadMetricsRequest
-	(*ListWorkloadsRequest)(nil),              // 42: admiral.api.agent.v1.ListWorkloadsRequest
-	(*GetWorkloadRequest)(nil),                // 43: admiral.api.agent.v1.GetWorkloadRequest
-	(*ListWorkloadEventsRequest)(nil),         // 44: admiral.api.agent.v1.ListWorkloadEventsRequest
-	(*GetRevisionBundleRequest)(nil),          // 45: admiral.api.agent.v1.GetRevisionBundleRequest
-	(*ReportRevisionResultRequest)(nil),       // 46: admiral.api.agent.v1.ReportRevisionResultRequest
-	(*HeartbeatResponse)(nil),                 // 47: admiral.api.agent.v1.HeartbeatResponse
-	(*ClaimJobResponse)(nil),                  // 48: admiral.api.agent.v1.ClaimJobResponse
-	(*GetJobBundleResponse)(nil),              // 49: admiral.api.agent.v1.GetJobBundleResponse
-	(*ReportJobResultResponse)(nil),           // 50: admiral.api.agent.v1.ReportJobResultResponse
-	(*ListAgentJobsResponse)(nil),             // 51: admiral.api.agent.v1.ListAgentJobsResponse
-	(*ReportAgentStatusResponse)(nil),         // 52: admiral.api.agent.v1.ReportAgentStatusResponse
-	(*ReportWorkloadStatusResponse)(nil),      // 53: admiral.api.agent.v1.ReportWorkloadStatusResponse
-	(*ReportWorkloadMetricsResponse)(nil),     // 54: admiral.api.agent.v1.ReportWorkloadMetricsResponse
-	(*ListWorkloadsResponse)(nil),             // 55: admiral.api.agent.v1.ListWorkloadsResponse
-	(*GetWorkloadResponse)(nil),               // 56: admiral.api.agent.v1.GetWorkloadResponse
-	(*ListWorkloadEventsResponse)(nil),        // 57: admiral.api.agent.v1.ListWorkloadEventsResponse
-	(*GetRevisionBundleResponse)(nil),         // 58: admiral.api.agent.v1.GetRevisionBundleResponse
-	(*ReportRevisionResultResponse)(nil),      // 59: admiral.api.agent.v1.ReportRevisionResultResponse
+	(*ListAgentJobsRequest)(nil),              // 34: admiral.api.agent.v1.ListAgentJobsRequest
+	(*ListWorkloadsRequest)(nil),              // 35: admiral.api.agent.v1.ListWorkloadsRequest
+	(*GetWorkloadRequest)(nil),                // 36: admiral.api.agent.v1.GetWorkloadRequest
+	(*ListWorkloadEventsRequest)(nil),         // 37: admiral.api.agent.v1.ListWorkloadEventsRequest
+	(*ListAgentJobsResponse)(nil),             // 38: admiral.api.agent.v1.ListAgentJobsResponse
+	(*ListWorkloadsResponse)(nil),             // 39: admiral.api.agent.v1.ListWorkloadsResponse
+	(*GetWorkloadResponse)(nil),               // 40: admiral.api.agent.v1.GetWorkloadResponse
+	(*ListWorkloadEventsResponse)(nil),        // 41: admiral.api.agent.v1.ListWorkloadEventsResponse
 }
 var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	0,  // 0: admiral.api.agent.v1.Agent.kind:type_name -> admiral.api.agent.v1.AgentKind
@@ -1867,45 +1818,27 @@ var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	19, // 33: admiral.api.agent.v1.AgentAPI.ListAgentTokens:input_type -> admiral.api.agent.v1.ListAgentTokensRequest
 	21, // 34: admiral.api.agent.v1.AgentAPI.GetAgentToken:input_type -> admiral.api.agent.v1.GetAgentTokenRequest
 	23, // 35: admiral.api.agent.v1.AgentAPI.RevokeAgentToken:input_type -> admiral.api.agent.v1.RevokeAgentTokenRequest
-	34, // 36: admiral.api.agent.v1.AgentAPI.Heartbeat:input_type -> admiral.api.agent.v1.HeartbeatRequest
-	35, // 37: admiral.api.agent.v1.AgentAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
-	36, // 38: admiral.api.agent.v1.AgentAPI.GetJobBundle:input_type -> admiral.api.agent.v1.GetJobBundleRequest
-	37, // 39: admiral.api.agent.v1.AgentAPI.ReportJobResult:input_type -> admiral.api.agent.v1.ReportJobResultRequest
-	38, // 40: admiral.api.agent.v1.AgentAPI.ListAgentJobs:input_type -> admiral.api.agent.v1.ListAgentJobsRequest
-	39, // 41: admiral.api.agent.v1.AgentAPI.ReportAgentStatus:input_type -> admiral.api.agent.v1.ReportAgentStatusRequest
-	40, // 42: admiral.api.agent.v1.AgentAPI.ReportWorkloadStatus:input_type -> admiral.api.agent.v1.ReportWorkloadStatusRequest
-	41, // 43: admiral.api.agent.v1.AgentAPI.ReportWorkloadMetrics:input_type -> admiral.api.agent.v1.ReportWorkloadMetricsRequest
-	42, // 44: admiral.api.agent.v1.AgentAPI.ListWorkloads:input_type -> admiral.api.agent.v1.ListWorkloadsRequest
-	43, // 45: admiral.api.agent.v1.AgentAPI.GetWorkload:input_type -> admiral.api.agent.v1.GetWorkloadRequest
-	44, // 46: admiral.api.agent.v1.AgentAPI.ListWorkloadEvents:input_type -> admiral.api.agent.v1.ListWorkloadEventsRequest
-	45, // 47: admiral.api.agent.v1.AgentAPI.GetRevisionBundle:input_type -> admiral.api.agent.v1.GetRevisionBundleRequest
-	46, // 48: admiral.api.agent.v1.AgentAPI.ReportRevisionResult:input_type -> admiral.api.agent.v1.ReportRevisionResultRequest
-	4,  // 49: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
-	6,  // 50: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
-	8,  // 51: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
-	10, // 52: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
-	12, // 53: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
-	16, // 54: admiral.api.agent.v1.AgentAPI.GetAgentStatus:output_type -> admiral.api.agent.v1.GetAgentStatusResponse
-	14, // 55: admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding:output_type -> admiral.api.agent.v1.ClearAgentIdentityBindingResponse
-	18, // 56: admiral.api.agent.v1.AgentAPI.CreateAgentToken:output_type -> admiral.api.agent.v1.CreateAgentTokenResponse
-	20, // 57: admiral.api.agent.v1.AgentAPI.ListAgentTokens:output_type -> admiral.api.agent.v1.ListAgentTokensResponse
-	22, // 58: admiral.api.agent.v1.AgentAPI.GetAgentToken:output_type -> admiral.api.agent.v1.GetAgentTokenResponse
-	24, // 59: admiral.api.agent.v1.AgentAPI.RevokeAgentToken:output_type -> admiral.api.agent.v1.RevokeAgentTokenResponse
-	47, // 60: admiral.api.agent.v1.AgentAPI.Heartbeat:output_type -> admiral.api.agent.v1.HeartbeatResponse
-	48, // 61: admiral.api.agent.v1.AgentAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
-	49, // 62: admiral.api.agent.v1.AgentAPI.GetJobBundle:output_type -> admiral.api.agent.v1.GetJobBundleResponse
-	50, // 63: admiral.api.agent.v1.AgentAPI.ReportJobResult:output_type -> admiral.api.agent.v1.ReportJobResultResponse
-	51, // 64: admiral.api.agent.v1.AgentAPI.ListAgentJobs:output_type -> admiral.api.agent.v1.ListAgentJobsResponse
-	52, // 65: admiral.api.agent.v1.AgentAPI.ReportAgentStatus:output_type -> admiral.api.agent.v1.ReportAgentStatusResponse
-	53, // 66: admiral.api.agent.v1.AgentAPI.ReportWorkloadStatus:output_type -> admiral.api.agent.v1.ReportWorkloadStatusResponse
-	54, // 67: admiral.api.agent.v1.AgentAPI.ReportWorkloadMetrics:output_type -> admiral.api.agent.v1.ReportWorkloadMetricsResponse
-	55, // 68: admiral.api.agent.v1.AgentAPI.ListWorkloads:output_type -> admiral.api.agent.v1.ListWorkloadsResponse
-	56, // 69: admiral.api.agent.v1.AgentAPI.GetWorkload:output_type -> admiral.api.agent.v1.GetWorkloadResponse
-	57, // 70: admiral.api.agent.v1.AgentAPI.ListWorkloadEvents:output_type -> admiral.api.agent.v1.ListWorkloadEventsResponse
-	58, // 71: admiral.api.agent.v1.AgentAPI.GetRevisionBundle:output_type -> admiral.api.agent.v1.GetRevisionBundleResponse
-	59, // 72: admiral.api.agent.v1.AgentAPI.ReportRevisionResult:output_type -> admiral.api.agent.v1.ReportRevisionResultResponse
-	49, // [49:73] is the sub-list for method output_type
-	25, // [25:49] is the sub-list for method input_type
+	34, // 36: admiral.api.agent.v1.AgentAPI.ListAgentJobs:input_type -> admiral.api.agent.v1.ListAgentJobsRequest
+	35, // 37: admiral.api.agent.v1.AgentAPI.ListWorkloads:input_type -> admiral.api.agent.v1.ListWorkloadsRequest
+	36, // 38: admiral.api.agent.v1.AgentAPI.GetWorkload:input_type -> admiral.api.agent.v1.GetWorkloadRequest
+	37, // 39: admiral.api.agent.v1.AgentAPI.ListWorkloadEvents:input_type -> admiral.api.agent.v1.ListWorkloadEventsRequest
+	4,  // 40: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
+	6,  // 41: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
+	8,  // 42: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
+	10, // 43: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
+	12, // 44: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
+	16, // 45: admiral.api.agent.v1.AgentAPI.GetAgentStatus:output_type -> admiral.api.agent.v1.GetAgentStatusResponse
+	14, // 46: admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding:output_type -> admiral.api.agent.v1.ClearAgentIdentityBindingResponse
+	18, // 47: admiral.api.agent.v1.AgentAPI.CreateAgentToken:output_type -> admiral.api.agent.v1.CreateAgentTokenResponse
+	20, // 48: admiral.api.agent.v1.AgentAPI.ListAgentTokens:output_type -> admiral.api.agent.v1.ListAgentTokensResponse
+	22, // 49: admiral.api.agent.v1.AgentAPI.GetAgentToken:output_type -> admiral.api.agent.v1.GetAgentTokenResponse
+	24, // 50: admiral.api.agent.v1.AgentAPI.RevokeAgentToken:output_type -> admiral.api.agent.v1.RevokeAgentTokenResponse
+	38, // 51: admiral.api.agent.v1.AgentAPI.ListAgentJobs:output_type -> admiral.api.agent.v1.ListAgentJobsResponse
+	39, // 52: admiral.api.agent.v1.AgentAPI.ListWorkloads:output_type -> admiral.api.agent.v1.ListWorkloadsResponse
+	40, // 53: admiral.api.agent.v1.AgentAPI.GetWorkload:output_type -> admiral.api.agent.v1.GetWorkloadResponse
+	41, // 54: admiral.api.agent.v1.AgentAPI.ListWorkloadEvents:output_type -> admiral.api.agent.v1.ListWorkloadEventsResponse
+	40, // [40:55] is the sub-list for method output_type
+	25, // [25:40] is the sub-list for method input_type
 	25, // [25:25] is the sub-list for extension type_name
 	25, // [25:25] is the sub-list for extension extendee
 	0,  // [0:25] is the sub-list for field type_name

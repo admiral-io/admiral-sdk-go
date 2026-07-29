@@ -18,6 +18,8 @@ import (
 type AdmiralClient interface {
 	// Agent returns the AgentAPI client.
 	Agent() agentv1.AgentAPIClient
+	// AgentRuntime returns the AgentRuntimeAPI client.
+	AgentRuntime() agentv1.AgentRuntimeAPIClient
 	// Application returns the ApplicationAPI client.
 	Application() applicationv1.ApplicationAPIClient
 	// Authentication returns the AuthenticationAPI client.

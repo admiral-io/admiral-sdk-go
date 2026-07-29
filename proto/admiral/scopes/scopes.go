@@ -12,10 +12,14 @@ package scopes
 const Wildcard = "*"
 
 // Token types, as used in AuthRule.allowed_token_types and Scope.AssignableTo.
+// "service" is the internal plane's principal: a workload calling over the mesh
+// with an internal-IdP token. Service scopes are issued by the STS against the
+// caller's workload identity, so "service" never appears in AssignableTo.
 const (
 	TokenTypePAT     = "pat"
 	TokenTypeSAT     = "sat"
 	TokenTypeSession = "session"
+	TokenTypeService = "service"
 )
 
 // Scope name constants.
