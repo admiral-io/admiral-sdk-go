@@ -7,19 +7,30 @@
 // Package scopes carries the scope catalog for the Admiral API surface.
 package scopes
 
-// Wildcard is the scope claim carried by session tokens: no reduction over
-// live authorization. It is never mintable input and never a catalog entry.
+// Wildcard is the scope claim carried by unreduced first-party tokens: no
+// reduction over live authorization. It is never mintable input and never a
+// catalog entry. Absence of a scope claim means DENY, not unrestricted --
+// privilege must be a positive assertion, or a truncated token reads as the
+// most privileged state.
 const Wildcard = "*"
 
-// Token types, as used in AuthRule.allowed_token_types and Scope.AssignableTo.
-// "service" is the internal plane's principal: a workload calling over the mesh
-// with an internal-IdP token. Service scopes are issued by the STS against the
-// caller's workload identity, so "service" never appears in AssignableTo.
+// Credential types, as used in Scope.AssignableTo. Mint-time policy: which
+// credential a scope may be attached to when one is issued.
 const (
-	TokenTypePAT     = "pat"
-	TokenTypeSAT     = "sat"
-	TokenTypeSession = "session"
-	TokenTypeService = "service"
+	TokenTypePAT = "pat"
+	TokenTypeSAT = "sat"
+)
+
+// Principal kinds, as used in AuthRule.allowed_token_types and matched against
+// the `kind` claim on an STS-minted token.
+//
+// Deliberately a different vocabulary from the credential types above: `kind`
+// describes the principal, not the credential presented. A browser session, a
+// CLI login and a PAT are all "user"; the PAT's narrowing rides on scope.
+const (
+	KindUser    = "user"
+	KindCluster = "cluster"
+	KindRunner  = "runner"
 )
 
 // Scope name constants.
