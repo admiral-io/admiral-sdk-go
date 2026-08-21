@@ -177,8 +177,7 @@ func (x *ComponentOutput) GetDescription() string {
 // The declared inputs are the edge spec of the dependency DAG -- they make
 // impact scoping precise (which components reference a changed variable or an
 // upstream output). Today component inputs are bound through the single
-// values_template; this typed declaration is additive and is consumed by the
-// impact-scoping work (see the execution-model doc, section 11).
+// values_template; this typed declaration is additive.
 type ComponentInput struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Input name. Must be a valid identifier (lowercase alphanumeric and

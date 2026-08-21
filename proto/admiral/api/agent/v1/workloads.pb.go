@@ -164,8 +164,6 @@ func (SyncState) EnumDescriptor() ([]byte, []int) {
 // KubernetesAgentStatus contains cluster-level telemetry for a KUBERNETES agent,
 // as reported via ReportAgentStatus. Used in both the push payload and the read
 // response (GetAgentStatusResponse).
-//
-// (Successor to the former admiral.cluster.v1.ClusterStatus.)
 type KubernetesAgentStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Kubernetes version reported by the agent (e.g., "1.29.2").

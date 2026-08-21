@@ -27,39 +27,39 @@ var File_admiral_api_agent_v1_runtime_proto protoreflect.FileDescriptor
 
 const file_admiral_api_agent_v1_runtime_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/api/agent/v1/runtime.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a#admiral/common/v1/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto2\x98\x10\n" +
-	"\x0fAgentRuntimeAPI\x12\xc3\x01\n" +
-	"\tHeartbeat\x12&.admiral.api.agent.v1.HeartbeatRequest\x1a'.admiral.api.agent.v1.HeartbeatResponse\"e\xbaG#\n" +
-	"\vInfra Agent\x12\x14Send agent heartbeat\xa2\x97$\x1d\n" +
+	"\"admiral/api/agent/v1/runtime.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a#admiral/common/v1/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto2\xfd\x0e\n" +
+	"\x0fAgentRuntimeAPI\x12\xb2\x01\n" +
+	"\tHeartbeat\x12&.admiral.api.agent.v1.HeartbeatRequest\x1a'.admiral.api.agent.v1.HeartbeatResponse\"T\xbaG#\n" +
+	"\vInfra Agent\x12\x14Send agent heartbeat\xa2\x97$\f\n" +
 	"\n" +
-	"agent:exec\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/agent/heartbeat\x12\xb8\x01\n" +
-	"\bClaimJob\x12%.admiral.api.agent.v1.ClaimJobRequest\x1a&.admiral.api.agent.v1.ClaimJobResponse\"]\xbaG\x1a\n" +
-	"\vInfra Agent\x12\vClaim a job\xa2\x97$\x1d\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/agent/heartbeat\x12\xa7\x01\n" +
+	"\bClaimJob\x12%.admiral.api.agent.v1.ClaimJobRequest\x1a&.admiral.api.agent.v1.ClaimJobResponse\"L\xbaG\x1a\n" +
+	"\vInfra Agent\x12\vClaim a job\xa2\x97$\f\n" +
 	"\n" +
-	"agent:exec\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/claim\x12\xd5\x01\n" +
-	"\fGetJobBundle\x12).admiral.api.agent.v1.GetJobBundleRequest\x1a*.admiral.api.agent.v1.GetJobBundleResponse\"n\xbaG$\n" +
-	"\vInfra Agent\x12\x15Retrieve a job bundle\xa2\x97$\x1d\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/claim\x12\xc4\x01\n" +
+	"\fGetJobBundle\x12).admiral.api.agent.v1.GetJobBundleRequest\x1a*.admiral.api.agent.v1.GetJobBundleResponse\"]\xbaG$\n" +
+	"\vInfra Agent\x12\x15Retrieve a job bundle\xa2\x97$\f\n" +
 	"\n" +
-	"agent:exec\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02 \x12\x1e/v1/agent/jobs/{job_id}/bundle\x12\xdd\x01\n" +
-	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"m\xbaG \n" +
-	"\vInfra Agent\x12\x11Report job result\xa2\x97$\x1d\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02 \x12\x1e/v1/agent/jobs/{job_id}/bundle\x12\xcc\x01\n" +
+	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"\\\xbaG \n" +
+	"\vInfra Agent\x12\x11Report job result\xa2\x97$\f\n" +
 	"\n" +
-	"agent:exec\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/v1/agent/jobs/{job_id}/result\x12\xdc\x01\n" +
-	"\x11ReportAgentStatus\x12..admiral.api.agent.v1.ReportAgentStatusRequest\x1a/.admiral.api.agent.v1.ReportAgentStatusResponse\"f\xbaG%\n" +
-	"\x0eWorkload Agent\x12\x13Report agent status\xa2\x97$\x1f\n" +
-	"\fagent:status\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/agent/status\x12\xf2\x01\n" +
-	"\x14ReportWorkloadStatus\x121.admiral.api.agent.v1.ReportWorkloadStatusRequest\x1a2.admiral.api.agent.v1.ReportWorkloadStatusResponse\"s\xbaG(\n" +
-	"\x0eWorkload Agent\x12\x16Report workload status\xa2\x97$\x1f\n" +
-	"\fagent:status\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v1/agent/workloads/status\x12\xf7\x01\n" +
-	"\x15ReportWorkloadMetrics\x122.admiral.api.agent.v1.ReportWorkloadMetricsRequest\x1a3.admiral.api.agent.v1.ReportWorkloadMetricsResponse\"u\xbaG)\n" +
-	"\x0eWorkload Agent\x12\x17Report workload metrics\xa2\x97$\x1f\n" +
-	"\fagent:status\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/agent/workloads/metrics\x12\xf9\x01\n" +
-	"\x11GetRevisionBundle\x12..admiral.api.agent.v1.GetRevisionBundleRequest\x1a/.admiral.api.agent.v1.GetRevisionBundleResponse\"\x82\x01\xbaG,\n" +
-	"\x0eWorkload Agent\x12\x1aRetrieve a revision bundle\xa2\x97$\x1f\n" +
-	"\fagent:deploy\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02*\x12(/v1/agent/revisions/{revision_id}/bundle\x12\x81\x02\n" +
-	"\x14ReportRevisionResult\x121.admiral.api.agent.v1.ReportRevisionResultRequest\x1a2.admiral.api.agent.v1.ReportRevisionResultResponse\"\x81\x01\xbaG(\n" +
-	"\x0eWorkload Agent\x12\x16Report revision result\xa2\x97$\x1f\n" +
-	"\fagent:deploy\x12\acluster\x12\x06runner\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/agent/revisions/{revision_id}/resultB\xd1\x01\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/v1/agent/jobs/{job_id}/result\x12\xcb\x01\n" +
+	"\x11ReportAgentStatus\x12..admiral.api.agent.v1.ReportAgentStatusRequest\x1a/.admiral.api.agent.v1.ReportAgentStatusResponse\"U\xbaG%\n" +
+	"\x0eWorkload Agent\x12\x13Report agent status\xa2\x97$\x0e\n" +
+	"\fagent:status\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/agent/status\x12\xe1\x01\n" +
+	"\x14ReportWorkloadStatus\x121.admiral.api.agent.v1.ReportWorkloadStatusRequest\x1a2.admiral.api.agent.v1.ReportWorkloadStatusResponse\"b\xbaG(\n" +
+	"\x0eWorkload Agent\x12\x16Report workload status\xa2\x97$\x0e\n" +
+	"\fagent:status\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v1/agent/workloads/status\x12\xe6\x01\n" +
+	"\x15ReportWorkloadMetrics\x122.admiral.api.agent.v1.ReportWorkloadMetricsRequest\x1a3.admiral.api.agent.v1.ReportWorkloadMetricsResponse\"d\xbaG)\n" +
+	"\x0eWorkload Agent\x12\x17Report workload metrics\xa2\x97$\x0e\n" +
+	"\fagent:status\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/agent/workloads/metrics\x12\xe7\x01\n" +
+	"\x11GetRevisionBundle\x12..admiral.api.agent.v1.GetRevisionBundleRequest\x1a/.admiral.api.agent.v1.GetRevisionBundleResponse\"q\xbaG,\n" +
+	"\x0eWorkload Agent\x12\x1aRetrieve a revision bundle\xa2\x97$\x0e\n" +
+	"\fagent:deploy\x82\xd3\xe4\x93\x02*\x12(/v1/agent/revisions/{revision_id}/bundle\x12\xef\x01\n" +
+	"\x14ReportRevisionResult\x121.admiral.api.agent.v1.ReportRevisionResultRequest\x1a2.admiral.api.agent.v1.ReportRevisionResultResponse\"p\xbaG(\n" +
+	"\x0eWorkload Agent\x12\x16Report revision result\xa2\x97$\x0e\n" +
+	"\fagent:deploy\x82\xd3\xe4\x93\x02-:\x01*\"(/v1/agent/revisions/{revision_id}/resultB\xd1\x01\n" +
 	"\x18com.admiral.api.agent.v1B\fRuntimeProtoP\x01Z4go.admiral.io/sdk/proto/admiral/api/agent/v1;agentv1\xa2\x02\x03AAA\xaa\x02\x14Admiral.Api.Agent.V1\xca\x02\x14Admiral\\Api\\Agent\\V1\xe2\x02 Admiral\\Api\\Agent\\V1\\GPBMetadata\xea\x02\x17Admiral::Api::Agent::V1b\x06proto3"
 
 var file_admiral_api_agent_v1_runtime_proto_goTypes = []any{

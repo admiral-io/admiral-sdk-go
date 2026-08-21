@@ -71,9 +71,6 @@ const (
 //
 // Message definitions live in companion files: jobs.proto (TERRAFORM execution)
 // and workloads.proto (KUBERNETES telemetry and revision delivery).
-//
-// This service is the unified successor to the former RunnerAPI (admiral.runner.v1)
-// and ClusterAPI (admiral.cluster.v1).
 type AgentAPIClient interface {
 	// ---------------------------------------------------------------------------
 	// Admin CRUD
@@ -386,9 +383,6 @@ func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, in *ListWorkloa
 //
 // Message definitions live in companion files: jobs.proto (TERRAFORM execution)
 // and workloads.proto (KUBERNETES telemetry and revision delivery).
-//
-// This service is the unified successor to the former RunnerAPI (admiral.runner.v1)
-// and ClusterAPI (admiral.cluster.v1).
 type AgentAPIServer interface {
 	// ---------------------------------------------------------------------------
 	// Admin CRUD

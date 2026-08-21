@@ -1344,9 +1344,8 @@ func (x *ArtifactRef) GetChecksum() string {
 }
 
 // ExecutionReport is the executor-agnostic outcome of one revision phase --
-// the single report shape every executor maps its native result onto. It
-// supersedes the terraform-shaped JobResult and the kubernetes RevisionResult:
-// the TERRAFORM and KUBERNETES agents both report via this message.
+// the single report shape every executor maps its native result onto. The
+// TERRAFORM and KUBERNETES agents both report via this message.
 type ExecutionReport struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Terminal status of the phase.

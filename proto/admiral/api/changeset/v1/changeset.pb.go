@@ -249,7 +249,7 @@ type ChangeSet struct {
 	// empty in ListChangeSets responses.
 	VariableEntries []*ChangeSetVariableEntry `protobuf:"bytes,10,rep,name=variable_entries,json=variableEntries,proto3" json:"variable_entries,omitempty"`
 	// Typed display identifier of the form `cs-<12-char-suffix>` (e.g.,
-	// `cs-3k7m9p2q4rvw`). Server-generated, indexed, and stable. Prefer this
+	// `cs-3k7m9p2q4rvw`). Server-generated and stable. Prefer this
 	// over `id` for user-facing references; lookups accept either form.
 	DisplayId string `protobuf:"bytes,11,opt,name=display_id,json=displayId,proto3" json:"display_id,omitempty"`
 	// Display name of the parent application. Denormalized for display.
@@ -461,7 +461,7 @@ type ChangeSetEntry struct {
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Resolved placement for the component: the agent it deploys on (plus a
 	// namespace for WORKLOAD components). Copied onto the component at deploy
-	// time; the environment is no longer the source of truth for placement.
+	// time, and the component is the source of truth for placement at runtime.
 	Target        *v11.ComponentTarget `protobuf:"bytes,14,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1389,7 +1389,7 @@ type SetEntryRequest struct {
 	Description *string `protobuf:"bytes,8,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	// Resolved placement for the component, by kind. Required for CREATE (the
 	// component needs a placement); for UPDATE, absent means "no change to
-	// placement." Replaces the former per-environment target defaults.
+	// placement."
 	Target        *v11.ComponentTarget `protobuf:"bytes,9,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

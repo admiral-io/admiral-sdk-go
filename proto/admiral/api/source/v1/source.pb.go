@@ -27,10 +27,10 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// SourceType identifies the fetch protocol: how Admiral's Fetcher layer
-// retrieves content from the source URL. Types are carved by wire protocol,
-// not by content semantics. "This is a Terraform module" vs "this is a Helm
-// chart" is a Catalog/Component concern, not a Source concern.
+// SourceType identifies the fetch protocol: how Admiral retrieves content from
+// the source URL. Types are carved by wire protocol, not by content semantics.
+// "This is a Terraform module" vs "this is a Helm chart" is a Catalog/Component
+// concern, not a Source concern.
 type SourceType int32
 
 const (

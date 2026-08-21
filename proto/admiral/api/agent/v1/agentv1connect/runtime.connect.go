@@ -102,8 +102,6 @@ type AgentRuntimeAPIClient interface {
 	// piggybacks pending workload revisions on the response. The agent is identified
 	// by the SAT's binding; no agent_id is required.
 	//
-	// (Successor to the former ClusterAPI.ReportClusterStatus.)
-	//
 	// Scope: `agent:status` | Token types: `sat`
 	ReportAgentStatus(context.Context, *connect.Request[v1.ReportAgentStatusRequest]) (*connect.Response[v1.ReportAgentStatusResponse], error)
 	// ReportWorkloadStatus receives workload-only telemetry from a KUBERNETES agent,
@@ -306,8 +304,6 @@ type AgentRuntimeAPIHandler interface {
 	// Kubernetes events. Admiral splits this into storage tiers on receipt and
 	// piggybacks pending workload revisions on the response. The agent is identified
 	// by the SAT's binding; no agent_id is required.
-	//
-	// (Successor to the former ClusterAPI.ReportClusterStatus.)
 	//
 	// Scope: `agent:status` | Token types: `sat`
 	ReportAgentStatus(context.Context, *connect.Request[v1.ReportAgentStatusRequest]) (*connect.Response[v1.ReportAgentStatusResponse], error)
