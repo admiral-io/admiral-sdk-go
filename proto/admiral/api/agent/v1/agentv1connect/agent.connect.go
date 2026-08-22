@@ -59,26 +59,8 @@ const (
 	// AgentAPIRevokeAgentTokenProcedure is the fully-qualified name of the AgentAPI's RevokeAgentToken
 	// RPC.
 	AgentAPIRevokeAgentTokenProcedure = "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken"
-	// AgentAPIHeartbeatProcedure is the fully-qualified name of the AgentAPI's Heartbeat RPC.
-	AgentAPIHeartbeatProcedure = "/admiral.api.agent.v1.AgentAPI/Heartbeat"
-	// AgentAPIClaimJobProcedure is the fully-qualified name of the AgentAPI's ClaimJob RPC.
-	AgentAPIClaimJobProcedure = "/admiral.api.agent.v1.AgentAPI/ClaimJob"
-	// AgentAPIGetJobBundleProcedure is the fully-qualified name of the AgentAPI's GetJobBundle RPC.
-	AgentAPIGetJobBundleProcedure = "/admiral.api.agent.v1.AgentAPI/GetJobBundle"
-	// AgentAPIReportJobResultProcedure is the fully-qualified name of the AgentAPI's ReportJobResult
-	// RPC.
-	AgentAPIReportJobResultProcedure = "/admiral.api.agent.v1.AgentAPI/ReportJobResult"
 	// AgentAPIListAgentJobsProcedure is the fully-qualified name of the AgentAPI's ListAgentJobs RPC.
 	AgentAPIListAgentJobsProcedure = "/admiral.api.agent.v1.AgentAPI/ListAgentJobs"
-	// AgentAPIReportAgentStatusProcedure is the fully-qualified name of the AgentAPI's
-	// ReportAgentStatus RPC.
-	AgentAPIReportAgentStatusProcedure = "/admiral.api.agent.v1.AgentAPI/ReportAgentStatus"
-	// AgentAPIReportWorkloadStatusProcedure is the fully-qualified name of the AgentAPI's
-	// ReportWorkloadStatus RPC.
-	AgentAPIReportWorkloadStatusProcedure = "/admiral.api.agent.v1.AgentAPI/ReportWorkloadStatus"
-	// AgentAPIReportWorkloadMetricsProcedure is the fully-qualified name of the AgentAPI's
-	// ReportWorkloadMetrics RPC.
-	AgentAPIReportWorkloadMetricsProcedure = "/admiral.api.agent.v1.AgentAPI/ReportWorkloadMetrics"
 	// AgentAPIListWorkloadsProcedure is the fully-qualified name of the AgentAPI's ListWorkloads RPC.
 	AgentAPIListWorkloadsProcedure = "/admiral.api.agent.v1.AgentAPI/ListWorkloads"
 	// AgentAPIGetWorkloadProcedure is the fully-qualified name of the AgentAPI's GetWorkload RPC.
@@ -86,16 +68,13 @@ const (
 	// AgentAPIListWorkloadEventsProcedure is the fully-qualified name of the AgentAPI's
 	// ListWorkloadEvents RPC.
 	AgentAPIListWorkloadEventsProcedure = "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents"
-	// AgentAPIGetRevisionBundleProcedure is the fully-qualified name of the AgentAPI's
-	// GetRevisionBundle RPC.
-	AgentAPIGetRevisionBundleProcedure = "/admiral.api.agent.v1.AgentAPI/GetRevisionBundle"
-	// AgentAPIReportRevisionResultProcedure is the fully-qualified name of the AgentAPI's
-	// ReportRevisionResult RPC.
-	AgentAPIReportRevisionResultProcedure = "/admiral.api.agent.v1.AgentAPI/ReportRevisionResult"
 )
 
 // AgentAPIClient is a client for the admiral.api.agent.v1.AgentAPI service.
 type AgentAPIClient interface {
+	// ---------------------------------------------------------------------------
+	// Admin CRUD
+	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
 	// generates an initial Service Access Token (SAT). The agent starts in PENDING
 	// health status until it begins reporting.
@@ -152,6 +131,9 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error)
+	// ---------------------------------------------------------------------------
+	// Agent tokens
+	// ---------------------------------------------------------------------------
 	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
 	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
 	// be overridden. The response includes the raw token secret, shown exactly once.
@@ -182,60 +164,14 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	RevokeAgentToken(context.Context, *connect.Request[v1.RevokeAgentTokenRequest]) (*connect.Response[v1.RevokeAgentTokenResponse], error)
-	// Heartbeat reports that a TERRAFORM agent is alive and includes current capacity
-	// metrics. The server uses heartbeat recency to derive health status. The agent
-	// is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	Heartbeat(context.Context, *connect.Request[v1.HeartbeatRequest]) (*connect.Response[v1.HeartbeatResponse], error)
-	// ClaimJob polls for the next job assigned to this TERRAFORM agent. Returns the job
-	// metadata if work is available, or an empty response if no jobs are pending.
-	// The agent is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error)
-	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated from
-	// ClaimJob to keep the claim response lightweight. The bundle contains
-	// everything the agent needs to execute: rendered infrastructure files,
-	// resolved variables, provider/backend configuration, the engine and version,
-	// and lifecycle hooks.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	GetJobBundle(context.Context, *connect.Request[v1.GetJobBundleRequest]) (*connect.Response[v1.GetJobBundleResponse], error)
-	// ReportJobResult reports the outcome of a completed job. The server
-	// transitions the parent Revision status accordingly (e.g., PLANNING->APPLYING,
-	// APPLYING->SUCCEEDED/FAILED).
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error)
+	// ---------------------------------------------------------------------------
+	// Read-only observability. Messages: jobs.proto, workloads.proto.
+	// ---------------------------------------------------------------------------
 	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
 	// Provides admin read-only visibility into agent workload.
 	//
 	// Scope: `agent:read`
 	ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error)
-	// ReportAgentStatus receives a combined telemetry snapshot from a KUBERNETES
-	// agent. The payload includes cluster-level metrics, per-workload status, and
-	// Kubernetes events. Admiral splits this into storage tiers on receipt and
-	// piggybacks pending workload revisions on the response. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// (Successor to the former ClusterAPI.ReportClusterStatus.)
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportAgentStatus(context.Context, *connect.Request[v1.ReportAgentStatusRequest]) (*connect.Response[v1.ReportAgentStatusResponse], error)
-	// ReportWorkloadStatus receives workload-only telemetry from a KUBERNETES agent,
-	// for incremental updates between full status pushes. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadStatus(context.Context, *connect.Request[v1.ReportWorkloadStatusRequest]) (*connect.Response[v1.ReportWorkloadStatusResponse], error)
-	// ReportWorkloadMetrics receives a batch of per-pod CPU/memory samples from a
-	// KUBERNETES agent. Admiral aggregates them pod -> workload -> cluster
-	// server-side. The agent is identified by the SAT's binding; no agent_id is
-	// required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadMetrics(context.Context, *connect.Request[v1.ReportWorkloadMetricsRequest]) (*connect.Response[v1.ReportWorkloadMetricsResponse], error)
 	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
 	// agent's cluster.
 	//
@@ -252,23 +188,6 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	ListWorkloadEvents(context.Context, *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error)
-	// GetRevisionBundle fetches the rendered manifest bundle for a workload
-	// revision. The KUBERNETES agent calls this when it detects a new or updated
-	// revision (advertised via ReportAgentStatus's pending_revision_ids). The
-	// bundle contains pre-rendered Kubernetes manifests ready for server-side apply.
-	//
-	// The agent is identified by the SAT's binding. Returns PERMISSION_DENIED if
-	// the revision's target agent does not match the SAT binding. Returns NOT_FOUND
-	// if the revision does not exist or has been canceled.
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	GetRevisionBundle(context.Context, *connect.Request[v1.GetRevisionBundleRequest]) (*connect.Response[v1.GetRevisionBundleResponse], error)
-	// ReportRevisionResult reports the outcome of applying a workload revision to
-	// the cluster. The server transitions the parent Revision status accordingly
-	// (APPLYING -> SUCCEEDED or FAILED).
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	ReportRevisionResult(context.Context, *connect.Request[v1.ReportRevisionResultRequest]) (*connect.Response[v1.ReportRevisionResultResponse], error)
 }
 
 // NewAgentAPIClient constructs a client for the admiral.api.agent.v1.AgentAPI service. By default,
@@ -348,52 +267,10 @@ func NewAgentAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(agentAPIMethods.ByName("RevokeAgentToken")),
 			connect.WithClientOptions(opts...),
 		),
-		heartbeat: connect.NewClient[v1.HeartbeatRequest, v1.HeartbeatResponse](
-			httpClient,
-			baseURL+AgentAPIHeartbeatProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("Heartbeat")),
-			connect.WithClientOptions(opts...),
-		),
-		claimJob: connect.NewClient[v1.ClaimJobRequest, v1.ClaimJobResponse](
-			httpClient,
-			baseURL+AgentAPIClaimJobProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ClaimJob")),
-			connect.WithClientOptions(opts...),
-		),
-		getJobBundle: connect.NewClient[v1.GetJobBundleRequest, v1.GetJobBundleResponse](
-			httpClient,
-			baseURL+AgentAPIGetJobBundleProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("GetJobBundle")),
-			connect.WithClientOptions(opts...),
-		),
-		reportJobResult: connect.NewClient[v1.ReportJobResultRequest, v1.ReportJobResultResponse](
-			httpClient,
-			baseURL+AgentAPIReportJobResultProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ReportJobResult")),
-			connect.WithClientOptions(opts...),
-		),
 		listAgentJobs: connect.NewClient[v1.ListAgentJobsRequest, v1.ListAgentJobsResponse](
 			httpClient,
 			baseURL+AgentAPIListAgentJobsProcedure,
 			connect.WithSchema(agentAPIMethods.ByName("ListAgentJobs")),
-			connect.WithClientOptions(opts...),
-		),
-		reportAgentStatus: connect.NewClient[v1.ReportAgentStatusRequest, v1.ReportAgentStatusResponse](
-			httpClient,
-			baseURL+AgentAPIReportAgentStatusProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ReportAgentStatus")),
-			connect.WithClientOptions(opts...),
-		),
-		reportWorkloadStatus: connect.NewClient[v1.ReportWorkloadStatusRequest, v1.ReportWorkloadStatusResponse](
-			httpClient,
-			baseURL+AgentAPIReportWorkloadStatusProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ReportWorkloadStatus")),
-			connect.WithClientOptions(opts...),
-		),
-		reportWorkloadMetrics: connect.NewClient[v1.ReportWorkloadMetricsRequest, v1.ReportWorkloadMetricsResponse](
-			httpClient,
-			baseURL+AgentAPIReportWorkloadMetricsProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ReportWorkloadMetrics")),
 			connect.WithClientOptions(opts...),
 		),
 		listWorkloads: connect.NewClient[v1.ListWorkloadsRequest, v1.ListWorkloadsResponse](
@@ -414,18 +291,6 @@ func NewAgentAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(agentAPIMethods.ByName("ListWorkloadEvents")),
 			connect.WithClientOptions(opts...),
 		),
-		getRevisionBundle: connect.NewClient[v1.GetRevisionBundleRequest, v1.GetRevisionBundleResponse](
-			httpClient,
-			baseURL+AgentAPIGetRevisionBundleProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("GetRevisionBundle")),
-			connect.WithClientOptions(opts...),
-		),
-		reportRevisionResult: connect.NewClient[v1.ReportRevisionResultRequest, v1.ReportRevisionResultResponse](
-			httpClient,
-			baseURL+AgentAPIReportRevisionResultProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ReportRevisionResult")),
-			connect.WithClientOptions(opts...),
-		),
 	}
 }
 
@@ -442,19 +307,10 @@ type agentAPIClient struct {
 	listAgentTokens           *connect.Client[v1.ListAgentTokensRequest, v1.ListAgentTokensResponse]
 	getAgentToken             *connect.Client[v1.GetAgentTokenRequest, v1.GetAgentTokenResponse]
 	revokeAgentToken          *connect.Client[v1.RevokeAgentTokenRequest, v1.RevokeAgentTokenResponse]
-	heartbeat                 *connect.Client[v1.HeartbeatRequest, v1.HeartbeatResponse]
-	claimJob                  *connect.Client[v1.ClaimJobRequest, v1.ClaimJobResponse]
-	getJobBundle              *connect.Client[v1.GetJobBundleRequest, v1.GetJobBundleResponse]
-	reportJobResult           *connect.Client[v1.ReportJobResultRequest, v1.ReportJobResultResponse]
 	listAgentJobs             *connect.Client[v1.ListAgentJobsRequest, v1.ListAgentJobsResponse]
-	reportAgentStatus         *connect.Client[v1.ReportAgentStatusRequest, v1.ReportAgentStatusResponse]
-	reportWorkloadStatus      *connect.Client[v1.ReportWorkloadStatusRequest, v1.ReportWorkloadStatusResponse]
-	reportWorkloadMetrics     *connect.Client[v1.ReportWorkloadMetricsRequest, v1.ReportWorkloadMetricsResponse]
 	listWorkloads             *connect.Client[v1.ListWorkloadsRequest, v1.ListWorkloadsResponse]
 	getWorkload               *connect.Client[v1.GetWorkloadRequest, v1.GetWorkloadResponse]
 	listWorkloadEvents        *connect.Client[v1.ListWorkloadEventsRequest, v1.ListWorkloadEventsResponse]
-	getRevisionBundle         *connect.Client[v1.GetRevisionBundleRequest, v1.GetRevisionBundleResponse]
-	reportRevisionResult      *connect.Client[v1.ReportRevisionResultRequest, v1.ReportRevisionResultResponse]
 }
 
 // CreateAgent calls admiral.api.agent.v1.AgentAPI.CreateAgent.
@@ -512,44 +368,9 @@ func (c *agentAPIClient) RevokeAgentToken(ctx context.Context, req *connect.Requ
 	return c.revokeAgentToken.CallUnary(ctx, req)
 }
 
-// Heartbeat calls admiral.api.agent.v1.AgentAPI.Heartbeat.
-func (c *agentAPIClient) Heartbeat(ctx context.Context, req *connect.Request[v1.HeartbeatRequest]) (*connect.Response[v1.HeartbeatResponse], error) {
-	return c.heartbeat.CallUnary(ctx, req)
-}
-
-// ClaimJob calls admiral.api.agent.v1.AgentAPI.ClaimJob.
-func (c *agentAPIClient) ClaimJob(ctx context.Context, req *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error) {
-	return c.claimJob.CallUnary(ctx, req)
-}
-
-// GetJobBundle calls admiral.api.agent.v1.AgentAPI.GetJobBundle.
-func (c *agentAPIClient) GetJobBundle(ctx context.Context, req *connect.Request[v1.GetJobBundleRequest]) (*connect.Response[v1.GetJobBundleResponse], error) {
-	return c.getJobBundle.CallUnary(ctx, req)
-}
-
-// ReportJobResult calls admiral.api.agent.v1.AgentAPI.ReportJobResult.
-func (c *agentAPIClient) ReportJobResult(ctx context.Context, req *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error) {
-	return c.reportJobResult.CallUnary(ctx, req)
-}
-
 // ListAgentJobs calls admiral.api.agent.v1.AgentAPI.ListAgentJobs.
 func (c *agentAPIClient) ListAgentJobs(ctx context.Context, req *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error) {
 	return c.listAgentJobs.CallUnary(ctx, req)
-}
-
-// ReportAgentStatus calls admiral.api.agent.v1.AgentAPI.ReportAgentStatus.
-func (c *agentAPIClient) ReportAgentStatus(ctx context.Context, req *connect.Request[v1.ReportAgentStatusRequest]) (*connect.Response[v1.ReportAgentStatusResponse], error) {
-	return c.reportAgentStatus.CallUnary(ctx, req)
-}
-
-// ReportWorkloadStatus calls admiral.api.agent.v1.AgentAPI.ReportWorkloadStatus.
-func (c *agentAPIClient) ReportWorkloadStatus(ctx context.Context, req *connect.Request[v1.ReportWorkloadStatusRequest]) (*connect.Response[v1.ReportWorkloadStatusResponse], error) {
-	return c.reportWorkloadStatus.CallUnary(ctx, req)
-}
-
-// ReportWorkloadMetrics calls admiral.api.agent.v1.AgentAPI.ReportWorkloadMetrics.
-func (c *agentAPIClient) ReportWorkloadMetrics(ctx context.Context, req *connect.Request[v1.ReportWorkloadMetricsRequest]) (*connect.Response[v1.ReportWorkloadMetricsResponse], error) {
-	return c.reportWorkloadMetrics.CallUnary(ctx, req)
 }
 
 // ListWorkloads calls admiral.api.agent.v1.AgentAPI.ListWorkloads.
@@ -567,18 +388,11 @@ func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, req *connect.Re
 	return c.listWorkloadEvents.CallUnary(ctx, req)
 }
 
-// GetRevisionBundle calls admiral.api.agent.v1.AgentAPI.GetRevisionBundle.
-func (c *agentAPIClient) GetRevisionBundle(ctx context.Context, req *connect.Request[v1.GetRevisionBundleRequest]) (*connect.Response[v1.GetRevisionBundleResponse], error) {
-	return c.getRevisionBundle.CallUnary(ctx, req)
-}
-
-// ReportRevisionResult calls admiral.api.agent.v1.AgentAPI.ReportRevisionResult.
-func (c *agentAPIClient) ReportRevisionResult(ctx context.Context, req *connect.Request[v1.ReportRevisionResultRequest]) (*connect.Response[v1.ReportRevisionResultResponse], error) {
-	return c.reportRevisionResult.CallUnary(ctx, req)
-}
-
 // AgentAPIHandler is an implementation of the admiral.api.agent.v1.AgentAPI service.
 type AgentAPIHandler interface {
+	// ---------------------------------------------------------------------------
+	// Admin CRUD
+	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
 	// generates an initial Service Access Token (SAT). The agent starts in PENDING
 	// health status until it begins reporting.
@@ -635,6 +449,9 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error)
+	// ---------------------------------------------------------------------------
+	// Agent tokens
+	// ---------------------------------------------------------------------------
 	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
 	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
 	// be overridden. The response includes the raw token secret, shown exactly once.
@@ -665,60 +482,14 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:write`
 	RevokeAgentToken(context.Context, *connect.Request[v1.RevokeAgentTokenRequest]) (*connect.Response[v1.RevokeAgentTokenResponse], error)
-	// Heartbeat reports that a TERRAFORM agent is alive and includes current capacity
-	// metrics. The server uses heartbeat recency to derive health status. The agent
-	// is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	Heartbeat(context.Context, *connect.Request[v1.HeartbeatRequest]) (*connect.Response[v1.HeartbeatResponse], error)
-	// ClaimJob polls for the next job assigned to this TERRAFORM agent. Returns the job
-	// metadata if work is available, or an empty response if no jobs are pending.
-	// The agent is identified by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error)
-	// GetJobBundle fetches the rendered artifacts for a claimed job. Separated from
-	// ClaimJob to keep the claim response lightweight. The bundle contains
-	// everything the agent needs to execute: rendered infrastructure files,
-	// resolved variables, provider/backend configuration, the engine and version,
-	// and lifecycle hooks.
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	GetJobBundle(context.Context, *connect.Request[v1.GetJobBundleRequest]) (*connect.Response[v1.GetJobBundleResponse], error)
-	// ReportJobResult reports the outcome of a completed job. The server
-	// transitions the parent Revision status accordingly (e.g., PLANNING->APPLYING,
-	// APPLYING->SUCCEEDED/FAILED).
-	//
-	// Scope: `agent:exec` | Token types: `sat`
-	ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error)
+	// ---------------------------------------------------------------------------
+	// Read-only observability. Messages: jobs.proto, workloads.proto.
+	// ---------------------------------------------------------------------------
 	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
 	// Provides admin read-only visibility into agent workload.
 	//
 	// Scope: `agent:read`
 	ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error)
-	// ReportAgentStatus receives a combined telemetry snapshot from a KUBERNETES
-	// agent. The payload includes cluster-level metrics, per-workload status, and
-	// Kubernetes events. Admiral splits this into storage tiers on receipt and
-	// piggybacks pending workload revisions on the response. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// (Successor to the former ClusterAPI.ReportClusterStatus.)
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportAgentStatus(context.Context, *connect.Request[v1.ReportAgentStatusRequest]) (*connect.Response[v1.ReportAgentStatusResponse], error)
-	// ReportWorkloadStatus receives workload-only telemetry from a KUBERNETES agent,
-	// for incremental updates between full status pushes. The agent is identified
-	// by the SAT's binding; no agent_id is required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadStatus(context.Context, *connect.Request[v1.ReportWorkloadStatusRequest]) (*connect.Response[v1.ReportWorkloadStatusResponse], error)
-	// ReportWorkloadMetrics receives a batch of per-pod CPU/memory samples from a
-	// KUBERNETES agent. Admiral aggregates them pod -> workload -> cluster
-	// server-side. The agent is identified by the SAT's binding; no agent_id is
-	// required.
-	//
-	// Scope: `agent:status` | Token types: `sat`
-	ReportWorkloadMetrics(context.Context, *connect.Request[v1.ReportWorkloadMetricsRequest]) (*connect.Response[v1.ReportWorkloadMetricsResponse], error)
 	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
 	// agent's cluster.
 	//
@@ -735,23 +506,6 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:read`
 	ListWorkloadEvents(context.Context, *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error)
-	// GetRevisionBundle fetches the rendered manifest bundle for a workload
-	// revision. The KUBERNETES agent calls this when it detects a new or updated
-	// revision (advertised via ReportAgentStatus's pending_revision_ids). The
-	// bundle contains pre-rendered Kubernetes manifests ready for server-side apply.
-	//
-	// The agent is identified by the SAT's binding. Returns PERMISSION_DENIED if
-	// the revision's target agent does not match the SAT binding. Returns NOT_FOUND
-	// if the revision does not exist or has been canceled.
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	GetRevisionBundle(context.Context, *connect.Request[v1.GetRevisionBundleRequest]) (*connect.Response[v1.GetRevisionBundleResponse], error)
-	// ReportRevisionResult reports the outcome of applying a workload revision to
-	// the cluster. The server transitions the parent Revision status accordingly
-	// (APPLYING -> SUCCEEDED or FAILED).
-	//
-	// Scope: `agent:deploy` | Token types: `sat`
-	ReportRevisionResult(context.Context, *connect.Request[v1.ReportRevisionResultRequest]) (*connect.Response[v1.ReportRevisionResultResponse], error)
 }
 
 // NewAgentAPIHandler builds an HTTP handler from the service implementation. It returns the path on
@@ -827,52 +581,10 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 		connect.WithSchema(agentAPIMethods.ByName("RevokeAgentToken")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIHeartbeatHandler := connect.NewUnaryHandler(
-		AgentAPIHeartbeatProcedure,
-		svc.Heartbeat,
-		connect.WithSchema(agentAPIMethods.ByName("Heartbeat")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIClaimJobHandler := connect.NewUnaryHandler(
-		AgentAPIClaimJobProcedure,
-		svc.ClaimJob,
-		connect.WithSchema(agentAPIMethods.ByName("ClaimJob")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIGetJobBundleHandler := connect.NewUnaryHandler(
-		AgentAPIGetJobBundleProcedure,
-		svc.GetJobBundle,
-		connect.WithSchema(agentAPIMethods.ByName("GetJobBundle")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIReportJobResultHandler := connect.NewUnaryHandler(
-		AgentAPIReportJobResultProcedure,
-		svc.ReportJobResult,
-		connect.WithSchema(agentAPIMethods.ByName("ReportJobResult")),
-		connect.WithHandlerOptions(opts...),
-	)
 	agentAPIListAgentJobsHandler := connect.NewUnaryHandler(
 		AgentAPIListAgentJobsProcedure,
 		svc.ListAgentJobs,
 		connect.WithSchema(agentAPIMethods.ByName("ListAgentJobs")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIReportAgentStatusHandler := connect.NewUnaryHandler(
-		AgentAPIReportAgentStatusProcedure,
-		svc.ReportAgentStatus,
-		connect.WithSchema(agentAPIMethods.ByName("ReportAgentStatus")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIReportWorkloadStatusHandler := connect.NewUnaryHandler(
-		AgentAPIReportWorkloadStatusProcedure,
-		svc.ReportWorkloadStatus,
-		connect.WithSchema(agentAPIMethods.ByName("ReportWorkloadStatus")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIReportWorkloadMetricsHandler := connect.NewUnaryHandler(
-		AgentAPIReportWorkloadMetricsProcedure,
-		svc.ReportWorkloadMetrics,
-		connect.WithSchema(agentAPIMethods.ByName("ReportWorkloadMetrics")),
 		connect.WithHandlerOptions(opts...),
 	)
 	agentAPIListWorkloadsHandler := connect.NewUnaryHandler(
@@ -891,18 +603,6 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 		AgentAPIListWorkloadEventsProcedure,
 		svc.ListWorkloadEvents,
 		connect.WithSchema(agentAPIMethods.ByName("ListWorkloadEvents")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIGetRevisionBundleHandler := connect.NewUnaryHandler(
-		AgentAPIGetRevisionBundleProcedure,
-		svc.GetRevisionBundle,
-		connect.WithSchema(agentAPIMethods.ByName("GetRevisionBundle")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIReportRevisionResultHandler := connect.NewUnaryHandler(
-		AgentAPIReportRevisionResultProcedure,
-		svc.ReportRevisionResult,
-		connect.WithSchema(agentAPIMethods.ByName("ReportRevisionResult")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/admiral.api.agent.v1.AgentAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -929,32 +629,14 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 			agentAPIGetAgentTokenHandler.ServeHTTP(w, r)
 		case AgentAPIRevokeAgentTokenProcedure:
 			agentAPIRevokeAgentTokenHandler.ServeHTTP(w, r)
-		case AgentAPIHeartbeatProcedure:
-			agentAPIHeartbeatHandler.ServeHTTP(w, r)
-		case AgentAPIClaimJobProcedure:
-			agentAPIClaimJobHandler.ServeHTTP(w, r)
-		case AgentAPIGetJobBundleProcedure:
-			agentAPIGetJobBundleHandler.ServeHTTP(w, r)
-		case AgentAPIReportJobResultProcedure:
-			agentAPIReportJobResultHandler.ServeHTTP(w, r)
 		case AgentAPIListAgentJobsProcedure:
 			agentAPIListAgentJobsHandler.ServeHTTP(w, r)
-		case AgentAPIReportAgentStatusProcedure:
-			agentAPIReportAgentStatusHandler.ServeHTTP(w, r)
-		case AgentAPIReportWorkloadStatusProcedure:
-			agentAPIReportWorkloadStatusHandler.ServeHTTP(w, r)
-		case AgentAPIReportWorkloadMetricsProcedure:
-			agentAPIReportWorkloadMetricsHandler.ServeHTTP(w, r)
 		case AgentAPIListWorkloadsProcedure:
 			agentAPIListWorkloadsHandler.ServeHTTP(w, r)
 		case AgentAPIGetWorkloadProcedure:
 			agentAPIGetWorkloadHandler.ServeHTTP(w, r)
 		case AgentAPIListWorkloadEventsProcedure:
 			agentAPIListWorkloadEventsHandler.ServeHTTP(w, r)
-		case AgentAPIGetRevisionBundleProcedure:
-			agentAPIGetRevisionBundleHandler.ServeHTTP(w, r)
-		case AgentAPIReportRevisionResultProcedure:
-			agentAPIReportRevisionResultHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1008,36 +690,8 @@ func (UnimplementedAgentAPIHandler) RevokeAgentToken(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.RevokeAgentToken is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) Heartbeat(context.Context, *connect.Request[v1.HeartbeatRequest]) (*connect.Response[v1.HeartbeatResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.Heartbeat is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ClaimJob is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) GetJobBundle(context.Context, *connect.Request[v1.GetJobBundleRequest]) (*connect.Response[v1.GetJobBundleResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetJobBundle is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ReportJobResult is not implemented"))
-}
-
 func (UnimplementedAgentAPIHandler) ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListAgentJobs is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) ReportAgentStatus(context.Context, *connect.Request[v1.ReportAgentStatusRequest]) (*connect.Response[v1.ReportAgentStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ReportAgentStatus is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) ReportWorkloadStatus(context.Context, *connect.Request[v1.ReportWorkloadStatusRequest]) (*connect.Response[v1.ReportWorkloadStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ReportWorkloadStatus is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) ReportWorkloadMetrics(context.Context, *connect.Request[v1.ReportWorkloadMetricsRequest]) (*connect.Response[v1.ReportWorkloadMetricsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ReportWorkloadMetrics is not implemented"))
 }
 
 func (UnimplementedAgentAPIHandler) ListWorkloads(context.Context, *connect.Request[v1.ListWorkloadsRequest]) (*connect.Response[v1.ListWorkloadsResponse], error) {
@@ -1050,12 +704,4 @@ func (UnimplementedAgentAPIHandler) GetWorkload(context.Context, *connect.Reques
 
 func (UnimplementedAgentAPIHandler) ListWorkloadEvents(context.Context, *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListWorkloadEvents is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) GetRevisionBundle(context.Context, *connect.Request[v1.GetRevisionBundleRequest]) (*connect.Response[v1.GetRevisionBundleResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetRevisionBundle is not implemented"))
-}
-
-func (UnimplementedAgentAPIHandler) ReportRevisionResult(context.Context, *connect.Request[v1.ReportRevisionResultRequest]) (*connect.Response[v1.ReportRevisionResultResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ReportRevisionResult is not implemented"))
 }

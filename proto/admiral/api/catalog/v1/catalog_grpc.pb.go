@@ -37,8 +37,7 @@ const (
 //
 // A catalog item binds a Source to a specific ref (branch, tag, version) and
 // optional root (subdirectory within the fetched tree) and path (working
-// directory within root for execution). Catalog items are the first layer that
-// actually consumes backend.Fetch for real work.
+// directory within root for execution).
 //
 // The API includes a resolve operation (ResolveCatalogItem) that fetches the
 // item via its Source and returns the resolved revision and content digest
@@ -161,8 +160,7 @@ func (c *catalogAPIClient) ResolveCatalogItem(ctx context.Context, in *ResolveCa
 //
 // A catalog item binds a Source to a specific ref (branch, tag, version) and
 // optional root (subdirectory within the fetched tree) and path (working
-// directory within root for execution). Catalog items are the first layer that
-// actually consumes backend.Fetch for real work.
+// directory within root for execution).
 //
 // The API includes a resolve operation (ResolveCatalogItem) that fetches the
 // item via its Source and returns the resolved revision and content digest

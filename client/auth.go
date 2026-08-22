@@ -47,6 +47,14 @@ func (v *DefaultTokenValidator) Validate(token string) error {
 	return ValidateAuthToken(token)
 }
 
+// NoOpTokenValidator accepts any token, including the empty string. It is the
+// default when credentials are ambient (supplied by the transport or by
+// caller-provided per-RPC credentials) rather than an Admiral opaque token.
+type NoOpTokenValidator struct{}
+
+// Validate always succeeds.
+func (v *NoOpTokenValidator) Validate(string) error { return nil }
+
 // ValidateAuthToken validates the format of an Admiral opaque token.
 // It checks the prefix, length, and CRC32 checksum without requiring
 // a network call.

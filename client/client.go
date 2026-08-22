@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
 	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
-	authenticationv1 "go.admiral.io/sdk/proto/admiral/api/authentication/v1"
 	catalogv1 "go.admiral.io/sdk/proto/admiral/api/catalog/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
@@ -18,6 +17,7 @@ import (
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
+	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
 
@@ -31,8 +31,8 @@ type Client struct {
 	authToken      string
 	tokenValidator TokenValidator
 	agent agentv1.AgentAPIClient
+	agentRuntime agentv1.AgentRuntimeAPIClient
 	application applicationv1.ApplicationAPIClient
-	authentication authenticationv1.AuthenticationAPIClient
 	catalog catalogv1.CatalogAPIClient
 	changeSet changesetv1.ChangeSetAPIClient
 	credential credentialv1.CredentialAPIClient
@@ -40,6 +40,7 @@ type Client struct {
 	healthcheck healthcheckv1.HealthcheckAPIClient
 	run runv1.RunAPIClient
 	source sourcev1.SourceAPIClient
+	tenant tenantv1.TenantAPIClient
 	user userv1.UserAPIClient
 }
 
@@ -82,8 +83,8 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		authToken:      cfg.AuthToken,
 		tokenValidator: cfg.TokenValidator,
 		agent: agentv1.NewAgentAPIClient(conn),
+		agentRuntime: agentv1.NewAgentRuntimeAPIClient(conn),
 		application: applicationv1.NewApplicationAPIClient(conn),
-		authentication: authenticationv1.NewAuthenticationAPIClient(conn),
 		catalog: catalogv1.NewCatalogAPIClient(conn),
 		changeSet: changesetv1.NewChangeSetAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
@@ -91,6 +92,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		healthcheck: healthcheckv1.NewHealthcheckAPIClient(conn),
 		run: runv1.NewRunAPIClient(conn),
 		source: sourcev1.NewSourceAPIClient(conn),
+		tenant: tenantv1.NewTenantAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
 	}, nil
 }
@@ -100,14 +102,14 @@ func (c *Client) Agent() agentv1.AgentAPIClient {
 	return c.agent
 }
 
+// AgentRuntime returns the AgentRuntimeAPI client.
+func (c *Client) AgentRuntime() agentv1.AgentRuntimeAPIClient {
+	return c.agentRuntime
+}
+
 // Application returns the ApplicationAPI client.
 func (c *Client) Application() applicationv1.ApplicationAPIClient {
 	return c.application
-}
-
-// Authentication returns the AuthenticationAPI client.
-func (c *Client) Authentication() authenticationv1.AuthenticationAPIClient {
-	return c.authentication
 }
 
 // Catalog returns the CatalogAPI client.
@@ -143,6 +145,11 @@ func (c *Client) Run() runv1.RunAPIClient {
 // Source returns the SourceAPI client.
 func (c *Client) Source() sourcev1.SourceAPIClient {
 	return c.source
+}
+
+// Tenant returns the TenantAPI client.
+func (c *Client) Tenant() tenantv1.TenantAPIClient {
+	return c.tenant
 }
 
 // User returns the UserAPI client.

@@ -25,7 +25,7 @@ func main() {
 
 	// Create client
 	c, err := client.New(ctx, client.Config{
-		HostPort:  "api.admiral.io:443",
+		HostPort: "api.admiral.io:443",
 		AuthToken: "your-token-here",
 	})
 	if err != nil {
@@ -35,8 +35,8 @@ func main() {
 
 	// Access services via accessors
 	// c.Agent().MethodName(ctx, req)
+	// c.AgentRuntime().MethodName(ctx, req)
 	// c.Application().MethodName(ctx, req)
-	// c.Authentication().MethodName(ctx, req)
 	// c.Catalog().MethodName(ctx, req)
 	// c.ChangeSet().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
@@ -44,6 +44,7 @@ func main() {
 	// c.Healthcheck().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
 	// c.Source().MethodName(ctx, req)
+	// c.Tenant().MethodName(ctx, req)
 	// c.User().MethodName(ctx, req)
 }
 ```
@@ -53,8 +54,8 @@ func main() {
 | Service | Accessor | Import |
 |---------|----------|--------|
 | AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
+| AgentRuntimeAPI | `AgentRuntime()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/api/application/v1` |
-| AuthenticationAPI | `Authentication()` | `go.admiral.io/sdk/proto/admiral/api/authentication/v1` |
 | CatalogAPI | `Catalog()` | `go.admiral.io/sdk/proto/admiral/api/catalog/v1` |
 | ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/api/changeset/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/api/credential/v1` |
@@ -62,47 +63,8 @@ func main() {
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/api/healthcheck/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |
 | SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/api/source/v1` |
+| TenantAPI | `Tenant()` | `go.admiral.io/sdk/proto/admiral/api/tenant/v1` |
 | UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/api/user/v1` |
-
-## Example
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"log"
-
-	"go.admiral.io/sdk/client"
-	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
-)
-
-func main() {
-	ctx := context.Background()
-
-	c, err := client.New(ctx, client.Config{
-		HostPort:  "api.admiral.io:443",
-		AuthToken: os.Getenv("ADMIRAL_TOKEN"),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer c.Close()
-
-	// Validate token before making requests
-	if err := c.ValidateToken(); err != nil {
-		log.Fatal("Invalid token:", err)
-	}
-
-	// Call a service method
-	resp, err := c.Agent().ListMethod(ctx, &agentv1.ListMethodRequest{})
-	if err != nil {
-		log.Fatal("Request failed:", err)
-	}
-	fmt.Printf("Response: %+v\n", resp)
-}
-```
 
 ## Configuration
 
@@ -126,7 +88,7 @@ cfg := client.Config{
 		// Use insecure connection (no TLS) - default: false
 		Insecure: false,
 
-		// Connection timeout - default: 10s
+		// Connection timeout - default: 30s
 		DialTimeout: 10 * time.Second,
 
 		// Custom TLS configuration

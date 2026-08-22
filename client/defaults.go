@@ -2,7 +2,8 @@ package client
 
 import "time"
 
-// DefaultHostPort is the default API endpoint.
+// DefaultHostPort is the endpoint used when Config.HostPort is not set.
+// Declared by this collection's protorepo.yaml (default_host_port).
 const DefaultHostPort = "api.admiral.io:443"
 
 // DefaultDialTimeout is the default timeout for establishing a gRPC connection.

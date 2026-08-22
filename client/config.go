@@ -68,6 +68,9 @@ func (c *Config) CheckAndSetDefaults() error {
 	if c.HostPort == "" {
 		c.HostPort = DefaultHostPort
 	}
+	if c.HostPort == "" {
+		return errors.New("HostPort is required: this SDK declares no default endpoint")
+	}
 
 	_, _, err := net.SplitHostPort(c.HostPort)
 	if err != nil {
@@ -93,7 +96,6 @@ func (c *Config) CheckAndSetDefaults() error {
 	if c.ConnectionOptions.KeepAliveTimeout == 0 {
 		c.ConnectionOptions.KeepAliveTimeout = DefaultKeepAliveTimeout
 	}
-
 	if len(c.AuthToken) == 0 {
 		return errors.New("auth token is required")
 	}

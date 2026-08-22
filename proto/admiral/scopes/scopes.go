@@ -7,15 +7,34 @@
 // Package scopes carries the scope catalog for the Admiral API surface.
 package scopes
 
-// Wildcard is the scope claim carried by session tokens: no reduction over
-// live authorization. It is never mintable input and never a catalog entry.
+// Wildcard is the scope claim carried by unreduced first-party tokens: no
+// reduction over live authorization. It is never mintable input and never a
+// catalog entry. Absence of a scope claim means DENY, not unrestricted --
+// privilege must be a positive assertion, or a truncated token reads as the
+// most privileged state.
 const Wildcard = "*"
 
-// Token types, as used in AuthRule.allowed_token_types and Scope.AssignableTo.
+// Credential types, as used in Scope.AssignableTo. Mint-time policy: which
+// credential a scope may be attached to when one is issued.
 const (
-	TokenTypePAT     = "pat"
-	TokenTypeSAT     = "sat"
-	TokenTypeSession = "session"
+	TokenTypePAT = "pat"
+	TokenTypeSAT = "sat"
+)
+
+// Principal kinds, matched against the `kind` claim on an STS-minted token.
+//
+// Deliberately a different vocabulary from the credential types above: `kind`
+// describes the principal, not the credential presented. A browser session, a
+// CLI login and a PAT are all "user"; the PAT's narrowing rides on scope.
+//
+// Every machine identity is "serviceaccount". What it is used for -- an agent,
+// internal automation, CI -- is a property of the record its credential is bound
+// to, reached via binding_id, not a distinction the claim carries.
+//
+// Every principal is tenant-bound: there is no kind whose tokens omit `tid`.
+const (
+	KindUser           = "user"
+	KindServiceAccount = "serviceaccount"
 )
 
 // Scope name constants.
@@ -37,9 +56,12 @@ const (
 	RunWrite        = "run:write"
 	SourceRead      = "source:read"
 	SourceWrite     = "source:write"
+	TenantRead      = "tenant:read"
+	TenantWrite     = "tenant:write"
 	TokenRead       = "token:read"
 	TokenWrite      = "token:write"
 	UserRead        = "user:read"
+	UserWrite       = "user:write"
 	VarRead         = "var:read"
 )
 
@@ -68,9 +90,8 @@ var Catalog = map[string]Scope{
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentRead: {
-		Name:         AgentRead,
-		Description:  "Read agents, agent tokens, jobs, workloads, and workload events.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        AgentRead,
+		Description: "Read agents, agent tokens, jobs, workloads, and workload events.",
 	},
 	AgentStatus: {
 		Name:         AgentStatus,
@@ -78,97 +99,94 @@ var Catalog = map[string]Scope{
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentWrite: {
-		Name:         AgentWrite,
-		Description:  "Create, update, and delete agents; manage agent tokens and identity bindings.",
-		Implies:      []string{AgentRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        AgentWrite,
+		Description: "Create, update, and delete agents; manage agent tokens and identity bindings.",
+		Implies:     []string{AgentRead},
 	},
 	AppRead: {
-		Name:         AppRead,
-		Description:  "Read applications, change sets, and change set diffs.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        AppRead,
+		Description: "Read applications, change sets, and change set diffs.",
 	},
 	AppWrite: {
-		Name:         AppWrite,
-		Description:  "Create, update, and delete applications; manage change sets and their entries and variables.",
-		Implies:      []string{AppRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        AppWrite,
+		Description: "Create, update, and delete applications; manage change sets and their entries and variables.",
+		Implies:     []string{AppRead},
 	},
 	CatalogRead: {
-		Name:         CatalogRead,
-		Description:  "Read catalog items and resolve their content.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        CatalogRead,
+		Description: "Read catalog items and resolve their content.",
 	},
 	CatalogWrite: {
-		Name:         CatalogWrite,
-		Description:  "Create, update, and delete catalog items.",
-		Implies:      []string{CatalogRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        CatalogWrite,
+		Description: "Create, update, and delete catalog items.",
+		Implies:     []string{CatalogRead},
 	},
 	CredentialRead: {
-		Name:         CredentialRead,
-		Description:  "Read credentials.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        CredentialRead,
+		Description: "Read credentials.",
 	},
 	CredentialWrite: {
-		Name:         CredentialWrite,
-		Description:  "Create, update, and delete credentials.",
-		Implies:      []string{CredentialRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        CredentialWrite,
+		Description: "Create, update, and delete credentials.",
+		Implies:     []string{CredentialRead},
 	},
 	EnvRead: {
-		Name:         EnvRead,
-		Description:  "Read environments and their components.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        EnvRead,
+		Description: "Read environments and their components.",
 	},
 	EnvWrite: {
-		Name:         EnvWrite,
-		Description:  "Create, update, and delete environments.",
-		Implies:      []string{EnvRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        EnvWrite,
+		Description: "Create, update, and delete environments.",
+		Implies:     []string{EnvRead},
 	},
 	RunRead: {
-		Name:         RunRead,
-		Description:  "Read runs and revisions.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        RunRead,
+		Description: "Read runs and revisions.",
 	},
 	RunWrite: {
-		Name:         RunWrite,
-		Description:  "Create, apply, and cancel runs; retry revisions.",
-		Implies:      []string{RunRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        RunWrite,
+		Description: "Create, apply, and cancel runs; retry revisions.",
+		Implies:     []string{RunRead},
 	},
 	SourceRead: {
-		Name:         SourceRead,
-		Description:  "Read sources and source versions.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        SourceRead,
+		Description: "Read sources and source versions.",
 	},
 	SourceWrite: {
-		Name:         SourceWrite,
-		Description:  "Create, update, delete, and test sources.",
-		Implies:      []string{SourceRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        SourceWrite,
+		Description: "Create, update, delete, and test sources.",
+		Implies:     []string{SourceRead},
+	},
+	TenantRead: {
+		Name:        TenantRead,
+		Description: "Read the caller's own tenant -- name, slug, and status.",
+	},
+	TenantWrite: {
+		Name:        TenantWrite,
+		Description: "Update the caller's own tenant's settings, and close it -- suspending or deleting the tenant you own. Which of those you may actually do is decided per tenant, not by holding this.",
+		Implies:     []string{TenantRead},
 	},
 	TokenRead: {
-		Name:         TokenRead,
-		Description:  "Read personal access tokens.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        TokenRead,
+		Description: "Read personal access tokens.",
 	},
 	TokenWrite: {
-		Name:         TokenWrite,
-		Description:  "Create, update, and revoke personal access tokens.",
-		Implies:      []string{TokenRead},
-		AssignableTo: []string{TokenTypePAT},
+		Name:        TokenWrite,
+		Description: "Create, update, and revoke personal access tokens.",
+		Implies:     []string{TokenRead},
 	},
 	UserRead: {
-		Name:         UserRead,
-		Description:  "Read user profiles.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        UserRead,
+		Description: "Read user profiles within your own tenant.",
+	},
+	UserWrite: {
+		Name:        UserWrite,
+		Description: "Create users and manage their access -- suspending, reactivating, or offboarding them. Reach is decided per tenant rather than by holding this, so the same scope covers adding someone to your own tenant and an operator acting across the platform.",
+		Implies:     []string{UserRead},
 	},
 	VarRead: {
-		Name:         VarRead,
-		Description:  "Read resolved environment variables, including secret values.",
-		AssignableTo: []string{TokenTypePAT},
+		Name:        VarRead,
+		Description: "Read resolved environment variables, including secret values.",
 	},
 }
 
@@ -182,7 +200,9 @@ var impliesClosure = map[string][]string{
 	EnvWrite:        []string{EnvRead},
 	RunWrite:        []string{RunRead},
 	SourceWrite:     []string{SourceRead},
+	TenantWrite:     []string{TenantRead},
 	TokenWrite:      []string{TokenRead},
+	UserWrite:       []string{UserRead},
 }
 
 // SATProfiles maps an agent kind (lowercased AgentKind enum value) to the
