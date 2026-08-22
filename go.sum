@@ -1,5 +1,5 @@
-buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20260729011259-067b91a73071.1 h1:bAfeAR+CgXEe8ADvf4aWGRakiXjFfFtbg+tePlkBTT8=
-buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20260729011259-067b91a73071.1/go.mod h1:No9Iuf1OTXJB6yd+7gw65HDWuf7vHsLX8iFTidApcyQ=
+buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20260821220128-46606cc61d86.1 h1:0z/FenQ3OXiiSzSo0PANv29Rtp0IFQPd/1yF7Auzims=
+buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20260821220128-46606cc61d86.1/go.mod h1:No9Iuf1OTXJB6yd+7gw65HDWuf7vHsLX8iFTidApcyQ=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260709200747-435963d16310.1 h1:6nlcxMOui23ZRVAfJM451duu79P1npA5JRdZqMilrrQ=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260709200747-435963d16310.1/go.mod h1:TCt1lluMFnctISJXvkIQ4x3ABrPuUKCWKyjKdkJNBpw=
 connectrpc.com/connect v1.20.0 h1:6TNDAB+WeNd2uolWNlYczB5E0KNNaVMNUEx8JEUsPmQ=

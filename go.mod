@@ -5,7 +5,7 @@ go 1.26
 toolchain go1.26.0
 
 require (
-	buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20260729011259-067b91a73071.1
+	buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20260821220128-46606cc61d86.1
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260709200747-435963d16310.1
 	connectrpc.com/connect v1.20.0
 	github.com/google/gnostic v0.7.1
