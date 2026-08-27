@@ -60,4 +60,6 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx --yes semantic-release
+        # Major pinned: minors/patches still float at run time, but a breaking
+        # semantic-release major waits for a deliberate template edit.
+        run: npx --yes semantic-release@25
