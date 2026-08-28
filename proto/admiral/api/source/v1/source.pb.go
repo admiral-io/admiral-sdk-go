@@ -1529,9 +1529,9 @@ const file_admiral_api_source_v1_source_proto_rawDesc = "" +
 	"\fpublished_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x128\n" +
 	"\x04kind\x18\x04 \x01(\x0e2$.admiral.api.source.v1.SourceRefKindR\x04kind\x12\x1a\n" +
-	"\bresolved\x18\x05 \x01(\tR\bresolved\"\xcc\a\n" +
-	"\x06Source\x12\x1b\n" +
-	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"\bresolved\x18\x05 \x01(\tR\bresolved\"\xcf\a\n" +
+	"\x06Source\x12\x1e\n" +
+	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12:\n" +
 	"\x04type\x18\x04 \x01(\x0e2!.admiral.api.source.v1.SourceTypeB\x03\xe0A\x05R\x04type\x12\x19\n" +

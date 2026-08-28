@@ -1054,10 +1054,10 @@ const file_admiral_api_credential_v1_credential_proto_rawDesc = "" +
 	"\n" +
 	"basic_auth\x18\x02 \x01(\v2$.admiral.api.credential.v1.BasicAuthH\x00R\tbasicAuth\x12O\n" +
 	"\fbearer_token\x18\x03 \x01(\v2*.admiral.api.credential.v1.BearerTokenAuthH\x00R\vbearerTokenB\t\n" +
-	"\avariant\"\x83\x05\n" +
+	"\avariant\"\x86\x05\n" +
 	"\n" +
-	"Credential\x12\x1b\n" +
-	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"Credential\x12\x1e\n" +
+	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12B\n" +
 	"\x04type\x18\x04 \x01(\x0e2).admiral.api.credential.v1.CredentialTypeB\x03\xe0A\x05R\x04type\x12F\n" +

@@ -971,9 +971,9 @@ var File_admiral_api_catalog_v1_catalog_proto protoreflect.FileDescriptor
 
 const file_admiral_api_catalog_v1_catalog_proto_rawDesc = "" +
 	"\n" +
-	"$admiral/api/catalog/v1/catalog.proto\x12\x16admiral.api.catalog.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdd\x05\n" +
-	"\vCatalogItem\x12\x1b\n" +
-	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	"$admiral/api/catalog/v1/catalog.proto\x12\x16admiral.api.catalog.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe0\x05\n" +
+	"\vCatalogItem\x12\x1e\n" +
+	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12@\n" +
 	"\x04type\x18\x04 \x01(\x0e2'.admiral.api.catalog.v1.CatalogItemTypeB\x03\xe0A\x05R\x04type\x12%\n" +
