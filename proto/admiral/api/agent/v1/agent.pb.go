@@ -1555,9 +1555,9 @@ var File_admiral_api_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
-	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9b\x05\n" +
-	"\x05Agent\x12\x1b\n" +
-	"\x02id\x18\x01 \x01(\tB\v\xe0A\x03\xbaH\x05r\x03\xb0\x01\x01R\x02id\x128\n" +
+	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\x05\n" +
+	"\x05Agent\x12\x1e\n" +
+	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x128\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1f.admiral.api.agent.v1.AgentKindB\x03\xe0A\x05R\x04kind\x12@\n" +
 	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12X\n" +
