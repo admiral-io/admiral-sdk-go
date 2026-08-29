@@ -14,7 +14,7 @@ const modulePath = "go.admiral.io/sdk"
 // clients use it to enforce skew policy. Format follows `git describe`:
 // "v1.24.0" on a tag, "v1.23.0-4-gabc1234" between tags, "abc1234" if no
 // tags exist on admiral-protos.
-const SchemaVersion = "v1.28.1-3-g4495811"
+const SchemaVersion = "v1.28.2-1-g1fa6ae5"
 
 // Version returns the module version (e.g., "v1.2.3" or "dev").
 // When used as a dependency, returns the version from go.sum.
