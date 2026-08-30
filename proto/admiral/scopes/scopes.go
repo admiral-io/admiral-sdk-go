@@ -59,6 +59,7 @@ const (
 	TenantRead      = "tenant:read"
 	TenantWrite     = "tenant:write"
 	TokenRead       = "token:read"
+	TokenResolve    = "token:resolve"
 	TokenWrite      = "token:write"
 	UserRead        = "user:read"
 	UserWrite       = "user:write"
@@ -168,11 +169,15 @@ var Catalog = map[string]Scope{
 	},
 	TokenRead: {
 		Name:        TokenRead,
-		Description: "Read personal access tokens.",
+		Description: "Read your own API keys.",
+	},
+	TokenResolve: {
+		Name:        TokenResolve,
+		Description: "Resolve a presented API key into the credential it identifies.",
 	},
 	TokenWrite: {
 		Name:        TokenWrite,
-		Description: "Create, update, and revoke personal access tokens.",
+		Description: "Create, update, and revoke your own API keys.",
 		Implies:     []string{TokenRead},
 	},
 	UserRead: {

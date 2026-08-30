@@ -177,11 +177,11 @@ type Agent struct {
 	// Derived health status based on reporting recency and kind-specific signals.
 	HealthStatus AgentHealthStatus `protobuf:"varint,6,opt,name=health_status,json=healthStatus,proto3,enum=admiral.api.agent.v1.AgentHealthStatus" json:"health_status,omitempty"`
 	// (KUBERNETES only) The Kubernetes kube-system namespace UID, bound at agent
-	// registration using a first-write-wins strategy. Used to detect when a token
+	// registration using a first-write-wins strategy. Used to detect when a key
 	// is accidentally deployed to a different physical cluster. Empty for TERRAFORM
 	// agents.
 	ClusterUid string `protobuf:"bytes,7,opt,name=cluster_uid,json=clusterUid,proto3" json:"cluster_uid,omitempty"`
-	// The user or agent who created this agent (server-populated from token).
+	// The user or agent who created this agent (server-populated from key).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,8,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the agent record was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -297,7 +297,7 @@ func (x *Agent) GetUpdatedAt() *timestamppb.Timestamp {
 type CreateAgentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The execution plane this agent serves (TERRAFORM or KUBERNETES). Selects the
-	// SAT's auto-assigned scopes and is immutable.
+	// key's auto-assigned scopes and is immutable.
 	Kind AgentKind `protobuf:"varint,1,opt,name=kind,proto3,enum=admiral.api.agent.v1.AgentKind" json:"kind,omitempty"`
 	// URL-safe, human-readable identifier (e.g., "prod-terraform"). Unique within
 	// the tenant. Lowercase alphanumeric and hyphens only, must start with a
@@ -369,17 +369,17 @@ func (x *CreateAgentRequest) GetLabels() map[string]string {
 	return nil
 }
 
-// CreateAgentResponse contains the newly created agent and its initial SAT.
+// CreateAgentResponse contains the newly created agent and its initial API key.
 type CreateAgentResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The created agent. Health status will be PENDING until it begins reporting.
 	Agent *Agent `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
-	// The raw Service Access Token secret (e.g., "adms_pL2mN5oQ8rS1..."). Shown
-	// exactly once and cannot be retrieved again. Deploy this token to the agent
-	// binary for authentication. For additional tokens, use CreateAgentToken.
-	PlainTextToken string `protobuf:"bytes,2,opt,name=plain_text_token,json=plainTextToken,proto3" json:"plain_text_token,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// The raw API key secret (e.g., "adms_pL2mN5oQ8rS1..."). Shown exactly once
+	// and cannot be retrieved again. Deploy this key to the agent binary for
+	// authentication. For additional keys, use CreateApiKey.
+	PlainTextKey  string `protobuf:"bytes,2,opt,name=plain_text_key,json=plainTextKey,proto3" json:"plain_text_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateAgentResponse) Reset() {
@@ -419,9 +419,9 @@ func (x *CreateAgentResponse) GetAgent() *Agent {
 	return nil
 }
 
-func (x *CreateAgentResponse) GetPlainTextToken() string {
+func (x *CreateAgentResponse) GetPlainTextKey() string {
 	if x != nil {
-		return x.PlainTextToken
+		return x.PlainTextKey
 	}
 	return ""
 }
@@ -754,8 +754,8 @@ func (x *UpdateAgentResponse) GetAgent() *Agent {
 // DeleteAgentRequest identifies an agent to delete.
 type DeleteAgentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the agent to delete (UUID). All associated service
-	// access tokens will be revoked.
+	// The unique identifier of the agent to delete (UUID). All API keys bound to
+	// its service account are revoked.
 	AgentId       string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1109,36 +1109,36 @@ func (*GetAgentStatusResponse_Terraform) isGetAgentStatusResponse_Status() {}
 
 func (*GetAgentStatusResponse_Kubernetes) isGetAgentStatusResponse_Status() {}
 
-// CreateAgentTokenRequest contains the parameters for creating a new SAT bound to
+// CreateApiKeyRequest contains the parameters for creating a new API key bound to
 // an agent.
-type CreateAgentTokenRequest struct {
+type CreateApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The agent to bind this token to (UUID).
+	// The agent to bind this key to (UUID).
 	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	// URL-safe, human-readable identifier for the token (e.g., "prod-agent-key").
-	// Unique within the agent's tokens. Lowercase alphanumeric and hyphens only,
+	// URL-safe, human-readable identifier for the key (e.g., "prod-agent-key").
+	// Unique within the agent's keys. Lowercase alphanumeric and hyphens only,
 	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional expiration time. If unset, the token does not expire.
+	// Optional expiration time. If unset, the key does not expire.
 	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateAgentTokenRequest) Reset() {
-	*x = CreateAgentTokenRequest{}
+func (x *CreateApiKeyRequest) Reset() {
+	*x = CreateApiKeyRequest{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateAgentTokenRequest) String() string {
+func (x *CreateApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateAgentTokenRequest) ProtoMessage() {}
+func (*CreateApiKeyRequest) ProtoMessage() {}
 
-func (x *CreateAgentTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1150,57 +1150,57 @@ func (x *CreateAgentTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateAgentTokenRequest.ProtoReflect.Descriptor instead.
-func (*CreateAgentTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*CreateApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *CreateAgentTokenRequest) GetAgentId() string {
+func (x *CreateApiKeyRequest) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-func (x *CreateAgentTokenRequest) GetName() string {
+func (x *CreateApiKeyRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreateAgentTokenRequest) GetExpiresAt() *timestamppb.Timestamp {
+func (x *CreateApiKeyRequest) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ExpiresAt
 	}
 	return nil
 }
 
-// CreateAgentTokenResponse contains the newly created SAT.
-type CreateAgentTokenResponse struct {
+// CreateApiKeyResponse contains the newly created API key.
+type CreateApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created token metadata. Scopes are auto-assigned from the agent's kind.
-	AccessToken *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	// The raw token secret. Shown exactly once and cannot be retrieved again.
-	PlainTextToken string `protobuf:"bytes,2,opt,name=plain_text_token,json=plainTextToken,proto3" json:"plain_text_token,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// The created key metadata. Scopes are auto-assigned from the agent's kind.
+	ApiKey *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	// The raw secret. Shown exactly once and cannot be retrieved again.
+	PlainTextKey  string `protobuf:"bytes,2,opt,name=plain_text_key,json=plainTextKey,proto3" json:"plain_text_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateAgentTokenResponse) Reset() {
-	*x = CreateAgentTokenResponse{}
+func (x *CreateApiKeyResponse) Reset() {
+	*x = CreateApiKeyResponse{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateAgentTokenResponse) String() string {
+func (x *CreateApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateAgentTokenResponse) ProtoMessage() {}
+func (*CreateApiKeyResponse) ProtoMessage() {}
 
-func (x *CreateAgentTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1212,38 +1212,38 @@ func (x *CreateAgentTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateAgentTokenResponse.ProtoReflect.Descriptor instead.
-func (*CreateAgentTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*CreateApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *CreateAgentTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *CreateApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
 
-func (x *CreateAgentTokenResponse) GetPlainTextToken() string {
+func (x *CreateApiKeyResponse) GetPlainTextKey() string {
 	if x != nil {
-		return x.PlainTextToken
+		return x.PlainTextKey
 	}
 	return ""
 }
 
-// ListAgentTokensRequest contains pagination and filter parameters.
-type ListAgentTokensRequest struct {
+// ListApiKeysRequest contains pagination and filter parameters.
+type ListApiKeysRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The agent to list tokens for (UUID).
+	// The agent to list keys for (UUID).
 	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
 	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
-	//   - `name`: filter by token name.
-	//   - `status`: filter by token status (ACTIVE, REVOKED).
+	//   - `name`: filter by key name.
+	//   - `status`: filter by key status (ACTIVE, REVOKED).
 	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of tokens to return per page. Defaults to 50 when omitted or
+	// Maximum number of keys to return per page. Defaults to 50 when omitted or
 	// 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
@@ -1252,20 +1252,20 @@ type ListAgentTokensRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListAgentTokensRequest) Reset() {
-	*x = ListAgentTokensRequest{}
+func (x *ListApiKeysRequest) Reset() {
+	*x = ListApiKeysRequest{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListAgentTokensRequest) String() string {
+func (x *ListApiKeysRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListAgentTokensRequest) ProtoMessage() {}
+func (*ListApiKeysRequest) ProtoMessage() {}
 
-func (x *ListAgentTokensRequest) ProtoReflect() protoreflect.Message {
+func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1277,64 +1277,64 @@ func (x *ListAgentTokensRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListAgentTokensRequest.ProtoReflect.Descriptor instead.
-func (*ListAgentTokensRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListApiKeysRequest.ProtoReflect.Descriptor instead.
+func (*ListApiKeysRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *ListAgentTokensRequest) GetAgentId() string {
+func (x *ListApiKeysRequest) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-func (x *ListAgentTokensRequest) GetFilter() string {
+func (x *ListApiKeysRequest) GetFilter() string {
 	if x != nil {
 		return x.Filter
 	}
 	return ""
 }
 
-func (x *ListAgentTokensRequest) GetPageSize() int32 {
+func (x *ListApiKeysRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
 	return 0
 }
 
-func (x *ListAgentTokensRequest) GetPageToken() string {
+func (x *ListApiKeysRequest) GetPageToken() string {
 	if x != nil {
 		return x.PageToken
 	}
 	return ""
 }
 
-// ListAgentTokensResponse contains a page of agent SAT metadata.
-type ListAgentTokensResponse struct {
+// ListApiKeysResponse contains a page of agent API key metadata.
+type ListApiKeysResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of tokens. Token secrets are never included.
-	AccessTokens []*v1.AccessToken `protobuf:"bytes,1,rep,name=access_tokens,json=accessTokens,proto3" json:"access_tokens,omitempty"`
+	// The list of keys. Secrets are never included.
+	ApiKeys []*v1.ApiKey `protobuf:"bytes,1,rep,name=api_keys,json=apiKeys,proto3" json:"api_keys,omitempty"`
 	// Pagination token for the next page. Empty when there are no more results.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListAgentTokensResponse) Reset() {
-	*x = ListAgentTokensResponse{}
+func (x *ListApiKeysResponse) Reset() {
+	*x = ListApiKeysResponse{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListAgentTokensResponse) String() string {
+func (x *ListApiKeysResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListAgentTokensResponse) ProtoMessage() {}
+func (*ListApiKeysResponse) ProtoMessage() {}
 
-func (x *ListAgentTokensResponse) ProtoReflect() protoreflect.Message {
+func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1346,49 +1346,49 @@ func (x *ListAgentTokensResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListAgentTokensResponse.ProtoReflect.Descriptor instead.
-func (*ListAgentTokensResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListApiKeysResponse.ProtoReflect.Descriptor instead.
+func (*ListApiKeysResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *ListAgentTokensResponse) GetAccessTokens() []*v1.AccessToken {
+func (x *ListApiKeysResponse) GetApiKeys() []*v1.ApiKey {
 	if x != nil {
-		return x.AccessTokens
+		return x.ApiKeys
 	}
 	return nil
 }
 
-func (x *ListAgentTokensResponse) GetNextPageToken() string {
+func (x *ListApiKeysResponse) GetNextPageToken() string {
 	if x != nil {
 		return x.NextPageToken
 	}
 	return ""
 }
 
-// GetAgentTokenRequest identifies an agent SAT to retrieve. Token IDs are globally
-// unique; the server resolves the parent agent from the token ID.
-type GetAgentTokenRequest struct {
+// GetApiKeyRequest identifies an agent API key to retrieve. Key IDs are globally
+// unique; the server resolves the parent agent from the key ID.
+type GetApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the token (UUID).
+	// The unique identifier of the key (UUID).
 	TokenId       string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAgentTokenRequest) Reset() {
-	*x = GetAgentTokenRequest{}
+func (x *GetApiKeyRequest) Reset() {
+	*x = GetApiKeyRequest{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAgentTokenRequest) String() string {
+func (x *GetApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAgentTokenRequest) ProtoMessage() {}
+func (*GetApiKeyRequest) ProtoMessage() {}
 
-func (x *GetAgentTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *GetApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1400,41 +1400,41 @@ func (x *GetAgentTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAgentTokenRequest.ProtoReflect.Descriptor instead.
-func (*GetAgentTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*GetApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *GetAgentTokenRequest) GetTokenId() string {
+func (x *GetApiKeyRequest) GetTokenId() string {
 	if x != nil {
 		return x.TokenId
 	}
 	return ""
 }
 
-// GetAgentTokenResponse contains the requested agent SAT metadata.
-type GetAgentTokenResponse struct {
+// GetApiKeyResponse contains the requested agent API key metadata.
+type GetApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The token metadata. The token secret is never included.
-	AccessToken   *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	// The key metadata. The key secret is never included.
+	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAgentTokenResponse) Reset() {
-	*x = GetAgentTokenResponse{}
+func (x *GetApiKeyResponse) Reset() {
+	*x = GetApiKeyResponse{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAgentTokenResponse) String() string {
+func (x *GetApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAgentTokenResponse) ProtoMessage() {}
+func (*GetApiKeyResponse) ProtoMessage() {}
 
-func (x *GetAgentTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *GetApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1446,42 +1446,42 @@ func (x *GetAgentTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAgentTokenResponse.ProtoReflect.Descriptor instead.
-func (*GetAgentTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*GetApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *GetAgentTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *GetApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
 
-// RevokeAgentTokenRequest identifies an agent SAT to revoke. Token IDs are
-// globally unique; the server resolves the parent agent from the token ID.
-type RevokeAgentTokenRequest struct {
+// RevokeApiKeyRequest identifies an agent API key to revoke. Key IDs are
+// globally unique; the server resolves the parent agent from the key ID.
+type RevokeApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the token to revoke (UUID).
+	// The unique identifier of the key to revoke (UUID).
 	TokenId       string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RevokeAgentTokenRequest) Reset() {
-	*x = RevokeAgentTokenRequest{}
+func (x *RevokeApiKeyRequest) Reset() {
+	*x = RevokeApiKeyRequest{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RevokeAgentTokenRequest) String() string {
+func (x *RevokeApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RevokeAgentTokenRequest) ProtoMessage() {}
+func (*RevokeApiKeyRequest) ProtoMessage() {}
 
-func (x *RevokeAgentTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *RevokeApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1493,41 +1493,41 @@ func (x *RevokeAgentTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RevokeAgentTokenRequest.ProtoReflect.Descriptor instead.
-func (*RevokeAgentTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use RevokeApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*RevokeApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *RevokeAgentTokenRequest) GetTokenId() string {
+func (x *RevokeApiKeyRequest) GetTokenId() string {
 	if x != nil {
 		return x.TokenId
 	}
 	return ""
 }
 
-// RevokeAgentTokenResponse contains the revoked agent SAT metadata.
-type RevokeAgentTokenResponse struct {
+// RevokeApiKeyResponse contains the revoked agent API key metadata.
+type RevokeApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The token metadata with updated status.
-	AccessToken   *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	// The key metadata with updated status.
+	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RevokeAgentTokenResponse) Reset() {
-	*x = RevokeAgentTokenResponse{}
+func (x *RevokeApiKeyResponse) Reset() {
+	*x = RevokeApiKeyResponse{}
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RevokeAgentTokenResponse) String() string {
+func (x *RevokeApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RevokeAgentTokenResponse) ProtoMessage() {}
+func (*RevokeApiKeyResponse) ProtoMessage() {}
 
-func (x *RevokeAgentTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *RevokeApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1539,14 +1539,14 @@ func (x *RevokeAgentTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RevokeAgentTokenResponse.ProtoReflect.Descriptor instead.
-func (*RevokeAgentTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use RevokeApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*RevokeApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *RevokeAgentTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *RevokeApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
@@ -1555,7 +1555,7 @@ var File_admiral_api_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
-	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\x05\n" +
+	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1eadmiral/common/v1/apikey.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\x05\n" +
 	"\x05Agent\x12\x1e\n" +
 	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x128\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x1f.admiral.api.agent.v1.AgentKindB\x03\xe0A\x05R\x04kind\x12@\n" +
@@ -1582,10 +1582,10 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x06labels\x18\x04 \x03(\v24.admiral.api.agent.v1.CreateAgentRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"r\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"n\n" +
 	"\x13CreateAgentResponse\x121\n" +
-	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\x12(\n" +
-	"\x10plain_text_token\x18\x02 \x01(\tR\x0eplainTextToken\"9\n" +
+	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\x12$\n" +
+	"\x0eplain_text_key\x18\x02 \x01(\tR\fplainTextKey\"9\n" +
 	"\x0fGetAgentRequest\x12&\n" +
 	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\"E\n" +
 	"\x10GetAgentResponse\x121\n" +
@@ -1625,32 +1625,32 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"kubernetes\x12;\n" +
 	"\vreported_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"reportedAtB\b\n" +
-	"\x06status\"\xc1\x01\n" +
-	"\x17CreateAgentTokenRequest\x12&\n" +
+	"\x06status\"\xbd\x01\n" +
+	"\x13CreateApiKeyRequest\x12&\n" +
 	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12C\n" +
 	"\x04name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x129\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x87\x01\n" +
-	"\x18CreateAgentTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\x12(\n" +
-	"\x10plain_text_token\x18\x02 \x01(\tR\x0eplainTextToken\"\xa9\x01\n" +
-	"\x16ListAgentTokensRequest\x12&\n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"p\n" +
+	"\x14CreateApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\x12$\n" +
+	"\x0eplain_text_key\x18\x02 \x01(\tR\fplainTextKey\"\xa5\x01\n" +
+	"\x12ListApiKeysRequest\x12&\n" +
 	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12 \n" +
 	"\x06filter\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x03 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\"\x86\x01\n" +
-	"\x17ListAgentTokensResponse\x12C\n" +
-	"\raccess_tokens\x18\x01 \x03(\v2\x1e.admiral.common.v1.AccessTokenR\faccessTokens\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\">\n" +
-	"\x14GetAgentTokenRequest\x12&\n" +
-	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"Z\n" +
-	"\x15GetAgentTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"A\n" +
-	"\x17RevokeAgentTokenRequest\x12&\n" +
-	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"]\n" +
-	"\x18RevokeAgentTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken*\\\n" +
+	"page_token\x18\x04 \x01(\tR\tpageToken\"s\n" +
+	"\x13ListApiKeysResponse\x124\n" +
+	"\bapi_keys\x18\x01 \x03(\v2\x19.admiral.common.v1.ApiKeyR\aapiKeys\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\":\n" +
+	"\x10GetApiKeyRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"G\n" +
+	"\x11GetApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\"=\n" +
+	"\x13RevokeApiKeyRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"J\n" +
+	"\x14RevokeApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey*\\\n" +
 	"\tAgentKind\x12\x1a\n" +
 	"\x16AGENT_KIND_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14AGENT_KIND_TERRAFORM\x10\x01\x12\x19\n" +
@@ -1661,7 +1661,7 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x1bAGENT_HEALTH_STATUS_HEALTHY\x10\x02\x12 \n" +
 	"\x1cAGENT_HEALTH_STATUS_DEGRADED\x10\x03\x12\x1d\n" +
 	"\x19AGENT_HEALTH_STATUS_ERROR\x10\x04\x12#\n" +
-	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\x8c\x17\n" +
+	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\xdc\x16\n" +
 	"\bAgentAPI\x12\xa6\x01\n" +
 	"\vCreateAgent\x12(.admiral.api.agent.v1.CreateAgentRequest\x1a).admiral.api.agent.v1.CreateAgentResponse\"B\xbaG\x19\n" +
 	"\x06Agents\x12\x0fCreate an agent\xa2\x97$\r\n" +
@@ -1689,19 +1689,19 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/status\x12\x84\x02\n" +
 	"\x19ClearAgentIdentityBinding\x126.admiral.api.agent.v1.ClearAgentIdentityBindingRequest\x1a7.admiral.api.agent.v1.ClearAgentIdentityBindingResponse\"v\xbaG+\n" +
 	"\x06Agents\x12!Clear an agent's identity binding\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x021:\x01*\",/v1/agents/{agent_id}/clear-identity-binding\x12\xd3\x01\n" +
-	"\x10CreateAgentToken\x12-.admiral.api.agent.v1.CreateAgentTokenRequest\x1a..admiral.api.agent.v1.CreateAgentTokenResponse\"`\xbaG%\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x021:\x01*\",/v1/agents/{agent_id}/clear-identity-binding\x12\xc7\x01\n" +
+	"\fCreateApiKey\x12).admiral.api.agent.v1.CreateApiKeyRequest\x1a*.admiral.api.agent.v1.CreateApiKeyResponse\"`\xbaG%\n" +
 	"\fAgent Tokens\x12\x15Create an agent token\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/agents/{agent_id}/tokens\x12\xc8\x01\n" +
-	"\x0fListAgentTokens\x12,.admiral.api.agent.v1.ListAgentTokensRequest\x1a-.admiral.api.agent.v1.ListAgentTokensResponse\"X\xbaG!\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/agents/{agent_id}/tokens\x12\xbc\x01\n" +
+	"\vListApiKeys\x12(.admiral.api.agent.v1.ListApiKeysRequest\x1a).admiral.api.agent.v1.ListApiKeysResponse\"X\xbaG!\n" +
 	"\fAgent Tokens\x12\x11List agent tokens\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/tokens\x12\xc8\x01\n" +
-	"\rGetAgentToken\x12*.admiral.api.agent.v1.GetAgentTokenRequest\x1a+.admiral.api.agent.v1.GetAgentTokenResponse\"^\xbaG'\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/tokens\x12\xbc\x01\n" +
+	"\tGetApiKey\x12&.admiral.api.agent.v1.GetApiKeyRequest\x1a'.admiral.api.agent.v1.GetApiKeyResponse\"^\xbaG'\n" +
 	"\fAgent Tokens\x12\x17Retrieve an agent token\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/tokens/{token_id}\x12\xda\x01\n" +
-	"\x10RevokeAgentToken\x12-.admiral.api.agent.v1.RevokeAgentTokenRequest\x1a..admiral.api.agent.v1.RevokeAgentTokenResponse\"g\xbaG%\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/tokens/{token_id}\x12\xce\x01\n" +
+	"\fRevokeApiKey\x12).admiral.api.agent.v1.RevokeApiKeyRequest\x1a*.admiral.api.agent.v1.RevokeApiKeyResponse\"g\xbaG%\n" +
 	"\fAgent Tokens\x12\x15Revoke an agent token\xa2\x97$\r\n" +
 	"\vagent:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/agents/tokens/{token_id}/revoke\x12\xb8\x01\n" +
 	"\rListAgentJobs\x12*.admiral.api.agent.v1.ListAgentJobsRequest\x1a+.admiral.api.agent.v1.ListAgentJobsResponse\"N\xbaG\x19\n" +
@@ -1755,14 +1755,14 @@ var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(*ClearAgentIdentityBindingResponse)(nil), // 14: admiral.api.agent.v1.ClearAgentIdentityBindingResponse
 	(*GetAgentStatusRequest)(nil),             // 15: admiral.api.agent.v1.GetAgentStatusRequest
 	(*GetAgentStatusResponse)(nil),            // 16: admiral.api.agent.v1.GetAgentStatusResponse
-	(*CreateAgentTokenRequest)(nil),           // 17: admiral.api.agent.v1.CreateAgentTokenRequest
-	(*CreateAgentTokenResponse)(nil),          // 18: admiral.api.agent.v1.CreateAgentTokenResponse
-	(*ListAgentTokensRequest)(nil),            // 19: admiral.api.agent.v1.ListAgentTokensRequest
-	(*ListAgentTokensResponse)(nil),           // 20: admiral.api.agent.v1.ListAgentTokensResponse
-	(*GetAgentTokenRequest)(nil),              // 21: admiral.api.agent.v1.GetAgentTokenRequest
-	(*GetAgentTokenResponse)(nil),             // 22: admiral.api.agent.v1.GetAgentTokenResponse
-	(*RevokeAgentTokenRequest)(nil),           // 23: admiral.api.agent.v1.RevokeAgentTokenRequest
-	(*RevokeAgentTokenResponse)(nil),          // 24: admiral.api.agent.v1.RevokeAgentTokenResponse
+	(*CreateApiKeyRequest)(nil),               // 17: admiral.api.agent.v1.CreateApiKeyRequest
+	(*CreateApiKeyResponse)(nil),              // 18: admiral.api.agent.v1.CreateApiKeyResponse
+	(*ListApiKeysRequest)(nil),                // 19: admiral.api.agent.v1.ListApiKeysRequest
+	(*ListApiKeysResponse)(nil),               // 20: admiral.api.agent.v1.ListApiKeysResponse
+	(*GetApiKeyRequest)(nil),                  // 21: admiral.api.agent.v1.GetApiKeyRequest
+	(*GetApiKeyResponse)(nil),                 // 22: admiral.api.agent.v1.GetApiKeyResponse
+	(*RevokeApiKeyRequest)(nil),               // 23: admiral.api.agent.v1.RevokeApiKeyRequest
+	(*RevokeApiKeyResponse)(nil),              // 24: admiral.api.agent.v1.RevokeApiKeyResponse
 	nil,                                       // 25: admiral.api.agent.v1.Agent.LabelsEntry
 	nil,                                       // 26: admiral.api.agent.v1.CreateAgentRequest.LabelsEntry
 	(*v1.ActorRef)(nil),                       // 27: admiral.common.v1.ActorRef
@@ -1771,7 +1771,7 @@ var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(*durationpb.Duration)(nil),               // 30: google.protobuf.Duration
 	(*TerraformAgentStatus)(nil),              // 31: admiral.api.agent.v1.TerraformAgentStatus
 	(*KubernetesAgentStatus)(nil),             // 32: admiral.api.agent.v1.KubernetesAgentStatus
-	(*v1.AccessToken)(nil),                    // 33: admiral.common.v1.AccessToken
+	(*v1.ApiKey)(nil),                         // 33: admiral.common.v1.ApiKey
 	(*ListAgentJobsRequest)(nil),              // 34: admiral.api.agent.v1.ListAgentJobsRequest
 	(*ListWorkloadsRequest)(nil),              // 35: admiral.api.agent.v1.ListWorkloadsRequest
 	(*GetWorkloadRequest)(nil),                // 36: admiral.api.agent.v1.GetWorkloadRequest
@@ -1802,11 +1802,11 @@ var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	31, // 17: admiral.api.agent.v1.GetAgentStatusResponse.terraform:type_name -> admiral.api.agent.v1.TerraformAgentStatus
 	32, // 18: admiral.api.agent.v1.GetAgentStatusResponse.kubernetes:type_name -> admiral.api.agent.v1.KubernetesAgentStatus
 	28, // 19: admiral.api.agent.v1.GetAgentStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	28, // 20: admiral.api.agent.v1.CreateAgentTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
-	33, // 21: admiral.api.agent.v1.CreateAgentTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	33, // 22: admiral.api.agent.v1.ListAgentTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
-	33, // 23: admiral.api.agent.v1.GetAgentTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	33, // 24: admiral.api.agent.v1.RevokeAgentTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	28, // 20: admiral.api.agent.v1.CreateApiKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
+	33, // 21: admiral.api.agent.v1.CreateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	33, // 22: admiral.api.agent.v1.ListApiKeysResponse.api_keys:type_name -> admiral.common.v1.ApiKey
+	33, // 23: admiral.api.agent.v1.GetApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	33, // 24: admiral.api.agent.v1.RevokeApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
 	3,  // 25: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
 	5,  // 26: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
 	7,  // 27: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
@@ -1814,10 +1814,10 @@ var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	11, // 29: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
 	15, // 30: admiral.api.agent.v1.AgentAPI.GetAgentStatus:input_type -> admiral.api.agent.v1.GetAgentStatusRequest
 	13, // 31: admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding:input_type -> admiral.api.agent.v1.ClearAgentIdentityBindingRequest
-	17, // 32: admiral.api.agent.v1.AgentAPI.CreateAgentToken:input_type -> admiral.api.agent.v1.CreateAgentTokenRequest
-	19, // 33: admiral.api.agent.v1.AgentAPI.ListAgentTokens:input_type -> admiral.api.agent.v1.ListAgentTokensRequest
-	21, // 34: admiral.api.agent.v1.AgentAPI.GetAgentToken:input_type -> admiral.api.agent.v1.GetAgentTokenRequest
-	23, // 35: admiral.api.agent.v1.AgentAPI.RevokeAgentToken:input_type -> admiral.api.agent.v1.RevokeAgentTokenRequest
+	17, // 32: admiral.api.agent.v1.AgentAPI.CreateApiKey:input_type -> admiral.api.agent.v1.CreateApiKeyRequest
+	19, // 33: admiral.api.agent.v1.AgentAPI.ListApiKeys:input_type -> admiral.api.agent.v1.ListApiKeysRequest
+	21, // 34: admiral.api.agent.v1.AgentAPI.GetApiKey:input_type -> admiral.api.agent.v1.GetApiKeyRequest
+	23, // 35: admiral.api.agent.v1.AgentAPI.RevokeApiKey:input_type -> admiral.api.agent.v1.RevokeApiKeyRequest
 	34, // 36: admiral.api.agent.v1.AgentAPI.ListAgentJobs:input_type -> admiral.api.agent.v1.ListAgentJobsRequest
 	35, // 37: admiral.api.agent.v1.AgentAPI.ListWorkloads:input_type -> admiral.api.agent.v1.ListWorkloadsRequest
 	36, // 38: admiral.api.agent.v1.AgentAPI.GetWorkload:input_type -> admiral.api.agent.v1.GetWorkloadRequest
@@ -1829,10 +1829,10 @@ var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	12, // 44: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
 	16, // 45: admiral.api.agent.v1.AgentAPI.GetAgentStatus:output_type -> admiral.api.agent.v1.GetAgentStatusResponse
 	14, // 46: admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding:output_type -> admiral.api.agent.v1.ClearAgentIdentityBindingResponse
-	18, // 47: admiral.api.agent.v1.AgentAPI.CreateAgentToken:output_type -> admiral.api.agent.v1.CreateAgentTokenResponse
-	20, // 48: admiral.api.agent.v1.AgentAPI.ListAgentTokens:output_type -> admiral.api.agent.v1.ListAgentTokensResponse
-	22, // 49: admiral.api.agent.v1.AgentAPI.GetAgentToken:output_type -> admiral.api.agent.v1.GetAgentTokenResponse
-	24, // 50: admiral.api.agent.v1.AgentAPI.RevokeAgentToken:output_type -> admiral.api.agent.v1.RevokeAgentTokenResponse
+	18, // 47: admiral.api.agent.v1.AgentAPI.CreateApiKey:output_type -> admiral.api.agent.v1.CreateApiKeyResponse
+	20, // 48: admiral.api.agent.v1.AgentAPI.ListApiKeys:output_type -> admiral.api.agent.v1.ListApiKeysResponse
+	22, // 49: admiral.api.agent.v1.AgentAPI.GetApiKey:output_type -> admiral.api.agent.v1.GetApiKeyResponse
+	24, // 50: admiral.api.agent.v1.AgentAPI.RevokeApiKey:output_type -> admiral.api.agent.v1.RevokeApiKeyResponse
 	38, // 51: admiral.api.agent.v1.AgentAPI.ListAgentJobs:output_type -> admiral.api.agent.v1.ListAgentJobsResponse
 	39, // 52: admiral.api.agent.v1.AgentAPI.ListWorkloads:output_type -> admiral.api.agent.v1.ListWorkloadsResponse
 	40, // 53: admiral.api.agent.v1.AgentAPI.GetWorkload:output_type -> admiral.api.agent.v1.GetWorkloadResponse

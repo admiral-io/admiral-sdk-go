@@ -32,6 +32,11 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # This repo is regenerated and pushed immediately after its schema lands on
+    # the BSR, so it races proxy.golang.org's indexing of the stubs it imports.
+    # Buf's proxy has them already; it 404s everything else and falls through.
+    env:
+      GOPROXY: https://buf.build/gen/go,https://proxy.golang.org,direct
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Set up Go

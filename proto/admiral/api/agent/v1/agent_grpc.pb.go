@@ -26,10 +26,10 @@ const (
 	AgentAPI_DeleteAgent_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/DeleteAgent"
 	AgentAPI_GetAgentStatus_FullMethodName            = "/admiral.api.agent.v1.AgentAPI/GetAgentStatus"
 	AgentAPI_ClearAgentIdentityBinding_FullMethodName = "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding"
-	AgentAPI_CreateAgentToken_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/CreateAgentToken"
-	AgentAPI_ListAgentTokens_FullMethodName           = "/admiral.api.agent.v1.AgentAPI/ListAgentTokens"
-	AgentAPI_GetAgentToken_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/GetAgentToken"
-	AgentAPI_RevokeAgentToken_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken"
+	AgentAPI_CreateApiKey_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/CreateApiKey"
+	AgentAPI_ListApiKeys_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/ListApiKeys"
+	AgentAPI_GetApiKey_FullMethodName                 = "/admiral.api.agent.v1.AgentAPI/GetApiKey"
+	AgentAPI_RevokeApiKey_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/RevokeApiKey"
 	AgentAPI_ListAgentJobs_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/ListAgentJobs"
 	AgentAPI_ListWorkloads_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/ListWorkloads"
 	AgentAPI_GetWorkload_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/GetWorkload"
@@ -41,18 +41,24 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // AgentAPI is the management surface for execution agents: their lifecycle,
-// their Service Access Tokens, and read-only visibility into the work they
-// have done. It is the human-facing half of the agent contract, called with a
-// PAT from the CLI, Terraform provider, or web app.
+// their API keys, and read-only visibility into the work they have done. It is
+// the human-facing half of the agent contract, called with a user's own API key
+// from the CLI, Terraform provider, or web app.
+//
+// An agent's key is bound to the agent's service account
+// (BINDING_TYPE_SERVICE_ACCOUNT), not to the agent record: an agent HAS a
+// service account rather than being one, so its credential rotates without
+// touching the agent.
 //
 // The execution protocol the agents themselves speak lives in AgentRuntimeAPI
-// (runtime.proto). That half is SAT-only, excluded from the public OpenAPI
+// (runtime.proto). That half is reachable only with a service-account-bound
+// key, excluded from the public OpenAPI
 // surface, and changes with the agent binaries. Keeping the two apart means the
 // documented management contract is not versioned against the churn of job
 // bundles, hooks, and engines.
 //
 // Both agent kinds are managed here and share one identity, lifecycle, and
-// token model:
+// key model:
 //
 //   - TERRAFORM agents are the execution plane for infrastructure operations
 //     (plan, apply, destroy) run by a terraform-semantic engine (Terraform or
@@ -62,12 +68,12 @@ const (
 //     reporting workload telemetry and applying rendered manifest revisions.
 //
 // Administrators create an agent via CreateAgent (passing the kind), which
-// returns a Service Access Token (SAT) for deploying the agent binary. Once the
+// returns an API key for deploying the agent binary. Once the
 // agent boots and begins reporting through AgentRuntimeAPI, the server
 // transitions its health from PENDING to HEALTHY.
 //
 // Management routes follow /v1/agents/... (plural, with IDs); the runtime
-// protocol uses /v1/agent/... (singular, no ID; derived from the SAT binding).
+// protocol uses /v1/agent/... (singular, no ID; derived from the key's binding).
 //
 // Message definitions live in companion files: jobs.proto (TERRAFORM execution)
 // and workloads.proto (KUBERNETES telemetry and revision delivery).
@@ -76,14 +82,14 @@ type AgentAPIClient interface {
 	// Admin CRUD
 	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial Service Access Token (SAT). The agent starts in PENDING
+	// generates an initial API key. The agent starts in PENDING
 	// health status until it begins reporting.
 	//
 	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the SAT's auto-assigned scopes. The kind is immutable.
+	// and determines the key's auto-assigned scopes. The kind is immutable.
 	//
-	// The response includes a `plain_text_token`: the raw SAT secret shown
-	// exactly once. Deploy this token to the agent binary for authentication.
+	// The response includes a `plain_text_key`: the raw API key secret shown
+	// exactly once. Deploy this key to the agent binary for authentication.
 	//
 	// Scope: `agent:write`
 	CreateAgent(ctx context.Context, in *CreateAgentRequest, opts ...grpc.CallOption) (*CreateAgentResponse, error)
@@ -106,7 +112,7 @@ type AgentAPIClient interface {
 	// Scope: `agent:write`
 	UpdateAgent(ctx context.Context, in *UpdateAgentRequest, opts ...grpc.CallOption) (*UpdateAgentResponse, error)
 	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// service access tokens. For TERRAFORM agents, any not-yet-completed jobs assigned
+	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
 	// to this agent will be failed. This action cannot be undone.
 	//
 	// Scope: `agent:write`
@@ -132,38 +138,38 @@ type AgentAPIClient interface {
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(ctx context.Context, in *ClearAgentIdentityBindingRequest, opts ...grpc.CallOption) (*ClearAgentIdentityBindingResponse, error)
 	// ---------------------------------------------------------------------------
-	// Agent tokens
+	// API keys
 	// ---------------------------------------------------------------------------
-	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
-	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
-	// be overridden. The response includes the raw token secret, shown exactly once.
+	// CreateApiKey creates a new API key bound to the specified agent's service
+	// account. Scopes are auto-assigned from the agent's kind and cannot be
+	// overridden. The response includes the raw secret, shown exactly once.
 	//
-	// Use this to create additional SATs for an existing agent (e.g., for
-	// zero-downtime token rotation). The initial SAT is created automatically by
+	// Use this to create additional API keys for an existing agent (e.g., for
+	// zero-downtime key rotation). The initial key is created automatically by
 	// CreateAgent.
 	//
 	// Scope: `agent:write`
-	CreateAgentToken(ctx context.Context, in *CreateAgentTokenRequest, opts ...grpc.CallOption) (*CreateAgentTokenResponse, error)
-	// ListAgentTokens returns a paginated list of SATs bound to the specified
-	// agent. Token secrets are never included.
+	CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error)
+	// ListApiKeys returns a paginated list of API keys bound to the specified
+	// agent. Secrets are never included.
 	//
 	// Scope: `agent:read`
-	ListAgentTokens(ctx context.Context, in *ListAgentTokensRequest, opts ...grpc.CallOption) (*ListAgentTokensResponse, error)
-	// GetAgentToken retrieves a single SAT by ID. Returns metadata only; the token
-	// secret is never included. Token IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the token
+	ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error)
+	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
+	// secret is never included. Key IDs are globally unique, so no agent scoping
+	// is required in the path; the server resolves the parent agent from the key
 	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
 	//
 	// Scope: `agent:read`
-	GetAgentToken(ctx context.Context, in *GetAgentTokenRequest, opts ...grpc.CallOption) (*GetAgentTokenResponse, error)
-	// RevokeAgentToken permanently revokes an SAT bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active SAT for
-	// the agent, the agent will become disconnected. Token IDs are globally unique,
+	GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error)
+	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
+	// will receive a 401 on its next request. If this is the only active key for
+	// the agent, the agent will become disconnected. Key IDs are globally unique,
 	// so no agent scoping is required in the path; authorization is enforced via
 	// the `agent:write` scope, not by path prefix.
 	//
 	// Scope: `agent:write`
-	RevokeAgentToken(ctx context.Context, in *RevokeAgentTokenRequest, opts ...grpc.CallOption) (*RevokeAgentTokenResponse, error)
+	RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error)
 	// ---------------------------------------------------------------------------
 	// Read-only observability. Messages: jobs.proto, workloads.proto.
 	// ---------------------------------------------------------------------------
@@ -268,40 +274,40 @@ func (c *agentAPIClient) ClearAgentIdentityBinding(ctx context.Context, in *Clea
 	return out, nil
 }
 
-func (c *agentAPIClient) CreateAgentToken(ctx context.Context, in *CreateAgentTokenRequest, opts ...grpc.CallOption) (*CreateAgentTokenResponse, error) {
+func (c *agentAPIClient) CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateAgentTokenResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_CreateAgentToken_FullMethodName, in, out, cOpts...)
+	out := new(CreateApiKeyResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_CreateApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) ListAgentTokens(ctx context.Context, in *ListAgentTokensRequest, opts ...grpc.CallOption) (*ListAgentTokensResponse, error) {
+func (c *agentAPIClient) ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListAgentTokensResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListAgentTokens_FullMethodName, in, out, cOpts...)
+	out := new(ListApiKeysResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_ListApiKeys_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) GetAgentToken(ctx context.Context, in *GetAgentTokenRequest, opts ...grpc.CallOption) (*GetAgentTokenResponse, error) {
+func (c *agentAPIClient) GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetAgentTokenResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetAgentToken_FullMethodName, in, out, cOpts...)
+	out := new(GetApiKeyResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_GetApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) RevokeAgentToken(ctx context.Context, in *RevokeAgentTokenRequest, opts ...grpc.CallOption) (*RevokeAgentTokenResponse, error) {
+func (c *agentAPIClient) RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RevokeAgentTokenResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_RevokeAgentToken_FullMethodName, in, out, cOpts...)
+	out := new(RevokeApiKeyResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_RevokeApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -353,18 +359,24 @@ func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, in *ListWorkloa
 // for forward compatibility.
 //
 // AgentAPI is the management surface for execution agents: their lifecycle,
-// their Service Access Tokens, and read-only visibility into the work they
-// have done. It is the human-facing half of the agent contract, called with a
-// PAT from the CLI, Terraform provider, or web app.
+// their API keys, and read-only visibility into the work they have done. It is
+// the human-facing half of the agent contract, called with a user's own API key
+// from the CLI, Terraform provider, or web app.
+//
+// An agent's key is bound to the agent's service account
+// (BINDING_TYPE_SERVICE_ACCOUNT), not to the agent record: an agent HAS a
+// service account rather than being one, so its credential rotates without
+// touching the agent.
 //
 // The execution protocol the agents themselves speak lives in AgentRuntimeAPI
-// (runtime.proto). That half is SAT-only, excluded from the public OpenAPI
+// (runtime.proto). That half is reachable only with a service-account-bound
+// key, excluded from the public OpenAPI
 // surface, and changes with the agent binaries. Keeping the two apart means the
 // documented management contract is not versioned against the churn of job
 // bundles, hooks, and engines.
 //
 // Both agent kinds are managed here and share one identity, lifecycle, and
-// token model:
+// key model:
 //
 //   - TERRAFORM agents are the execution plane for infrastructure operations
 //     (plan, apply, destroy) run by a terraform-semantic engine (Terraform or
@@ -374,12 +386,12 @@ func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, in *ListWorkloa
 //     reporting workload telemetry and applying rendered manifest revisions.
 //
 // Administrators create an agent via CreateAgent (passing the kind), which
-// returns a Service Access Token (SAT) for deploying the agent binary. Once the
+// returns an API key for deploying the agent binary. Once the
 // agent boots and begins reporting through AgentRuntimeAPI, the server
 // transitions its health from PENDING to HEALTHY.
 //
 // Management routes follow /v1/agents/... (plural, with IDs); the runtime
-// protocol uses /v1/agent/... (singular, no ID; derived from the SAT binding).
+// protocol uses /v1/agent/... (singular, no ID; derived from the key's binding).
 //
 // Message definitions live in companion files: jobs.proto (TERRAFORM execution)
 // and workloads.proto (KUBERNETES telemetry and revision delivery).
@@ -388,14 +400,14 @@ type AgentAPIServer interface {
 	// Admin CRUD
 	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial Service Access Token (SAT). The agent starts in PENDING
+	// generates an initial API key. The agent starts in PENDING
 	// health status until it begins reporting.
 	//
 	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the SAT's auto-assigned scopes. The kind is immutable.
+	// and determines the key's auto-assigned scopes. The kind is immutable.
 	//
-	// The response includes a `plain_text_token`: the raw SAT secret shown
-	// exactly once. Deploy this token to the agent binary for authentication.
+	// The response includes a `plain_text_key`: the raw API key secret shown
+	// exactly once. Deploy this key to the agent binary for authentication.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *CreateAgentRequest) (*CreateAgentResponse, error)
@@ -418,7 +430,7 @@ type AgentAPIServer interface {
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *UpdateAgentRequest) (*UpdateAgentResponse, error)
 	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// service access tokens. For TERRAFORM agents, any not-yet-completed jobs assigned
+	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
 	// to this agent will be failed. This action cannot be undone.
 	//
 	// Scope: `agent:write`
@@ -444,38 +456,38 @@ type AgentAPIServer interface {
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(context.Context, *ClearAgentIdentityBindingRequest) (*ClearAgentIdentityBindingResponse, error)
 	// ---------------------------------------------------------------------------
-	// Agent tokens
+	// API keys
 	// ---------------------------------------------------------------------------
-	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
-	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
-	// be overridden. The response includes the raw token secret, shown exactly once.
+	// CreateApiKey creates a new API key bound to the specified agent's service
+	// account. Scopes are auto-assigned from the agent's kind and cannot be
+	// overridden. The response includes the raw secret, shown exactly once.
 	//
-	// Use this to create additional SATs for an existing agent (e.g., for
-	// zero-downtime token rotation). The initial SAT is created automatically by
+	// Use this to create additional API keys for an existing agent (e.g., for
+	// zero-downtime key rotation). The initial key is created automatically by
 	// CreateAgent.
 	//
 	// Scope: `agent:write`
-	CreateAgentToken(context.Context, *CreateAgentTokenRequest) (*CreateAgentTokenResponse, error)
-	// ListAgentTokens returns a paginated list of SATs bound to the specified
-	// agent. Token secrets are never included.
+	CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
+	// ListApiKeys returns a paginated list of API keys bound to the specified
+	// agent. Secrets are never included.
 	//
 	// Scope: `agent:read`
-	ListAgentTokens(context.Context, *ListAgentTokensRequest) (*ListAgentTokensResponse, error)
-	// GetAgentToken retrieves a single SAT by ID. Returns metadata only; the token
-	// secret is never included. Token IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the token
+	ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error)
+	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
+	// secret is never included. Key IDs are globally unique, so no agent scoping
+	// is required in the path; the server resolves the parent agent from the key
 	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
 	//
 	// Scope: `agent:read`
-	GetAgentToken(context.Context, *GetAgentTokenRequest) (*GetAgentTokenResponse, error)
-	// RevokeAgentToken permanently revokes an SAT bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active SAT for
-	// the agent, the agent will become disconnected. Token IDs are globally unique,
+	GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error)
+	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
+	// will receive a 401 on its next request. If this is the only active key for
+	// the agent, the agent will become disconnected. Key IDs are globally unique,
 	// so no agent scoping is required in the path; authorization is enforced via
 	// the `agent:write` scope, not by path prefix.
 	//
 	// Scope: `agent:write`
-	RevokeAgentToken(context.Context, *RevokeAgentTokenRequest) (*RevokeAgentTokenResponse, error)
+	RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error)
 	// ---------------------------------------------------------------------------
 	// Read-only observability. Messages: jobs.proto, workloads.proto.
 	// ---------------------------------------------------------------------------
@@ -530,17 +542,17 @@ func (UnimplementedAgentAPIServer) GetAgentStatus(context.Context, *GetAgentStat
 func (UnimplementedAgentAPIServer) ClearAgentIdentityBinding(context.Context, *ClearAgentIdentityBindingRequest) (*ClearAgentIdentityBindingResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ClearAgentIdentityBinding not implemented")
 }
-func (UnimplementedAgentAPIServer) CreateAgentToken(context.Context, *CreateAgentTokenRequest) (*CreateAgentTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateAgentToken not implemented")
+func (UnimplementedAgentAPIServer) CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateApiKey not implemented")
 }
-func (UnimplementedAgentAPIServer) ListAgentTokens(context.Context, *ListAgentTokensRequest) (*ListAgentTokensResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListAgentTokens not implemented")
+func (UnimplementedAgentAPIServer) ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListApiKeys not implemented")
 }
-func (UnimplementedAgentAPIServer) GetAgentToken(context.Context, *GetAgentTokenRequest) (*GetAgentTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetAgentToken not implemented")
+func (UnimplementedAgentAPIServer) GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetApiKey not implemented")
 }
-func (UnimplementedAgentAPIServer) RevokeAgentToken(context.Context, *RevokeAgentTokenRequest) (*RevokeAgentTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RevokeAgentToken not implemented")
+func (UnimplementedAgentAPIServer) RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeApiKey not implemented")
 }
 func (UnimplementedAgentAPIServer) ListAgentJobs(context.Context, *ListAgentJobsRequest) (*ListAgentJobsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAgentJobs not implemented")
@@ -700,74 +712,74 @@ func _AgentAPI_ClearAgentIdentityBinding_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_CreateAgentToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAgentTokenRequest)
+func _AgentAPI_CreateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).CreateAgentToken(ctx, in)
+		return srv.(AgentAPIServer).CreateApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_CreateAgentToken_FullMethodName,
+		FullMethod: AgentAPI_CreateApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).CreateAgentToken(ctx, req.(*CreateAgentTokenRequest))
+		return srv.(AgentAPIServer).CreateApiKey(ctx, req.(*CreateApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_ListAgentTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAgentTokensRequest)
+func _AgentAPI_ListApiKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListApiKeysRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).ListAgentTokens(ctx, in)
+		return srv.(AgentAPIServer).ListApiKeys(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_ListAgentTokens_FullMethodName,
+		FullMethod: AgentAPI_ListApiKeys_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListAgentTokens(ctx, req.(*ListAgentTokensRequest))
+		return srv.(AgentAPIServer).ListApiKeys(ctx, req.(*ListApiKeysRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_GetAgentToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAgentTokenRequest)
+func _AgentAPI_GetApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).GetAgentToken(ctx, in)
+		return srv.(AgentAPIServer).GetApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_GetAgentToken_FullMethodName,
+		FullMethod: AgentAPI_GetApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetAgentToken(ctx, req.(*GetAgentTokenRequest))
+		return srv.(AgentAPIServer).GetApiKey(ctx, req.(*GetApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_RevokeAgentToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokeAgentTokenRequest)
+func _AgentAPI_RevokeApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).RevokeAgentToken(ctx, in)
+		return srv.(AgentAPIServer).RevokeApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_RevokeAgentToken_FullMethodName,
+		FullMethod: AgentAPI_RevokeApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).RevokeAgentToken(ctx, req.(*RevokeAgentTokenRequest))
+		return srv.(AgentAPIServer).RevokeApiKey(ctx, req.(*RevokeApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -880,20 +892,20 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentAPI_ClearAgentIdentityBinding_Handler,
 		},
 		{
-			MethodName: "CreateAgentToken",
-			Handler:    _AgentAPI_CreateAgentToken_Handler,
+			MethodName: "CreateApiKey",
+			Handler:    _AgentAPI_CreateApiKey_Handler,
 		},
 		{
-			MethodName: "ListAgentTokens",
-			Handler:    _AgentAPI_ListAgentTokens_Handler,
+			MethodName: "ListApiKeys",
+			Handler:    _AgentAPI_ListApiKeys_Handler,
 		},
 		{
-			MethodName: "GetAgentToken",
-			Handler:    _AgentAPI_GetAgentToken_Handler,
+			MethodName: "GetApiKey",
+			Handler:    _AgentAPI_GetApiKey_Handler,
 		},
 		{
-			MethodName: "RevokeAgentToken",
-			Handler:    _AgentAPI_RevokeAgentToken_Handler,
+			MethodName: "RevokeApiKey",
+			Handler:    _AgentAPI_RevokeApiKey_Handler,
 		},
 		{
 			MethodName: "ListAgentJobs",

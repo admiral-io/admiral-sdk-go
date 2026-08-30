@@ -395,7 +395,7 @@ func (m *CreateAgentResponse) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for PlainTextToken
+	// no validation rules for PlainTextKey
 
 	if len(errors) > 0 {
 		return CreateAgentResponseMultiError(errors)
@@ -2049,22 +2049,22 @@ var _ interface {
 	ErrorName() string
 } = GetAgentStatusResponseValidationError{}
 
-// Validate checks the field values on CreateAgentTokenRequest with the rules
+// Validate checks the field values on CreateApiKeyRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *CreateAgentTokenRequest) Validate() error {
+func (m *CreateApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CreateAgentTokenRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on CreateApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// CreateAgentTokenRequestMultiError, or nil if none found.
-func (m *CreateAgentTokenRequest) ValidateAll() error {
+// CreateApiKeyRequestMultiError, or nil if none found.
+func (m *CreateApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CreateAgentTokenRequest) validate(all bool) error {
+func (m *CreateApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2079,7 +2079,7 @@ func (m *CreateAgentTokenRequest) validate(all bool) error {
 		switch v := interface{}(m.GetExpiresAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateAgentTokenRequestValidationError{
+				errors = append(errors, CreateApiKeyRequestValidationError{
 					field:  "ExpiresAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2087,7 +2087,7 @@ func (m *CreateAgentTokenRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateAgentTokenRequestValidationError{
+				errors = append(errors, CreateApiKeyRequestValidationError{
 					field:  "ExpiresAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2096,7 +2096,7 @@ func (m *CreateAgentTokenRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetExpiresAt()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return CreateAgentTokenRequestValidationError{
+			return CreateApiKeyRequestValidationError{
 				field:  "ExpiresAt",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -2105,19 +2105,19 @@ func (m *CreateAgentTokenRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return CreateAgentTokenRequestMultiError(errors)
+		return CreateApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// CreateAgentTokenRequestMultiError is an error wrapping multiple validation
-// errors returned by CreateAgentTokenRequest.ValidateAll() if the designated
+// CreateApiKeyRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateApiKeyRequest.ValidateAll() if the designated
 // constraints aren't met.
-type CreateAgentTokenRequestMultiError []error
+type CreateApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CreateAgentTokenRequestMultiError) Error() string {
+func (m CreateApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2126,11 +2126,11 @@ func (m CreateAgentTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CreateAgentTokenRequestMultiError) AllErrors() []error { return m }
+func (m CreateApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// CreateAgentTokenRequestValidationError is the validation error returned by
-// CreateAgentTokenRequest.Validate if the designated constraints aren't met.
-type CreateAgentTokenRequestValidationError struct {
+// CreateApiKeyRequestValidationError is the validation error returned by
+// CreateApiKeyRequest.Validate if the designated constraints aren't met.
+type CreateApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2138,24 +2138,24 @@ type CreateAgentTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreateAgentTokenRequestValidationError) Field() string { return e.field }
+func (e CreateApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreateAgentTokenRequestValidationError) Reason() string { return e.reason }
+func (e CreateApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreateAgentTokenRequestValidationError) Cause() error { return e.cause }
+func (e CreateApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreateAgentTokenRequestValidationError) Key() bool { return e.key }
+func (e CreateApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreateAgentTokenRequestValidationError) ErrorName() string {
-	return "CreateAgentTokenRequestValidationError"
+func (e CreateApiKeyRequestValidationError) ErrorName() string {
+	return "CreateApiKeyRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreateAgentTokenRequestValidationError) Error() string {
+func (e CreateApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2167,14 +2167,14 @@ func (e CreateAgentTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreateAgentTokenRequest.%s: %s%s",
+		"invalid %sCreateApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreateAgentTokenRequestValidationError{}
+var _ error = CreateApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2182,24 +2182,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreateAgentTokenRequestValidationError{}
+} = CreateApiKeyRequestValidationError{}
 
-// Validate checks the field values on CreateAgentTokenResponse with the rules
+// Validate checks the field values on CreateApiKeyResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *CreateAgentTokenResponse) Validate() error {
+func (m *CreateApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CreateAgentTokenResponse with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on CreateApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// CreateAgentTokenResponseMultiError, or nil if none found.
-func (m *CreateAgentTokenResponse) ValidateAll() error {
+// CreateApiKeyResponseMultiError, or nil if none found.
+func (m *CreateApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CreateAgentTokenResponse) validate(all bool) error {
+func (m *CreateApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2207,50 +2207,50 @@ func (m *CreateAgentTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateAgentTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, CreateApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateAgentTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, CreateApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return CreateAgentTokenResponseValidationError{
-				field:  "AccessToken",
+			return CreateApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
 	}
 
-	// no validation rules for PlainTextToken
+	// no validation rules for PlainTextKey
 
 	if len(errors) > 0 {
-		return CreateAgentTokenResponseMultiError(errors)
+		return CreateApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// CreateAgentTokenResponseMultiError is an error wrapping multiple validation
-// errors returned by CreateAgentTokenResponse.ValidateAll() if the designated
+// CreateApiKeyResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateApiKeyResponse.ValidateAll() if the designated
 // constraints aren't met.
-type CreateAgentTokenResponseMultiError []error
+type CreateApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CreateAgentTokenResponseMultiError) Error() string {
+func (m CreateApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2259,11 +2259,11 @@ func (m CreateAgentTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CreateAgentTokenResponseMultiError) AllErrors() []error { return m }
+func (m CreateApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// CreateAgentTokenResponseValidationError is the validation error returned by
-// CreateAgentTokenResponse.Validate if the designated constraints aren't met.
-type CreateAgentTokenResponseValidationError struct {
+// CreateApiKeyResponseValidationError is the validation error returned by
+// CreateApiKeyResponse.Validate if the designated constraints aren't met.
+type CreateApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2271,24 +2271,24 @@ type CreateAgentTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreateAgentTokenResponseValidationError) Field() string { return e.field }
+func (e CreateApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreateAgentTokenResponseValidationError) Reason() string { return e.reason }
+func (e CreateApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreateAgentTokenResponseValidationError) Cause() error { return e.cause }
+func (e CreateApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreateAgentTokenResponseValidationError) Key() bool { return e.key }
+func (e CreateApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreateAgentTokenResponseValidationError) ErrorName() string {
-	return "CreateAgentTokenResponseValidationError"
+func (e CreateApiKeyResponseValidationError) ErrorName() string {
+	return "CreateApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreateAgentTokenResponseValidationError) Error() string {
+func (e CreateApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2300,14 +2300,14 @@ func (e CreateAgentTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreateAgentTokenResponse.%s: %s%s",
+		"invalid %sCreateApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreateAgentTokenResponseValidationError{}
+var _ error = CreateApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -2315,24 +2315,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreateAgentTokenResponseValidationError{}
+} = CreateApiKeyResponseValidationError{}
 
-// Validate checks the field values on ListAgentTokensRequest with the rules
+// Validate checks the field values on ListApiKeysRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListAgentTokensRequest) Validate() error {
+func (m *ListApiKeysRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListAgentTokensRequest with the rules
+// ValidateAll checks the field values on ListApiKeysRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListAgentTokensRequestMultiError, or nil if none found.
-func (m *ListAgentTokensRequest) ValidateAll() error {
+// ListApiKeysRequestMultiError, or nil if none found.
+func (m *ListApiKeysRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListAgentTokensRequest) validate(all bool) error {
+func (m *ListApiKeysRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2348,19 +2348,19 @@ func (m *ListAgentTokensRequest) validate(all bool) error {
 	// no validation rules for PageToken
 
 	if len(errors) > 0 {
-		return ListAgentTokensRequestMultiError(errors)
+		return ListApiKeysRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListAgentTokensRequestMultiError is an error wrapping multiple validation
-// errors returned by ListAgentTokensRequest.ValidateAll() if the designated
-// constraints aren't met.
-type ListAgentTokensRequestMultiError []error
+// ListApiKeysRequestMultiError is an error wrapping multiple validation errors
+// returned by ListApiKeysRequest.ValidateAll() if the designated constraints
+// aren't met.
+type ListApiKeysRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListAgentTokensRequestMultiError) Error() string {
+func (m ListApiKeysRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2369,11 +2369,11 @@ func (m ListAgentTokensRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListAgentTokensRequestMultiError) AllErrors() []error { return m }
+func (m ListApiKeysRequestMultiError) AllErrors() []error { return m }
 
-// ListAgentTokensRequestValidationError is the validation error returned by
-// ListAgentTokensRequest.Validate if the designated constraints aren't met.
-type ListAgentTokensRequestValidationError struct {
+// ListApiKeysRequestValidationError is the validation error returned by
+// ListApiKeysRequest.Validate if the designated constraints aren't met.
+type ListApiKeysRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2381,24 +2381,24 @@ type ListAgentTokensRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListAgentTokensRequestValidationError) Field() string { return e.field }
+func (e ListApiKeysRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListAgentTokensRequestValidationError) Reason() string { return e.reason }
+func (e ListApiKeysRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListAgentTokensRequestValidationError) Cause() error { return e.cause }
+func (e ListApiKeysRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListAgentTokensRequestValidationError) Key() bool { return e.key }
+func (e ListApiKeysRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListAgentTokensRequestValidationError) ErrorName() string {
-	return "ListAgentTokensRequestValidationError"
+func (e ListApiKeysRequestValidationError) ErrorName() string {
+	return "ListApiKeysRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListAgentTokensRequestValidationError) Error() string {
+func (e ListApiKeysRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2410,14 +2410,14 @@ func (e ListAgentTokensRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListAgentTokensRequest.%s: %s%s",
+		"invalid %sListApiKeysRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListAgentTokensRequestValidationError{}
+var _ error = ListApiKeysRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2425,47 +2425,47 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListAgentTokensRequestValidationError{}
+} = ListApiKeysRequestValidationError{}
 
-// Validate checks the field values on ListAgentTokensResponse with the rules
+// Validate checks the field values on ListApiKeysResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListAgentTokensResponse) Validate() error {
+func (m *ListApiKeysResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListAgentTokensResponse with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on ListApiKeysResponse with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListAgentTokensResponseMultiError, or nil if none found.
-func (m *ListAgentTokensResponse) ValidateAll() error {
+// ListApiKeysResponseMultiError, or nil if none found.
+func (m *ListApiKeysResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListAgentTokensResponse) validate(all bool) error {
+func (m *ListApiKeysResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	for idx, item := range m.GetAccessTokens() {
+	for idx, item := range m.GetApiKeys() {
 		_, _ = idx, item
 
 		if all {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ListAgentTokensResponseValidationError{
-						field:  fmt.Sprintf("AccessTokens[%v]", idx),
+					errors = append(errors, ListApiKeysResponseValidationError{
+						field:  fmt.Sprintf("ApiKeys[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, ListAgentTokensResponseValidationError{
-						field:  fmt.Sprintf("AccessTokens[%v]", idx),
+					errors = append(errors, ListApiKeysResponseValidationError{
+						field:  fmt.Sprintf("ApiKeys[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -2473,8 +2473,8 @@ func (m *ListAgentTokensResponse) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return ListAgentTokensResponseValidationError{
-					field:  fmt.Sprintf("AccessTokens[%v]", idx),
+				return ListApiKeysResponseValidationError{
+					field:  fmt.Sprintf("ApiKeys[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -2486,19 +2486,19 @@ func (m *ListAgentTokensResponse) validate(all bool) error {
 	// no validation rules for NextPageToken
 
 	if len(errors) > 0 {
-		return ListAgentTokensResponseMultiError(errors)
+		return ListApiKeysResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListAgentTokensResponseMultiError is an error wrapping multiple validation
-// errors returned by ListAgentTokensResponse.ValidateAll() if the designated
+// ListApiKeysResponseMultiError is an error wrapping multiple validation
+// errors returned by ListApiKeysResponse.ValidateAll() if the designated
 // constraints aren't met.
-type ListAgentTokensResponseMultiError []error
+type ListApiKeysResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListAgentTokensResponseMultiError) Error() string {
+func (m ListApiKeysResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2507,11 +2507,11 @@ func (m ListAgentTokensResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListAgentTokensResponseMultiError) AllErrors() []error { return m }
+func (m ListApiKeysResponseMultiError) AllErrors() []error { return m }
 
-// ListAgentTokensResponseValidationError is the validation error returned by
-// ListAgentTokensResponse.Validate if the designated constraints aren't met.
-type ListAgentTokensResponseValidationError struct {
+// ListApiKeysResponseValidationError is the validation error returned by
+// ListApiKeysResponse.Validate if the designated constraints aren't met.
+type ListApiKeysResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2519,24 +2519,24 @@ type ListAgentTokensResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListAgentTokensResponseValidationError) Field() string { return e.field }
+func (e ListApiKeysResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListAgentTokensResponseValidationError) Reason() string { return e.reason }
+func (e ListApiKeysResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListAgentTokensResponseValidationError) Cause() error { return e.cause }
+func (e ListApiKeysResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListAgentTokensResponseValidationError) Key() bool { return e.key }
+func (e ListApiKeysResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListAgentTokensResponseValidationError) ErrorName() string {
-	return "ListAgentTokensResponseValidationError"
+func (e ListApiKeysResponseValidationError) ErrorName() string {
+	return "ListApiKeysResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListAgentTokensResponseValidationError) Error() string {
+func (e ListApiKeysResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2548,14 +2548,14 @@ func (e ListAgentTokensResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListAgentTokensResponse.%s: %s%s",
+		"invalid %sListApiKeysResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListAgentTokensResponseValidationError{}
+var _ error = ListApiKeysResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -2563,24 +2563,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListAgentTokensResponseValidationError{}
+} = ListApiKeysResponseValidationError{}
 
-// Validate checks the field values on GetAgentTokenRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetAgentTokenRequest) Validate() error {
+// Validate checks the field values on GetApiKeyRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetAgentTokenRequest with the rules
+// ValidateAll checks the field values on GetApiKeyRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetAgentTokenRequestMultiError, or nil if none found.
-func (m *GetAgentTokenRequest) ValidateAll() error {
+// GetApiKeyRequestMultiError, or nil if none found.
+func (m *GetApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetAgentTokenRequest) validate(all bool) error {
+func (m *GetApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2590,19 +2590,19 @@ func (m *GetAgentTokenRequest) validate(all bool) error {
 	// no validation rules for TokenId
 
 	if len(errors) > 0 {
-		return GetAgentTokenRequestMultiError(errors)
+		return GetApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetAgentTokenRequestMultiError is an error wrapping multiple validation
-// errors returned by GetAgentTokenRequest.ValidateAll() if the designated
-// constraints aren't met.
-type GetAgentTokenRequestMultiError []error
+// GetApiKeyRequestMultiError is an error wrapping multiple validation errors
+// returned by GetApiKeyRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetAgentTokenRequestMultiError) Error() string {
+func (m GetApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2611,11 +2611,11 @@ func (m GetAgentTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetAgentTokenRequestMultiError) AllErrors() []error { return m }
+func (m GetApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// GetAgentTokenRequestValidationError is the validation error returned by
-// GetAgentTokenRequest.Validate if the designated constraints aren't met.
-type GetAgentTokenRequestValidationError struct {
+// GetApiKeyRequestValidationError is the validation error returned by
+// GetApiKeyRequest.Validate if the designated constraints aren't met.
+type GetApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2623,24 +2623,22 @@ type GetAgentTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetAgentTokenRequestValidationError) Field() string { return e.field }
+func (e GetApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetAgentTokenRequestValidationError) Reason() string { return e.reason }
+func (e GetApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetAgentTokenRequestValidationError) Cause() error { return e.cause }
+func (e GetApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetAgentTokenRequestValidationError) Key() bool { return e.key }
+func (e GetApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetAgentTokenRequestValidationError) ErrorName() string {
-	return "GetAgentTokenRequestValidationError"
-}
+func (e GetApiKeyRequestValidationError) ErrorName() string { return "GetApiKeyRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e GetAgentTokenRequestValidationError) Error() string {
+func (e GetApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2652,14 +2650,14 @@ func (e GetAgentTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetAgentTokenRequest.%s: %s%s",
+		"invalid %sGetApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetAgentTokenRequestValidationError{}
+var _ error = GetApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2667,24 +2665,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetAgentTokenRequestValidationError{}
+} = GetApiKeyRequestValidationError{}
 
-// Validate checks the field values on GetAgentTokenResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetAgentTokenResponse) Validate() error {
+// Validate checks the field values on GetApiKeyResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetAgentTokenResponse with the rules
+// ValidateAll checks the field values on GetApiKeyResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetAgentTokenResponseMultiError, or nil if none found.
-func (m *GetAgentTokenResponse) ValidateAll() error {
+// GetApiKeyResponseMultiError, or nil if none found.
+func (m *GetApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetAgentTokenResponse) validate(all bool) error {
+func (m *GetApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2692,28 +2690,28 @@ func (m *GetAgentTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetAgentTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, GetApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, GetAgentTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, GetApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return GetAgentTokenResponseValidationError{
-				field:  "AccessToken",
+			return GetApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -2721,19 +2719,19 @@ func (m *GetAgentTokenResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetAgentTokenResponseMultiError(errors)
+		return GetApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetAgentTokenResponseMultiError is an error wrapping multiple validation
-// errors returned by GetAgentTokenResponse.ValidateAll() if the designated
-// constraints aren't met.
-type GetAgentTokenResponseMultiError []error
+// GetApiKeyResponseMultiError is an error wrapping multiple validation errors
+// returned by GetApiKeyResponse.ValidateAll() if the designated constraints
+// aren't met.
+type GetApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetAgentTokenResponseMultiError) Error() string {
+func (m GetApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2742,11 +2740,11 @@ func (m GetAgentTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetAgentTokenResponseMultiError) AllErrors() []error { return m }
+func (m GetApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// GetAgentTokenResponseValidationError is the validation error returned by
-// GetAgentTokenResponse.Validate if the designated constraints aren't met.
-type GetAgentTokenResponseValidationError struct {
+// GetApiKeyResponseValidationError is the validation error returned by
+// GetApiKeyResponse.Validate if the designated constraints aren't met.
+type GetApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2754,24 +2752,24 @@ type GetAgentTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetAgentTokenResponseValidationError) Field() string { return e.field }
+func (e GetApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetAgentTokenResponseValidationError) Reason() string { return e.reason }
+func (e GetApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetAgentTokenResponseValidationError) Cause() error { return e.cause }
+func (e GetApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetAgentTokenResponseValidationError) Key() bool { return e.key }
+func (e GetApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetAgentTokenResponseValidationError) ErrorName() string {
-	return "GetAgentTokenResponseValidationError"
+func (e GetApiKeyResponseValidationError) ErrorName() string {
+	return "GetApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetAgentTokenResponseValidationError) Error() string {
+func (e GetApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2783,14 +2781,14 @@ func (e GetAgentTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetAgentTokenResponse.%s: %s%s",
+		"invalid %sGetApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetAgentTokenResponseValidationError{}
+var _ error = GetApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -2798,24 +2796,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetAgentTokenResponseValidationError{}
+} = GetApiKeyResponseValidationError{}
 
-// Validate checks the field values on RevokeAgentTokenRequest with the rules
+// Validate checks the field values on RevokeApiKeyRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *RevokeAgentTokenRequest) Validate() error {
+func (m *RevokeApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on RevokeAgentTokenRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on RevokeApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// RevokeAgentTokenRequestMultiError, or nil if none found.
-func (m *RevokeAgentTokenRequest) ValidateAll() error {
+// RevokeApiKeyRequestMultiError, or nil if none found.
+func (m *RevokeApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *RevokeAgentTokenRequest) validate(all bool) error {
+func (m *RevokeApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2825,19 +2823,19 @@ func (m *RevokeAgentTokenRequest) validate(all bool) error {
 	// no validation rules for TokenId
 
 	if len(errors) > 0 {
-		return RevokeAgentTokenRequestMultiError(errors)
+		return RevokeApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// RevokeAgentTokenRequestMultiError is an error wrapping multiple validation
-// errors returned by RevokeAgentTokenRequest.ValidateAll() if the designated
+// RevokeApiKeyRequestMultiError is an error wrapping multiple validation
+// errors returned by RevokeApiKeyRequest.ValidateAll() if the designated
 // constraints aren't met.
-type RevokeAgentTokenRequestMultiError []error
+type RevokeApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m RevokeAgentTokenRequestMultiError) Error() string {
+func (m RevokeApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2846,11 +2844,11 @@ func (m RevokeAgentTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m RevokeAgentTokenRequestMultiError) AllErrors() []error { return m }
+func (m RevokeApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// RevokeAgentTokenRequestValidationError is the validation error returned by
-// RevokeAgentTokenRequest.Validate if the designated constraints aren't met.
-type RevokeAgentTokenRequestValidationError struct {
+// RevokeApiKeyRequestValidationError is the validation error returned by
+// RevokeApiKeyRequest.Validate if the designated constraints aren't met.
+type RevokeApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2858,24 +2856,24 @@ type RevokeAgentTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e RevokeAgentTokenRequestValidationError) Field() string { return e.field }
+func (e RevokeApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e RevokeAgentTokenRequestValidationError) Reason() string { return e.reason }
+func (e RevokeApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e RevokeAgentTokenRequestValidationError) Cause() error { return e.cause }
+func (e RevokeApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e RevokeAgentTokenRequestValidationError) Key() bool { return e.key }
+func (e RevokeApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e RevokeAgentTokenRequestValidationError) ErrorName() string {
-	return "RevokeAgentTokenRequestValidationError"
+func (e RevokeApiKeyRequestValidationError) ErrorName() string {
+	return "RevokeApiKeyRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e RevokeAgentTokenRequestValidationError) Error() string {
+func (e RevokeApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2887,14 +2885,14 @@ func (e RevokeAgentTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sRevokeAgentTokenRequest.%s: %s%s",
+		"invalid %sRevokeApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = RevokeAgentTokenRequestValidationError{}
+var _ error = RevokeApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2902,24 +2900,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = RevokeAgentTokenRequestValidationError{}
+} = RevokeApiKeyRequestValidationError{}
 
-// Validate checks the field values on RevokeAgentTokenResponse with the rules
+// Validate checks the field values on RevokeApiKeyResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *RevokeAgentTokenResponse) Validate() error {
+func (m *RevokeApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on RevokeAgentTokenResponse with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on RevokeApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// RevokeAgentTokenResponseMultiError, or nil if none found.
-func (m *RevokeAgentTokenResponse) ValidateAll() error {
+// RevokeApiKeyResponseMultiError, or nil if none found.
+func (m *RevokeApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *RevokeAgentTokenResponse) validate(all bool) error {
+func (m *RevokeApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2927,28 +2925,28 @@ func (m *RevokeAgentTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, RevokeAgentTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, RevokeApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, RevokeAgentTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, RevokeApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return RevokeAgentTokenResponseValidationError{
-				field:  "AccessToken",
+			return RevokeApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -2956,19 +2954,19 @@ func (m *RevokeAgentTokenResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return RevokeAgentTokenResponseMultiError(errors)
+		return RevokeApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// RevokeAgentTokenResponseMultiError is an error wrapping multiple validation
-// errors returned by RevokeAgentTokenResponse.ValidateAll() if the designated
+// RevokeApiKeyResponseMultiError is an error wrapping multiple validation
+// errors returned by RevokeApiKeyResponse.ValidateAll() if the designated
 // constraints aren't met.
-type RevokeAgentTokenResponseMultiError []error
+type RevokeApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m RevokeAgentTokenResponseMultiError) Error() string {
+func (m RevokeApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2977,11 +2975,11 @@ func (m RevokeAgentTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m RevokeAgentTokenResponseMultiError) AllErrors() []error { return m }
+func (m RevokeApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// RevokeAgentTokenResponseValidationError is the validation error returned by
-// RevokeAgentTokenResponse.Validate if the designated constraints aren't met.
-type RevokeAgentTokenResponseValidationError struct {
+// RevokeApiKeyResponseValidationError is the validation error returned by
+// RevokeApiKeyResponse.Validate if the designated constraints aren't met.
+type RevokeApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2989,24 +2987,24 @@ type RevokeAgentTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e RevokeAgentTokenResponseValidationError) Field() string { return e.field }
+func (e RevokeApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e RevokeAgentTokenResponseValidationError) Reason() string { return e.reason }
+func (e RevokeApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e RevokeAgentTokenResponseValidationError) Cause() error { return e.cause }
+func (e RevokeApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e RevokeAgentTokenResponseValidationError) Key() bool { return e.key }
+func (e RevokeApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e RevokeAgentTokenResponseValidationError) ErrorName() string {
-	return "RevokeAgentTokenResponseValidationError"
+func (e RevokeApiKeyResponseValidationError) ErrorName() string {
+	return "RevokeApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e RevokeAgentTokenResponseValidationError) Error() string {
+func (e RevokeApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -3018,14 +3016,14 @@ func (e RevokeAgentTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sRevokeAgentTokenResponse.%s: %s%s",
+		"invalid %sRevokeApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = RevokeAgentTokenResponseValidationError{}
+var _ error = RevokeApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -3033,4 +3031,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = RevokeAgentTokenResponseValidationError{}
+} = RevokeApiKeyResponseValidationError{}
