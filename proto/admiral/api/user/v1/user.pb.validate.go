@@ -672,23 +672,22 @@ var _ interface {
 	ErrorName() string
 } = GetUserResponseValidationError{}
 
-// Validate checks the field values on CreatePersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *CreatePersonalAccessTokenRequest) Validate() error {
+// Validate checks the field values on CreateApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CreatePersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// CreatePersonalAccessTokenRequestMultiError, or nil if none found.
-func (m *CreatePersonalAccessTokenRequest) ValidateAll() error {
+// ValidateAll checks the field values on CreateApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateApiKeyRequestMultiError, or nil if none found.
+func (m *CreateApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CreatePersonalAccessTokenRequest) validate(all bool) error {
+func (m *CreateApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -701,7 +700,7 @@ func (m *CreatePersonalAccessTokenRequest) validate(all bool) error {
 		switch v := interface{}(m.GetExpiresAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreatePersonalAccessTokenRequestValidationError{
+				errors = append(errors, CreateApiKeyRequestValidationError{
 					field:  "ExpiresAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -709,7 +708,7 @@ func (m *CreatePersonalAccessTokenRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, CreatePersonalAccessTokenRequestValidationError{
+				errors = append(errors, CreateApiKeyRequestValidationError{
 					field:  "ExpiresAt",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -718,7 +717,7 @@ func (m *CreatePersonalAccessTokenRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetExpiresAt()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return CreatePersonalAccessTokenRequestValidationError{
+			return CreateApiKeyRequestValidationError{
 				field:  "ExpiresAt",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -727,20 +726,19 @@ func (m *CreatePersonalAccessTokenRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return CreatePersonalAccessTokenRequestMultiError(errors)
+		return CreateApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// CreatePersonalAccessTokenRequestMultiError is an error wrapping multiple
-// validation errors returned by
-// CreatePersonalAccessTokenRequest.ValidateAll() if the designated
+// CreateApiKeyRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateApiKeyRequest.ValidateAll() if the designated
 // constraints aren't met.
-type CreatePersonalAccessTokenRequestMultiError []error
+type CreateApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CreatePersonalAccessTokenRequestMultiError) Error() string {
+func (m CreateApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -749,12 +747,11 @@ func (m CreatePersonalAccessTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CreatePersonalAccessTokenRequestMultiError) AllErrors() []error { return m }
+func (m CreateApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// CreatePersonalAccessTokenRequestValidationError is the validation error
-// returned by CreatePersonalAccessTokenRequest.Validate if the designated
-// constraints aren't met.
-type CreatePersonalAccessTokenRequestValidationError struct {
+// CreateApiKeyRequestValidationError is the validation error returned by
+// CreateApiKeyRequest.Validate if the designated constraints aren't met.
+type CreateApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -762,24 +759,24 @@ type CreatePersonalAccessTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreatePersonalAccessTokenRequestValidationError) Field() string { return e.field }
+func (e CreateApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreatePersonalAccessTokenRequestValidationError) Reason() string { return e.reason }
+func (e CreateApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreatePersonalAccessTokenRequestValidationError) Cause() error { return e.cause }
+func (e CreateApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreatePersonalAccessTokenRequestValidationError) Key() bool { return e.key }
+func (e CreateApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreatePersonalAccessTokenRequestValidationError) ErrorName() string {
-	return "CreatePersonalAccessTokenRequestValidationError"
+func (e CreateApiKeyRequestValidationError) ErrorName() string {
+	return "CreateApiKeyRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreatePersonalAccessTokenRequestValidationError) Error() string {
+func (e CreateApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -791,14 +788,14 @@ func (e CreatePersonalAccessTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreatePersonalAccessTokenRequest.%s: %s%s",
+		"invalid %sCreateApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreatePersonalAccessTokenRequestValidationError{}
+var _ error = CreateApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -806,25 +803,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreatePersonalAccessTokenRequestValidationError{}
+} = CreateApiKeyRequestValidationError{}
 
-// Validate checks the field values on CreatePersonalAccessTokenResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *CreatePersonalAccessTokenResponse) Validate() error {
+// Validate checks the field values on CreateApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CreatePersonalAccessTokenResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// CreatePersonalAccessTokenResponseMultiError, or nil if none found.
-func (m *CreatePersonalAccessTokenResponse) ValidateAll() error {
+// ValidateAll checks the field values on CreateApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateApiKeyResponseMultiError, or nil if none found.
+func (m *CreateApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CreatePersonalAccessTokenResponse) validate(all bool) error {
+func (m *CreateApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -832,51 +828,50 @@ func (m *CreatePersonalAccessTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreatePersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, CreateApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, CreatePersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, CreateApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return CreatePersonalAccessTokenResponseValidationError{
-				field:  "AccessToken",
+			return CreateApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
 	}
 
-	// no validation rules for PlainTextToken
+	// no validation rules for PlainTextKey
 
 	if len(errors) > 0 {
-		return CreatePersonalAccessTokenResponseMultiError(errors)
+		return CreateApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// CreatePersonalAccessTokenResponseMultiError is an error wrapping multiple
-// validation errors returned by
-// CreatePersonalAccessTokenResponse.ValidateAll() if the designated
+// CreateApiKeyResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateApiKeyResponse.ValidateAll() if the designated
 // constraints aren't met.
-type CreatePersonalAccessTokenResponseMultiError []error
+type CreateApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CreatePersonalAccessTokenResponseMultiError) Error() string {
+func (m CreateApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -885,12 +880,11 @@ func (m CreatePersonalAccessTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CreatePersonalAccessTokenResponseMultiError) AllErrors() []error { return m }
+func (m CreateApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// CreatePersonalAccessTokenResponseValidationError is the validation error
-// returned by CreatePersonalAccessTokenResponse.Validate if the designated
-// constraints aren't met.
-type CreatePersonalAccessTokenResponseValidationError struct {
+// CreateApiKeyResponseValidationError is the validation error returned by
+// CreateApiKeyResponse.Validate if the designated constraints aren't met.
+type CreateApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -898,24 +892,24 @@ type CreatePersonalAccessTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreatePersonalAccessTokenResponseValidationError) Field() string { return e.field }
+func (e CreateApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreatePersonalAccessTokenResponseValidationError) Reason() string { return e.reason }
+func (e CreateApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreatePersonalAccessTokenResponseValidationError) Cause() error { return e.cause }
+func (e CreateApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreatePersonalAccessTokenResponseValidationError) Key() bool { return e.key }
+func (e CreateApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreatePersonalAccessTokenResponseValidationError) ErrorName() string {
-	return "CreatePersonalAccessTokenResponseValidationError"
+func (e CreateApiKeyResponseValidationError) ErrorName() string {
+	return "CreateApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreatePersonalAccessTokenResponseValidationError) Error() string {
+func (e CreateApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -927,14 +921,14 @@ func (e CreatePersonalAccessTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreatePersonalAccessTokenResponse.%s: %s%s",
+		"invalid %sCreateApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreatePersonalAccessTokenResponseValidationError{}
+var _ error = CreateApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -942,24 +936,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreatePersonalAccessTokenResponseValidationError{}
+} = CreateApiKeyResponseValidationError{}
 
-// Validate checks the field values on ListPersonalAccessTokensRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// Validate checks the field values on ListApiKeysRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListPersonalAccessTokensRequest) Validate() error {
+func (m *ListApiKeysRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListPersonalAccessTokensRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// ListPersonalAccessTokensRequestMultiError, or nil if none found.
-func (m *ListPersonalAccessTokensRequest) ValidateAll() error {
+// ValidateAll checks the field values on ListApiKeysRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListApiKeysRequestMultiError, or nil if none found.
+func (m *ListApiKeysRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListPersonalAccessTokensRequest) validate(all bool) error {
+func (m *ListApiKeysRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -973,19 +967,19 @@ func (m *ListPersonalAccessTokensRequest) validate(all bool) error {
 	// no validation rules for PageToken
 
 	if len(errors) > 0 {
-		return ListPersonalAccessTokensRequestMultiError(errors)
+		return ListApiKeysRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListPersonalAccessTokensRequestMultiError is an error wrapping multiple
-// validation errors returned by ListPersonalAccessTokensRequest.ValidateAll()
-// if the designated constraints aren't met.
-type ListPersonalAccessTokensRequestMultiError []error
+// ListApiKeysRequestMultiError is an error wrapping multiple validation errors
+// returned by ListApiKeysRequest.ValidateAll() if the designated constraints
+// aren't met.
+type ListApiKeysRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListPersonalAccessTokensRequestMultiError) Error() string {
+func (m ListApiKeysRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -994,12 +988,11 @@ func (m ListPersonalAccessTokensRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListPersonalAccessTokensRequestMultiError) AllErrors() []error { return m }
+func (m ListApiKeysRequestMultiError) AllErrors() []error { return m }
 
-// ListPersonalAccessTokensRequestValidationError is the validation error
-// returned by ListPersonalAccessTokensRequest.Validate if the designated
-// constraints aren't met.
-type ListPersonalAccessTokensRequestValidationError struct {
+// ListApiKeysRequestValidationError is the validation error returned by
+// ListApiKeysRequest.Validate if the designated constraints aren't met.
+type ListApiKeysRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1007,24 +1000,24 @@ type ListPersonalAccessTokensRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListPersonalAccessTokensRequestValidationError) Field() string { return e.field }
+func (e ListApiKeysRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListPersonalAccessTokensRequestValidationError) Reason() string { return e.reason }
+func (e ListApiKeysRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListPersonalAccessTokensRequestValidationError) Cause() error { return e.cause }
+func (e ListApiKeysRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListPersonalAccessTokensRequestValidationError) Key() bool { return e.key }
+func (e ListApiKeysRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListPersonalAccessTokensRequestValidationError) ErrorName() string {
-	return "ListPersonalAccessTokensRequestValidationError"
+func (e ListApiKeysRequestValidationError) ErrorName() string {
+	return "ListApiKeysRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListPersonalAccessTokensRequestValidationError) Error() string {
+func (e ListApiKeysRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1036,14 +1029,14 @@ func (e ListPersonalAccessTokensRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListPersonalAccessTokensRequest.%s: %s%s",
+		"invalid %sListApiKeysRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListPersonalAccessTokensRequestValidationError{}
+var _ error = ListApiKeysRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1051,48 +1044,47 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListPersonalAccessTokensRequestValidationError{}
+} = ListApiKeysRequestValidationError{}
 
-// Validate checks the field values on ListPersonalAccessTokensResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *ListPersonalAccessTokensResponse) Validate() error {
+// Validate checks the field values on ListApiKeysResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListApiKeysResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListPersonalAccessTokensResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// ListPersonalAccessTokensResponseMultiError, or nil if none found.
-func (m *ListPersonalAccessTokensResponse) ValidateAll() error {
+// ValidateAll checks the field values on ListApiKeysResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListApiKeysResponseMultiError, or nil if none found.
+func (m *ListApiKeysResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListPersonalAccessTokensResponse) validate(all bool) error {
+func (m *ListApiKeysResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	for idx, item := range m.GetAccessTokens() {
+	for idx, item := range m.GetApiKeys() {
 		_, _ = idx, item
 
 		if all {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ListPersonalAccessTokensResponseValidationError{
-						field:  fmt.Sprintf("AccessTokens[%v]", idx),
+					errors = append(errors, ListApiKeysResponseValidationError{
+						field:  fmt.Sprintf("ApiKeys[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, ListPersonalAccessTokensResponseValidationError{
-						field:  fmt.Sprintf("AccessTokens[%v]", idx),
+					errors = append(errors, ListApiKeysResponseValidationError{
+						field:  fmt.Sprintf("ApiKeys[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1100,8 +1092,8 @@ func (m *ListPersonalAccessTokensResponse) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return ListPersonalAccessTokensResponseValidationError{
-					field:  fmt.Sprintf("AccessTokens[%v]", idx),
+				return ListApiKeysResponseValidationError{
+					field:  fmt.Sprintf("ApiKeys[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -1113,20 +1105,19 @@ func (m *ListPersonalAccessTokensResponse) validate(all bool) error {
 	// no validation rules for NextPageToken
 
 	if len(errors) > 0 {
-		return ListPersonalAccessTokensResponseMultiError(errors)
+		return ListApiKeysResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListPersonalAccessTokensResponseMultiError is an error wrapping multiple
-// validation errors returned by
-// ListPersonalAccessTokensResponse.ValidateAll() if the designated
+// ListApiKeysResponseMultiError is an error wrapping multiple validation
+// errors returned by ListApiKeysResponse.ValidateAll() if the designated
 // constraints aren't met.
-type ListPersonalAccessTokensResponseMultiError []error
+type ListApiKeysResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListPersonalAccessTokensResponseMultiError) Error() string {
+func (m ListApiKeysResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1135,12 +1126,11 @@ func (m ListPersonalAccessTokensResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListPersonalAccessTokensResponseMultiError) AllErrors() []error { return m }
+func (m ListApiKeysResponseMultiError) AllErrors() []error { return m }
 
-// ListPersonalAccessTokensResponseValidationError is the validation error
-// returned by ListPersonalAccessTokensResponse.Validate if the designated
-// constraints aren't met.
-type ListPersonalAccessTokensResponseValidationError struct {
+// ListApiKeysResponseValidationError is the validation error returned by
+// ListApiKeysResponse.Validate if the designated constraints aren't met.
+type ListApiKeysResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1148,24 +1138,24 @@ type ListPersonalAccessTokensResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListPersonalAccessTokensResponseValidationError) Field() string { return e.field }
+func (e ListApiKeysResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListPersonalAccessTokensResponseValidationError) Reason() string { return e.reason }
+func (e ListApiKeysResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListPersonalAccessTokensResponseValidationError) Cause() error { return e.cause }
+func (e ListApiKeysResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListPersonalAccessTokensResponseValidationError) Key() bool { return e.key }
+func (e ListApiKeysResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListPersonalAccessTokensResponseValidationError) ErrorName() string {
-	return "ListPersonalAccessTokensResponseValidationError"
+func (e ListApiKeysResponseValidationError) ErrorName() string {
+	return "ListApiKeysResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListPersonalAccessTokensResponseValidationError) Error() string {
+func (e ListApiKeysResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1177,14 +1167,14 @@ func (e ListPersonalAccessTokensResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListPersonalAccessTokensResponse.%s: %s%s",
+		"invalid %sListApiKeysResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListPersonalAccessTokensResponseValidationError{}
+var _ error = ListApiKeysResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1192,24 +1182,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListPersonalAccessTokensResponseValidationError{}
+} = ListApiKeysResponseValidationError{}
 
-// Validate checks the field values on GetPersonalAccessTokenRequest with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetPersonalAccessTokenRequest) Validate() error {
+// Validate checks the field values on GetApiKeyRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetPersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// GetPersonalAccessTokenRequestMultiError, or nil if none found.
-func (m *GetPersonalAccessTokenRequest) ValidateAll() error {
+// ValidateAll checks the field values on GetApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetApiKeyRequestMultiError, or nil if none found.
+func (m *GetApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetPersonalAccessTokenRequest) validate(all bool) error {
+func (m *GetApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1219,19 +1209,19 @@ func (m *GetPersonalAccessTokenRequest) validate(all bool) error {
 	// no validation rules for TokenId
 
 	if len(errors) > 0 {
-		return GetPersonalAccessTokenRequestMultiError(errors)
+		return GetApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetPersonalAccessTokenRequestMultiError is an error wrapping multiple
-// validation errors returned by GetPersonalAccessTokenRequest.ValidateAll()
-// if the designated constraints aren't met.
-type GetPersonalAccessTokenRequestMultiError []error
+// GetApiKeyRequestMultiError is an error wrapping multiple validation errors
+// returned by GetApiKeyRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetPersonalAccessTokenRequestMultiError) Error() string {
+func (m GetApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1240,12 +1230,11 @@ func (m GetPersonalAccessTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetPersonalAccessTokenRequestMultiError) AllErrors() []error { return m }
+func (m GetApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// GetPersonalAccessTokenRequestValidationError is the validation error
-// returned by GetPersonalAccessTokenRequest.Validate if the designated
-// constraints aren't met.
-type GetPersonalAccessTokenRequestValidationError struct {
+// GetApiKeyRequestValidationError is the validation error returned by
+// GetApiKeyRequest.Validate if the designated constraints aren't met.
+type GetApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1253,24 +1242,22 @@ type GetPersonalAccessTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetPersonalAccessTokenRequestValidationError) Field() string { return e.field }
+func (e GetApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetPersonalAccessTokenRequestValidationError) Reason() string { return e.reason }
+func (e GetApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetPersonalAccessTokenRequestValidationError) Cause() error { return e.cause }
+func (e GetApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetPersonalAccessTokenRequestValidationError) Key() bool { return e.key }
+func (e GetApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetPersonalAccessTokenRequestValidationError) ErrorName() string {
-	return "GetPersonalAccessTokenRequestValidationError"
-}
+func (e GetApiKeyRequestValidationError) ErrorName() string { return "GetApiKeyRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e GetPersonalAccessTokenRequestValidationError) Error() string {
+func (e GetApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1282,14 +1269,14 @@ func (e GetPersonalAccessTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetPersonalAccessTokenRequest.%s: %s%s",
+		"invalid %sGetApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetPersonalAccessTokenRequestValidationError{}
+var _ error = GetApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1297,24 +1284,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetPersonalAccessTokenRequestValidationError{}
+} = GetApiKeyRequestValidationError{}
 
-// Validate checks the field values on GetPersonalAccessTokenResponse with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetPersonalAccessTokenResponse) Validate() error {
+// Validate checks the field values on GetApiKeyResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GetApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetPersonalAccessTokenResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// GetPersonalAccessTokenResponseMultiError, or nil if none found.
-func (m *GetPersonalAccessTokenResponse) ValidateAll() error {
+// ValidateAll checks the field values on GetApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetApiKeyResponseMultiError, or nil if none found.
+func (m *GetApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetPersonalAccessTokenResponse) validate(all bool) error {
+func (m *GetApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1322,28 +1309,28 @@ func (m *GetPersonalAccessTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetPersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, GetApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, GetPersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, GetApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return GetPersonalAccessTokenResponseValidationError{
-				field:  "AccessToken",
+			return GetApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1351,19 +1338,19 @@ func (m *GetPersonalAccessTokenResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetPersonalAccessTokenResponseMultiError(errors)
+		return GetApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetPersonalAccessTokenResponseMultiError is an error wrapping multiple
-// validation errors returned by GetPersonalAccessTokenResponse.ValidateAll()
-// if the designated constraints aren't met.
-type GetPersonalAccessTokenResponseMultiError []error
+// GetApiKeyResponseMultiError is an error wrapping multiple validation errors
+// returned by GetApiKeyResponse.ValidateAll() if the designated constraints
+// aren't met.
+type GetApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetPersonalAccessTokenResponseMultiError) Error() string {
+func (m GetApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1372,12 +1359,11 @@ func (m GetPersonalAccessTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetPersonalAccessTokenResponseMultiError) AllErrors() []error { return m }
+func (m GetApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// GetPersonalAccessTokenResponseValidationError is the validation error
-// returned by GetPersonalAccessTokenResponse.Validate if the designated
-// constraints aren't met.
-type GetPersonalAccessTokenResponseValidationError struct {
+// GetApiKeyResponseValidationError is the validation error returned by
+// GetApiKeyResponse.Validate if the designated constraints aren't met.
+type GetApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1385,24 +1371,24 @@ type GetPersonalAccessTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetPersonalAccessTokenResponseValidationError) Field() string { return e.field }
+func (e GetApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetPersonalAccessTokenResponseValidationError) Reason() string { return e.reason }
+func (e GetApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetPersonalAccessTokenResponseValidationError) Cause() error { return e.cause }
+func (e GetApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetPersonalAccessTokenResponseValidationError) Key() bool { return e.key }
+func (e GetApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetPersonalAccessTokenResponseValidationError) ErrorName() string {
-	return "GetPersonalAccessTokenResponseValidationError"
+func (e GetApiKeyResponseValidationError) ErrorName() string {
+	return "GetApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetPersonalAccessTokenResponseValidationError) Error() string {
+func (e GetApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1414,14 +1400,14 @@ func (e GetPersonalAccessTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetPersonalAccessTokenResponse.%s: %s%s",
+		"invalid %sGetApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetPersonalAccessTokenResponseValidationError{}
+var _ error = GetApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1429,25 +1415,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetPersonalAccessTokenResponseValidationError{}
+} = GetApiKeyResponseValidationError{}
 
-// Validate checks the field values on UpdatePersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *UpdatePersonalAccessTokenRequest) Validate() error {
+// Validate checks the field values on UpdateApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on UpdatePersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// UpdatePersonalAccessTokenRequestMultiError, or nil if none found.
-func (m *UpdatePersonalAccessTokenRequest) ValidateAll() error {
+// ValidateAll checks the field values on UpdateApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateApiKeyRequestMultiError, or nil if none found.
+func (m *UpdateApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *UpdatePersonalAccessTokenRequest) validate(all bool) error {
+func (m *UpdateApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1461,20 +1446,19 @@ func (m *UpdatePersonalAccessTokenRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return UpdatePersonalAccessTokenRequestMultiError(errors)
+		return UpdateApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// UpdatePersonalAccessTokenRequestMultiError is an error wrapping multiple
-// validation errors returned by
-// UpdatePersonalAccessTokenRequest.ValidateAll() if the designated
+// UpdateApiKeyRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateApiKeyRequest.ValidateAll() if the designated
 // constraints aren't met.
-type UpdatePersonalAccessTokenRequestMultiError []error
+type UpdateApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m UpdatePersonalAccessTokenRequestMultiError) Error() string {
+func (m UpdateApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1483,12 +1467,11 @@ func (m UpdatePersonalAccessTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m UpdatePersonalAccessTokenRequestMultiError) AllErrors() []error { return m }
+func (m UpdateApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// UpdatePersonalAccessTokenRequestValidationError is the validation error
-// returned by UpdatePersonalAccessTokenRequest.Validate if the designated
-// constraints aren't met.
-type UpdatePersonalAccessTokenRequestValidationError struct {
+// UpdateApiKeyRequestValidationError is the validation error returned by
+// UpdateApiKeyRequest.Validate if the designated constraints aren't met.
+type UpdateApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1496,24 +1479,24 @@ type UpdatePersonalAccessTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e UpdatePersonalAccessTokenRequestValidationError) Field() string { return e.field }
+func (e UpdateApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UpdatePersonalAccessTokenRequestValidationError) Reason() string { return e.reason }
+func (e UpdateApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UpdatePersonalAccessTokenRequestValidationError) Cause() error { return e.cause }
+func (e UpdateApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UpdatePersonalAccessTokenRequestValidationError) Key() bool { return e.key }
+func (e UpdateApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UpdatePersonalAccessTokenRequestValidationError) ErrorName() string {
-	return "UpdatePersonalAccessTokenRequestValidationError"
+func (e UpdateApiKeyRequestValidationError) ErrorName() string {
+	return "UpdateApiKeyRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e UpdatePersonalAccessTokenRequestValidationError) Error() string {
+func (e UpdateApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1525,14 +1508,14 @@ func (e UpdatePersonalAccessTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUpdatePersonalAccessTokenRequest.%s: %s%s",
+		"invalid %sUpdateApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UpdatePersonalAccessTokenRequestValidationError{}
+var _ error = UpdateApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1540,25 +1523,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UpdatePersonalAccessTokenRequestValidationError{}
+} = UpdateApiKeyRequestValidationError{}
 
-// Validate checks the field values on UpdatePersonalAccessTokenResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *UpdatePersonalAccessTokenResponse) Validate() error {
+// Validate checks the field values on UpdateApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on UpdatePersonalAccessTokenResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// UpdatePersonalAccessTokenResponseMultiError, or nil if none found.
-func (m *UpdatePersonalAccessTokenResponse) ValidateAll() error {
+// ValidateAll checks the field values on UpdateApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateApiKeyResponseMultiError, or nil if none found.
+func (m *UpdateApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *UpdatePersonalAccessTokenResponse) validate(all bool) error {
+func (m *UpdateApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1566,28 +1548,28 @@ func (m *UpdatePersonalAccessTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, UpdatePersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, UpdateApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, UpdatePersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, UpdateApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return UpdatePersonalAccessTokenResponseValidationError{
-				field:  "AccessToken",
+			return UpdateApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1595,20 +1577,19 @@ func (m *UpdatePersonalAccessTokenResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return UpdatePersonalAccessTokenResponseMultiError(errors)
+		return UpdateApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// UpdatePersonalAccessTokenResponseMultiError is an error wrapping multiple
-// validation errors returned by
-// UpdatePersonalAccessTokenResponse.ValidateAll() if the designated
+// UpdateApiKeyResponseMultiError is an error wrapping multiple validation
+// errors returned by UpdateApiKeyResponse.ValidateAll() if the designated
 // constraints aren't met.
-type UpdatePersonalAccessTokenResponseMultiError []error
+type UpdateApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m UpdatePersonalAccessTokenResponseMultiError) Error() string {
+func (m UpdateApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1617,12 +1598,11 @@ func (m UpdatePersonalAccessTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m UpdatePersonalAccessTokenResponseMultiError) AllErrors() []error { return m }
+func (m UpdateApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// UpdatePersonalAccessTokenResponseValidationError is the validation error
-// returned by UpdatePersonalAccessTokenResponse.Validate if the designated
-// constraints aren't met.
-type UpdatePersonalAccessTokenResponseValidationError struct {
+// UpdateApiKeyResponseValidationError is the validation error returned by
+// UpdateApiKeyResponse.Validate if the designated constraints aren't met.
+type UpdateApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1630,24 +1610,24 @@ type UpdatePersonalAccessTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e UpdatePersonalAccessTokenResponseValidationError) Field() string { return e.field }
+func (e UpdateApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UpdatePersonalAccessTokenResponseValidationError) Reason() string { return e.reason }
+func (e UpdateApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UpdatePersonalAccessTokenResponseValidationError) Cause() error { return e.cause }
+func (e UpdateApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UpdatePersonalAccessTokenResponseValidationError) Key() bool { return e.key }
+func (e UpdateApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UpdatePersonalAccessTokenResponseValidationError) ErrorName() string {
-	return "UpdatePersonalAccessTokenResponseValidationError"
+func (e UpdateApiKeyResponseValidationError) ErrorName() string {
+	return "UpdateApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e UpdatePersonalAccessTokenResponseValidationError) Error() string {
+func (e UpdateApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1659,14 +1639,14 @@ func (e UpdatePersonalAccessTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUpdatePersonalAccessTokenResponse.%s: %s%s",
+		"invalid %sUpdateApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UpdatePersonalAccessTokenResponseValidationError{}
+var _ error = UpdateApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1674,25 +1654,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UpdatePersonalAccessTokenResponseValidationError{}
+} = UpdateApiKeyResponseValidationError{}
 
-// Validate checks the field values on RevokePersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *RevokePersonalAccessTokenRequest) Validate() error {
+// Validate checks the field values on RevokeApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RevokeApiKeyRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on RevokePersonalAccessTokenRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the result is a list of violation errors wrapped in
-// RevokePersonalAccessTokenRequestMultiError, or nil if none found.
-func (m *RevokePersonalAccessTokenRequest) ValidateAll() error {
+// ValidateAll checks the field values on RevokeApiKeyRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RevokeApiKeyRequestMultiError, or nil if none found.
+func (m *RevokeApiKeyRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *RevokePersonalAccessTokenRequest) validate(all bool) error {
+func (m *RevokeApiKeyRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1702,20 +1681,19 @@ func (m *RevokePersonalAccessTokenRequest) validate(all bool) error {
 	// no validation rules for TokenId
 
 	if len(errors) > 0 {
-		return RevokePersonalAccessTokenRequestMultiError(errors)
+		return RevokeApiKeyRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// RevokePersonalAccessTokenRequestMultiError is an error wrapping multiple
-// validation errors returned by
-// RevokePersonalAccessTokenRequest.ValidateAll() if the designated
+// RevokeApiKeyRequestMultiError is an error wrapping multiple validation
+// errors returned by RevokeApiKeyRequest.ValidateAll() if the designated
 // constraints aren't met.
-type RevokePersonalAccessTokenRequestMultiError []error
+type RevokeApiKeyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m RevokePersonalAccessTokenRequestMultiError) Error() string {
+func (m RevokeApiKeyRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1724,12 +1702,11 @@ func (m RevokePersonalAccessTokenRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m RevokePersonalAccessTokenRequestMultiError) AllErrors() []error { return m }
+func (m RevokeApiKeyRequestMultiError) AllErrors() []error { return m }
 
-// RevokePersonalAccessTokenRequestValidationError is the validation error
-// returned by RevokePersonalAccessTokenRequest.Validate if the designated
-// constraints aren't met.
-type RevokePersonalAccessTokenRequestValidationError struct {
+// RevokeApiKeyRequestValidationError is the validation error returned by
+// RevokeApiKeyRequest.Validate if the designated constraints aren't met.
+type RevokeApiKeyRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1737,24 +1714,24 @@ type RevokePersonalAccessTokenRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e RevokePersonalAccessTokenRequestValidationError) Field() string { return e.field }
+func (e RevokeApiKeyRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e RevokePersonalAccessTokenRequestValidationError) Reason() string { return e.reason }
+func (e RevokeApiKeyRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e RevokePersonalAccessTokenRequestValidationError) Cause() error { return e.cause }
+func (e RevokeApiKeyRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e RevokePersonalAccessTokenRequestValidationError) Key() bool { return e.key }
+func (e RevokeApiKeyRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e RevokePersonalAccessTokenRequestValidationError) ErrorName() string {
-	return "RevokePersonalAccessTokenRequestValidationError"
+func (e RevokeApiKeyRequestValidationError) ErrorName() string {
+	return "RevokeApiKeyRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e RevokePersonalAccessTokenRequestValidationError) Error() string {
+func (e RevokeApiKeyRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1766,14 +1743,14 @@ func (e RevokePersonalAccessTokenRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sRevokePersonalAccessTokenRequest.%s: %s%s",
+		"invalid %sRevokeApiKeyRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = RevokePersonalAccessTokenRequestValidationError{}
+var _ error = RevokeApiKeyRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1781,25 +1758,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = RevokePersonalAccessTokenRequestValidationError{}
+} = RevokeApiKeyRequestValidationError{}
 
-// Validate checks the field values on RevokePersonalAccessTokenResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *RevokePersonalAccessTokenResponse) Validate() error {
+// Validate checks the field values on RevokeApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RevokeApiKeyResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on RevokePersonalAccessTokenResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// RevokePersonalAccessTokenResponseMultiError, or nil if none found.
-func (m *RevokePersonalAccessTokenResponse) ValidateAll() error {
+// ValidateAll checks the field values on RevokeApiKeyResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RevokeApiKeyResponseMultiError, or nil if none found.
+func (m *RevokeApiKeyResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *RevokePersonalAccessTokenResponse) validate(all bool) error {
+func (m *RevokeApiKeyResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1807,28 +1783,28 @@ func (m *RevokePersonalAccessTokenResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetAccessToken()).(type) {
+		switch v := interface{}(m.GetApiKey()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, RevokePersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, RevokeApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, RevokePersonalAccessTokenResponseValidationError{
-					field:  "AccessToken",
+				errors = append(errors, RevokeApiKeyResponseValidationError{
+					field:  "ApiKey",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetApiKey()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return RevokePersonalAccessTokenResponseValidationError{
-				field:  "AccessToken",
+			return RevokeApiKeyResponseValidationError{
+				field:  "ApiKey",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1836,20 +1812,19 @@ func (m *RevokePersonalAccessTokenResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return RevokePersonalAccessTokenResponseMultiError(errors)
+		return RevokeApiKeyResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// RevokePersonalAccessTokenResponseMultiError is an error wrapping multiple
-// validation errors returned by
-// RevokePersonalAccessTokenResponse.ValidateAll() if the designated
+// RevokeApiKeyResponseMultiError is an error wrapping multiple validation
+// errors returned by RevokeApiKeyResponse.ValidateAll() if the designated
 // constraints aren't met.
-type RevokePersonalAccessTokenResponseMultiError []error
+type RevokeApiKeyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m RevokePersonalAccessTokenResponseMultiError) Error() string {
+func (m RevokeApiKeyResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1858,12 +1833,11 @@ func (m RevokePersonalAccessTokenResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m RevokePersonalAccessTokenResponseMultiError) AllErrors() []error { return m }
+func (m RevokeApiKeyResponseMultiError) AllErrors() []error { return m }
 
-// RevokePersonalAccessTokenResponseValidationError is the validation error
-// returned by RevokePersonalAccessTokenResponse.Validate if the designated
-// constraints aren't met.
-type RevokePersonalAccessTokenResponseValidationError struct {
+// RevokeApiKeyResponseValidationError is the validation error returned by
+// RevokeApiKeyResponse.Validate if the designated constraints aren't met.
+type RevokeApiKeyResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1871,24 +1845,24 @@ type RevokePersonalAccessTokenResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e RevokePersonalAccessTokenResponseValidationError) Field() string { return e.field }
+func (e RevokeApiKeyResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e RevokePersonalAccessTokenResponseValidationError) Reason() string { return e.reason }
+func (e RevokeApiKeyResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e RevokePersonalAccessTokenResponseValidationError) Cause() error { return e.cause }
+func (e RevokeApiKeyResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e RevokePersonalAccessTokenResponseValidationError) Key() bool { return e.key }
+func (e RevokeApiKeyResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e RevokePersonalAccessTokenResponseValidationError) ErrorName() string {
-	return "RevokePersonalAccessTokenResponseValidationError"
+func (e RevokeApiKeyResponseValidationError) ErrorName() string {
+	return "RevokeApiKeyResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e RevokePersonalAccessTokenResponseValidationError) Error() string {
+func (e RevokeApiKeyResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1900,14 +1874,14 @@ func (e RevokePersonalAccessTokenResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sRevokePersonalAccessTokenResponse.%s: %s%s",
+		"invalid %sRevokeApiKeyResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = RevokePersonalAccessTokenResponseValidationError{}
+var _ error = RevokeApiKeyResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1915,4 +1889,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = RevokePersonalAccessTokenResponseValidationError{}
+} = RevokeApiKeyResponseValidationError{}

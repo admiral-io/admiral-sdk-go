@@ -48,17 +48,14 @@ const (
 	// AgentAPIClearAgentIdentityBindingProcedure is the fully-qualified name of the AgentAPI's
 	// ClearAgentIdentityBinding RPC.
 	AgentAPIClearAgentIdentityBindingProcedure = "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding"
-	// AgentAPICreateAgentTokenProcedure is the fully-qualified name of the AgentAPI's CreateAgentToken
-	// RPC.
-	AgentAPICreateAgentTokenProcedure = "/admiral.api.agent.v1.AgentAPI/CreateAgentToken"
-	// AgentAPIListAgentTokensProcedure is the fully-qualified name of the AgentAPI's ListAgentTokens
-	// RPC.
-	AgentAPIListAgentTokensProcedure = "/admiral.api.agent.v1.AgentAPI/ListAgentTokens"
-	// AgentAPIGetAgentTokenProcedure is the fully-qualified name of the AgentAPI's GetAgentToken RPC.
-	AgentAPIGetAgentTokenProcedure = "/admiral.api.agent.v1.AgentAPI/GetAgentToken"
-	// AgentAPIRevokeAgentTokenProcedure is the fully-qualified name of the AgentAPI's RevokeAgentToken
-	// RPC.
-	AgentAPIRevokeAgentTokenProcedure = "/admiral.api.agent.v1.AgentAPI/RevokeAgentToken"
+	// AgentAPICreateApiKeyProcedure is the fully-qualified name of the AgentAPI's CreateApiKey RPC.
+	AgentAPICreateApiKeyProcedure = "/admiral.api.agent.v1.AgentAPI/CreateApiKey"
+	// AgentAPIListApiKeysProcedure is the fully-qualified name of the AgentAPI's ListApiKeys RPC.
+	AgentAPIListApiKeysProcedure = "/admiral.api.agent.v1.AgentAPI/ListApiKeys"
+	// AgentAPIGetApiKeyProcedure is the fully-qualified name of the AgentAPI's GetApiKey RPC.
+	AgentAPIGetApiKeyProcedure = "/admiral.api.agent.v1.AgentAPI/GetApiKey"
+	// AgentAPIRevokeApiKeyProcedure is the fully-qualified name of the AgentAPI's RevokeApiKey RPC.
+	AgentAPIRevokeApiKeyProcedure = "/admiral.api.agent.v1.AgentAPI/RevokeApiKey"
 	// AgentAPIListAgentJobsProcedure is the fully-qualified name of the AgentAPI's ListAgentJobs RPC.
 	AgentAPIListAgentJobsProcedure = "/admiral.api.agent.v1.AgentAPI/ListAgentJobs"
 	// AgentAPIListWorkloadsProcedure is the fully-qualified name of the AgentAPI's ListWorkloads RPC.
@@ -76,14 +73,14 @@ type AgentAPIClient interface {
 	// Admin CRUD
 	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial Service Access Token (SAT). The agent starts in PENDING
+	// generates an initial API key. The agent starts in PENDING
 	// health status until it begins reporting.
 	//
 	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the SAT's auto-assigned scopes. The kind is immutable.
+	// and determines the key's auto-assigned scopes. The kind is immutable.
 	//
-	// The response includes a `plain_text_token`: the raw SAT secret shown
-	// exactly once. Deploy this token to the agent binary for authentication.
+	// The response includes a `plain_text_key`: the raw API key secret shown
+	// exactly once. Deploy this key to the agent binary for authentication.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *connect.Request[v1.CreateAgentRequest]) (*connect.Response[v1.CreateAgentResponse], error)
@@ -106,7 +103,7 @@ type AgentAPIClient interface {
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *connect.Request[v1.UpdateAgentRequest]) (*connect.Response[v1.UpdateAgentResponse], error)
 	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// service access tokens. For TERRAFORM agents, any not-yet-completed jobs assigned
+	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
 	// to this agent will be failed. This action cannot be undone.
 	//
 	// Scope: `agent:write`
@@ -132,38 +129,38 @@ type AgentAPIClient interface {
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error)
 	// ---------------------------------------------------------------------------
-	// Agent tokens
+	// API keys
 	// ---------------------------------------------------------------------------
-	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
-	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
-	// be overridden. The response includes the raw token secret, shown exactly once.
+	// CreateApiKey creates a new API key bound to the specified agent's service
+	// account. Scopes are auto-assigned from the agent's kind and cannot be
+	// overridden. The response includes the raw secret, shown exactly once.
 	//
-	// Use this to create additional SATs for an existing agent (e.g., for
-	// zero-downtime token rotation). The initial SAT is created automatically by
+	// Use this to create additional API keys for an existing agent (e.g., for
+	// zero-downtime key rotation). The initial key is created automatically by
 	// CreateAgent.
 	//
 	// Scope: `agent:write`
-	CreateAgentToken(context.Context, *connect.Request[v1.CreateAgentTokenRequest]) (*connect.Response[v1.CreateAgentTokenResponse], error)
-	// ListAgentTokens returns a paginated list of SATs bound to the specified
-	// agent. Token secrets are never included.
+	CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error)
+	// ListApiKeys returns a paginated list of API keys bound to the specified
+	// agent. Secrets are never included.
 	//
 	// Scope: `agent:read`
-	ListAgentTokens(context.Context, *connect.Request[v1.ListAgentTokensRequest]) (*connect.Response[v1.ListAgentTokensResponse], error)
-	// GetAgentToken retrieves a single SAT by ID. Returns metadata only; the token
-	// secret is never included. Token IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the token
+	ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error)
+	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
+	// secret is never included. Key IDs are globally unique, so no agent scoping
+	// is required in the path; the server resolves the parent agent from the key
 	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
 	//
 	// Scope: `agent:read`
-	GetAgentToken(context.Context, *connect.Request[v1.GetAgentTokenRequest]) (*connect.Response[v1.GetAgentTokenResponse], error)
-	// RevokeAgentToken permanently revokes an SAT bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active SAT for
-	// the agent, the agent will become disconnected. Token IDs are globally unique,
+	GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error)
+	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
+	// will receive a 401 on its next request. If this is the only active key for
+	// the agent, the agent will become disconnected. Key IDs are globally unique,
 	// so no agent scoping is required in the path; authorization is enforced via
 	// the `agent:write` scope, not by path prefix.
 	//
 	// Scope: `agent:write`
-	RevokeAgentToken(context.Context, *connect.Request[v1.RevokeAgentTokenRequest]) (*connect.Response[v1.RevokeAgentTokenResponse], error)
+	RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error)
 	// ---------------------------------------------------------------------------
 	// Read-only observability. Messages: jobs.proto, workloads.proto.
 	// ---------------------------------------------------------------------------
@@ -243,28 +240,28 @@ func NewAgentAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(agentAPIMethods.ByName("ClearAgentIdentityBinding")),
 			connect.WithClientOptions(opts...),
 		),
-		createAgentToken: connect.NewClient[v1.CreateAgentTokenRequest, v1.CreateAgentTokenResponse](
+		createApiKey: connect.NewClient[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse](
 			httpClient,
-			baseURL+AgentAPICreateAgentTokenProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("CreateAgentToken")),
+			baseURL+AgentAPICreateApiKeyProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("CreateApiKey")),
 			connect.WithClientOptions(opts...),
 		),
-		listAgentTokens: connect.NewClient[v1.ListAgentTokensRequest, v1.ListAgentTokensResponse](
+		listApiKeys: connect.NewClient[v1.ListApiKeysRequest, v1.ListApiKeysResponse](
 			httpClient,
-			baseURL+AgentAPIListAgentTokensProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ListAgentTokens")),
+			baseURL+AgentAPIListApiKeysProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("ListApiKeys")),
 			connect.WithClientOptions(opts...),
 		),
-		getAgentToken: connect.NewClient[v1.GetAgentTokenRequest, v1.GetAgentTokenResponse](
+		getApiKey: connect.NewClient[v1.GetApiKeyRequest, v1.GetApiKeyResponse](
 			httpClient,
-			baseURL+AgentAPIGetAgentTokenProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("GetAgentToken")),
+			baseURL+AgentAPIGetApiKeyProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("GetApiKey")),
 			connect.WithClientOptions(opts...),
 		),
-		revokeAgentToken: connect.NewClient[v1.RevokeAgentTokenRequest, v1.RevokeAgentTokenResponse](
+		revokeApiKey: connect.NewClient[v1.RevokeApiKeyRequest, v1.RevokeApiKeyResponse](
 			httpClient,
-			baseURL+AgentAPIRevokeAgentTokenProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("RevokeAgentToken")),
+			baseURL+AgentAPIRevokeApiKeyProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("RevokeApiKey")),
 			connect.WithClientOptions(opts...),
 		),
 		listAgentJobs: connect.NewClient[v1.ListAgentJobsRequest, v1.ListAgentJobsResponse](
@@ -303,10 +300,10 @@ type agentAPIClient struct {
 	deleteAgent               *connect.Client[v1.DeleteAgentRequest, v1.DeleteAgentResponse]
 	getAgentStatus            *connect.Client[v1.GetAgentStatusRequest, v1.GetAgentStatusResponse]
 	clearAgentIdentityBinding *connect.Client[v1.ClearAgentIdentityBindingRequest, v1.ClearAgentIdentityBindingResponse]
-	createAgentToken          *connect.Client[v1.CreateAgentTokenRequest, v1.CreateAgentTokenResponse]
-	listAgentTokens           *connect.Client[v1.ListAgentTokensRequest, v1.ListAgentTokensResponse]
-	getAgentToken             *connect.Client[v1.GetAgentTokenRequest, v1.GetAgentTokenResponse]
-	revokeAgentToken          *connect.Client[v1.RevokeAgentTokenRequest, v1.RevokeAgentTokenResponse]
+	createApiKey              *connect.Client[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse]
+	listApiKeys               *connect.Client[v1.ListApiKeysRequest, v1.ListApiKeysResponse]
+	getApiKey                 *connect.Client[v1.GetApiKeyRequest, v1.GetApiKeyResponse]
+	revokeApiKey              *connect.Client[v1.RevokeApiKeyRequest, v1.RevokeApiKeyResponse]
 	listAgentJobs             *connect.Client[v1.ListAgentJobsRequest, v1.ListAgentJobsResponse]
 	listWorkloads             *connect.Client[v1.ListWorkloadsRequest, v1.ListWorkloadsResponse]
 	getWorkload               *connect.Client[v1.GetWorkloadRequest, v1.GetWorkloadResponse]
@@ -348,24 +345,24 @@ func (c *agentAPIClient) ClearAgentIdentityBinding(ctx context.Context, req *con
 	return c.clearAgentIdentityBinding.CallUnary(ctx, req)
 }
 
-// CreateAgentToken calls admiral.api.agent.v1.AgentAPI.CreateAgentToken.
-func (c *agentAPIClient) CreateAgentToken(ctx context.Context, req *connect.Request[v1.CreateAgentTokenRequest]) (*connect.Response[v1.CreateAgentTokenResponse], error) {
-	return c.createAgentToken.CallUnary(ctx, req)
+// CreateApiKey calls admiral.api.agent.v1.AgentAPI.CreateApiKey.
+func (c *agentAPIClient) CreateApiKey(ctx context.Context, req *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {
+	return c.createApiKey.CallUnary(ctx, req)
 }
 
-// ListAgentTokens calls admiral.api.agent.v1.AgentAPI.ListAgentTokens.
-func (c *agentAPIClient) ListAgentTokens(ctx context.Context, req *connect.Request[v1.ListAgentTokensRequest]) (*connect.Response[v1.ListAgentTokensResponse], error) {
-	return c.listAgentTokens.CallUnary(ctx, req)
+// ListApiKeys calls admiral.api.agent.v1.AgentAPI.ListApiKeys.
+func (c *agentAPIClient) ListApiKeys(ctx context.Context, req *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error) {
+	return c.listApiKeys.CallUnary(ctx, req)
 }
 
-// GetAgentToken calls admiral.api.agent.v1.AgentAPI.GetAgentToken.
-func (c *agentAPIClient) GetAgentToken(ctx context.Context, req *connect.Request[v1.GetAgentTokenRequest]) (*connect.Response[v1.GetAgentTokenResponse], error) {
-	return c.getAgentToken.CallUnary(ctx, req)
+// GetApiKey calls admiral.api.agent.v1.AgentAPI.GetApiKey.
+func (c *agentAPIClient) GetApiKey(ctx context.Context, req *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error) {
+	return c.getApiKey.CallUnary(ctx, req)
 }
 
-// RevokeAgentToken calls admiral.api.agent.v1.AgentAPI.RevokeAgentToken.
-func (c *agentAPIClient) RevokeAgentToken(ctx context.Context, req *connect.Request[v1.RevokeAgentTokenRequest]) (*connect.Response[v1.RevokeAgentTokenResponse], error) {
-	return c.revokeAgentToken.CallUnary(ctx, req)
+// RevokeApiKey calls admiral.api.agent.v1.AgentAPI.RevokeApiKey.
+func (c *agentAPIClient) RevokeApiKey(ctx context.Context, req *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error) {
+	return c.revokeApiKey.CallUnary(ctx, req)
 }
 
 // ListAgentJobs calls admiral.api.agent.v1.AgentAPI.ListAgentJobs.
@@ -394,14 +391,14 @@ type AgentAPIHandler interface {
 	// Admin CRUD
 	// ---------------------------------------------------------------------------
 	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial Service Access Token (SAT). The agent starts in PENDING
+	// generates an initial API key. The agent starts in PENDING
 	// health status until it begins reporting.
 	//
 	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the SAT's auto-assigned scopes. The kind is immutable.
+	// and determines the key's auto-assigned scopes. The kind is immutable.
 	//
-	// The response includes a `plain_text_token`: the raw SAT secret shown
-	// exactly once. Deploy this token to the agent binary for authentication.
+	// The response includes a `plain_text_key`: the raw API key secret shown
+	// exactly once. Deploy this key to the agent binary for authentication.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *connect.Request[v1.CreateAgentRequest]) (*connect.Response[v1.CreateAgentResponse], error)
@@ -424,7 +421,7 @@ type AgentAPIHandler interface {
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *connect.Request[v1.UpdateAgentRequest]) (*connect.Response[v1.UpdateAgentResponse], error)
 	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// service access tokens. For TERRAFORM agents, any not-yet-completed jobs assigned
+	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
 	// to this agent will be failed. This action cannot be undone.
 	//
 	// Scope: `agent:write`
@@ -450,38 +447,38 @@ type AgentAPIHandler interface {
 	// Scope: `agent:write`
 	ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error)
 	// ---------------------------------------------------------------------------
-	// Agent tokens
+	// API keys
 	// ---------------------------------------------------------------------------
-	// CreateAgentToken creates a new Service Access Token (SAT) bound to the
-	// specified agent. Scopes are auto-assigned from the agent's kind and cannot
-	// be overridden. The response includes the raw token secret, shown exactly once.
+	// CreateApiKey creates a new API key bound to the specified agent's service
+	// account. Scopes are auto-assigned from the agent's kind and cannot be
+	// overridden. The response includes the raw secret, shown exactly once.
 	//
-	// Use this to create additional SATs for an existing agent (e.g., for
-	// zero-downtime token rotation). The initial SAT is created automatically by
+	// Use this to create additional API keys for an existing agent (e.g., for
+	// zero-downtime key rotation). The initial key is created automatically by
 	// CreateAgent.
 	//
 	// Scope: `agent:write`
-	CreateAgentToken(context.Context, *connect.Request[v1.CreateAgentTokenRequest]) (*connect.Response[v1.CreateAgentTokenResponse], error)
-	// ListAgentTokens returns a paginated list of SATs bound to the specified
-	// agent. Token secrets are never included.
+	CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error)
+	// ListApiKeys returns a paginated list of API keys bound to the specified
+	// agent. Secrets are never included.
 	//
 	// Scope: `agent:read`
-	ListAgentTokens(context.Context, *connect.Request[v1.ListAgentTokensRequest]) (*connect.Response[v1.ListAgentTokensResponse], error)
-	// GetAgentToken retrieves a single SAT by ID. Returns metadata only; the token
-	// secret is never included. Token IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the token
+	ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error)
+	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
+	// secret is never included. Key IDs are globally unique, so no agent scoping
+	// is required in the path; the server resolves the parent agent from the key
 	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
 	//
 	// Scope: `agent:read`
-	GetAgentToken(context.Context, *connect.Request[v1.GetAgentTokenRequest]) (*connect.Response[v1.GetAgentTokenResponse], error)
-	// RevokeAgentToken permanently revokes an SAT bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active SAT for
-	// the agent, the agent will become disconnected. Token IDs are globally unique,
+	GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error)
+	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
+	// will receive a 401 on its next request. If this is the only active key for
+	// the agent, the agent will become disconnected. Key IDs are globally unique,
 	// so no agent scoping is required in the path; authorization is enforced via
 	// the `agent:write` scope, not by path prefix.
 	//
 	// Scope: `agent:write`
-	RevokeAgentToken(context.Context, *connect.Request[v1.RevokeAgentTokenRequest]) (*connect.Response[v1.RevokeAgentTokenResponse], error)
+	RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error)
 	// ---------------------------------------------------------------------------
 	// Read-only observability. Messages: jobs.proto, workloads.proto.
 	// ---------------------------------------------------------------------------
@@ -557,28 +554,28 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 		connect.WithSchema(agentAPIMethods.ByName("ClearAgentIdentityBinding")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPICreateAgentTokenHandler := connect.NewUnaryHandler(
-		AgentAPICreateAgentTokenProcedure,
-		svc.CreateAgentToken,
-		connect.WithSchema(agentAPIMethods.ByName("CreateAgentToken")),
+	agentAPICreateApiKeyHandler := connect.NewUnaryHandler(
+		AgentAPICreateApiKeyProcedure,
+		svc.CreateApiKey,
+		connect.WithSchema(agentAPIMethods.ByName("CreateApiKey")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIListAgentTokensHandler := connect.NewUnaryHandler(
-		AgentAPIListAgentTokensProcedure,
-		svc.ListAgentTokens,
-		connect.WithSchema(agentAPIMethods.ByName("ListAgentTokens")),
+	agentAPIListApiKeysHandler := connect.NewUnaryHandler(
+		AgentAPIListApiKeysProcedure,
+		svc.ListApiKeys,
+		connect.WithSchema(agentAPIMethods.ByName("ListApiKeys")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIGetAgentTokenHandler := connect.NewUnaryHandler(
-		AgentAPIGetAgentTokenProcedure,
-		svc.GetAgentToken,
-		connect.WithSchema(agentAPIMethods.ByName("GetAgentToken")),
+	agentAPIGetApiKeyHandler := connect.NewUnaryHandler(
+		AgentAPIGetApiKeyProcedure,
+		svc.GetApiKey,
+		connect.WithSchema(agentAPIMethods.ByName("GetApiKey")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIRevokeAgentTokenHandler := connect.NewUnaryHandler(
-		AgentAPIRevokeAgentTokenProcedure,
-		svc.RevokeAgentToken,
-		connect.WithSchema(agentAPIMethods.ByName("RevokeAgentToken")),
+	agentAPIRevokeApiKeyHandler := connect.NewUnaryHandler(
+		AgentAPIRevokeApiKeyProcedure,
+		svc.RevokeApiKey,
+		connect.WithSchema(agentAPIMethods.ByName("RevokeApiKey")),
 		connect.WithHandlerOptions(opts...),
 	)
 	agentAPIListAgentJobsHandler := connect.NewUnaryHandler(
@@ -621,14 +618,14 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 			agentAPIGetAgentStatusHandler.ServeHTTP(w, r)
 		case AgentAPIClearAgentIdentityBindingProcedure:
 			agentAPIClearAgentIdentityBindingHandler.ServeHTTP(w, r)
-		case AgentAPICreateAgentTokenProcedure:
-			agentAPICreateAgentTokenHandler.ServeHTTP(w, r)
-		case AgentAPIListAgentTokensProcedure:
-			agentAPIListAgentTokensHandler.ServeHTTP(w, r)
-		case AgentAPIGetAgentTokenProcedure:
-			agentAPIGetAgentTokenHandler.ServeHTTP(w, r)
-		case AgentAPIRevokeAgentTokenProcedure:
-			agentAPIRevokeAgentTokenHandler.ServeHTTP(w, r)
+		case AgentAPICreateApiKeyProcedure:
+			agentAPICreateApiKeyHandler.ServeHTTP(w, r)
+		case AgentAPIListApiKeysProcedure:
+			agentAPIListApiKeysHandler.ServeHTTP(w, r)
+		case AgentAPIGetApiKeyProcedure:
+			agentAPIGetApiKeyHandler.ServeHTTP(w, r)
+		case AgentAPIRevokeApiKeyProcedure:
+			agentAPIRevokeApiKeyHandler.ServeHTTP(w, r)
 		case AgentAPIListAgentJobsProcedure:
 			agentAPIListAgentJobsHandler.ServeHTTP(w, r)
 		case AgentAPIListWorkloadsProcedure:
@@ -674,20 +671,20 @@ func (UnimplementedAgentAPIHandler) ClearAgentIdentityBinding(context.Context, *
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) CreateAgentToken(context.Context, *connect.Request[v1.CreateAgentTokenRequest]) (*connect.Response[v1.CreateAgentTokenResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CreateAgentToken is not implemented"))
+func (UnimplementedAgentAPIHandler) CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CreateApiKey is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) ListAgentTokens(context.Context, *connect.Request[v1.ListAgentTokensRequest]) (*connect.Response[v1.ListAgentTokensResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListAgentTokens is not implemented"))
+func (UnimplementedAgentAPIHandler) ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListApiKeys is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) GetAgentToken(context.Context, *connect.Request[v1.GetAgentTokenRequest]) (*connect.Response[v1.GetAgentTokenResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetAgentToken is not implemented"))
+func (UnimplementedAgentAPIHandler) GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetApiKey is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) RevokeAgentToken(context.Context, *connect.Request[v1.RevokeAgentTokenRequest]) (*connect.Response[v1.RevokeAgentTokenResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.RevokeAgentToken is not implemented"))
+func (UnimplementedAgentAPIHandler) RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.RevokeApiKey is not implemented"))
 }
 
 func (UnimplementedAgentAPIHandler) ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error) {

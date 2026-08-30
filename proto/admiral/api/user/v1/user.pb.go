@@ -320,38 +320,38 @@ func (x *GetUserResponse) GetUser() *User {
 	return nil
 }
 
-// CreatePersonalAccessTokenRequest contains the parameters for creating a new PAT.
-type CreatePersonalAccessTokenRequest struct {
+// CreateApiKeyRequest contains the parameters for creating a new API key.
+type CreateApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// URL-safe, human-readable identifier for the token (e.g., "postman-testing").
+	// URL-safe, human-readable identifier for the key (e.g., "postman-testing").
 	// Unique per user within the tenant. Lowercase alphanumeric and hyphens only,
 	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// The scopes to grant this token. Must be valid scopes allowed for PATs.
+	// The scopes to grant this key. Must be scopes assignable to a user-bound key.
 	// The server enforces that issued scopes are a subset of the caller's own
-	// scopes. A token cannot grant more access than the user holds.
+	// scopes. A key cannot grant more access than the user holds.
 	Scopes []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	// Optional expiration time. If unset, the token does not expire.
+	// Optional expiration time. If unset, the key does not expire.
 	// Tenant policies may enforce a maximum lifetime.
 	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreatePersonalAccessTokenRequest) Reset() {
-	*x = CreatePersonalAccessTokenRequest{}
+func (x *CreateApiKeyRequest) Reset() {
+	*x = CreateApiKeyRequest{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreatePersonalAccessTokenRequest) String() string {
+func (x *CreateApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreatePersonalAccessTokenRequest) ProtoMessage() {}
+func (*CreateApiKeyRequest) ProtoMessage() {}
 
-func (x *CreatePersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -363,58 +363,58 @@ func (x *CreatePersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreatePersonalAccessTokenRequest.ProtoReflect.Descriptor instead.
-func (*CreatePersonalAccessTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*CreateApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *CreatePersonalAccessTokenRequest) GetName() string {
+func (x *CreateApiKeyRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreatePersonalAccessTokenRequest) GetScopes() []string {
+func (x *CreateApiKeyRequest) GetScopes() []string {
 	if x != nil {
 		return x.Scopes
 	}
 	return nil
 }
 
-func (x *CreatePersonalAccessTokenRequest) GetExpiresAt() *timestamppb.Timestamp {
+func (x *CreateApiKeyRequest) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ExpiresAt
 	}
 	return nil
 }
 
-// CreatePersonalAccessTokenResponse contains the newly created PAT.
-type CreatePersonalAccessTokenResponse struct {
+// CreateApiKeyResponse contains the newly created API key.
+type CreateApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created token metadata.
-	AccessToken *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	// The raw token secret (e.g., "admp_7kH3mNqR2xFb..."). This value is
+	// The created key metadata.
+	ApiKey *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	// The raw secret (e.g., "admp_7kH3mNqR2xFb..."). This value is
 	// shown exactly once and cannot be retrieved again. Store it securely.
-	PlainTextToken string `protobuf:"bytes,2,opt,name=plain_text_token,json=plainTextToken,proto3" json:"plain_text_token,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	PlainTextKey  string `protobuf:"bytes,2,opt,name=plain_text_key,json=plainTextKey,proto3" json:"plain_text_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreatePersonalAccessTokenResponse) Reset() {
-	*x = CreatePersonalAccessTokenResponse{}
+func (x *CreateApiKeyResponse) Reset() {
+	*x = CreateApiKeyResponse{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreatePersonalAccessTokenResponse) String() string {
+func (x *CreateApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreatePersonalAccessTokenResponse) ProtoMessage() {}
+func (*CreateApiKeyResponse) ProtoMessage() {}
 
-func (x *CreatePersonalAccessTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -426,38 +426,38 @@ func (x *CreatePersonalAccessTokenResponse) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreatePersonalAccessTokenResponse.ProtoReflect.Descriptor instead.
-func (*CreatePersonalAccessTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*CreateApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CreatePersonalAccessTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *CreateApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
 
-func (x *CreatePersonalAccessTokenResponse) GetPlainTextToken() string {
+func (x *CreateApiKeyResponse) GetPlainTextKey() string {
 	if x != nil {
-		return x.PlainTextToken
+		return x.PlainTextKey
 	}
 	return ""
 }
 
-// ListPersonalAccessTokensRequest contains pagination and filter parameters.
-type ListPersonalAccessTokensRequest struct {
+// ListApiKeysRequest contains pagination and filter parameters.
+type ListApiKeysRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
 	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
-	//   - `name`: filter by token name.
-	//   - `status`: filter by token status (ACTIVE, REVOKED).
+	//   - `name`: filter by key name.
+	//   - `status`: filter by key status (ACTIVE, REVOKED).
 	//
 	// Example: `field['status'] = 'ACTIVE'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of tokens to return per page. Defaults to 50 when omitted
+	// Maximum number of keys to return per page. Defaults to 50 when omitted
 	// or 0; must not exceed 100.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Opaque pagination token from a previous response.
@@ -466,20 +466,20 @@ type ListPersonalAccessTokensRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListPersonalAccessTokensRequest) Reset() {
-	*x = ListPersonalAccessTokensRequest{}
+func (x *ListApiKeysRequest) Reset() {
+	*x = ListApiKeysRequest{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListPersonalAccessTokensRequest) String() string {
+func (x *ListApiKeysRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListPersonalAccessTokensRequest) ProtoMessage() {}
+func (*ListApiKeysRequest) ProtoMessage() {}
 
-func (x *ListPersonalAccessTokensRequest) ProtoReflect() protoreflect.Message {
+func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -491,57 +491,57 @@ func (x *ListPersonalAccessTokensRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListPersonalAccessTokensRequest.ProtoReflect.Descriptor instead.
-func (*ListPersonalAccessTokensRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListApiKeysRequest.ProtoReflect.Descriptor instead.
+func (*ListApiKeysRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *ListPersonalAccessTokensRequest) GetFilter() string {
+func (x *ListApiKeysRequest) GetFilter() string {
 	if x != nil {
 		return x.Filter
 	}
 	return ""
 }
 
-func (x *ListPersonalAccessTokensRequest) GetPageSize() int32 {
+func (x *ListApiKeysRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
 	return 0
 }
 
-func (x *ListPersonalAccessTokensRequest) GetPageToken() string {
+func (x *ListApiKeysRequest) GetPageToken() string {
 	if x != nil {
 		return x.PageToken
 	}
 	return ""
 }
 
-// ListPersonalAccessTokensResponse contains a page of PAT metadata.
-type ListPersonalAccessTokensResponse struct {
+// ListApiKeysResponse contains a page of API key metadata.
+type ListApiKeysResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of tokens. Token secrets are never included.
-	AccessTokens []*v1.AccessToken `protobuf:"bytes,1,rep,name=access_tokens,json=accessTokens,proto3" json:"access_tokens,omitempty"`
+	// The list of keys. Secrets are never included.
+	ApiKeys []*v1.ApiKey `protobuf:"bytes,1,rep,name=api_keys,json=apiKeys,proto3" json:"api_keys,omitempty"`
 	// Pagination token for the next page. Empty when there are no more results.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListPersonalAccessTokensResponse) Reset() {
-	*x = ListPersonalAccessTokensResponse{}
+func (x *ListApiKeysResponse) Reset() {
+	*x = ListApiKeysResponse{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListPersonalAccessTokensResponse) String() string {
+func (x *ListApiKeysResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListPersonalAccessTokensResponse) ProtoMessage() {}
+func (*ListApiKeysResponse) ProtoMessage() {}
 
-func (x *ListPersonalAccessTokensResponse) ProtoReflect() protoreflect.Message {
+func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -553,48 +553,48 @@ func (x *ListPersonalAccessTokensResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListPersonalAccessTokensResponse.ProtoReflect.Descriptor instead.
-func (*ListPersonalAccessTokensResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListApiKeysResponse.ProtoReflect.Descriptor instead.
+func (*ListApiKeysResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *ListPersonalAccessTokensResponse) GetAccessTokens() []*v1.AccessToken {
+func (x *ListApiKeysResponse) GetApiKeys() []*v1.ApiKey {
 	if x != nil {
-		return x.AccessTokens
+		return x.ApiKeys
 	}
 	return nil
 }
 
-func (x *ListPersonalAccessTokensResponse) GetNextPageToken() string {
+func (x *ListApiKeysResponse) GetNextPageToken() string {
 	if x != nil {
 		return x.NextPageToken
 	}
 	return ""
 }
 
-// GetPersonalAccessTokenRequest identifies a PAT to retrieve.
-type GetPersonalAccessTokenRequest struct {
+// GetApiKeyRequest identifies an API key to retrieve.
+type GetApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the token (UUID).
+	// The unique identifier of the key (UUID).
 	TokenId       string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetPersonalAccessTokenRequest) Reset() {
-	*x = GetPersonalAccessTokenRequest{}
+func (x *GetApiKeyRequest) Reset() {
+	*x = GetApiKeyRequest{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetPersonalAccessTokenRequest) String() string {
+func (x *GetApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetPersonalAccessTokenRequest) ProtoMessage() {}
+func (*GetApiKeyRequest) ProtoMessage() {}
 
-func (x *GetPersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *GetApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -606,41 +606,41 @@ func (x *GetPersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetPersonalAccessTokenRequest.ProtoReflect.Descriptor instead.
-func (*GetPersonalAccessTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*GetApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *GetPersonalAccessTokenRequest) GetTokenId() string {
+func (x *GetApiKeyRequest) GetTokenId() string {
 	if x != nil {
 		return x.TokenId
 	}
 	return ""
 }
 
-// GetPersonalAccessTokenResponse contains the requested PAT metadata.
-type GetPersonalAccessTokenResponse struct {
+// GetApiKeyResponse contains the requested API key metadata.
+type GetApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The token metadata. The token secret is never included.
-	AccessToken   *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	// The key metadata. The key secret is never included.
+	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetPersonalAccessTokenResponse) Reset() {
-	*x = GetPersonalAccessTokenResponse{}
+func (x *GetApiKeyResponse) Reset() {
+	*x = GetApiKeyResponse{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetPersonalAccessTokenResponse) String() string {
+func (x *GetApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetPersonalAccessTokenResponse) ProtoMessage() {}
+func (*GetApiKeyResponse) ProtoMessage() {}
 
-func (x *GetPersonalAccessTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *GetApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -652,50 +652,50 @@ func (x *GetPersonalAccessTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetPersonalAccessTokenResponse.ProtoReflect.Descriptor instead.
-func (*GetPersonalAccessTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*GetApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *GetPersonalAccessTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *GetApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
 
-// UpdatePersonalAccessTokenRequest contains the fields to update on a PAT.
+// UpdateApiKeyRequest contains the fields to update on an API key.
 // Only provided fields are updated; omitted fields remain unchanged.
-type UpdatePersonalAccessTokenRequest struct {
+type UpdateApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the token to update (UUID).
+	// The unique identifier of the key to update (UUID).
 	TokenId string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
-	// New name for the token. Must follow the same naming rules as creation.
+	// New name for the key. Must follow the same naming rules as creation.
 	// Omit to leave the name unchanged.
 	Name *string `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
-	// New scopes for the token. Replaces all existing scopes.
+	// New scopes for the key. Replaces all existing scopes.
 	// The server enforces that issued scopes are a subset of the caller's own
-	// scopes. A token cannot grant more access than the user holds.
+	// scopes. A key cannot grant more access than the user holds.
 	// Omit to leave scopes unchanged.
 	Scopes        []string `protobuf:"bytes,3,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdatePersonalAccessTokenRequest) Reset() {
-	*x = UpdatePersonalAccessTokenRequest{}
+func (x *UpdateApiKeyRequest) Reset() {
+	*x = UpdateApiKeyRequest{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdatePersonalAccessTokenRequest) String() string {
+func (x *UpdateApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdatePersonalAccessTokenRequest) ProtoMessage() {}
+func (*UpdateApiKeyRequest) ProtoMessage() {}
 
-func (x *UpdatePersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *UpdateApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -707,55 +707,55 @@ func (x *UpdatePersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdatePersonalAccessTokenRequest.ProtoReflect.Descriptor instead.
-func (*UpdatePersonalAccessTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdateApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*UpdateApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *UpdatePersonalAccessTokenRequest) GetTokenId() string {
+func (x *UpdateApiKeyRequest) GetTokenId() string {
 	if x != nil {
 		return x.TokenId
 	}
 	return ""
 }
 
-func (x *UpdatePersonalAccessTokenRequest) GetName() string {
+func (x *UpdateApiKeyRequest) GetName() string {
 	if x != nil && x.Name != nil {
 		return *x.Name
 	}
 	return ""
 }
 
-func (x *UpdatePersonalAccessTokenRequest) GetScopes() []string {
+func (x *UpdateApiKeyRequest) GetScopes() []string {
 	if x != nil {
 		return x.Scopes
 	}
 	return nil
 }
 
-// UpdatePersonalAccessTokenResponse contains the updated PAT metadata.
-type UpdatePersonalAccessTokenResponse struct {
+// UpdateApiKeyResponse contains the updated API key metadata.
+type UpdateApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The updated token metadata.
-	AccessToken   *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	// The updated key metadata.
+	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdatePersonalAccessTokenResponse) Reset() {
-	*x = UpdatePersonalAccessTokenResponse{}
+func (x *UpdateApiKeyResponse) Reset() {
+	*x = UpdateApiKeyResponse{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdatePersonalAccessTokenResponse) String() string {
+func (x *UpdateApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdatePersonalAccessTokenResponse) ProtoMessage() {}
+func (*UpdateApiKeyResponse) ProtoMessage() {}
 
-func (x *UpdatePersonalAccessTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *UpdateApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -767,41 +767,41 @@ func (x *UpdatePersonalAccessTokenResponse) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdatePersonalAccessTokenResponse.ProtoReflect.Descriptor instead.
-func (*UpdatePersonalAccessTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdateApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*UpdateApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *UpdatePersonalAccessTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *UpdateApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
 
-// RevokePersonalAccessTokenRequest identifies a PAT to revoke.
-type RevokePersonalAccessTokenRequest struct {
+// RevokeApiKeyRequest identifies an API key to revoke.
+type RevokeApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the token to revoke (UUID).
+	// The unique identifier of the key to revoke (UUID).
 	TokenId       string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RevokePersonalAccessTokenRequest) Reset() {
-	*x = RevokePersonalAccessTokenRequest{}
+func (x *RevokeApiKeyRequest) Reset() {
+	*x = RevokeApiKeyRequest{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RevokePersonalAccessTokenRequest) String() string {
+func (x *RevokeApiKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RevokePersonalAccessTokenRequest) ProtoMessage() {}
+func (*RevokeApiKeyRequest) ProtoMessage() {}
 
-func (x *RevokePersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *RevokeApiKeyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -813,41 +813,41 @@ func (x *RevokePersonalAccessTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RevokePersonalAccessTokenRequest.ProtoReflect.Descriptor instead.
-func (*RevokePersonalAccessTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use RevokeApiKeyRequest.ProtoReflect.Descriptor instead.
+func (*RevokeApiKeyRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *RevokePersonalAccessTokenRequest) GetTokenId() string {
+func (x *RevokeApiKeyRequest) GetTokenId() string {
 	if x != nil {
 		return x.TokenId
 	}
 	return ""
 }
 
-// RevokePersonalAccessTokenResponse contains the revoked PAT metadata.
-type RevokePersonalAccessTokenResponse struct {
+// RevokeApiKeyResponse contains the revoked API key metadata.
+type RevokeApiKeyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The token metadata with updated status.
-	AccessToken   *v1.AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	// The key metadata with updated status.
+	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RevokePersonalAccessTokenResponse) Reset() {
-	*x = RevokePersonalAccessTokenResponse{}
+func (x *RevokeApiKeyResponse) Reset() {
+	*x = RevokeApiKeyResponse{}
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RevokePersonalAccessTokenResponse) String() string {
+func (x *RevokeApiKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RevokePersonalAccessTokenResponse) ProtoMessage() {}
+func (*RevokeApiKeyResponse) ProtoMessage() {}
 
-func (x *RevokePersonalAccessTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *RevokeApiKeyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_user_v1_user_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -859,14 +859,14 @@ func (x *RevokePersonalAccessTokenResponse) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RevokePersonalAccessTokenResponse.ProtoReflect.Descriptor instead.
-func (*RevokePersonalAccessTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use RevokeApiKeyResponse.ProtoReflect.Descriptor instead.
+func (*RevokeApiKeyResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *RevokePersonalAccessTokenResponse) GetAccessToken() *v1.AccessToken {
+func (x *RevokeApiKeyResponse) GetApiKey() *v1.ApiKey {
 	if x != nil {
-		return x.AccessToken
+		return x.ApiKey
 	}
 	return nil
 }
@@ -875,7 +875,7 @@ var File_admiral_api_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x1eadmiral/api/user/v1/user.proto\x12\x13admiral.api.user.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1dadmiral/common/v1/token.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x03\n" +
+	"\x1eadmiral/api/user/v1/user.proto\x12\x13admiral.api.user.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1eadmiral/common/v1/apikey.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x03\n" +
 	"\x04User\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12%\n" +
@@ -901,59 +901,60 @@ const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"\x0eGetUserRequest\x12$\n" +
 	"\auser_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x06userId\"@\n" +
 	"\x0fGetUserResponse\x12-\n" +
-	"\x04user\x18\x01 \x01(\v2\x19.admiral.api.user.v1.UserR\x04user\"\xcd\x01\n" +
-	" CreatePersonalAccessTokenRequest\x12C\n" +
+	"\x04user\x18\x01 \x01(\v2\x19.admiral.api.user.v1.UserR\x04user\"\xc0\x01\n" +
+	"\x13CreateApiKeyRequest\x12C\n" +
 	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12)\n" +
 	"\x06scopes\x18\x02 \x03(\tB\x11\xbaH\x0e\x92\x01\v\x10\xff\x01\"\x06r\x04\x10\x01\x18@R\x06scopes\x129\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x90\x01\n" +
-	"!CreatePersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\x12(\n" +
-	"\x10plain_text_token\x18\x02 \x01(\tR\x0eplainTextToken\"\x8a\x01\n" +
-	"\x1fListPersonalAccessTokensRequest\x12 \n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"p\n" +
+	"\x14CreateApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\x12$\n" +
+	"\x0eplain_text_key\x18\x02 \x01(\tR\fplainTextKey\"}\n" +
+	"\x12ListApiKeysRequest\x12 \n" +
 	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8f\x01\n" +
-	" ListPersonalAccessTokensResponse\x12C\n" +
-	"\raccess_tokens\x18\x01 \x03(\v2\x1e.admiral.common.v1.AccessTokenR\faccessTokens\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"G\n" +
-	"\x1dGetPersonalAccessTokenRequest\x12&\n" +
-	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"c\n" +
-	"\x1eGetPersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"\xc5\x01\n" +
-	" UpdatePersonalAccessTokenRequest\x12&\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"s\n" +
+	"\x13ListApiKeysResponse\x124\n" +
+	"\bapi_keys\x18\x01 \x03(\v2\x19.admiral.common.v1.ApiKeyR\aapiKeys\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\":\n" +
+	"\x10GetApiKeyRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"G\n" +
+	"\x11GetApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\"\xb8\x01\n" +
+	"\x13UpdateApiKeyRequest\x12&\n" +
 	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\x12E\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$H\x00R\x04name\x88\x01\x01\x12)\n" +
 	"\x06scopes\x18\x03 \x03(\tB\x11\xbaH\x0e\x92\x01\v\x10\xff\x01\"\x06r\x04\x10\x01\x18@R\x06scopesB\a\n" +
-	"\x05_name\"f\n" +
-	"!UpdatePersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken\"J\n" +
-	" RevokePersonalAccessTokenRequest\x12&\n" +
-	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"f\n" +
-	"!RevokePersonalAccessTokenResponse\x12A\n" +
-	"\faccess_token\x18\x01 \x01(\v2\x1e.admiral.common.v1.AccessTokenR\vaccessToken2\x9a\f\n" +
+	"\x05_name\"J\n" +
+	"\x14UpdateApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\"=\n" +
+	"\x13RevokeApiKeyRequest\x12&\n" +
+	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"J\n" +
+	"\x14RevokeApiKeyResponse\x122\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey2\xd7\n" +
+	"\n" +
 	"\aUserAPI\x12\x8f\x01\n" +
 	"\x05GetMe\x12!.admiral.api.user.v1.GetMeRequest\x1a\".admiral.api.user.v1.GetMeResponse\"?\xbaG%\n" +
 	"\x04User\x12\x1dRetrieve current user profile\xa2\x97$\x00\x82\xd3\xe4\x93\x02\r\x12\v/v1/user/me\x12\xa0\x01\n" +
 	"\aGetUser\x12#.admiral.api.user.v1.GetUserRequest\x1a$.admiral.api.user.v1.GetUserResponse\"J\xbaG\x1d\n" +
 	"\x04User\x12\x15Retrieve a user by ID\xa2\x97$\v\n" +
-	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xf2\x01\n" +
-	"\x19CreatePersonalAccessToken\x125.admiral.api.user.v1.CreatePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.CreatePersonalAccessTokenResponse\"f\xbaG8\n" +
+	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xcb\x01\n" +
+	"\fCreateApiKey\x12(.admiral.api.user.v1.CreateApiKeyRequest\x1a).admiral.api.user.v1.CreateApiKeyResponse\"f\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eCreate a personal access token\xa2\x97$\r\n" +
-	"\vtoken:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/user/tokens\x12\xe8\x01\n" +
-	"\x18ListPersonalAccessTokens\x124.admiral.api.user.v1.ListPersonalAccessTokensRequest\x1a5.admiral.api.user.v1.ListPersonalAccessTokensResponse\"_\xbaG5\n" +
+	"\vtoken:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/user/tokens\x12\xc1\x01\n" +
+	"\vListApiKeys\x12'.admiral.api.user.v1.ListApiKeysRequest\x1a(.admiral.api.user.v1.ListApiKeysResponse\"_\xbaG5\n" +
 	"\x16Personal Access Tokens\x12\x1bList personal access tokens\xa2\x97$\f\n" +
 	"\n" +
-	"token:read\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/user/tokens\x12\xf2\x01\n" +
-	"\x16GetPersonalAccessToken\x122.admiral.api.user.v1.GetPersonalAccessTokenRequest\x1a3.admiral.api.user.v1.GetPersonalAccessTokenResponse\"o\xbaG:\n" +
+	"token:read\x82\xd3\xe4\x93\x02\x11\x12\x0f/v1/user/tokens\x12\xcb\x01\n" +
+	"\tGetApiKey\x12%.admiral.api.user.v1.GetApiKeyRequest\x1a&.admiral.api.user.v1.GetApiKeyResponse\"o\xbaG:\n" +
 	"\x16Personal Access Tokens\x12 Retrieve a personal access token\xa2\x97$\f\n" +
 	"\n" +
-	"token:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/user/tokens/{token_id}\x12\xfd\x01\n" +
-	"\x19UpdatePersonalAccessToken\x125.admiral.api.user.v1.UpdatePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.UpdatePersonalAccessTokenResponse\"q\xbaG8\n" +
+	"token:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/user/tokens/{token_id}\x12\xd6\x01\n" +
+	"\fUpdateApiKey\x12(.admiral.api.user.v1.UpdateApiKeyRequest\x1a).admiral.api.user.v1.UpdateApiKeyResponse\"q\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eUpdate a personal access token\xa2\x97$\r\n" +
-	"\vtoken:write\x82\xd3\xe4\x93\x02\x1f:\x01*2\x1a/v1/user/tokens/{token_id}\x12\x84\x02\n" +
-	"\x19RevokePersonalAccessToken\x125.admiral.api.user.v1.RevokePersonalAccessTokenRequest\x1a6.admiral.api.user.v1.RevokePersonalAccessTokenResponse\"x\xbaG8\n" +
+	"\vtoken:write\x82\xd3\xe4\x93\x02\x1f:\x01*2\x1a/v1/user/tokens/{token_id}\x12\xdd\x01\n" +
+	"\fRevokeApiKey\x12(.admiral.api.user.v1.RevokeApiKeyRequest\x1a).admiral.api.user.v1.RevokeApiKeyResponse\"x\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eRevoke a personal access token\xa2\x97$\r\n" +
 	"\vtoken:write\x82\xd3\xe4\x93\x02&:\x01*\"!/v1/user/tokens/{token_id}/revokeB\xc7\x01\n" +
 	"\x17com.admiral.api.user.v1B\tUserProtoP\x01Z2go.admiral.io/sdk/proto/admiral/api/user/v1;userv1\xa2\x02\x03AAU\xaa\x02\x13Admiral.Api.User.V1\xca\x02\x13Admiral\\Api\\User\\V1\xe2\x02\x1fAdmiral\\Api\\User\\V1\\GPBMetadata\xea\x02\x16Admiral::Api::User::V1b\x06proto3"
@@ -972,49 +973,49 @@ func file_admiral_api_user_v1_user_proto_rawDescGZIP() []byte {
 
 var file_admiral_api_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_admiral_api_user_v1_user_proto_goTypes = []any{
-	(*User)(nil),                              // 0: admiral.api.user.v1.User
-	(*GetMeRequest)(nil),                      // 1: admiral.api.user.v1.GetMeRequest
-	(*GetMeResponse)(nil),                     // 2: admiral.api.user.v1.GetMeResponse
-	(*GetUserRequest)(nil),                    // 3: admiral.api.user.v1.GetUserRequest
-	(*GetUserResponse)(nil),                   // 4: admiral.api.user.v1.GetUserResponse
-	(*CreatePersonalAccessTokenRequest)(nil),  // 5: admiral.api.user.v1.CreatePersonalAccessTokenRequest
-	(*CreatePersonalAccessTokenResponse)(nil), // 6: admiral.api.user.v1.CreatePersonalAccessTokenResponse
-	(*ListPersonalAccessTokensRequest)(nil),   // 7: admiral.api.user.v1.ListPersonalAccessTokensRequest
-	(*ListPersonalAccessTokensResponse)(nil),  // 8: admiral.api.user.v1.ListPersonalAccessTokensResponse
-	(*GetPersonalAccessTokenRequest)(nil),     // 9: admiral.api.user.v1.GetPersonalAccessTokenRequest
-	(*GetPersonalAccessTokenResponse)(nil),    // 10: admiral.api.user.v1.GetPersonalAccessTokenResponse
-	(*UpdatePersonalAccessTokenRequest)(nil),  // 11: admiral.api.user.v1.UpdatePersonalAccessTokenRequest
-	(*UpdatePersonalAccessTokenResponse)(nil), // 12: admiral.api.user.v1.UpdatePersonalAccessTokenResponse
-	(*RevokePersonalAccessTokenRequest)(nil),  // 13: admiral.api.user.v1.RevokePersonalAccessTokenRequest
-	(*RevokePersonalAccessTokenResponse)(nil), // 14: admiral.api.user.v1.RevokePersonalAccessTokenResponse
-	(*timestamppb.Timestamp)(nil),             // 15: google.protobuf.Timestamp
-	(*v1.AccessToken)(nil),                    // 16: admiral.common.v1.AccessToken
+	(*User)(nil),                  // 0: admiral.api.user.v1.User
+	(*GetMeRequest)(nil),          // 1: admiral.api.user.v1.GetMeRequest
+	(*GetMeResponse)(nil),         // 2: admiral.api.user.v1.GetMeResponse
+	(*GetUserRequest)(nil),        // 3: admiral.api.user.v1.GetUserRequest
+	(*GetUserResponse)(nil),       // 4: admiral.api.user.v1.GetUserResponse
+	(*CreateApiKeyRequest)(nil),   // 5: admiral.api.user.v1.CreateApiKeyRequest
+	(*CreateApiKeyResponse)(nil),  // 6: admiral.api.user.v1.CreateApiKeyResponse
+	(*ListApiKeysRequest)(nil),    // 7: admiral.api.user.v1.ListApiKeysRequest
+	(*ListApiKeysResponse)(nil),   // 8: admiral.api.user.v1.ListApiKeysResponse
+	(*GetApiKeyRequest)(nil),      // 9: admiral.api.user.v1.GetApiKeyRequest
+	(*GetApiKeyResponse)(nil),     // 10: admiral.api.user.v1.GetApiKeyResponse
+	(*UpdateApiKeyRequest)(nil),   // 11: admiral.api.user.v1.UpdateApiKeyRequest
+	(*UpdateApiKeyResponse)(nil),  // 12: admiral.api.user.v1.UpdateApiKeyResponse
+	(*RevokeApiKeyRequest)(nil),   // 13: admiral.api.user.v1.RevokeApiKeyRequest
+	(*RevokeApiKeyResponse)(nil),  // 14: admiral.api.user.v1.RevokeApiKeyResponse
+	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
+	(*v1.ApiKey)(nil),             // 16: admiral.common.v1.ApiKey
 }
 var file_admiral_api_user_v1_user_proto_depIdxs = []int32{
 	15, // 0: admiral.api.user.v1.User.created_at:type_name -> google.protobuf.Timestamp
 	15, // 1: admiral.api.user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: admiral.api.user.v1.GetMeResponse.user:type_name -> admiral.api.user.v1.User
 	0,  // 3: admiral.api.user.v1.GetUserResponse.user:type_name -> admiral.api.user.v1.User
-	15, // 4: admiral.api.user.v1.CreatePersonalAccessTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
-	16, // 5: admiral.api.user.v1.CreatePersonalAccessTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	16, // 6: admiral.api.user.v1.ListPersonalAccessTokensResponse.access_tokens:type_name -> admiral.common.v1.AccessToken
-	16, // 7: admiral.api.user.v1.GetPersonalAccessTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	16, // 8: admiral.api.user.v1.UpdatePersonalAccessTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
-	16, // 9: admiral.api.user.v1.RevokePersonalAccessTokenResponse.access_token:type_name -> admiral.common.v1.AccessToken
+	15, // 4: admiral.api.user.v1.CreateApiKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
+	16, // 5: admiral.api.user.v1.CreateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	16, // 6: admiral.api.user.v1.ListApiKeysResponse.api_keys:type_name -> admiral.common.v1.ApiKey
+	16, // 7: admiral.api.user.v1.GetApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	16, // 8: admiral.api.user.v1.UpdateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	16, // 9: admiral.api.user.v1.RevokeApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
 	1,  // 10: admiral.api.user.v1.UserAPI.GetMe:input_type -> admiral.api.user.v1.GetMeRequest
 	3,  // 11: admiral.api.user.v1.UserAPI.GetUser:input_type -> admiral.api.user.v1.GetUserRequest
-	5,  // 12: admiral.api.user.v1.UserAPI.CreatePersonalAccessToken:input_type -> admiral.api.user.v1.CreatePersonalAccessTokenRequest
-	7,  // 13: admiral.api.user.v1.UserAPI.ListPersonalAccessTokens:input_type -> admiral.api.user.v1.ListPersonalAccessTokensRequest
-	9,  // 14: admiral.api.user.v1.UserAPI.GetPersonalAccessToken:input_type -> admiral.api.user.v1.GetPersonalAccessTokenRequest
-	11, // 15: admiral.api.user.v1.UserAPI.UpdatePersonalAccessToken:input_type -> admiral.api.user.v1.UpdatePersonalAccessTokenRequest
-	13, // 16: admiral.api.user.v1.UserAPI.RevokePersonalAccessToken:input_type -> admiral.api.user.v1.RevokePersonalAccessTokenRequest
+	5,  // 12: admiral.api.user.v1.UserAPI.CreateApiKey:input_type -> admiral.api.user.v1.CreateApiKeyRequest
+	7,  // 13: admiral.api.user.v1.UserAPI.ListApiKeys:input_type -> admiral.api.user.v1.ListApiKeysRequest
+	9,  // 14: admiral.api.user.v1.UserAPI.GetApiKey:input_type -> admiral.api.user.v1.GetApiKeyRequest
+	11, // 15: admiral.api.user.v1.UserAPI.UpdateApiKey:input_type -> admiral.api.user.v1.UpdateApiKeyRequest
+	13, // 16: admiral.api.user.v1.UserAPI.RevokeApiKey:input_type -> admiral.api.user.v1.RevokeApiKeyRequest
 	2,  // 17: admiral.api.user.v1.UserAPI.GetMe:output_type -> admiral.api.user.v1.GetMeResponse
 	4,  // 18: admiral.api.user.v1.UserAPI.GetUser:output_type -> admiral.api.user.v1.GetUserResponse
-	6,  // 19: admiral.api.user.v1.UserAPI.CreatePersonalAccessToken:output_type -> admiral.api.user.v1.CreatePersonalAccessTokenResponse
-	8,  // 20: admiral.api.user.v1.UserAPI.ListPersonalAccessTokens:output_type -> admiral.api.user.v1.ListPersonalAccessTokensResponse
-	10, // 21: admiral.api.user.v1.UserAPI.GetPersonalAccessToken:output_type -> admiral.api.user.v1.GetPersonalAccessTokenResponse
-	12, // 22: admiral.api.user.v1.UserAPI.UpdatePersonalAccessToken:output_type -> admiral.api.user.v1.UpdatePersonalAccessTokenResponse
-	14, // 23: admiral.api.user.v1.UserAPI.RevokePersonalAccessToken:output_type -> admiral.api.user.v1.RevokePersonalAccessTokenResponse
+	6,  // 19: admiral.api.user.v1.UserAPI.CreateApiKey:output_type -> admiral.api.user.v1.CreateApiKeyResponse
+	8,  // 20: admiral.api.user.v1.UserAPI.ListApiKeys:output_type -> admiral.api.user.v1.ListApiKeysResponse
+	10, // 21: admiral.api.user.v1.UserAPI.GetApiKey:output_type -> admiral.api.user.v1.GetApiKeyResponse
+	12, // 22: admiral.api.user.v1.UserAPI.UpdateApiKey:output_type -> admiral.api.user.v1.UpdateApiKeyResponse
+	14, // 23: admiral.api.user.v1.UserAPI.RevokeApiKey:output_type -> admiral.api.user.v1.RevokeApiKeyResponse
 	17, // [17:24] is the sub-list for method output_type
 	10, // [10:17] is the sub-list for method input_type
 	10, // [10:10] is the sub-list for extension type_name

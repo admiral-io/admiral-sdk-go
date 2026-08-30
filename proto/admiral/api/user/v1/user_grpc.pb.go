@@ -19,62 +19,64 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserAPI_GetMe_FullMethodName                     = "/admiral.api.user.v1.UserAPI/GetMe"
-	UserAPI_GetUser_FullMethodName                   = "/admiral.api.user.v1.UserAPI/GetUser"
-	UserAPI_CreatePersonalAccessToken_FullMethodName = "/admiral.api.user.v1.UserAPI/CreatePersonalAccessToken"
-	UserAPI_ListPersonalAccessTokens_FullMethodName  = "/admiral.api.user.v1.UserAPI/ListPersonalAccessTokens"
-	UserAPI_GetPersonalAccessToken_FullMethodName    = "/admiral.api.user.v1.UserAPI/GetPersonalAccessToken"
-	UserAPI_UpdatePersonalAccessToken_FullMethodName = "/admiral.api.user.v1.UserAPI/UpdatePersonalAccessToken"
-	UserAPI_RevokePersonalAccessToken_FullMethodName = "/admiral.api.user.v1.UserAPI/RevokePersonalAccessToken"
+	UserAPI_GetMe_FullMethodName        = "/admiral.api.user.v1.UserAPI/GetMe"
+	UserAPI_GetUser_FullMethodName      = "/admiral.api.user.v1.UserAPI/GetUser"
+	UserAPI_CreateApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/CreateApiKey"
+	UserAPI_ListApiKeys_FullMethodName  = "/admiral.api.user.v1.UserAPI/ListApiKeys"
+	UserAPI_GetApiKey_FullMethodName    = "/admiral.api.user.v1.UserAPI/GetApiKey"
+	UserAPI_UpdateApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/UpdateApiKey"
+	UserAPI_RevokeApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/RevokeApiKey"
 )
 
 // UserAPIClient is the client API for UserAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UserAPI provides operations for user profile retrieval and Personal Access
-// Token (PAT) management.
+// UserAPI provides operations for user profile retrieval and management of the
+// caller's own API keys.
 //
-// PATs allow users to authenticate with the Admiral API from scripts, CI
-// pipelines, and other programmatic contexts. Each PAT has user-selected
-// scopes and an optional expiration.
+// An API key here is bound to the calling user (BINDING_TYPE_USER) and lets them
+// authenticate from scripts, CI pipelines, and other programmatic contexts. Its
+// scopes are selected at creation and it may carry an expiration. Personal
+// access token is the same thing said in user-facing words, and the REST routes
+// and generated documentation keep that name; the contract has one noun.
 type UserAPIClient interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
 	//
-	// Scope: any authenticated token (no specific scope required).
+	// Scope: any authenticated key (no specific scope required).
 	GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*GetMeResponse, error)
 	// GetUser retrieves a user's profile by ID.
 	//
 	// Scope: `user:read`
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	// CreatePersonalAccessToken creates a new PAT for the authenticated user.
-	// The response includes the raw token secret, which is shown exactly once
+	// CreateApiKey creates a new API key for the authenticated user.
+	// The response includes the raw secret, which is shown exactly once
 	// and cannot be retrieved again.
 	//
 	// Scope: `token:write`
-	CreatePersonalAccessToken(ctx context.Context, in *CreatePersonalAccessTokenRequest, opts ...grpc.CallOption) (*CreatePersonalAccessTokenResponse, error)
-	// ListPersonalAccessTokens returns a paginated list of the authenticated
-	// user's PATs. Token secrets are never included.
+	CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error)
+	// ListApiKeys returns a paginated list of the authenticated user's own API
+	// keys. Secrets are never included.
 	//
 	// Scope: `token:read`
-	ListPersonalAccessTokens(ctx context.Context, in *ListPersonalAccessTokensRequest, opts ...grpc.CallOption) (*ListPersonalAccessTokensResponse, error)
-	// GetPersonalAccessToken retrieves a single PAT by ID.
-	// Returns metadata only. The token secret is never included.
+	ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error)
+	// GetApiKey retrieves a single API key by ID.
+	// Returns metadata only. The key secret is never included.
 	//
 	// Scope: `token:read`
-	GetPersonalAccessToken(ctx context.Context, in *GetPersonalAccessTokenRequest, opts ...grpc.CallOption) (*GetPersonalAccessTokenResponse, error)
-	// UpdatePersonalAccessToken updates a PAT's mutable fields (name, scopes).
-	// Only active tokens can be updated. The token secret and expiration are
+	GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error)
+	// UpdateApiKey updates an API key's mutable fields (name, scopes).
+	// Only active keys can be updated. The secret and expiration are
 	// immutable after creation.
 	//
 	// Scope: `token:write`
-	UpdatePersonalAccessToken(ctx context.Context, in *UpdatePersonalAccessTokenRequest, opts ...grpc.CallOption) (*UpdatePersonalAccessTokenResponse, error)
-	// RevokePersonalAccessToken permanently revokes a PAT. The token becomes
+	UpdateApiKey(ctx context.Context, in *UpdateApiKeyRequest, opts ...grpc.CallOption) (*UpdateApiKeyResponse, error)
+	// RevokeApiKey permanently revokes an API key. The key becomes
 	// immediately unusable and cannot be restored.
 	//
 	// Scope: `token:write`
-	RevokePersonalAccessToken(ctx context.Context, in *RevokePersonalAccessTokenRequest, opts ...grpc.CallOption) (*RevokePersonalAccessTokenResponse, error)
+	RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error)
 }
 
 type userAPIClient struct {
@@ -105,50 +107,50 @@ func (c *userAPIClient) GetUser(ctx context.Context, in *GetUserRequest, opts ..
 	return out, nil
 }
 
-func (c *userAPIClient) CreatePersonalAccessToken(ctx context.Context, in *CreatePersonalAccessTokenRequest, opts ...grpc.CallOption) (*CreatePersonalAccessTokenResponse, error) {
+func (c *userAPIClient) CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreatePersonalAccessTokenResponse)
-	err := c.cc.Invoke(ctx, UserAPI_CreatePersonalAccessToken_FullMethodName, in, out, cOpts...)
+	out := new(CreateApiKeyResponse)
+	err := c.cc.Invoke(ctx, UserAPI_CreateApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAPIClient) ListPersonalAccessTokens(ctx context.Context, in *ListPersonalAccessTokensRequest, opts ...grpc.CallOption) (*ListPersonalAccessTokensResponse, error) {
+func (c *userAPIClient) ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListPersonalAccessTokensResponse)
-	err := c.cc.Invoke(ctx, UserAPI_ListPersonalAccessTokens_FullMethodName, in, out, cOpts...)
+	out := new(ListApiKeysResponse)
+	err := c.cc.Invoke(ctx, UserAPI_ListApiKeys_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAPIClient) GetPersonalAccessToken(ctx context.Context, in *GetPersonalAccessTokenRequest, opts ...grpc.CallOption) (*GetPersonalAccessTokenResponse, error) {
+func (c *userAPIClient) GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetPersonalAccessTokenResponse)
-	err := c.cc.Invoke(ctx, UserAPI_GetPersonalAccessToken_FullMethodName, in, out, cOpts...)
+	out := new(GetApiKeyResponse)
+	err := c.cc.Invoke(ctx, UserAPI_GetApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAPIClient) UpdatePersonalAccessToken(ctx context.Context, in *UpdatePersonalAccessTokenRequest, opts ...grpc.CallOption) (*UpdatePersonalAccessTokenResponse, error) {
+func (c *userAPIClient) UpdateApiKey(ctx context.Context, in *UpdateApiKeyRequest, opts ...grpc.CallOption) (*UpdateApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdatePersonalAccessTokenResponse)
-	err := c.cc.Invoke(ctx, UserAPI_UpdatePersonalAccessToken_FullMethodName, in, out, cOpts...)
+	out := new(UpdateApiKeyResponse)
+	err := c.cc.Invoke(ctx, UserAPI_UpdateApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAPIClient) RevokePersonalAccessToken(ctx context.Context, in *RevokePersonalAccessTokenRequest, opts ...grpc.CallOption) (*RevokePersonalAccessTokenResponse, error) {
+func (c *userAPIClient) RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RevokePersonalAccessTokenResponse)
-	err := c.cc.Invoke(ctx, UserAPI_RevokePersonalAccessToken_FullMethodName, in, out, cOpts...)
+	out := new(RevokeApiKeyResponse)
+	err := c.cc.Invoke(ctx, UserAPI_RevokeApiKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -159,49 +161,51 @@ func (c *userAPIClient) RevokePersonalAccessToken(ctx context.Context, in *Revok
 // All implementations should embed UnimplementedUserAPIServer
 // for forward compatibility.
 //
-// UserAPI provides operations for user profile retrieval and Personal Access
-// Token (PAT) management.
+// UserAPI provides operations for user profile retrieval and management of the
+// caller's own API keys.
 //
-// PATs allow users to authenticate with the Admiral API from scripts, CI
-// pipelines, and other programmatic contexts. Each PAT has user-selected
-// scopes and an optional expiration.
+// An API key here is bound to the calling user (BINDING_TYPE_USER) and lets them
+// authenticate from scripts, CI pipelines, and other programmatic contexts. Its
+// scopes are selected at creation and it may carry an expiration. Personal
+// access token is the same thing said in user-facing words, and the REST routes
+// and generated documentation keep that name; the contract has one noun.
 type UserAPIServer interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
 	//
-	// Scope: any authenticated token (no specific scope required).
+	// Scope: any authenticated key (no specific scope required).
 	GetMe(context.Context, *GetMeRequest) (*GetMeResponse, error)
 	// GetUser retrieves a user's profile by ID.
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	// CreatePersonalAccessToken creates a new PAT for the authenticated user.
-	// The response includes the raw token secret, which is shown exactly once
+	// CreateApiKey creates a new API key for the authenticated user.
+	// The response includes the raw secret, which is shown exactly once
 	// and cannot be retrieved again.
 	//
 	// Scope: `token:write`
-	CreatePersonalAccessToken(context.Context, *CreatePersonalAccessTokenRequest) (*CreatePersonalAccessTokenResponse, error)
-	// ListPersonalAccessTokens returns a paginated list of the authenticated
-	// user's PATs. Token secrets are never included.
+	CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
+	// ListApiKeys returns a paginated list of the authenticated user's own API
+	// keys. Secrets are never included.
 	//
 	// Scope: `token:read`
-	ListPersonalAccessTokens(context.Context, *ListPersonalAccessTokensRequest) (*ListPersonalAccessTokensResponse, error)
-	// GetPersonalAccessToken retrieves a single PAT by ID.
-	// Returns metadata only. The token secret is never included.
+	ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error)
+	// GetApiKey retrieves a single API key by ID.
+	// Returns metadata only. The key secret is never included.
 	//
 	// Scope: `token:read`
-	GetPersonalAccessToken(context.Context, *GetPersonalAccessTokenRequest) (*GetPersonalAccessTokenResponse, error)
-	// UpdatePersonalAccessToken updates a PAT's mutable fields (name, scopes).
-	// Only active tokens can be updated. The token secret and expiration are
+	GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error)
+	// UpdateApiKey updates an API key's mutable fields (name, scopes).
+	// Only active keys can be updated. The secret and expiration are
 	// immutable after creation.
 	//
 	// Scope: `token:write`
-	UpdatePersonalAccessToken(context.Context, *UpdatePersonalAccessTokenRequest) (*UpdatePersonalAccessTokenResponse, error)
-	// RevokePersonalAccessToken permanently revokes a PAT. The token becomes
+	UpdateApiKey(context.Context, *UpdateApiKeyRequest) (*UpdateApiKeyResponse, error)
+	// RevokeApiKey permanently revokes an API key. The key becomes
 	// immediately unusable and cannot be restored.
 	//
 	// Scope: `token:write`
-	RevokePersonalAccessToken(context.Context, *RevokePersonalAccessTokenRequest) (*RevokePersonalAccessTokenResponse, error)
+	RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error)
 }
 
 // UnimplementedUserAPIServer should be embedded to have
@@ -217,20 +221,20 @@ func (UnimplementedUserAPIServer) GetMe(context.Context, *GetMeRequest) (*GetMeR
 func (UnimplementedUserAPIServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUser not implemented")
 }
-func (UnimplementedUserAPIServer) CreatePersonalAccessToken(context.Context, *CreatePersonalAccessTokenRequest) (*CreatePersonalAccessTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreatePersonalAccessToken not implemented")
+func (UnimplementedUserAPIServer) CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateApiKey not implemented")
 }
-func (UnimplementedUserAPIServer) ListPersonalAccessTokens(context.Context, *ListPersonalAccessTokensRequest) (*ListPersonalAccessTokensResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListPersonalAccessTokens not implemented")
+func (UnimplementedUserAPIServer) ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListApiKeys not implemented")
 }
-func (UnimplementedUserAPIServer) GetPersonalAccessToken(context.Context, *GetPersonalAccessTokenRequest) (*GetPersonalAccessTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetPersonalAccessToken not implemented")
+func (UnimplementedUserAPIServer) GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetApiKey not implemented")
 }
-func (UnimplementedUserAPIServer) UpdatePersonalAccessToken(context.Context, *UpdatePersonalAccessTokenRequest) (*UpdatePersonalAccessTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdatePersonalAccessToken not implemented")
+func (UnimplementedUserAPIServer) UpdateApiKey(context.Context, *UpdateApiKeyRequest) (*UpdateApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateApiKey not implemented")
 }
-func (UnimplementedUserAPIServer) RevokePersonalAccessToken(context.Context, *RevokePersonalAccessTokenRequest) (*RevokePersonalAccessTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RevokePersonalAccessToken not implemented")
+func (UnimplementedUserAPIServer) RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeApiKey not implemented")
 }
 func (UnimplementedUserAPIServer) testEmbeddedByValue() {}
 
@@ -288,92 +292,92 @@ func _UserAPI_GetUser_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAPI_CreatePersonalAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreatePersonalAccessTokenRequest)
+func _UserAPI_CreateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAPIServer).CreatePersonalAccessToken(ctx, in)
+		return srv.(UserAPIServer).CreateApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserAPI_CreatePersonalAccessToken_FullMethodName,
+		FullMethod: UserAPI_CreateApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).CreatePersonalAccessToken(ctx, req.(*CreatePersonalAccessTokenRequest))
+		return srv.(UserAPIServer).CreateApiKey(ctx, req.(*CreateApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAPI_ListPersonalAccessTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListPersonalAccessTokensRequest)
+func _UserAPI_ListApiKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListApiKeysRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAPIServer).ListPersonalAccessTokens(ctx, in)
+		return srv.(UserAPIServer).ListApiKeys(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserAPI_ListPersonalAccessTokens_FullMethodName,
+		FullMethod: UserAPI_ListApiKeys_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).ListPersonalAccessTokens(ctx, req.(*ListPersonalAccessTokensRequest))
+		return srv.(UserAPIServer).ListApiKeys(ctx, req.(*ListApiKeysRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAPI_GetPersonalAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetPersonalAccessTokenRequest)
+func _UserAPI_GetApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAPIServer).GetPersonalAccessToken(ctx, in)
+		return srv.(UserAPIServer).GetApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserAPI_GetPersonalAccessToken_FullMethodName,
+		FullMethod: UserAPI_GetApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).GetPersonalAccessToken(ctx, req.(*GetPersonalAccessTokenRequest))
+		return srv.(UserAPIServer).GetApiKey(ctx, req.(*GetApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAPI_UpdatePersonalAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdatePersonalAccessTokenRequest)
+func _UserAPI_UpdateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAPIServer).UpdatePersonalAccessToken(ctx, in)
+		return srv.(UserAPIServer).UpdateApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserAPI_UpdatePersonalAccessToken_FullMethodName,
+		FullMethod: UserAPI_UpdateApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).UpdatePersonalAccessToken(ctx, req.(*UpdatePersonalAccessTokenRequest))
+		return srv.(UserAPIServer).UpdateApiKey(ctx, req.(*UpdateApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAPI_RevokePersonalAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokePersonalAccessTokenRequest)
+func _UserAPI_RevokeApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeApiKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAPIServer).RevokePersonalAccessToken(ctx, in)
+		return srv.(UserAPIServer).RevokeApiKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserAPI_RevokePersonalAccessToken_FullMethodName,
+		FullMethod: UserAPI_RevokeApiKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).RevokePersonalAccessToken(ctx, req.(*RevokePersonalAccessTokenRequest))
+		return srv.(UserAPIServer).RevokeApiKey(ctx, req.(*RevokeApiKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -394,24 +398,24 @@ var UserAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserAPI_GetUser_Handler,
 		},
 		{
-			MethodName: "CreatePersonalAccessToken",
-			Handler:    _UserAPI_CreatePersonalAccessToken_Handler,
+			MethodName: "CreateApiKey",
+			Handler:    _UserAPI_CreateApiKey_Handler,
 		},
 		{
-			MethodName: "ListPersonalAccessTokens",
-			Handler:    _UserAPI_ListPersonalAccessTokens_Handler,
+			MethodName: "ListApiKeys",
+			Handler:    _UserAPI_ListApiKeys_Handler,
 		},
 		{
-			MethodName: "GetPersonalAccessToken",
-			Handler:    _UserAPI_GetPersonalAccessToken_Handler,
+			MethodName: "GetApiKey",
+			Handler:    _UserAPI_GetApiKey_Handler,
 		},
 		{
-			MethodName: "UpdatePersonalAccessToken",
-			Handler:    _UserAPI_UpdatePersonalAccessToken_Handler,
+			MethodName: "UpdateApiKey",
+			Handler:    _UserAPI_UpdateApiKey_Handler,
 		},
 		{
-			MethodName: "RevokePersonalAccessToken",
-			Handler:    _UserAPI_RevokePersonalAccessToken_Handler,
+			MethodName: "RevokeApiKey",
+			Handler:    _UserAPI_RevokeApiKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
