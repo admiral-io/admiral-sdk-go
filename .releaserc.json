@@ -1,10 +1,6 @@
 {
   "branches": [
-    "master",
-    {
-      "name": "next",
-      "prerelease": "rc"
-    }
+    "master"
   ],
   "plugins": [
     "@semantic-release/commit-analyzer",

@@ -73,8 +73,15 @@ type Scope struct {
 	// Implies lists directly implied scopes; see Covers for transitive
 	// coverage.
 	Implies []string
-	// AssignableTo is mint-time policy: the token types this scope may be
-	// attached to. Empty means documented-only, mintable by nothing.
+	// AssignableTo is mint-time policy: the credential types this scope may be
+	// attached to when one is issued. Always populated -- the catalog resolves
+	// the default rather than leaving it implied.
+	//
+	// EMPTY means mintable by NOTHING: the scope exists and guards an RPC, and no
+	// credential a user or administrator can create may carry it. Check it before
+	// offering a scope at creation time. A scope reachable through Implies from a
+	// mintable one is also mintable, which the catalog lint forbids for exactly
+	// these entries.
 	AssignableTo []string
 }
 
@@ -91,8 +98,9 @@ var Catalog = map[string]Scope{
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentRead: {
-		Name:        AgentRead,
-		Description: "Read agents, agent tokens, jobs, workloads, and workload events.",
+		Name:         AgentRead,
+		Description:  "Read agents, agent tokens, jobs, workloads, and workload events.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	AgentStatus: {
 		Name:         AgentStatus,
@@ -100,98 +108,119 @@ var Catalog = map[string]Scope{
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentWrite: {
-		Name:        AgentWrite,
-		Description: "Create, update, and delete agents; manage agent tokens and identity bindings.",
-		Implies:     []string{AgentRead},
+		Name:         AgentWrite,
+		Description:  "Create, update, and delete agents; manage agent tokens and identity bindings.",
+		Implies:      []string{AgentRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	AppRead: {
-		Name:        AppRead,
-		Description: "Read applications, change sets, and change set diffs.",
+		Name:         AppRead,
+		Description:  "Read applications, change sets, and change set diffs.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	AppWrite: {
-		Name:        AppWrite,
-		Description: "Create, update, and delete applications; manage change sets and their entries and variables.",
-		Implies:     []string{AppRead},
+		Name:         AppWrite,
+		Description:  "Create, update, and delete applications; manage change sets and their entries and variables.",
+		Implies:      []string{AppRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	CatalogRead: {
-		Name:        CatalogRead,
-		Description: "Read catalog items and resolve their content.",
+		Name:         CatalogRead,
+		Description:  "Read catalog items and resolve their content.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	CatalogWrite: {
-		Name:        CatalogWrite,
-		Description: "Create, update, and delete catalog items.",
-		Implies:     []string{CatalogRead},
+		Name:         CatalogWrite,
+		Description:  "Create, update, and delete catalog items.",
+		Implies:      []string{CatalogRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	CredentialRead: {
-		Name:        CredentialRead,
-		Description: "Read credentials.",
+		Name:         CredentialRead,
+		Description:  "Read credentials.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	CredentialWrite: {
-		Name:        CredentialWrite,
-		Description: "Create, update, and delete credentials.",
-		Implies:     []string{CredentialRead},
+		Name:         CredentialWrite,
+		Description:  "Create, update, and delete credentials.",
+		Implies:      []string{CredentialRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	EnvRead: {
-		Name:        EnvRead,
-		Description: "Read environments and their components.",
+		Name:         EnvRead,
+		Description:  "Read environments and their components.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	EnvWrite: {
-		Name:        EnvWrite,
-		Description: "Create, update, and delete environments.",
-		Implies:     []string{EnvRead},
+		Name:         EnvWrite,
+		Description:  "Create, update, and delete environments.",
+		Implies:      []string{EnvRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	RunRead: {
-		Name:        RunRead,
-		Description: "Read runs and revisions.",
+		Name:         RunRead,
+		Description:  "Read runs and revisions.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	RunWrite: {
-		Name:        RunWrite,
-		Description: "Create, apply, and cancel runs; retry revisions.",
-		Implies:     []string{RunRead},
+		Name:         RunWrite,
+		Description:  "Create, apply, and cancel runs; retry revisions.",
+		Implies:      []string{RunRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	SourceRead: {
-		Name:        SourceRead,
-		Description: "Read sources and source versions.",
+		Name:         SourceRead,
+		Description:  "Read sources and source versions.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	SourceWrite: {
-		Name:        SourceWrite,
-		Description: "Create, update, delete, and test sources.",
-		Implies:     []string{SourceRead},
+		Name:         SourceWrite,
+		Description:  "Create, update, delete, and test sources.",
+		Implies:      []string{SourceRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	TenantRead: {
-		Name:        TenantRead,
-		Description: "Read the caller's own tenant -- name, slug, and status.",
+		Name:         TenantRead,
+		Description:  "Read the caller's own tenant -- name, slug, and status.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	TenantWrite: {
-		Name:        TenantWrite,
-		Description: "Update the caller's own tenant's settings, and close it -- suspending or deleting the tenant you own. Which of those you may actually do is decided per tenant, not by holding this.",
-		Implies:     []string{TenantRead},
+		Name:         TenantWrite,
+		Description:  "Update the caller's own tenant's settings, and close it -- suspending or deleting the tenant you own. Which of those you may actually do is decided per tenant, not by holding this.",
+		Implies:      []string{TenantRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	TokenRead: {
-		Name:        TokenRead,
-		Description: "Read your own API keys.",
+		Name:         TokenRead,
+		Description:  "Read your own API keys.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	TokenResolve: {
-		Name:        TokenResolve,
-		Description: "Resolve a presented API key into the credential it identifies.",
+		Name:         TokenResolve,
+		Description:  "Resolve a presented API key into the credential it identifies.",
+		AssignableTo: []string{},
 	},
 	TokenWrite: {
-		Name:        TokenWrite,
-		Description: "Create, update, and revoke your own API keys.",
-		Implies:     []string{TokenRead},
+		Name:         TokenWrite,
+		Description:  "Create, update, and revoke your own API keys.",
+		Implies:      []string{TokenRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	UserRead: {
-		Name:        UserRead,
-		Description: "Read user profiles within your own tenant.",
+		Name:         UserRead,
+		Description:  "Read user profiles within your own tenant.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 	UserWrite: {
-		Name:        UserWrite,
-		Description: "Create users and manage their access -- suspending, reactivating, or offboarding them. Reach is decided per tenant rather than by holding this, so the same scope covers adding someone to your own tenant and an operator acting across the platform.",
-		Implies:     []string{UserRead},
+		Name:         UserWrite,
+		Description:  "Create users and manage their access -- suspending, reactivating, or offboarding them. Reach is decided per tenant rather than by holding this, so the same scope covers adding someone to your own tenant and an operator acting across the platform.",
+		Implies:      []string{UserRead},
+		AssignableTo: []string{TokenTypePAT},
 	},
 	VarRead: {
-		Name:        VarRead,
-		Description: "Read resolved environment variables, including secret values.",
+		Name:         VarRead,
+		Description:  "Read resolved environment variables, including secret values.",
+		AssignableTo: []string{TokenTypePAT},
 	},
 }
 
