@@ -62,6 +62,7 @@ const (
 	TokenResolve    = "token:resolve"
 	TokenWrite      = "token:write"
 	UserRead        = "user:read"
+	UserResolve     = "user:resolve"
 	UserWrite       = "user:write"
 	VarRead         = "var:read"
 )
@@ -210,6 +211,11 @@ var Catalog = map[string]Scope{
 		Name:         UserRead,
 		Description:  "Read user profiles within your own tenant.",
 		AssignableTo: []string{TokenTypePAT},
+	},
+	UserResolve: {
+		Name:         UserResolve,
+		Description:  "Resolve an address within a tenant into the user it identifies, for authentication. Narrower than user:read on purpose -- it answers one address in one tenant rather than listing a directory, so the sign-in service can authenticate without being able to enumerate anyone.",
+		AssignableTo: []string{},
 	},
 	UserWrite: {
 		Name:         UserWrite,
