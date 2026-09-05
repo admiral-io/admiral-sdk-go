@@ -57,13 +57,10 @@ const (
 	SourceRead      = "source:read"
 	SourceWrite     = "source:write"
 	TenantRead      = "tenant:read"
-	TenantResolve   = "tenant:resolve"
 	TenantWrite     = "tenant:write"
 	TokenRead       = "token:read"
-	TokenResolve    = "token:resolve"
 	TokenWrite      = "token:write"
 	UserRead        = "user:read"
-	UserResolve     = "user:resolve"
 	UserWrite       = "user:write"
 	VarRead         = "var:read"
 )
@@ -186,11 +183,6 @@ var Catalog = map[string]Scope{
 		Description:  "Read the caller's own tenant -- name, slug, and status.",
 		AssignableTo: []string{TokenTypePAT},
 	},
-	TenantResolve: {
-		Name:         TenantResolve,
-		Description:  "Find the tenants an address belongs to, before any tenant is known, so the sign-in service can ask which one to authenticate against. Deliberately not implied by tenant:read and not implied BY anything -- it is the one scope here that answers across tenants rather than within the caller's own, so holding it must be a separate decision every time.",
-		AssignableTo: []string{},
-	},
 	TenantWrite: {
 		Name:         TenantWrite,
 		Description:  "Update the caller's own tenant's settings, and close it -- suspending or deleting the tenant you own. Which of those you may actually do is decided per tenant, not by holding this.",
@@ -202,11 +194,6 @@ var Catalog = map[string]Scope{
 		Description:  "Read your own API keys.",
 		AssignableTo: []string{TokenTypePAT},
 	},
-	TokenResolve: {
-		Name:         TokenResolve,
-		Description:  "Resolve a presented API key into the credential it identifies.",
-		AssignableTo: []string{},
-	},
 	TokenWrite: {
 		Name:         TokenWrite,
 		Description:  "Create, update, and revoke your own API keys.",
@@ -217,11 +204,6 @@ var Catalog = map[string]Scope{
 		Name:         UserRead,
 		Description:  "Read user profiles within your own tenant.",
 		AssignableTo: []string{TokenTypePAT},
-	},
-	UserResolve: {
-		Name:         UserResolve,
-		Description:  "Resolve an address within a tenant into the user it identifies, for authentication. Narrower than user:read on purpose -- it answers one address in one tenant rather than listing a directory, so the sign-in service can authenticate without being able to enumerate anyone.",
-		AssignableTo: []string{},
 	},
 	UserWrite: {
 		Name:         UserWrite,
