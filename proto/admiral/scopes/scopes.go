@@ -57,6 +57,7 @@ const (
 	SourceRead      = "source:read"
 	SourceWrite     = "source:write"
 	TenantRead      = "tenant:read"
+	TenantResolve   = "tenant:resolve"
 	TenantWrite     = "tenant:write"
 	TokenRead       = "token:read"
 	TokenResolve    = "token:resolve"
@@ -184,6 +185,11 @@ var Catalog = map[string]Scope{
 		Name:         TenantRead,
 		Description:  "Read the caller's own tenant -- name, slug, and status.",
 		AssignableTo: []string{TokenTypePAT},
+	},
+	TenantResolve: {
+		Name:         TenantResolve,
+		Description:  "Find the tenants an address belongs to, before any tenant is known, so the sign-in service can ask which one to authenticate against. Deliberately not implied by tenant:read and not implied BY anything -- it is the one scope here that answers across tenants rather than within the caller's own, so holding it must be a separate decision every time.",
+		AssignableTo: []string{},
 	},
 	TenantWrite: {
 		Name:         TenantWrite,
