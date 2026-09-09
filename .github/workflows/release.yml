@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     # This repo is regenerated and pushed immediately after its schema lands on
     # the BSR, so it races proxy.golang.org's indexing of the stubs it imports.
     # Buf's proxy has them already; it 404s everything else and falls through.
@@ -46,7 +46,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
