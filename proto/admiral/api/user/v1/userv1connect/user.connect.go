@@ -37,6 +37,8 @@ const (
 	UserAPIGetMeProcedure = "/admiral.api.user.v1.UserAPI/GetMe"
 	// UserAPIGetUserProcedure is the fully-qualified name of the UserAPI's GetUser RPC.
 	UserAPIGetUserProcedure = "/admiral.api.user.v1.UserAPI/GetUser"
+	// UserAPIListUsersProcedure is the fully-qualified name of the UserAPI's ListUsers RPC.
+	UserAPIListUsersProcedure = "/admiral.api.user.v1.UserAPI/ListUsers"
 	// UserAPICreateApiKeyProcedure is the fully-qualified name of the UserAPI's CreateApiKey RPC.
 	UserAPICreateApiKeyProcedure = "/admiral.api.user.v1.UserAPI/CreateApiKey"
 	// UserAPIListApiKeysProcedure is the fully-qualified name of the UserAPI's ListApiKeys RPC.
@@ -60,6 +62,12 @@ type UserAPIClient interface {
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
+	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// has joined, whatever their role or status. People who have been invited but
+	// have not joined are not users yet; they are listed by InvitationAPI.
+	//
+	// Scope: `user:read`
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
 	// CreateApiKey creates a new API key for the authenticated user.
 	// The response includes the raw secret, which is shown exactly once
 	// and cannot be retrieved again.
@@ -112,6 +120,12 @@ func NewUserAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...con
 			connect.WithSchema(userAPIMethods.ByName("GetUser")),
 			connect.WithClientOptions(opts...),
 		),
+		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
+			httpClient,
+			baseURL+UserAPIListUsersProcedure,
+			connect.WithSchema(userAPIMethods.ByName("ListUsers")),
+			connect.WithClientOptions(opts...),
+		),
 		createApiKey: connect.NewClient[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse](
 			httpClient,
 			baseURL+UserAPICreateApiKeyProcedure,
@@ -149,6 +163,7 @@ func NewUserAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...con
 type userAPIClient struct {
 	getMe        *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
 	getUser      *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
+	listUsers    *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
 	createApiKey *connect.Client[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse]
 	listApiKeys  *connect.Client[v1.ListApiKeysRequest, v1.ListApiKeysResponse]
 	getApiKey    *connect.Client[v1.GetApiKeyRequest, v1.GetApiKeyResponse]
@@ -164,6 +179,11 @@ func (c *userAPIClient) GetMe(ctx context.Context, req *connect.Request[v1.GetMe
 // GetUser calls admiral.api.user.v1.UserAPI.GetUser.
 func (c *userAPIClient) GetUser(ctx context.Context, req *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
 	return c.getUser.CallUnary(ctx, req)
+}
+
+// ListUsers calls admiral.api.user.v1.UserAPI.ListUsers.
+func (c *userAPIClient) ListUsers(ctx context.Context, req *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return c.listUsers.CallUnary(ctx, req)
 }
 
 // CreateApiKey calls admiral.api.user.v1.UserAPI.CreateApiKey.
@@ -202,6 +222,12 @@ type UserAPIHandler interface {
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
+	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// has joined, whatever their role or status. People who have been invited but
+	// have not joined are not users yet; they are listed by InvitationAPI.
+	//
+	// Scope: `user:read`
+	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
 	// CreateApiKey creates a new API key for the authenticated user.
 	// The response includes the raw secret, which is shown exactly once
 	// and cannot be retrieved again.
@@ -250,6 +276,12 @@ func NewUserAPIHandler(svc UserAPIHandler, opts ...connect.HandlerOption) (strin
 		connect.WithSchema(userAPIMethods.ByName("GetUser")),
 		connect.WithHandlerOptions(opts...),
 	)
+	userAPIListUsersHandler := connect.NewUnaryHandler(
+		UserAPIListUsersProcedure,
+		svc.ListUsers,
+		connect.WithSchema(userAPIMethods.ByName("ListUsers")),
+		connect.WithHandlerOptions(opts...),
+	)
 	userAPICreateApiKeyHandler := connect.NewUnaryHandler(
 		UserAPICreateApiKeyProcedure,
 		svc.CreateApiKey,
@@ -286,6 +318,8 @@ func NewUserAPIHandler(svc UserAPIHandler, opts ...connect.HandlerOption) (strin
 			userAPIGetMeHandler.ServeHTTP(w, r)
 		case UserAPIGetUserProcedure:
 			userAPIGetUserHandler.ServeHTTP(w, r)
+		case UserAPIListUsersProcedure:
+			userAPIListUsersHandler.ServeHTTP(w, r)
 		case UserAPICreateApiKeyProcedure:
 			userAPICreateApiKeyHandler.ServeHTTP(w, r)
 		case UserAPIListApiKeysProcedure:
@@ -311,6 +345,10 @@ func (UnimplementedUserAPIHandler) GetMe(context.Context, *connect.Request[v1.Ge
 
 func (UnimplementedUserAPIHandler) GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.GetUser is not implemented"))
+}
+
+func (UnimplementedUserAPIHandler) ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.ListUsers is not implemented"))
 }
 
 func (UnimplementedUserAPIHandler) CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {

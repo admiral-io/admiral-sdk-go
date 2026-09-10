@@ -26,6 +26,125 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// UserRole is a member's standing in the tenant. The tiers imply one another
+// downward: an owner can do everything an administrator can, an administrator
+// everything a member can.
+type UserRole int32
+
+const (
+	// Default value. Must not be used.
+	UserRole_USER_ROLE_UNSPECIFIED UserRole = 0
+	// Owns the tenant. Exactly one per tenant; ownership moves by transfer, never
+	// by invitation.
+	UserRole_USER_ROLE_OWNER UserRole = 1
+	// Manages members and tenant settings.
+	UserRole_USER_ROLE_ADMIN UserRole = 2
+	// Ordinary membership.
+	UserRole_USER_ROLE_MEMBER UserRole = 3
+	// A member who may also create applications. An additive capability rather
+	// than a rung on the tier, reported here as the role the platform holds for
+	// the user.
+	UserRole_USER_ROLE_APP_CREATOR UserRole = 4
+)
+
+// Enum value maps for UserRole.
+var (
+	UserRole_name = map[int32]string{
+		0: "USER_ROLE_UNSPECIFIED",
+		1: "USER_ROLE_OWNER",
+		2: "USER_ROLE_ADMIN",
+		3: "USER_ROLE_MEMBER",
+		4: "USER_ROLE_APP_CREATOR",
+	}
+	UserRole_value = map[string]int32{
+		"USER_ROLE_UNSPECIFIED": 0,
+		"USER_ROLE_OWNER":       1,
+		"USER_ROLE_ADMIN":       2,
+		"USER_ROLE_MEMBER":      3,
+		"USER_ROLE_APP_CREATOR": 4,
+	}
+)
+
+func (x UserRole) Enum() *UserRole {
+	p := new(UserRole)
+	*p = x
+	return p
+}
+
+func (x UserRole) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (UserRole) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_user_v1_user_proto_enumTypes[0].Descriptor()
+}
+
+func (UserRole) Type() protoreflect.EnumType {
+	return &file_admiral_api_user_v1_user_proto_enumTypes[0]
+}
+
+func (x UserRole) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use UserRole.Descriptor instead.
+func (UserRole) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{0}
+}
+
+// UserStatus is whether a member can currently sign in.
+type UserStatus int32
+
+const (
+	// Default value. Must not be used.
+	UserStatus_USER_STATUS_UNSPECIFIED UserStatus = 0
+	// Can sign in and act.
+	UserStatus_USER_STATUS_ACTIVE UserStatus = 1
+	// Suspended by an administrator; cannot sign in until reactivated.
+	UserStatus_USER_STATUS_SUSPENDED UserStatus = 2
+)
+
+// Enum value maps for UserStatus.
+var (
+	UserStatus_name = map[int32]string{
+		0: "USER_STATUS_UNSPECIFIED",
+		1: "USER_STATUS_ACTIVE",
+		2: "USER_STATUS_SUSPENDED",
+	}
+	UserStatus_value = map[string]int32{
+		"USER_STATUS_UNSPECIFIED": 0,
+		"USER_STATUS_ACTIVE":      1,
+		"USER_STATUS_SUSPENDED":   2,
+	}
+)
+
+func (x UserStatus) Enum() *UserStatus {
+	p := new(UserStatus)
+	*p = x
+	return p
+}
+
+func (x UserStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (UserStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_user_v1_user_proto_enumTypes[1].Descriptor()
+}
+
+func (UserStatus) Type() protoreflect.EnumType {
+	return &file_admiral_api_user_v1_user_proto_enumTypes[1]
+}
+
+func (x UserStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use UserStatus.Descriptor instead.
+func (UserStatus) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{1}
+}
+
 // User represents a user's profile information.
 type User struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -46,7 +165,11 @@ type User struct {
 	// When the user was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the user was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// The user's standing in the tenant.
+	Role UserRole `protobuf:"varint,10,opt,name=role,proto3,enum=admiral.api.user.v1.UserRole" json:"role,omitempty"`
+	// Whether the user can currently sign in.
+	Status        UserStatus `protobuf:"varint,11,opt,name=status,proto3,enum=admiral.api.user.v1.UserStatus" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -142,6 +265,20 @@ func (x *User) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *User) GetRole() UserRole {
+	if x != nil {
+		return x.Role
+	}
+	return UserRole_USER_ROLE_UNSPECIFIED
+}
+
+func (x *User) GetStatus() UserStatus {
+	if x != nil {
+		return x.Status
+	}
+	return UserStatus_USER_STATUS_UNSPECIFIED
 }
 
 // GetMeRequest is the request message for GetMe.
@@ -320,6 +457,133 @@ func (x *GetUserResponse) GetUser() *User {
 	return nil
 }
 
+// ListUsersRequest pages through the members of the caller's tenant. The
+// tenant is never a parameter: it is the caller's own.
+type ListUsersRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
+	// API documentation for the full operator and predicate reference).
+	//
+	// Filterable fields:
+	//   - `email`: filter by address.
+	//   - `status`: filter by status.
+	//
+	// Example: `field['status'] = 'ACTIVE'`
+	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
+	// Maximum number of users to return per page. Defaults to 50 when omitted
+	// or 0; must not exceed 100.
+	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Opaque pagination token from a previous response.
+	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUsersRequest) Reset() {
+	*x = ListUsersRequest{}
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUsersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUsersRequest) ProtoMessage() {}
+
+func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUsersRequest.ProtoReflect.Descriptor instead.
+func (*ListUsersRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ListUsersRequest) GetFilter() string {
+	if x != nil {
+		return x.Filter
+	}
+	return ""
+}
+
+func (x *ListUsersRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListUsersRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+// ListUsersResponse contains a page of members.
+type ListUsersResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Users []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	// Pagination token for the next page. Empty when there are no more results.
+	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUsersResponse) Reset() {
+	*x = ListUsersResponse{}
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUsersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUsersResponse) ProtoMessage() {}
+
+func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUsersResponse.ProtoReflect.Descriptor instead.
+func (*ListUsersResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ListUsersResponse) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
+func (x *ListUsersResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
 // CreateApiKeyRequest contains the parameters for creating a new API key.
 type CreateApiKeyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -340,7 +604,7 @@ type CreateApiKeyRequest struct {
 
 func (x *CreateApiKeyRequest) Reset() {
 	*x = CreateApiKeyRequest{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[5]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -352,7 +616,7 @@ func (x *CreateApiKeyRequest) String() string {
 func (*CreateApiKeyRequest) ProtoMessage() {}
 
 func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[5]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -365,7 +629,7 @@ func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateApiKeyRequest.ProtoReflect.Descriptor instead.
 func (*CreateApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{5}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateApiKeyRequest) GetName() string {
@@ -403,7 +667,7 @@ type CreateApiKeyResponse struct {
 
 func (x *CreateApiKeyResponse) Reset() {
 	*x = CreateApiKeyResponse{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[6]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -415,7 +679,7 @@ func (x *CreateApiKeyResponse) String() string {
 func (*CreateApiKeyResponse) ProtoMessage() {}
 
 func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[6]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -428,7 +692,7 @@ func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateApiKeyResponse.ProtoReflect.Descriptor instead.
 func (*CreateApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{6}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateApiKeyResponse) GetApiKey() *v1.ApiKey {
@@ -468,7 +732,7 @@ type ListApiKeysRequest struct {
 
 func (x *ListApiKeysRequest) Reset() {
 	*x = ListApiKeysRequest{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[7]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -480,7 +744,7 @@ func (x *ListApiKeysRequest) String() string {
 func (*ListApiKeysRequest) ProtoMessage() {}
 
 func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[7]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -493,7 +757,7 @@ func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListApiKeysRequest.ProtoReflect.Descriptor instead.
 func (*ListApiKeysRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{7}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListApiKeysRequest) GetFilter() string {
@@ -530,7 +794,7 @@ type ListApiKeysResponse struct {
 
 func (x *ListApiKeysResponse) Reset() {
 	*x = ListApiKeysResponse{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[8]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -542,7 +806,7 @@ func (x *ListApiKeysResponse) String() string {
 func (*ListApiKeysResponse) ProtoMessage() {}
 
 func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[8]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -555,7 +819,7 @@ func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListApiKeysResponse.ProtoReflect.Descriptor instead.
 func (*ListApiKeysResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{8}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListApiKeysResponse) GetApiKeys() []*v1.ApiKey {
@@ -583,7 +847,7 @@ type GetApiKeyRequest struct {
 
 func (x *GetApiKeyRequest) Reset() {
 	*x = GetApiKeyRequest{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[9]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -595,7 +859,7 @@ func (x *GetApiKeyRequest) String() string {
 func (*GetApiKeyRequest) ProtoMessage() {}
 
 func (x *GetApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[9]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -608,7 +872,7 @@ func (x *GetApiKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetApiKeyRequest.ProtoReflect.Descriptor instead.
 func (*GetApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetApiKeyRequest) GetTokenId() string {
@@ -629,7 +893,7 @@ type GetApiKeyResponse struct {
 
 func (x *GetApiKeyResponse) Reset() {
 	*x = GetApiKeyResponse{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[10]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -641,7 +905,7 @@ func (x *GetApiKeyResponse) String() string {
 func (*GetApiKeyResponse) ProtoMessage() {}
 
 func (x *GetApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[10]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -654,7 +918,7 @@ func (x *GetApiKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetApiKeyResponse.ProtoReflect.Descriptor instead.
 func (*GetApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetApiKeyResponse) GetApiKey() *v1.ApiKey {
@@ -684,7 +948,7 @@ type UpdateApiKeyRequest struct {
 
 func (x *UpdateApiKeyRequest) Reset() {
 	*x = UpdateApiKeyRequest{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[11]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -696,7 +960,7 @@ func (x *UpdateApiKeyRequest) String() string {
 func (*UpdateApiKeyRequest) ProtoMessage() {}
 
 func (x *UpdateApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[11]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -709,7 +973,7 @@ func (x *UpdateApiKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateApiKeyRequest.ProtoReflect.Descriptor instead.
 func (*UpdateApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateApiKeyRequest) GetTokenId() string {
@@ -744,7 +1008,7 @@ type UpdateApiKeyResponse struct {
 
 func (x *UpdateApiKeyResponse) Reset() {
 	*x = UpdateApiKeyResponse{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[12]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -756,7 +1020,7 @@ func (x *UpdateApiKeyResponse) String() string {
 func (*UpdateApiKeyResponse) ProtoMessage() {}
 
 func (x *UpdateApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[12]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,7 +1033,7 @@ func (x *UpdateApiKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateApiKeyResponse.ProtoReflect.Descriptor instead.
 func (*UpdateApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateApiKeyResponse) GetApiKey() *v1.ApiKey {
@@ -790,7 +1054,7 @@ type RevokeApiKeyRequest struct {
 
 func (x *RevokeApiKeyRequest) Reset() {
 	*x = RevokeApiKeyRequest{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[13]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -802,7 +1066,7 @@ func (x *RevokeApiKeyRequest) String() string {
 func (*RevokeApiKeyRequest) ProtoMessage() {}
 
 func (x *RevokeApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[13]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -815,7 +1079,7 @@ func (x *RevokeApiKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeApiKeyRequest.ProtoReflect.Descriptor instead.
 func (*RevokeApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{13}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RevokeApiKeyRequest) GetTokenId() string {
@@ -836,7 +1100,7 @@ type RevokeApiKeyResponse struct {
 
 func (x *RevokeApiKeyResponse) Reset() {
 	*x = RevokeApiKeyResponse{}
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[14]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -848,7 +1112,7 @@ func (x *RevokeApiKeyResponse) String() string {
 func (*RevokeApiKeyResponse) ProtoMessage() {}
 
 func (x *RevokeApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_user_v1_user_proto_msgTypes[14]
+	mi := &file_admiral_api_user_v1_user_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -861,7 +1125,7 @@ func (x *RevokeApiKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeApiKeyResponse.ProtoReflect.Descriptor instead.
 func (*RevokeApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{14}
+	return file_admiral_api_user_v1_user_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *RevokeApiKeyResponse) GetApiKey() *v1.ApiKey {
@@ -875,7 +1139,7 @@ var File_admiral_api_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"\n" +
-	"\x1eadmiral/api/user/v1/user.proto\x12\x13admiral.api.user.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1eadmiral/common/v1/apikey.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa8\x03\n" +
+	"\x1eadmiral/api/user/v1/user.proto\x12\x13admiral.api.user.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1eadmiral/common/v1/apikey.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\x04\n" +
 	"\x04User\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12%\n" +
@@ -890,7 +1154,10 @@ const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x0f\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x126\n" +
+	"\x04role\x18\n" +
+	" \x01(\x0e2\x1d.admiral.api.user.v1.UserRoleB\x03\xe0A\x03R\x04role\x12<\n" +
+	"\x06status\x18\v \x01(\x0e2\x1f.admiral.api.user.v1.UserStatusB\x03\xe0A\x03R\x06statusB\x0f\n" +
 	"\r_display_nameB\r\n" +
 	"\v_given_nameB\x0e\n" +
 	"\f_family_nameB\r\n" +
@@ -901,7 +1168,15 @@ const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"\x0eGetUserRequest\x12$\n" +
 	"\auser_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x06userId\"@\n" +
 	"\x0fGetUserResponse\x12-\n" +
-	"\x04user\x18\x01 \x01(\v2\x19.admiral.api.user.v1.UserR\x04user\"\xc0\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x19.admiral.api.user.v1.UserR\x04user\"{\n" +
+	"\x10ListUsersRequest\x12 \n" +
+	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
+	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"l\n" +
+	"\x11ListUsersResponse\x12/\n" +
+	"\x05users\x18\x01 \x03(\v2\x19.admiral.api.user.v1.UserR\x05users\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xc0\x01\n" +
 	"\x13CreateApiKeyRequest\x12C\n" +
 	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12)\n" +
 	"\x06scopes\x18\x02 \x03(\tB\x11\xbaH\x0e\x92\x01\v\x10\xff\x01\"\x06r\x04\x10\x01\x18@R\x06scopes\x129\n" +
@@ -932,14 +1207,27 @@ const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"\x13RevokeApiKeyRequest\x12&\n" +
 	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"J\n" +
 	"\x14RevokeApiKeyResponse\x122\n" +
-	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey2\xd7\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey*\x80\x01\n" +
+	"\bUserRole\x12\x19\n" +
+	"\x15USER_ROLE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fUSER_ROLE_OWNER\x10\x01\x12\x13\n" +
+	"\x0fUSER_ROLE_ADMIN\x10\x02\x12\x14\n" +
+	"\x10USER_ROLE_MEMBER\x10\x03\x12\x19\n" +
+	"\x15USER_ROLE_APP_CREATOR\x10\x04*\\\n" +
 	"\n" +
+	"UserStatus\x12\x1b\n" +
+	"\x17USER_STATUS_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12USER_STATUS_ACTIVE\x10\x01\x12\x19\n" +
+	"\x15USER_STATUS_SUSPENDED\x10\x022\x87\f\n" +
 	"\aUserAPI\x12\x8f\x01\n" +
 	"\x05GetMe\x12!.admiral.api.user.v1.GetMeRequest\x1a\".admiral.api.user.v1.GetMeResponse\"?\xbaG%\n" +
 	"\x04User\x12\x1dRetrieve current user profile\xa2\x97$\x00\x82\xd3\xe4\x93\x02\r\x12\v/v1/user/me\x12\xa0\x01\n" +
 	"\aGetUser\x12#.admiral.api.user.v1.GetUserRequest\x1a$.admiral.api.user.v1.GetUserResponse\"J\xbaG\x1d\n" +
 	"\x04User\x12\x15Retrieve a user by ID\xa2\x97$\v\n" +
-	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xcb\x01\n" +
+	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xad\x01\n" +
+	"\tListUsers\x12%.admiral.api.user.v1.ListUsersRequest\x1a&.admiral.api.user.v1.ListUsersResponse\"Q\xbaG.\n" +
+	"\x04User\x12&List the members of the current tenant\xa2\x97$\v\n" +
+	"\tuser:read\x82\xd3\xe4\x93\x02\v\x12\t/v1/users\x12\xcb\x01\n" +
 	"\fCreateApiKey\x12(.admiral.api.user.v1.CreateApiKeyRequest\x1a).admiral.api.user.v1.CreateApiKeyResponse\"f\xbaG8\n" +
 	"\x16Personal Access Tokens\x12\x1eCreate a personal access token\xa2\x97$\r\n" +
 	"\vtoken:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/user/tokens\x12\xc1\x01\n" +
@@ -971,56 +1259,66 @@ func file_admiral_api_user_v1_user_proto_rawDescGZIP() []byte {
 	return file_admiral_api_user_v1_user_proto_rawDescData
 }
 
-var file_admiral_api_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_admiral_api_user_v1_user_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_admiral_api_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_admiral_api_user_v1_user_proto_goTypes = []any{
-	(*User)(nil),                  // 0: admiral.api.user.v1.User
-	(*GetMeRequest)(nil),          // 1: admiral.api.user.v1.GetMeRequest
-	(*GetMeResponse)(nil),         // 2: admiral.api.user.v1.GetMeResponse
-	(*GetUserRequest)(nil),        // 3: admiral.api.user.v1.GetUserRequest
-	(*GetUserResponse)(nil),       // 4: admiral.api.user.v1.GetUserResponse
-	(*CreateApiKeyRequest)(nil),   // 5: admiral.api.user.v1.CreateApiKeyRequest
-	(*CreateApiKeyResponse)(nil),  // 6: admiral.api.user.v1.CreateApiKeyResponse
-	(*ListApiKeysRequest)(nil),    // 7: admiral.api.user.v1.ListApiKeysRequest
-	(*ListApiKeysResponse)(nil),   // 8: admiral.api.user.v1.ListApiKeysResponse
-	(*GetApiKeyRequest)(nil),      // 9: admiral.api.user.v1.GetApiKeyRequest
-	(*GetApiKeyResponse)(nil),     // 10: admiral.api.user.v1.GetApiKeyResponse
-	(*UpdateApiKeyRequest)(nil),   // 11: admiral.api.user.v1.UpdateApiKeyRequest
-	(*UpdateApiKeyResponse)(nil),  // 12: admiral.api.user.v1.UpdateApiKeyResponse
-	(*RevokeApiKeyRequest)(nil),   // 13: admiral.api.user.v1.RevokeApiKeyRequest
-	(*RevokeApiKeyResponse)(nil),  // 14: admiral.api.user.v1.RevokeApiKeyResponse
-	(*timestamppb.Timestamp)(nil), // 15: google.protobuf.Timestamp
-	(*v1.ApiKey)(nil),             // 16: admiral.common.v1.ApiKey
+	(UserRole)(0),                 // 0: admiral.api.user.v1.UserRole
+	(UserStatus)(0),               // 1: admiral.api.user.v1.UserStatus
+	(*User)(nil),                  // 2: admiral.api.user.v1.User
+	(*GetMeRequest)(nil),          // 3: admiral.api.user.v1.GetMeRequest
+	(*GetMeResponse)(nil),         // 4: admiral.api.user.v1.GetMeResponse
+	(*GetUserRequest)(nil),        // 5: admiral.api.user.v1.GetUserRequest
+	(*GetUserResponse)(nil),       // 6: admiral.api.user.v1.GetUserResponse
+	(*ListUsersRequest)(nil),      // 7: admiral.api.user.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),     // 8: admiral.api.user.v1.ListUsersResponse
+	(*CreateApiKeyRequest)(nil),   // 9: admiral.api.user.v1.CreateApiKeyRequest
+	(*CreateApiKeyResponse)(nil),  // 10: admiral.api.user.v1.CreateApiKeyResponse
+	(*ListApiKeysRequest)(nil),    // 11: admiral.api.user.v1.ListApiKeysRequest
+	(*ListApiKeysResponse)(nil),   // 12: admiral.api.user.v1.ListApiKeysResponse
+	(*GetApiKeyRequest)(nil),      // 13: admiral.api.user.v1.GetApiKeyRequest
+	(*GetApiKeyResponse)(nil),     // 14: admiral.api.user.v1.GetApiKeyResponse
+	(*UpdateApiKeyRequest)(nil),   // 15: admiral.api.user.v1.UpdateApiKeyRequest
+	(*UpdateApiKeyResponse)(nil),  // 16: admiral.api.user.v1.UpdateApiKeyResponse
+	(*RevokeApiKeyRequest)(nil),   // 17: admiral.api.user.v1.RevokeApiKeyRequest
+	(*RevokeApiKeyResponse)(nil),  // 18: admiral.api.user.v1.RevokeApiKeyResponse
+	(*timestamppb.Timestamp)(nil), // 19: google.protobuf.Timestamp
+	(*v1.ApiKey)(nil),             // 20: admiral.common.v1.ApiKey
 }
 var file_admiral_api_user_v1_user_proto_depIdxs = []int32{
-	15, // 0: admiral.api.user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	15, // 1: admiral.api.user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: admiral.api.user.v1.GetMeResponse.user:type_name -> admiral.api.user.v1.User
-	0,  // 3: admiral.api.user.v1.GetUserResponse.user:type_name -> admiral.api.user.v1.User
-	15, // 4: admiral.api.user.v1.CreateApiKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
-	16, // 5: admiral.api.user.v1.CreateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	16, // 6: admiral.api.user.v1.ListApiKeysResponse.api_keys:type_name -> admiral.common.v1.ApiKey
-	16, // 7: admiral.api.user.v1.GetApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	16, // 8: admiral.api.user.v1.UpdateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	16, // 9: admiral.api.user.v1.RevokeApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	1,  // 10: admiral.api.user.v1.UserAPI.GetMe:input_type -> admiral.api.user.v1.GetMeRequest
-	3,  // 11: admiral.api.user.v1.UserAPI.GetUser:input_type -> admiral.api.user.v1.GetUserRequest
-	5,  // 12: admiral.api.user.v1.UserAPI.CreateApiKey:input_type -> admiral.api.user.v1.CreateApiKeyRequest
-	7,  // 13: admiral.api.user.v1.UserAPI.ListApiKeys:input_type -> admiral.api.user.v1.ListApiKeysRequest
-	9,  // 14: admiral.api.user.v1.UserAPI.GetApiKey:input_type -> admiral.api.user.v1.GetApiKeyRequest
-	11, // 15: admiral.api.user.v1.UserAPI.UpdateApiKey:input_type -> admiral.api.user.v1.UpdateApiKeyRequest
-	13, // 16: admiral.api.user.v1.UserAPI.RevokeApiKey:input_type -> admiral.api.user.v1.RevokeApiKeyRequest
-	2,  // 17: admiral.api.user.v1.UserAPI.GetMe:output_type -> admiral.api.user.v1.GetMeResponse
-	4,  // 18: admiral.api.user.v1.UserAPI.GetUser:output_type -> admiral.api.user.v1.GetUserResponse
-	6,  // 19: admiral.api.user.v1.UserAPI.CreateApiKey:output_type -> admiral.api.user.v1.CreateApiKeyResponse
-	8,  // 20: admiral.api.user.v1.UserAPI.ListApiKeys:output_type -> admiral.api.user.v1.ListApiKeysResponse
-	10, // 21: admiral.api.user.v1.UserAPI.GetApiKey:output_type -> admiral.api.user.v1.GetApiKeyResponse
-	12, // 22: admiral.api.user.v1.UserAPI.UpdateApiKey:output_type -> admiral.api.user.v1.UpdateApiKeyResponse
-	14, // 23: admiral.api.user.v1.UserAPI.RevokeApiKey:output_type -> admiral.api.user.v1.RevokeApiKeyResponse
-	17, // [17:24] is the sub-list for method output_type
-	10, // [10:17] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	19, // 0: admiral.api.user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	19, // 1: admiral.api.user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: admiral.api.user.v1.User.role:type_name -> admiral.api.user.v1.UserRole
+	1,  // 3: admiral.api.user.v1.User.status:type_name -> admiral.api.user.v1.UserStatus
+	2,  // 4: admiral.api.user.v1.GetMeResponse.user:type_name -> admiral.api.user.v1.User
+	2,  // 5: admiral.api.user.v1.GetUserResponse.user:type_name -> admiral.api.user.v1.User
+	2,  // 6: admiral.api.user.v1.ListUsersResponse.users:type_name -> admiral.api.user.v1.User
+	19, // 7: admiral.api.user.v1.CreateApiKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
+	20, // 8: admiral.api.user.v1.CreateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	20, // 9: admiral.api.user.v1.ListApiKeysResponse.api_keys:type_name -> admiral.common.v1.ApiKey
+	20, // 10: admiral.api.user.v1.GetApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	20, // 11: admiral.api.user.v1.UpdateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	20, // 12: admiral.api.user.v1.RevokeApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
+	3,  // 13: admiral.api.user.v1.UserAPI.GetMe:input_type -> admiral.api.user.v1.GetMeRequest
+	5,  // 14: admiral.api.user.v1.UserAPI.GetUser:input_type -> admiral.api.user.v1.GetUserRequest
+	7,  // 15: admiral.api.user.v1.UserAPI.ListUsers:input_type -> admiral.api.user.v1.ListUsersRequest
+	9,  // 16: admiral.api.user.v1.UserAPI.CreateApiKey:input_type -> admiral.api.user.v1.CreateApiKeyRequest
+	11, // 17: admiral.api.user.v1.UserAPI.ListApiKeys:input_type -> admiral.api.user.v1.ListApiKeysRequest
+	13, // 18: admiral.api.user.v1.UserAPI.GetApiKey:input_type -> admiral.api.user.v1.GetApiKeyRequest
+	15, // 19: admiral.api.user.v1.UserAPI.UpdateApiKey:input_type -> admiral.api.user.v1.UpdateApiKeyRequest
+	17, // 20: admiral.api.user.v1.UserAPI.RevokeApiKey:input_type -> admiral.api.user.v1.RevokeApiKeyRequest
+	4,  // 21: admiral.api.user.v1.UserAPI.GetMe:output_type -> admiral.api.user.v1.GetMeResponse
+	6,  // 22: admiral.api.user.v1.UserAPI.GetUser:output_type -> admiral.api.user.v1.GetUserResponse
+	8,  // 23: admiral.api.user.v1.UserAPI.ListUsers:output_type -> admiral.api.user.v1.ListUsersResponse
+	10, // 24: admiral.api.user.v1.UserAPI.CreateApiKey:output_type -> admiral.api.user.v1.CreateApiKeyResponse
+	12, // 25: admiral.api.user.v1.UserAPI.ListApiKeys:output_type -> admiral.api.user.v1.ListApiKeysResponse
+	14, // 26: admiral.api.user.v1.UserAPI.GetApiKey:output_type -> admiral.api.user.v1.GetApiKeyResponse
+	16, // 27: admiral.api.user.v1.UserAPI.UpdateApiKey:output_type -> admiral.api.user.v1.UpdateApiKeyResponse
+	18, // 28: admiral.api.user.v1.UserAPI.RevokeApiKey:output_type -> admiral.api.user.v1.RevokeApiKeyResponse
+	21, // [21:29] is the sub-list for method output_type
+	13, // [13:21] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_user_v1_user_proto_init() }
@@ -1029,19 +1327,20 @@ func file_admiral_api_user_v1_user_proto_init() {
 		return
 	}
 	file_admiral_api_user_v1_user_proto_msgTypes[0].OneofWrappers = []any{}
-	file_admiral_api_user_v1_user_proto_msgTypes[11].OneofWrappers = []any{}
+	file_admiral_api_user_v1_user_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_user_v1_user_proto_rawDesc), len(file_admiral_api_user_v1_user_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   15,
+			NumEnums:      2,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_admiral_api_user_v1_user_proto_goTypes,
 		DependencyIndexes: file_admiral_api_user_v1_user_proto_depIdxs,
+		EnumInfos:         file_admiral_api_user_v1_user_proto_enumTypes,
 		MessageInfos:      file_admiral_api_user_v1_user_proto_msgTypes,
 	}.Build()
 	File_admiral_api_user_v1_user_proto = out.File

@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	UserAPI_GetMe_FullMethodName        = "/admiral.api.user.v1.UserAPI/GetMe"
 	UserAPI_GetUser_FullMethodName      = "/admiral.api.user.v1.UserAPI/GetUser"
+	UserAPI_ListUsers_FullMethodName    = "/admiral.api.user.v1.UserAPI/ListUsers"
 	UserAPI_CreateApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/CreateApiKey"
 	UserAPI_ListApiKeys_FullMethodName  = "/admiral.api.user.v1.UserAPI/ListApiKeys"
 	UserAPI_GetApiKey_FullMethodName    = "/admiral.api.user.v1.UserAPI/GetApiKey"
@@ -32,8 +33,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UserAPI provides operations for user profile retrieval and management of the
-// caller's own API keys.
+// UserAPI provides operations for user profile retrieval, the list of a
+// tenant's members, and management of the caller's own API keys.
 //
 // An API key here is bound to the calling user (BINDING_TYPE_USER) and lets them
 // authenticate from scripts, CI pipelines, and other programmatic contexts. Its
@@ -50,6 +51,12 @@ type UserAPIClient interface {
 	//
 	// Scope: `user:read`
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// has joined, whatever their role or status. People who have been invited but
+	// have not joined are not users yet; they are listed by InvitationAPI.
+	//
+	// Scope: `user:read`
+	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 	// CreateApiKey creates a new API key for the authenticated user.
 	// The response includes the raw secret, which is shown exactly once
 	// and cannot be retrieved again.
@@ -101,6 +108,16 @@ func (c *userAPIClient) GetUser(ctx context.Context, in *GetUserRequest, opts ..
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetUserResponse)
 	err := c.cc.Invoke(ctx, UserAPI_GetUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userAPIClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUsersResponse)
+	err := c.cc.Invoke(ctx, UserAPI_ListUsers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +178,8 @@ func (c *userAPIClient) RevokeApiKey(ctx context.Context, in *RevokeApiKeyReques
 // All implementations should embed UnimplementedUserAPIServer
 // for forward compatibility.
 //
-// UserAPI provides operations for user profile retrieval and management of the
-// caller's own API keys.
+// UserAPI provides operations for user profile retrieval, the list of a
+// tenant's members, and management of the caller's own API keys.
 //
 // An API key here is bound to the calling user (BINDING_TYPE_USER) and lets them
 // authenticate from scripts, CI pipelines, and other programmatic contexts. Its
@@ -179,6 +196,12 @@ type UserAPIServer interface {
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// has joined, whatever their role or status. People who have been invited but
+	// have not joined are not users yet; they are listed by InvitationAPI.
+	//
+	// Scope: `user:read`
+	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	// CreateApiKey creates a new API key for the authenticated user.
 	// The response includes the raw secret, which is shown exactly once
 	// and cannot be retrieved again.
@@ -220,6 +243,9 @@ func (UnimplementedUserAPIServer) GetMe(context.Context, *GetMeRequest) (*GetMeR
 }
 func (UnimplementedUserAPIServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUser not implemented")
+}
+func (UnimplementedUserAPIServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
 }
 func (UnimplementedUserAPIServer) CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateApiKey not implemented")
@@ -288,6 +314,24 @@ func _UserAPI_GetUser_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserAPIServer).GetUser(ctx, req.(*GetUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserAPI_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserAPIServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserAPI_ListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserAPIServer).ListUsers(ctx, req.(*ListUsersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -396,6 +440,10 @@ var UserAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUser",
 			Handler:    _UserAPI_GetUser_Handler,
+		},
+		{
+			MethodName: "ListUsers",
+			Handler:    _UserAPI_ListUsers_Handler,
 		},
 		{
 			MethodName: "CreateApiKey",

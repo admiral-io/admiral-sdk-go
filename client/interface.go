@@ -8,6 +8,7 @@ import (
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/api/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
+	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
@@ -32,6 +33,8 @@ type AdmiralClient interface {
 	Environment() environmentv1.EnvironmentAPIClient
 	// Healthcheck returns the HealthcheckAPI client.
 	Healthcheck() healthcheckv1.HealthcheckAPIClient
+	// Invitation returns the InvitationAPI client.
+	Invitation() invitationv1.InvitationAPIClient
 	// Run returns the RunAPI client.
 	Run() runv1.RunAPIClient
 	// Source returns the SourceAPI client.

@@ -25,7 +25,7 @@ var File_admiral_api_openapi_proto protoreflect.FileDescriptor
 
 const file_admiral_api_openapi_proto_rawDesc = "" +
 	"\n" +
-	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xee\f\xbaG\xc3\v\x12\x91\x01\n" +
+	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xf7\r\xbaG\xcc\f\x12\x91\x01\n" +
 	"\vAdmiral API\x12\x81\x01The Admiral REST API for managing applications, infrastructure, and runs. See https://admiral.io/docs for complete documentation.:?\n" +
 	"\fApplications\x12/Manage application lifecycle and configuration.:o\n" +
 	"\fEnvironments\x12_Manage deployment environments within an application, and view the components deployed to them.:\x88\x01\n" +
@@ -37,8 +37,9 @@ const file_admiral_api_openapi_proto_rawDesc = "" +
 	"\aSources\x121Manage source definitions for external artifacts.:A\n" +
 	"\vCredentials\x122Manage credentials for accessing external systems.:G\n" +
 	"\x06Agents\x12=Manage agents (Terraform and Kubernetes) and their lifecycle.:H\n" +
-	"\fAgent Tokens\x128Manage service access tokens bound to a service account.:\x1f\n" +
-	"\x04User\x12\x17Retrieve user profiles.:O\n" +
+	"\fAgent Tokens\x128Manage service access tokens bound to a service account.:C\n" +
+	"\x04User\x12;Retrieve user profiles and list the members of your tenant.:c\n" +
+	"\vInvitations\x12TInvite people into your tenant, see what is outstanding, and withdraw an invitation.:O\n" +
 	"\x16Personal Access Tokens\x125Manage personal access tokens for API authentication.:\x8d\x01\n" +
 	"\rState Backend\x12|Terraform/OpenTofu HTTP state backend, consumed by the terraform CLI during job execution (authenticated with a PAT or SAT).:%\n" +
 	"\x06Health\x12\x1bCheck service availability.:Y\n" +

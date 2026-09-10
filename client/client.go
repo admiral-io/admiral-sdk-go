@@ -15,6 +15,7 @@ import (
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/api/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
+	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
@@ -38,6 +39,7 @@ type Client struct {
 	credential credentialv1.CredentialAPIClient
 	environment environmentv1.EnvironmentAPIClient
 	healthcheck healthcheckv1.HealthcheckAPIClient
+	invitation invitationv1.InvitationAPIClient
 	run runv1.RunAPIClient
 	source sourcev1.SourceAPIClient
 	tenant tenantv1.TenantAPIClient
@@ -90,6 +92,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		credential: credentialv1.NewCredentialAPIClient(conn),
 		environment: environmentv1.NewEnvironmentAPIClient(conn),
 		healthcheck: healthcheckv1.NewHealthcheckAPIClient(conn),
+		invitation: invitationv1.NewInvitationAPIClient(conn),
 		run: runv1.NewRunAPIClient(conn),
 		source: sourcev1.NewSourceAPIClient(conn),
 		tenant: tenantv1.NewTenantAPIClient(conn),
@@ -135,6 +138,11 @@ func (c *Client) Environment() environmentv1.EnvironmentAPIClient {
 // Healthcheck returns the HealthcheckAPI client.
 func (c *Client) Healthcheck() healthcheckv1.HealthcheckAPIClient {
 	return c.healthcheck
+}
+
+// Invitation returns the InvitationAPI client.
+func (c *Client) Invitation() invitationv1.InvitationAPIClient {
+	return c.invitation
 }
 
 // Run returns the RunAPI client.
