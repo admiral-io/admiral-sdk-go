@@ -10,7 +10,7 @@ import (
 	v1 "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
-	v12 "go.admiral.io/sdk/proto/admiral/api/catalog/v1"
+	v12 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	v13 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	v11 "go.admiral.io/sdk/proto/admiral/api/variable/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -855,9 +855,9 @@ type EnvironmentComponent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Component name (stable identifier set at creation).
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Engine type the component renders against (TERRAFORM, HELM, etc),
-	// denormalized from the component's own deploy spec.
-	CatalogItemType v12.CatalogItemType `protobuf:"varint,5,opt,name=catalog_item_type,json=catalogItemType,proto3,enum=admiral.api.catalog.v1.CatalogItemType" json:"catalog_item_type,omitempty"`
+	// What the component's pinned revision is (TERRAFORM, HELM, MANIFESTS),
+	// denormalized from the registry.
+	Kind v12.ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.api.registry.v1.ComponentKind" json:"kind,omitempty"`
 	// The git ref / version selector the component deploys.
 	Ref string `protobuf:"bytes,6,opt,name=ref,proto3" json:"ref,omitempty"`
 	// ID of the last-succeeded revision for this component in this env, if
@@ -909,11 +909,11 @@ func (x *EnvironmentComponent) GetName() string {
 	return ""
 }
 
-func (x *EnvironmentComponent) GetCatalogItemType() v12.CatalogItemType {
+func (x *EnvironmentComponent) GetKind() v12.ComponentKind {
 	if x != nil {
-		return x.CatalogItemType
+		return x.Kind
 	}
-	return v12.CatalogItemType(0)
+	return v12.ComponentKind(0)
 }
 
 func (x *EnvironmentComponent) GetRef() string {
@@ -1043,7 +1043,7 @@ var File_admiral_api_environment_v1_environment_proto protoreflect.FileDescripto
 
 const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a$admiral/api/catalog/v1/catalog.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1cadmiral/api/run/v1/run.proto\x1a&admiral/api/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb4\x05\n" +
+	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a\x1cadmiral/api/run/v1/run.proto\x1a&admiral/api/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb4\x05\n" +
 	"\vEnvironment\x12\x1e\n" +
 	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x125\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
@@ -1102,10 +1102,10 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"\x8b\x01\n" +
 	" ListEnvironmentVariablesResponse\x12?\n" +
 	"\tvariables\x18\x01 \x03(\v2!.admiral.api.variable.v1.VariableR\tvariables\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xd7\x02\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xbe\x02\n" +
 	"\x14EnvironmentComponent\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12S\n" +
-	"\x11catalog_item_type\x18\x05 \x01(\x0e2'.admiral.api.catalog.v1.CatalogItemTypeR\x0fcatalogItemType\x12\x10\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12:\n" +
+	"\x04kind\x18\x05 \x01(\x0e2&.admiral.api.registry.v1.ComponentKindR\x04kind\x12\x10\n" +
 	"\x03ref\x18\x06 \x01(\tR\x03ref\x12(\n" +
 	"\x10last_revision_id\x18\a \x01(\tR\x0elastRevisionId\x12T\n" +
 	"\x14last_revision_status\x18\b \x01(\x0e2\".admiral.api.run.v1.RevisionStatusR\x12lastRevisionStatus\x12D\n" +
@@ -1180,7 +1180,7 @@ var file_admiral_api_environment_v1_environment_proto_goTypes = []any{
 	(*v1.ActorRef)(nil),           // 19: admiral.common.v1.ActorRef
 	(*fieldmaskpb.FieldMask)(nil), // 20: google.protobuf.FieldMask
 	(*v11.Variable)(nil),          // 21: admiral.api.variable.v1.Variable
-	(v12.CatalogItemType)(0),      // 22: admiral.api.catalog.v1.CatalogItemType
+	(v12.ComponentKind)(0),        // 22: admiral.api.registry.v1.ComponentKind
 	(v13.RevisionStatus)(0),       // 23: admiral.api.run.v1.RevisionStatus
 }
 var file_admiral_api_environment_v1_environment_proto_depIdxs = []int32{
@@ -1197,7 +1197,7 @@ var file_admiral_api_environment_v1_environment_proto_depIdxs = []int32{
 	20, // 10: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
 	0,  // 11: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
 	21, // 12: admiral.api.environment.v1.ListEnvironmentVariablesResponse.variables:type_name -> admiral.api.variable.v1.Variable
-	22, // 13: admiral.api.environment.v1.EnvironmentComponent.catalog_item_type:type_name -> admiral.api.catalog.v1.CatalogItemType
+	22, // 13: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
 	23, // 14: admiral.api.environment.v1.EnvironmentComponent.last_revision_status:type_name -> admiral.api.run.v1.RevisionStatus
 	18, // 15: admiral.api.environment.v1.EnvironmentComponent.last_deployed_at:type_name -> google.protobuf.Timestamp
 	13, // 16: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent

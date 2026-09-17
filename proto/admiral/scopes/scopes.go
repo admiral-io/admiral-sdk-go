@@ -39,30 +39,31 @@ const (
 
 // Scope name constants.
 const (
-	AgentDeploy     = "agent:deploy"
-	AgentExec       = "agent:exec"
-	AgentRead       = "agent:read"
-	AgentStatus     = "agent:status"
-	AgentWrite      = "agent:write"
-	AppRead         = "app:read"
-	AppWrite        = "app:write"
-	CatalogRead     = "catalog:read"
-	CatalogWrite    = "catalog:write"
-	CredentialRead  = "credential:read"
-	CredentialWrite = "credential:write"
-	EnvRead         = "env:read"
-	EnvWrite        = "env:write"
-	RunRead         = "run:read"
-	RunWrite        = "run:write"
-	SourceRead      = "source:read"
-	SourceWrite     = "source:write"
-	TenantRead      = "tenant:read"
-	TenantWrite     = "tenant:write"
-	TokenRead       = "token:read"
-	TokenWrite      = "token:write"
-	UserRead        = "user:read"
-	UserWrite       = "user:write"
-	VarRead         = "var:read"
+	AgentDeploy      = "agent:deploy"
+	AgentExec        = "agent:exec"
+	AgentRead        = "agent:read"
+	AgentStatus      = "agent:status"
+	AgentWrite       = "agent:write"
+	AppRead          = "app:read"
+	AppWrite         = "app:write"
+	ComponentPublish = "component:publish"
+	ComponentRead    = "component:read"
+	ComponentWrite   = "component:write"
+	CredentialRead   = "credential:read"
+	CredentialWrite  = "credential:write"
+	EnvRead          = "env:read"
+	EnvWrite         = "env:write"
+	RunRead          = "run:read"
+	RunWrite         = "run:write"
+	SourceRead       = "source:read"
+	SourceWrite      = "source:write"
+	TenantRead       = "tenant:read"
+	TenantWrite      = "tenant:write"
+	TokenRead        = "token:read"
+	TokenWrite       = "token:write"
+	UserRead         = "user:read"
+	UserWrite        = "user:write"
+	VarRead          = "var:read"
 )
 
 // Scope is one catalog entry.
@@ -123,15 +124,21 @@ var Catalog = map[string]Scope{
 		Implies:      []string{AppRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
-	CatalogRead: {
-		Name:         CatalogRead,
-		Description:  "Read catalog items and resolve their content.",
+	ComponentPublish: {
+		Name:         ComponentPublish,
+		Description:  "Publish revisions and set tags. Adds to the registry and removes nothing from it, which is what a CI publish key holds.",
+		Implies:      []string{ComponentRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
-	CatalogWrite: {
-		Name:         CatalogWrite,
-		Description:  "Create, update, and delete catalog items.",
-		Implies:      []string{CatalogRead},
+	ComponentRead: {
+		Name:         ComponentRead,
+		Description:  "Read components, their revisions and tags, and the contract and findings each revision carries.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ComponentWrite: {
+		Name:         ComponentWrite,
+		Description:  "Edit a component's metadata, retire components, deprecate revisions, and delete floating tags, in addition to everything a publisher can do.",
+		Implies:      []string{ComponentPublish},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	CredentialRead: {
@@ -221,16 +228,17 @@ var Catalog = map[string]Scope{
 // impliesClosure precomputes the transitive closure of each scope's
 // implies edges (excluding the scope itself).
 var impliesClosure = map[string][]string{
-	AgentWrite:      []string{AgentRead},
-	AppWrite:        []string{AppRead},
-	CatalogWrite:    []string{CatalogRead},
-	CredentialWrite: []string{CredentialRead},
-	EnvWrite:        []string{EnvRead},
-	RunWrite:        []string{RunRead},
-	SourceWrite:     []string{SourceRead},
-	TenantWrite:     []string{TenantRead},
-	TokenWrite:      []string{TokenRead},
-	UserWrite:       []string{UserRead},
+	AgentWrite:       []string{AgentRead},
+	AppWrite:         []string{AppRead},
+	ComponentPublish: []string{ComponentRead},
+	ComponentWrite:   []string{ComponentPublish, ComponentRead},
+	CredentialWrite:  []string{CredentialRead},
+	EnvWrite:         []string{EnvRead},
+	RunWrite:         []string{RunRead},
+	SourceWrite:      []string{SourceRead},
+	TenantWrite:      []string{TenantRead},
+	TokenWrite:       []string{TokenRead},
+	UserWrite:        []string{UserRead},
 }
 
 // SATProfiles maps an agent kind (lowercased AgentKind enum value) to the

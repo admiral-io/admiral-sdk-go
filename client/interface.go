@@ -3,12 +3,12 @@ package client
 import (
 	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
 	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
-	catalogv1 "go.admiral.io/sdk/proto/admiral/api/catalog/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/api/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
 	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
+	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
@@ -23,8 +23,6 @@ type AdmiralClient interface {
 	AgentRuntime() agentv1.AgentRuntimeAPIClient
 	// Application returns the ApplicationAPI client.
 	Application() applicationv1.ApplicationAPIClient
-	// Catalog returns the CatalogAPI client.
-	Catalog() catalogv1.CatalogAPIClient
 	// ChangeSet returns the ChangeSetAPI client.
 	ChangeSet() changesetv1.ChangeSetAPIClient
 	// Credential returns the CredentialAPI client.
@@ -35,6 +33,8 @@ type AdmiralClient interface {
 	Healthcheck() healthcheckv1.HealthcheckAPIClient
 	// Invitation returns the InvitationAPI client.
 	Invitation() invitationv1.InvitationAPIClient
+	// Registry returns the RegistryAPI client.
+	Registry() registryv1.RegistryAPIClient
 	// Run returns the RunAPI client.
 	Run() runv1.RunAPIClient
 	// Source returns the SourceAPI client.

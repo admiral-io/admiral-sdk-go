@@ -37,12 +37,12 @@ func main() {
 	// c.Agent().MethodName(ctx, req)
 	// c.AgentRuntime().MethodName(ctx, req)
 	// c.Application().MethodName(ctx, req)
-	// c.Catalog().MethodName(ctx, req)
 	// c.ChangeSet().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
 	// c.Invitation().MethodName(ctx, req)
+	// c.Registry().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
 	// c.Source().MethodName(ctx, req)
 	// c.Tenant().MethodName(ctx, req)
@@ -57,12 +57,12 @@ func main() {
 | AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | AgentRuntimeAPI | `AgentRuntime()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/api/application/v1` |
-| CatalogAPI | `Catalog()` | `go.admiral.io/sdk/proto/admiral/api/catalog/v1` |
 | ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/api/changeset/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/api/credential/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/api/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/api/healthcheck/v1` |
 | InvitationAPI | `Invitation()` | `go.admiral.io/sdk/proto/admiral/api/invitation/v1` |
+| RegistryAPI | `Registry()` | `go.admiral.io/sdk/proto/admiral/api/registry/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |
 | SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/api/source/v1` |
 | TenantAPI | `Tenant()` | `go.admiral.io/sdk/proto/admiral/api/tenant/v1` |

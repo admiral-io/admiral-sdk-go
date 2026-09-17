@@ -18,7 +18,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	catalogv1 "go.admiral.io/sdk/proto/admiral/api/catalog/v1"
+	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 )
@@ -38,7 +38,7 @@ var (
 	_ = anypb.Any{}
 	_ = sort.Sort
 
-	_ = catalogv1.CatalogItemType(0)
+	_ = registryv1.ComponentKind(0)
 
 	_ = runv1.RevisionStatus(0)
 )
@@ -1767,7 +1767,7 @@ func (m *EnvironmentComponent) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for CatalogItemType
+	// no validation rules for Kind
 
 	// no validation rules for Ref
 
