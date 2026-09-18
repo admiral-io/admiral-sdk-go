@@ -7,6 +7,8 @@
 // Package scopes carries the scope catalog for the Admiral API surface.
 package scopes
 
+import "strings"
+
 // Wildcard is the scope claim carried by unreduced first-party tokens: no
 // reduction over live authorization. It is never mintable input and never a
 // catalog entry. Absence of a scope claim means DENY, not unrestricted --
@@ -65,6 +67,38 @@ const (
 	UserWrite        = "user:write"
 	VarRead          = "var:read"
 )
+
+// Group is one scope prefix and what it covers, for anything that shows
+// scopes grouped: "app" for app:read and app:write.
+type Group struct {
+	Name        string
+	Description string
+}
+
+// Groups maps a scope prefix to its group. Every scope's prefix has an
+// entry; GroupOf finds it.
+var Groups = map[string]Group{
+	"agent":      {Name: "agent", Description: "Execution agents, their tokens, and the jobs and workloads they run."},
+	"app":        {Name: "app", Description: "Applications and their change sets."},
+	"component":  {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
+	"credential": {Name: "credential", Description: "Credentials for external systems."},
+	"env":        {Name: "env", Description: "Deployment environments and the components in them."},
+	"run":        {Name: "run", Description: "Runs of change sets, plan through apply."},
+	"source":     {Name: "source", Description: "External artifact sources."},
+	"tenant":     {Name: "tenant", Description: "Your tenant."},
+	"token":      {Name: "token", Description: "Your own API keys."},
+	"user":       {Name: "user", Description: "Members of your tenant."},
+	"var":        {Name: "var", Description: "Configuration variables."},
+}
+
+// GroupOf is the group a scope name falls under: everything before the
+// first colon.
+func GroupOf(scope string) string {
+	if i := strings.IndexByte(scope, ':'); i >= 0 {
+		return scope[:i]
+	}
+	return scope
+}
 
 // Scope is one catalog entry.
 type Scope struct {
