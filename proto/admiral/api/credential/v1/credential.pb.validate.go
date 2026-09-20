@@ -343,6 +343,114 @@ var _ interface {
 	ErrorName() string
 } = BearerTokenAuthValidationError{}
 
+// Validate checks the field values on GitHubAppAuth with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GitHubAppAuth) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GitHubAppAuth with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GitHubAppAuthMultiError, or
+// nil if none found.
+func (m *GitHubAppAuth) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GitHubAppAuth) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for AppId
+
+	// no validation rules for InstallationId
+
+	// no validation rules for PrivateKey
+
+	// no validation rules for ApiUrl
+
+	if len(errors) > 0 {
+		return GitHubAppAuthMultiError(errors)
+	}
+
+	return nil
+}
+
+// GitHubAppAuthMultiError is an error wrapping multiple validation errors
+// returned by GitHubAppAuth.ValidateAll() if the designated constraints
+// aren't met.
+type GitHubAppAuthMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GitHubAppAuthMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GitHubAppAuthMultiError) AllErrors() []error { return m }
+
+// GitHubAppAuthValidationError is the validation error returned by
+// GitHubAppAuth.Validate if the designated constraints aren't met.
+type GitHubAppAuthValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GitHubAppAuthValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GitHubAppAuthValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GitHubAppAuthValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GitHubAppAuthValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GitHubAppAuthValidationError) ErrorName() string { return "GitHubAppAuthValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GitHubAppAuthValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGitHubAppAuth.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GitHubAppAuthValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GitHubAppAuthValidationError{}
+
 // Validate checks the field values on AuthConfig with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -483,6 +591,47 @@ func (m *AuthConfig) validate(all bool) error {
 			if err := v.Validate(); err != nil {
 				return AuthConfigValidationError{
 					field:  "BearerToken",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *AuthConfig_GithubApp:
+		if v == nil {
+			err := AuthConfigValidationError{
+				field:  "Variant",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetGithubApp()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "GithubApp",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AuthConfigValidationError{
+						field:  "GithubApp",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetGithubApp()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AuthConfigValidationError{
+					field:  "GithubApp",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -1327,6 +1476,8 @@ func (m *ListCredentialsRequest) validate(all bool) error {
 	// no validation rules for PageSize
 
 	// no validation rules for PageToken
+
+	// no validation rules for Type
 
 	if len(errors) > 0 {
 		return ListCredentialsRequestMultiError(errors)

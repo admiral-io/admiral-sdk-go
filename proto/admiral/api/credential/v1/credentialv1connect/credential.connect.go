@@ -52,37 +52,32 @@ const (
 
 // CredentialAPIClient is a client for the admiral.api.credential.v1.CredentialAPI service.
 type CredentialAPIClient interface {
-	// CreateCredential creates a new credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's tenant.
 	//
-	// The credential type and auth config must match. For example, a GIT_TOKEN
-	// credential requires a matching auth_config (e.g. BEARER_TOKEN → bearer_token).
+	// The `type` and the populated `auth_config` variant must agree.
 	//
 	// Scope: `credential:write`
 	CreateCredential(context.Context, *connect.Request[v1.CreateCredentialRequest]) (*connect.Response[v1.CreateCredentialResponse], error)
-	// GetCredential retrieves a credential by ID.
-	//
-	// Returns credential metadata only. Sensitive fields are never included
-	// in the response.
+	// GetCredential retrieves a credential's metadata by id. The secret is
+	// never included.
 	//
 	// Scope: `credential:read`
 	GetCredential(context.Context, *connect.Request[v1.GetCredentialRequest]) (*connect.Response[v1.GetCredentialResponse], error)
-	// ListCredentials returns a paginated list of credentials within the caller's
-	// tenant. Sensitive fields are never included.
+	// ListCredentials pages through the caller's tenant's credentials.
+	// Secrets are never included.
 	//
 	// Scope: `credential:read`
 	ListCredentials(context.Context, *connect.Request[v1.ListCredentialsRequest]) (*connect.Response[v1.ListCredentialsResponse], error)
-	// UpdateCredential updates a credential's mutable fields.
-	// Use the `update_mask` to specify which fields to update.
-	//
-	// When updating auth_config, the entire auth config is replaced. Partial
-	// updates within the auth config oneof are not supported. Omitting auth_config
-	// from the update_mask leaves credentials unchanged.
+	// UpdateCredential changes a credential's description, labels, allowed
+	// hosts, or secret. The name and type are immutable. A new secret
+	// replaces the old one whole; a rotation is an update with `auth_config`
+	// in the mask.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error)
-	// DeleteCredential permanently deletes a credential. Fails if any sources
-	// still reference this credential. Remove or reassign those sources first.
-	// This action cannot be undone.
+	// DeleteCredential removes a credential. A component whose pull-publish
+	// names it keeps the reference; its next pull fails naming the missing
+	// credential until it is attached to another.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *connect.Request[v1.DeleteCredentialRequest]) (*connect.Response[v1.DeleteCredentialResponse], error)
@@ -168,37 +163,32 @@ func (c *credentialAPIClient) DeleteCredential(ctx context.Context, req *connect
 
 // CredentialAPIHandler is an implementation of the admiral.api.credential.v1.CredentialAPI service.
 type CredentialAPIHandler interface {
-	// CreateCredential creates a new credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's tenant.
 	//
-	// The credential type and auth config must match. For example, a GIT_TOKEN
-	// credential requires a matching auth_config (e.g. BEARER_TOKEN → bearer_token).
+	// The `type` and the populated `auth_config` variant must agree.
 	//
 	// Scope: `credential:write`
 	CreateCredential(context.Context, *connect.Request[v1.CreateCredentialRequest]) (*connect.Response[v1.CreateCredentialResponse], error)
-	// GetCredential retrieves a credential by ID.
-	//
-	// Returns credential metadata only. Sensitive fields are never included
-	// in the response.
+	// GetCredential retrieves a credential's metadata by id. The secret is
+	// never included.
 	//
 	// Scope: `credential:read`
 	GetCredential(context.Context, *connect.Request[v1.GetCredentialRequest]) (*connect.Response[v1.GetCredentialResponse], error)
-	// ListCredentials returns a paginated list of credentials within the caller's
-	// tenant. Sensitive fields are never included.
+	// ListCredentials pages through the caller's tenant's credentials.
+	// Secrets are never included.
 	//
 	// Scope: `credential:read`
 	ListCredentials(context.Context, *connect.Request[v1.ListCredentialsRequest]) (*connect.Response[v1.ListCredentialsResponse], error)
-	// UpdateCredential updates a credential's mutable fields.
-	// Use the `update_mask` to specify which fields to update.
-	//
-	// When updating auth_config, the entire auth config is replaced. Partial
-	// updates within the auth config oneof are not supported. Omitting auth_config
-	// from the update_mask leaves credentials unchanged.
+	// UpdateCredential changes a credential's description, labels, allowed
+	// hosts, or secret. The name and type are immutable. A new secret
+	// replaces the old one whole; a rotation is an update with `auth_config`
+	// in the mask.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error)
-	// DeleteCredential permanently deletes a credential. Fails if any sources
-	// still reference this credential. Remove or reassign those sources first.
-	// This action cannot be undone.
+	// DeleteCredential removes a credential. A component whose pull-publish
+	// names it keeps the reference; its next pull fails naming the missing
+	// credential until it is attached to another.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *connect.Request[v1.DeleteCredentialRequest]) (*connect.Response[v1.DeleteCredentialResponse], error)

@@ -30,52 +30,47 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// CredentialAPI manages stored credentials for accessing external systems.
+// CredentialAPI manages the credentials a tenant registers for reaching
+// external systems at publish time: a git host, a Helm repository, an OCI
+// registry, a module registry.
 //
-// A credential stores the authentication configuration needed to reach a remote
-// system: a Git host, Helm repository, OCI registry, or Terraform registry.
-// Credentials are tenant-scoped and referenced by sources when fetching
-// artifacts.
+// A credential is never selected for the caller. A pull-publish names the
+// credentials it may use, chosen by the user from those whose type its
+// protocols can present, and the platform presents each only where it fits.
+// A credential may carry `allowed_hosts`, a guard that restricts where it is
+// ever presented, whatever it is attached to. Credentials exist for publish
+// only; nothing on the deploy path reads one.
 //
-// Sensitive fields (tokens, keys, secrets) are write-only: they are accepted on
-// create/update but never returned in API responses. GET and List operations
-// return credential metadata only.
-//
-// Connectivity validation (testing whether the credential can actually reach a
-// remote system) is performed at the Source level, where the credential is
-// paired with a target URL.
+// Secrets are write-only: accepted on create and update, encrypted at rest,
+// decrypted only inside a publish, and never returned. Get and List return
+// metadata only.
 type CredentialAPIClient interface {
-	// CreateCredential creates a new credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's tenant.
 	//
-	// The credential type and auth config must match. For example, a GIT_TOKEN
-	// credential requires a matching auth_config (e.g. BEARER_TOKEN → bearer_token).
+	// The `type` and the populated `auth_config` variant must agree.
 	//
 	// Scope: `credential:write`
 	CreateCredential(ctx context.Context, in *CreateCredentialRequest, opts ...grpc.CallOption) (*CreateCredentialResponse, error)
-	// GetCredential retrieves a credential by ID.
-	//
-	// Returns credential metadata only. Sensitive fields are never included
-	// in the response.
+	// GetCredential retrieves a credential's metadata by id. The secret is
+	// never included.
 	//
 	// Scope: `credential:read`
 	GetCredential(ctx context.Context, in *GetCredentialRequest, opts ...grpc.CallOption) (*GetCredentialResponse, error)
-	// ListCredentials returns a paginated list of credentials within the caller's
-	// tenant. Sensitive fields are never included.
+	// ListCredentials pages through the caller's tenant's credentials.
+	// Secrets are never included.
 	//
 	// Scope: `credential:read`
 	ListCredentials(ctx context.Context, in *ListCredentialsRequest, opts ...grpc.CallOption) (*ListCredentialsResponse, error)
-	// UpdateCredential updates a credential's mutable fields.
-	// Use the `update_mask` to specify which fields to update.
-	//
-	// When updating auth_config, the entire auth config is replaced. Partial
-	// updates within the auth config oneof are not supported. Omitting auth_config
-	// from the update_mask leaves credentials unchanged.
+	// UpdateCredential changes a credential's description, labels, allowed
+	// hosts, or secret. The name and type are immutable. A new secret
+	// replaces the old one whole; a rotation is an update with `auth_config`
+	// in the mask.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(ctx context.Context, in *UpdateCredentialRequest, opts ...grpc.CallOption) (*UpdateCredentialResponse, error)
-	// DeleteCredential permanently deletes a credential. Fails if any sources
-	// still reference this credential. Remove or reassign those sources first.
-	// This action cannot be undone.
+	// DeleteCredential removes a credential. A component whose pull-publish
+	// names it keeps the reference; its next pull fails naming the missing
+	// credential until it is attached to another.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(ctx context.Context, in *DeleteCredentialRequest, opts ...grpc.CallOption) (*DeleteCredentialResponse, error)
@@ -143,52 +138,47 @@ func (c *credentialAPIClient) DeleteCredential(ctx context.Context, in *DeleteCr
 // All implementations should embed UnimplementedCredentialAPIServer
 // for forward compatibility.
 //
-// CredentialAPI manages stored credentials for accessing external systems.
+// CredentialAPI manages the credentials a tenant registers for reaching
+// external systems at publish time: a git host, a Helm repository, an OCI
+// registry, a module registry.
 //
-// A credential stores the authentication configuration needed to reach a remote
-// system: a Git host, Helm repository, OCI registry, or Terraform registry.
-// Credentials are tenant-scoped and referenced by sources when fetching
-// artifacts.
+// A credential is never selected for the caller. A pull-publish names the
+// credentials it may use, chosen by the user from those whose type its
+// protocols can present, and the platform presents each only where it fits.
+// A credential may carry `allowed_hosts`, a guard that restricts where it is
+// ever presented, whatever it is attached to. Credentials exist for publish
+// only; nothing on the deploy path reads one.
 //
-// Sensitive fields (tokens, keys, secrets) are write-only: they are accepted on
-// create/update but never returned in API responses. GET and List operations
-// return credential metadata only.
-//
-// Connectivity validation (testing whether the credential can actually reach a
-// remote system) is performed at the Source level, where the credential is
-// paired with a target URL.
+// Secrets are write-only: accepted on create and update, encrypted at rest,
+// decrypted only inside a publish, and never returned. Get and List return
+// metadata only.
 type CredentialAPIServer interface {
-	// CreateCredential creates a new credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's tenant.
 	//
-	// The credential type and auth config must match. For example, a GIT_TOKEN
-	// credential requires a matching auth_config (e.g. BEARER_TOKEN → bearer_token).
+	// The `type` and the populated `auth_config` variant must agree.
 	//
 	// Scope: `credential:write`
 	CreateCredential(context.Context, *CreateCredentialRequest) (*CreateCredentialResponse, error)
-	// GetCredential retrieves a credential by ID.
-	//
-	// Returns credential metadata only. Sensitive fields are never included
-	// in the response.
+	// GetCredential retrieves a credential's metadata by id. The secret is
+	// never included.
 	//
 	// Scope: `credential:read`
 	GetCredential(context.Context, *GetCredentialRequest) (*GetCredentialResponse, error)
-	// ListCredentials returns a paginated list of credentials within the caller's
-	// tenant. Sensitive fields are never included.
+	// ListCredentials pages through the caller's tenant's credentials.
+	// Secrets are never included.
 	//
 	// Scope: `credential:read`
 	ListCredentials(context.Context, *ListCredentialsRequest) (*ListCredentialsResponse, error)
-	// UpdateCredential updates a credential's mutable fields.
-	// Use the `update_mask` to specify which fields to update.
-	//
-	// When updating auth_config, the entire auth config is replaced. Partial
-	// updates within the auth config oneof are not supported. Omitting auth_config
-	// from the update_mask leaves credentials unchanged.
+	// UpdateCredential changes a credential's description, labels, allowed
+	// hosts, or secret. The name and type are immutable. A new secret
+	// replaces the old one whole; a rotation is an update with `auth_config`
+	// in the mask.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *UpdateCredentialRequest) (*UpdateCredentialResponse, error)
-	// DeleteCredential permanently deletes a credential. Fails if any sources
-	// still reference this credential. Remove or reassign those sources first.
-	// This action cannot be undone.
+	// DeleteCredential removes a credential. A component whose pull-publish
+	// names it keeps the reference; its next pull fails naming the missing
+	// credential until it is attached to another.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *DeleteCredentialRequest) (*DeleteCredentialResponse, error)

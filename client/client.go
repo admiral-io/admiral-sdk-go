@@ -17,7 +17,6 @@ import (
 	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
-	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
@@ -41,7 +40,6 @@ type Client struct {
 	invitation invitationv1.InvitationAPIClient
 	registry registryv1.RegistryAPIClient
 	run runv1.RunAPIClient
-	source sourcev1.SourceAPIClient
 	tenant tenantv1.TenantAPIClient
 	user userv1.UserAPIClient
 }
@@ -94,7 +92,6 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		invitation: invitationv1.NewInvitationAPIClient(conn),
 		registry: registryv1.NewRegistryAPIClient(conn),
 		run: runv1.NewRunAPIClient(conn),
-		source: sourcev1.NewSourceAPIClient(conn),
 		tenant: tenantv1.NewTenantAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
 	}, nil
@@ -148,11 +145,6 @@ func (c *Client) Registry() registryv1.RegistryAPIClient {
 // Run returns the RunAPI client.
 func (c *Client) Run() runv1.RunAPIClient {
 	return c.run
-}
-
-// Source returns the SourceAPI client.
-func (c *Client) Source() sourcev1.SourceAPIClient {
-	return c.source
 }
 
 // Tenant returns the TenantAPI client.

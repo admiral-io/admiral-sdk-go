@@ -44,7 +44,6 @@ func main() {
 	// c.Invitation().MethodName(ctx, req)
 	// c.Registry().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
-	// c.Source().MethodName(ctx, req)
 	// c.Tenant().MethodName(ctx, req)
 	// c.User().MethodName(ctx, req)
 }
@@ -64,7 +63,6 @@ func main() {
 | InvitationAPI | `Invitation()` | `go.admiral.io/sdk/proto/admiral/api/invitation/v1` |
 | RegistryAPI | `Registry()` | `go.admiral.io/sdk/proto/admiral/api/registry/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |
-| SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/api/source/v1` |
 | TenantAPI | `Tenant()` | `go.admiral.io/sdk/proto/admiral/api/tenant/v1` |
 | UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/api/user/v1` |
 

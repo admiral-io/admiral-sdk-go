@@ -57,8 +57,6 @@ const (
 	EnvWrite         = "env:write"
 	RunRead          = "run:read"
 	RunWrite         = "run:write"
-	SourceRead       = "source:read"
-	SourceWrite      = "source:write"
 	TenantRead       = "tenant:read"
 	TenantWrite      = "tenant:write"
 	TokenRead        = "token:read"
@@ -84,7 +82,6 @@ var Groups = map[string]Group{
 	"credential": {Name: "credential", Description: "Credentials for external systems."},
 	"env":        {Name: "env", Description: "Deployment environments and the components in them."},
 	"run":        {Name: "run", Description: "Runs of change sets, plan through apply."},
-	"source":     {Name: "source", Description: "External artifact sources."},
 	"tenant":     {Name: "tenant", Description: "Your tenant."},
 	"token":      {Name: "token", Description: "Your own API keys."},
 	"user":       {Name: "user", Description: "Members of your tenant."},
@@ -208,17 +205,6 @@ var Catalog = map[string]Scope{
 		Implies:      []string{RunRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
-	SourceRead: {
-		Name:         SourceRead,
-		Description:  "Read sources and source versions.",
-		AssignableTo: []string{TokenTypePAT},
-	},
-	SourceWrite: {
-		Name:         SourceWrite,
-		Description:  "Create, update, delete, and test sources.",
-		Implies:      []string{SourceRead},
-		AssignableTo: []string{TokenTypePAT},
-	},
 	TenantRead: {
 		Name:         TenantRead,
 		Description:  "Read the caller's own tenant -- name, slug, and status.",
@@ -269,7 +255,6 @@ var impliesClosure = map[string][]string{
 	CredentialWrite:  []string{CredentialRead},
 	EnvWrite:         []string{EnvRead},
 	RunWrite:         []string{RunRead},
-	SourceWrite:      []string{SourceRead},
 	TenantWrite:      []string{TenantRead},
 	TokenWrite:       []string{TokenRead},
 	UserWrite:        []string{UserRead},

@@ -27,27 +27,29 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// CredentialType identifies the shape of the stored auth material (the
-// mechanism), not the system it targets. The target system is determined by
-// the Source that references the credential. One credential can be reused
-// across multiple Sources of different types, provided the Source accepts
-// that credential type (see the Source compatibility matrix).
+// CredentialType is the protocol family a credential is presented as. Each
+// fetch takes the families its protocol speaks: a module registry, an
+// archive and an OCI token take a bearer token; git over https, a Helm
+// repository and an OCI login take basic auth; git over ssh takes a key.
 type CredentialType int32
 
 const (
-	// Default value. Must not be used.
 	CredentialType_CREDENTIAL_TYPE_UNSPECIFIED CredentialType = 0
-	// SSH private key (with optional passphrase). Used for SSH-protocol Git
-	// sources.
+	// An SSH private key, for git over ssh.
 	CredentialType_CREDENTIAL_TYPE_SSH_KEY CredentialType = 1
-	// HTTP Basic auth (username + password). Used for Helm HTTP repos, OCI
-	// registries, authenticated HTTP archives, and Git HTTPS.
+	// A username and password: git over https, a Helm repository, an OCI
+	// registry, an authenticated archive.
 	CredentialType_CREDENTIAL_TYPE_BASIC_AUTH CredentialType = 2
-	// Single token value. Presented per target protocol: as
-	// `Authorization: Bearer <token>` for Terraform / Helm / OCI bearer-auth
-	// endpoints, or as the HTTP Basic password (with a dummy username) for
-	// Git HTTPS tokens (GitHub PAT, GitLab PAT, Bitbucket app password).
+	// One token. Presented as `Authorization: Bearer` to a module registry,
+	// a Helm repository, an OCI registry or an archive host, and as the
+	// basic-auth password with the `x-access-token` username to git over
+	// https, which is how GitHub and GitLab take a token.
 	CredentialType_CREDENTIAL_TYPE_BEARER_TOKEN CredentialType = 3
+	// A GitHub App installation. Not a secret that is presented: the platform
+	// mints a short-lived installation token from the app's private key at
+	// fetch time and presents that as a bearer token. Works for github.com,
+	// GitHub Enterprise Cloud and GitHub Enterprise Server.
+	CredentialType_CREDENTIAL_TYPE_GITHUB_APP CredentialType = 4
 )
 
 // Enum value maps for CredentialType.
@@ -57,12 +59,14 @@ var (
 		1: "CREDENTIAL_TYPE_SSH_KEY",
 		2: "CREDENTIAL_TYPE_BASIC_AUTH",
 		3: "CREDENTIAL_TYPE_BEARER_TOKEN",
+		4: "CREDENTIAL_TYPE_GITHUB_APP",
 	}
 	CredentialType_value = map[string]int32{
 		"CREDENTIAL_TYPE_UNSPECIFIED":  0,
 		"CREDENTIAL_TYPE_SSH_KEY":      1,
 		"CREDENTIAL_TYPE_BASIC_AUTH":   2,
 		"CREDENTIAL_TYPE_BEARER_TOKEN": 3,
+		"CREDENTIAL_TYPE_GITHUB_APP":   4,
 	}
 )
 
@@ -93,14 +97,12 @@ func (CredentialType) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{0}
 }
 
-// SSHKeyAuth holds an SSH private key and optional passphrase.
+// SSHKeyAuth is a PEM-encoded private key and its passphrase, if any.
 type SSHKeyAuth struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// PEM-encoded SSH private key.
-	// Write-only: masked in responses.
+	// Write-only.
 	PrivateKey string `protobuf:"bytes,1,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
-	// Optional passphrase for the private key.
-	// Write-only: masked in responses.
+	// Write-only.
 	Passphrase    string `protobuf:"bytes,2,opt,name=passphrase,proto3" json:"passphrase,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -150,15 +152,12 @@ func (x *SSHKeyAuth) GetPassphrase() string {
 	return ""
 }
 
-// BasicAuth holds HTTP Basic credentials (username + password). Reused across
-// any Source type that accepts HTTP Basic (Helm, OCI, HTTP archive, Git
-// HTTPS).
+// BasicAuth is a username and password, or a username and a token that the
+// host takes as a password (a registry-scoped token, an app password).
 type BasicAuth struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Username for authentication.
-	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	// Password (or PAT / registry-scoped token / app password).
-	// Write-only: masked in responses.
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Username string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	// Write-only.
 	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -208,16 +207,10 @@ func (x *BasicAuth) GetPassword() string {
 	return ""
 }
 
-// BearerTokenAuth holds a single token value. Presentation is per target
-// protocol:
-//   - Terraform registries, Helm bearer, OCI bearer, HTTP archives:
-//     `Authorization: Bearer <token>`
-//   - Git HTTPS (GitHub PAT, GitLab PAT): HTTP Basic with the token as
-//     password and a dummy username
+// BearerTokenAuth is one token.
 type BearerTokenAuth struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Token value.
-	// Write-only: masked in responses.
+	// Write-only.
 	Token         string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -260,9 +253,82 @@ func (x *BearerTokenAuth) GetToken() string {
 	return ""
 }
 
-// AuthConfig is the polymorphic auth configuration attached to a Credential.
-// Exactly one variant is populated, corresponding to the credential's type.
-// Sensitive fields within each variant are write-only.
+// GitHubAppAuth identifies a GitHub App installation and holds the app's
+// private key, from which the platform mints installation tokens.
+type GitHubAppAuth struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The app's numeric id, from the app's settings page.
+	AppId int64 `protobuf:"varint,1,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
+	// The installation's numeric id, from the installation's URL.
+	InstallationId int64 `protobuf:"varint,2,opt,name=installation_id,json=installationId,proto3" json:"installation_id,omitempty"`
+	// The app's PEM-encoded RSA private key. Write-only.
+	PrivateKey string `protobuf:"bytes,3,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	// The REST API base, for GitHub Enterprise Server:
+	// `https://github.acme.example/api/v3`. Empty is `https://api.github.com`.
+	ApiUrl        string `protobuf:"bytes,4,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitHubAppAuth) Reset() {
+	*x = GitHubAppAuth{}
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitHubAppAuth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitHubAppAuth) ProtoMessage() {}
+
+func (x *GitHubAppAuth) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitHubAppAuth.ProtoReflect.Descriptor instead.
+func (*GitHubAppAuth) Descriptor() ([]byte, []int) {
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GitHubAppAuth) GetAppId() int64 {
+	if x != nil {
+		return x.AppId
+	}
+	return 0
+}
+
+func (x *GitHubAppAuth) GetInstallationId() int64 {
+	if x != nil {
+		return x.InstallationId
+	}
+	return 0
+}
+
+func (x *GitHubAppAuth) GetPrivateKey() string {
+	if x != nil {
+		return x.PrivateKey
+	}
+	return ""
+}
+
+func (x *GitHubAppAuth) GetApiUrl() string {
+	if x != nil {
+		return x.ApiUrl
+	}
+	return ""
+}
+
+// AuthConfig is the secret, one variant matching the credential's type.
 type AuthConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Variant:
@@ -270,6 +336,7 @@ type AuthConfig struct {
 	//	*AuthConfig_SshKey
 	//	*AuthConfig_BasicAuth
 	//	*AuthConfig_BearerToken
+	//	*AuthConfig_GithubApp
 	Variant       isAuthConfig_Variant `protobuf_oneof:"variant"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -277,7 +344,7 @@ type AuthConfig struct {
 
 func (x *AuthConfig) Reset() {
 	*x = AuthConfig{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[3]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -289,7 +356,7 @@ func (x *AuthConfig) String() string {
 func (*AuthConfig) ProtoMessage() {}
 
 func (x *AuthConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[3]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -302,7 +369,7 @@ func (x *AuthConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthConfig.ProtoReflect.Descriptor instead.
 func (*AuthConfig) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{3}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AuthConfig) GetVariant() isAuthConfig_Variant {
@@ -339,6 +406,15 @@ func (x *AuthConfig) GetBearerToken() *BearerTokenAuth {
 	return nil
 }
 
+func (x *AuthConfig) GetGithubApp() *GitHubAppAuth {
+	if x != nil {
+		if x, ok := x.Variant.(*AuthConfig_GithubApp); ok {
+			return x.GithubApp
+		}
+	}
+	return nil
+}
+
 type isAuthConfig_Variant interface {
 	isAuthConfig_Variant()
 }
@@ -355,51 +431,47 @@ type AuthConfig_BearerToken struct {
 	BearerToken *BearerTokenAuth `protobuf:"bytes,3,opt,name=bearer_token,json=bearerToken,proto3,oneof"`
 }
 
+type AuthConfig_GithubApp struct {
+	GithubApp *GitHubAppAuth `protobuf:"bytes,4,opt,name=github_app,json=githubApp,proto3,oneof"`
+}
+
 func (*AuthConfig_SshKey) isAuthConfig_Variant() {}
 
 func (*AuthConfig_BasicAuth) isAuthConfig_Variant() {}
 
 func (*AuthConfig_BearerToken) isAuthConfig_Variant() {}
 
-// Credential represents stored authentication configuration for accessing an
-// external system. Credentials are tenant-scoped and referenced by sources
-// when fetching artifacts.
-//
-// Sensitive fields within auth_config are write-only: accepted on create and
-// update but never returned in API responses.
+func (*AuthConfig_GithubApp) isAuthConfig_Variant() {}
+
+// Credential is a registered credential's metadata. The secret is set
+// through `auth_config` and never read back; responses carry it empty.
 type Credential struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier for the credential (UUID).
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// URL-safe, human-readable identifier (e.g., "github-org", "ecr-prod").
-	// Unique within the tenant. Lowercase alphanumeric and hyphens only, must
-	// start with a letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional longer-form description of what this credential is for
-	// (e.g., "Read-only access to the platform team's GitHub org").
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Unique within the tenant.
+	Name        string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// The type of external system and authentication mechanism.
 	// Immutable after creation.
 	Type CredentialType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.api.credential.v1.CredentialType" json:"type,omitempty"`
-	// Auth material corresponding to `type`. Sensitive fields are write-only
-	// and masked in responses.
-	AuthConfig *AuthConfig `protobuf:"bytes,5,opt,name=auth_config,json=authConfig,proto3" json:"auth_config,omitempty"`
-	// Arbitrary key-value labels for organizing and filtering credentials
-	// (e.g., `{"team": "platform", "environment": "prod"}`).
-	Labels map[string]string `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// The user or agent who created this credential (server-populated from token).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// When the credential was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the credential was last updated.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Write-only. Empty in every response.
+	AuthConfig *AuthConfig            `protobuf:"bytes,5,opt,name=auth_config,json=authConfig,proto3" json:"auth_config,omitempty"`
+	Labels     map[string]string      `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	CreatedBy  *v1.ActorRef           `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt  *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Hosts this credential may be presented to, as a guard: empty means any
+	// host its type fits; set means the platform refuses to present it
+	// anywhere else, whatever it is attached to. Hostnames, optionally with
+	// a port: `github.acme.example`, `harbor.acme.example:8443`. No scheme,
+	// no path.
+	AllowedHosts  []string `protobuf:"bytes,10,rep,name=allowed_hosts,json=allowedHosts,proto3" json:"allowed_hosts,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Credential) Reset() {
 	*x = Credential{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[4]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -411,7 +483,7 @@ func (x *Credential) String() string {
 func (*Credential) ProtoMessage() {}
 
 func (x *Credential) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[4]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -424,7 +496,7 @@ func (x *Credential) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Credential.ProtoReflect.Descriptor instead.
 func (*Credential) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{4}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Credential) GetId() string {
@@ -490,28 +562,28 @@ func (x *Credential) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreateCredentialRequest contains the parameters for creating a new credential.
+func (x *Credential) GetAllowedHosts() []string {
+	if x != nil {
+		return x.AllowedHosts
+	}
+	return nil
+}
+
 type CreateCredentialRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// URL-safe, human-readable identifier (e.g., "github-org", "ecr-prod").
-	// Unique within the tenant. Lowercase alphanumeric and hyphens only, must
-	// start with a letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional description of the credential's purpose.
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// The type of external system and authentication mechanism.
-	Type CredentialType `protobuf:"varint,3,opt,name=type,proto3,enum=admiral.api.credential.v1.CredentialType" json:"type,omitempty"`
-	// Auth material corresponding to `type`.
-	AuthConfig *AuthConfig `protobuf:"bytes,4,opt,name=auth_config,json=authConfig,proto3" json:"auth_config,omitempty"`
-	// Arbitrary key-value labels for organizing and filtering credentials.
-	Labels        map[string]string `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Type          CredentialType         `protobuf:"varint,3,opt,name=type,proto3,enum=admiral.api.credential.v1.CredentialType" json:"type,omitempty"`
+	AuthConfig    *AuthConfig            `protobuf:"bytes,4,opt,name=auth_config,json=authConfig,proto3" json:"auth_config,omitempty"`
+	Labels        map[string]string      `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	AllowedHosts  []string               `protobuf:"bytes,6,rep,name=allowed_hosts,json=allowedHosts,proto3" json:"allowed_hosts,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateCredentialRequest) Reset() {
 	*x = CreateCredentialRequest{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[5]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -523,7 +595,7 @@ func (x *CreateCredentialRequest) String() string {
 func (*CreateCredentialRequest) ProtoMessage() {}
 
 func (x *CreateCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[5]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -536,7 +608,7 @@ func (x *CreateCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCredentialRequest.ProtoReflect.Descriptor instead.
 func (*CreateCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{5}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateCredentialRequest) GetName() string {
@@ -574,18 +646,23 @@ func (x *CreateCredentialRequest) GetLabels() map[string]string {
 	return nil
 }
 
-// CreateCredentialResponse contains the newly created credential.
+func (x *CreateCredentialRequest) GetAllowedHosts() []string {
+	if x != nil {
+		return x.AllowedHosts
+	}
+	return nil
+}
+
 type CreateCredentialResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created credential. Auth config sensitive fields are masked.
-	Credential    *Credential `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *Credential            `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateCredentialResponse) Reset() {
 	*x = CreateCredentialResponse{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[6]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -597,7 +674,7 @@ func (x *CreateCredentialResponse) String() string {
 func (*CreateCredentialResponse) ProtoMessage() {}
 
 func (x *CreateCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[6]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -610,7 +687,7 @@ func (x *CreateCredentialResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCredentialResponse.ProtoReflect.Descriptor instead.
 func (*CreateCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{6}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateCredentialResponse) GetCredential() *Credential {
@@ -620,18 +697,16 @@ func (x *CreateCredentialResponse) GetCredential() *Credential {
 	return nil
 }
 
-// GetCredentialRequest identifies a credential to retrieve.
 type GetCredentialRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the credential (UUID).
-	CredentialId  string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CredentialId  string                 `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetCredentialRequest) Reset() {
 	*x = GetCredentialRequest{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[7]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -643,7 +718,7 @@ func (x *GetCredentialRequest) String() string {
 func (*GetCredentialRequest) ProtoMessage() {}
 
 func (x *GetCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[7]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +731,7 @@ func (x *GetCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCredentialRequest.ProtoReflect.Descriptor instead.
 func (*GetCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{7}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetCredentialRequest) GetCredentialId() string {
@@ -666,18 +741,16 @@ func (x *GetCredentialRequest) GetCredentialId() string {
 	return ""
 }
 
-// GetCredentialResponse contains the credential record.
 type GetCredentialResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The retrieved credential. Sensitive fields are masked.
-	Credential    *Credential `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *Credential            `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetCredentialResponse) Reset() {
 	*x = GetCredentialResponse{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[8]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -689,7 +762,7 @@ func (x *GetCredentialResponse) String() string {
 func (*GetCredentialResponse) ProtoMessage() {}
 
 func (x *GetCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[8]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -702,7 +775,7 @@ func (x *GetCredentialResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCredentialResponse.ProtoReflect.Descriptor instead.
 func (*GetCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{8}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetCredentialResponse) GetCredential() *Credential {
@@ -712,31 +785,21 @@ func (x *GetCredentialResponse) GetCredential() *Credential {
 	return nil
 }
 
-// ListCredentialsRequest contains pagination and filter parameters.
 type ListCredentialsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
-	// API documentation for the full operator and predicate reference).
-	//
-	// Filterable fields:
-	//   - `name`: filter by credential name.
-	//   - `type`: filter by credential type (SSH_KEY, BASIC_AUTH, BEARER_TOKEN).
-	//   - `labels.key`: filter by label key.
-	//
-	// Example: `field['type'] = 'BEARER_TOKEN'`
-	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of credentials to return per page. Defaults to 50 when
-	// omitted or 0; must not exceed 100.
-	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	// Reserved for a filter expression; nothing reads it yet.
+	Filter    string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
+	PageSize  int32  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	// Only credentials of this type, when set.
+	Type          CredentialType `protobuf:"varint,4,opt,name=type,proto3,enum=admiral.api.credential.v1.CredentialType" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListCredentialsRequest) Reset() {
 	*x = ListCredentialsRequest{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[9]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -748,7 +811,7 @@ func (x *ListCredentialsRequest) String() string {
 func (*ListCredentialsRequest) ProtoMessage() {}
 
 func (x *ListCredentialsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[9]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -761,7 +824,7 @@ func (x *ListCredentialsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCredentialsRequest.ProtoReflect.Descriptor instead.
 func (*ListCredentialsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListCredentialsRequest) GetFilter() string {
@@ -785,20 +848,24 @@ func (x *ListCredentialsRequest) GetPageToken() string {
 	return ""
 }
 
-// ListCredentialsResponse contains a page of credentials.
+func (x *ListCredentialsRequest) GetType() CredentialType {
+	if x != nil {
+		return x.Type
+	}
+	return CredentialType_CREDENTIAL_TYPE_UNSPECIFIED
+}
+
 type ListCredentialsResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of credentials. Sensitive fields are masked.
-	Credentials []*Credential `protobuf:"bytes,1,rep,name=credentials,proto3" json:"credentials,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credentials   []*Credential          `protobuf:"bytes,1,rep,name=credentials,proto3" json:"credentials,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListCredentialsResponse) Reset() {
 	*x = ListCredentialsResponse{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[10]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -810,7 +877,7 @@ func (x *ListCredentialsResponse) String() string {
 func (*ListCredentialsResponse) ProtoMessage() {}
 
 func (x *ListCredentialsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[10]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +890,7 @@ func (x *ListCredentialsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCredentialsResponse.ProtoReflect.Descriptor instead.
 func (*ListCredentialsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListCredentialsResponse) GetCredentials() []*Credential {
@@ -840,18 +907,11 @@ func (x *ListCredentialsResponse) GetNextPageToken() string {
 	return ""
 }
 
-// UpdateCredentialRequest contains the credential fields to update.
 type UpdateCredentialRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The credential with updated fields.
-	// Only fields specified in `update_mask` are updated.
-	//
-	// When updating auth_config, the entire auth config is replaced.
-	// Omitting auth_config from the update_mask leaves credentials unchanged.
-	Credential *Credential `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
-	// The set of fields to update. Optional; if omitted, all populated fields
-	// are updated. Pass `*` for full replacement. Supported fields: `name`,
-	// `description`, `auth_config`, `labels`.
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Credential *Credential            `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	// Paths from `description`, `labels`, `allowed_hosts`, `auth_config`.
+	// Empty means every updatable field the message carries.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -859,7 +919,7 @@ type UpdateCredentialRequest struct {
 
 func (x *UpdateCredentialRequest) Reset() {
 	*x = UpdateCredentialRequest{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[11]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -871,7 +931,7 @@ func (x *UpdateCredentialRequest) String() string {
 func (*UpdateCredentialRequest) ProtoMessage() {}
 
 func (x *UpdateCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[11]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -884,7 +944,7 @@ func (x *UpdateCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCredentialRequest.ProtoReflect.Descriptor instead.
 func (*UpdateCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateCredentialRequest) GetCredential() *Credential {
@@ -901,18 +961,16 @@ func (x *UpdateCredentialRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
 	return nil
 }
 
-// UpdateCredentialResponse contains the updated credential.
 type UpdateCredentialResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The updated credential. Sensitive fields are masked.
-	Credential    *Credential `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *Credential            `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateCredentialResponse) Reset() {
 	*x = UpdateCredentialResponse{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[12]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -924,7 +982,7 @@ func (x *UpdateCredentialResponse) String() string {
 func (*UpdateCredentialResponse) ProtoMessage() {}
 
 func (x *UpdateCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[12]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -937,7 +995,7 @@ func (x *UpdateCredentialResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCredentialResponse.ProtoReflect.Descriptor instead.
 func (*UpdateCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateCredentialResponse) GetCredential() *Credential {
@@ -947,19 +1005,16 @@ func (x *UpdateCredentialResponse) GetCredential() *Credential {
 	return nil
 }
 
-// DeleteCredentialRequest identifies a credential to delete.
 type DeleteCredentialRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the credential to delete (UUID).
-	// Fails if any sources still reference this credential.
-	CredentialId  string `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CredentialId  string                 `protobuf:"bytes,1,opt,name=credential_id,json=credentialId,proto3" json:"credential_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DeleteCredentialRequest) Reset() {
 	*x = DeleteCredentialRequest{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[13]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -971,7 +1026,7 @@ func (x *DeleteCredentialRequest) String() string {
 func (*DeleteCredentialRequest) ProtoMessage() {}
 
 func (x *DeleteCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[13]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -984,7 +1039,7 @@ func (x *DeleteCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCredentialRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{13}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *DeleteCredentialRequest) GetCredentialId() string {
@@ -994,7 +1049,6 @@ func (x *DeleteCredentialRequest) GetCredentialId() string {
 	return ""
 }
 
-// DeleteCredentialResponse is empty on success.
 type DeleteCredentialResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1003,7 +1057,7 @@ type DeleteCredentialResponse struct {
 
 func (x *DeleteCredentialResponse) Reset() {
 	*x = DeleteCredentialResponse{}
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[14]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1015,7 +1069,7 @@ func (x *DeleteCredentialResponse) String() string {
 func (*DeleteCredentialResponse) ProtoMessage() {}
 
 func (x *DeleteCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[14]
+	mi := &file_admiral_api_credential_v1_credential_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1028,40 +1082,49 @@ func (x *DeleteCredentialResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCredentialResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{14}
+	return file_admiral_api_credential_v1_credential_proto_rawDescGZIP(), []int{15}
 }
 
 var File_admiral_api_credential_v1_credential_proto protoreflect.FileDescriptor
 
 const file_admiral_api_credential_v1_credential_proto_rawDesc = "" +
 	"\n" +
-	"*admiral/api/credential/v1/credential.proto\x12\x19admiral.api.credential.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"W\n" +
+	"*admiral/api/credential/v1/credential.proto\x12\x19admiral.api.credential.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"h\n" +
 	"\n" +
-	"SSHKeyAuth\x12$\n" +
-	"\vprivate_key\x18\x01 \x01(\tB\x03\xe0A\x04R\n" +
-	"privateKey\x12#\n" +
+	"SSHKeyAuth\x12-\n" +
+	"\vprivate_key\x18\x01 \x01(\tB\f\xe0A\x04\xbaH\x06r\x04\x18\x80\x80\x01R\n" +
+	"privateKey\x12+\n" +
 	"\n" +
-	"passphrase\x18\x02 \x01(\tB\x03\xe0A\x04R\n" +
-	"passphrase\"Q\n" +
-	"\tBasicAuth\x12#\n" +
-	"\busername\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\busername\x12\x1f\n" +
-	"\bpassword\x18\x02 \x01(\tB\x03\xe0A\x04R\bpassword\",\n" +
-	"\x0fBearerTokenAuth\x12\x19\n" +
-	"\x05token\x18\x01 \x01(\tB\x03\xe0A\x04R\x05token\"\xf1\x01\n" +
+	"passphrase\x18\x02 \x01(\tB\v\xe0A\x04\xbaH\x05r\x03\x18\x80\bR\n" +
+	"passphrase\"\\\n" +
+	"\tBasicAuth\x12&\n" +
+	"\busername\x18\x01 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x01\x18\x80\x02R\busername\x12'\n" +
+	"\bpassword\x18\x02 \x01(\tB\v\xe0A\x04\xbaH\x05r\x03\x18\x80 R\bpassword\"4\n" +
+	"\x0fBearerTokenAuth\x12!\n" +
+	"\x05token\x18\x01 \x01(\tB\v\xe0A\x04\xbaH\x05r\x03\x18\x80 R\x05token\"\xb9\x01\n" +
+	"\rGitHubAppAuth\x12\x1e\n" +
+	"\x06app_id\x18\x01 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\x05appId\x120\n" +
+	"\x0finstallation_id\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\x0einstallationId\x12-\n" +
+	"\vprivate_key\x18\x03 \x01(\tB\f\xe0A\x04\xbaH\x06r\x04\x18\x80\x80\x01R\n" +
+	"privateKey\x12'\n" +
+	"\aapi_url\x18\x04 \x01(\tB\x0e\xbaH\v\xd8\x01\x01r\x06\x18\x80\x04\x88\x01\x01R\x06apiUrl\"\xbc\x02\n" +
 	"\n" +
 	"AuthConfig\x12@\n" +
 	"\assh_key\x18\x01 \x01(\v2%.admiral.api.credential.v1.SSHKeyAuthH\x00R\x06sshKey\x12E\n" +
 	"\n" +
 	"basic_auth\x18\x02 \x01(\v2$.admiral.api.credential.v1.BasicAuthH\x00R\tbasicAuth\x12O\n" +
-	"\fbearer_token\x18\x03 \x01(\v2*.admiral.api.credential.v1.BearerTokenAuthH\x00R\vbearerTokenB\t\n" +
-	"\avariant\"\x86\x05\n" +
+	"\fbearer_token\x18\x03 \x01(\v2*.admiral.api.credential.v1.BearerTokenAuthH\x00R\vbearerToken\x12I\n" +
+	"\n" +
+	"github_app\x18\x04 \x01(\v2(.admiral.api.credential.v1.GitHubAppAuthH\x00R\tgithubAppB\t\n" +
+	"\avariant\"\x9f\x06\n" +
 	"\n" +
 	"Credential\x12\x1e\n" +
 	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12B\n" +
-	"\x04type\x18\x04 \x01(\x0e2).admiral.api.credential.v1.CredentialTypeB\x03\xe0A\x05R\x04type\x12F\n" +
-	"\vauth_config\x18\x05 \x01(\v2%.admiral.api.credential.v1.AuthConfigR\n" +
+	"\x04type\x18\x04 \x01(\x0e2).admiral.api.credential.v1.CredentialTypeB\x03\xe0A\x05R\x04type\x12K\n" +
+	"\vauth_config\x18\x05 \x01(\v2%.admiral.api.credential.v1.AuthConfigB\x03\xe0A\x04R\n" +
 	"authConfig\x12b\n" +
 	"\x06labels\x18\x06 \x03(\v21.admiral.api.credential.v1.Credential.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12?\n" +
 	"\n" +
@@ -1069,17 +1132,20 @@ const file_admiral_api_credential_v1_credential_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x12\x91\x01\n" +
+	"\rallowed_hosts\x18\n" +
+	" \x03(\tBl\xbaHi\x92\x01f\x10 \x18\x01\"`r^\x18\x8e\x022Y^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)*(:[0-9]{1,5})?$R\fallowedHosts\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xd1\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xeb\x04\n" +
 	"\x17CreateCredentialRequest\x12C\n" +
 	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12L\n" +
-	"\x04type\x18\x03 \x01(\x0e2).admiral.api.credential.v1.CredentialTypeB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12K\n" +
-	"\vauth_config\x18\x04 \x01(\v2%.admiral.api.credential.v1.AuthConfigB\x03\xe0A\x02R\n" +
+	"\x04type\x18\x03 \x01(\x0e2).admiral.api.credential.v1.CredentialTypeB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04type\x12Q\n" +
+	"\vauth_config\x18\x04 \x01(\v2%.admiral.api.credential.v1.AuthConfigB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\n" +
 	"authConfig\x12o\n" +
-	"\x06labels\x18\x05 \x03(\v2>.admiral.api.credential.v1.CreateCredentialRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
+	"\x06labels\x18\x05 \x03(\v2>.admiral.api.credential.v1.CreateCredentialRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12\x91\x01\n" +
+	"\rallowed_hosts\x18\x06 \x03(\tBl\xbaHi\x92\x01f\x10 \x18\x01\"`r^\x18\x8e\x022Y^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)*(:[0-9]{1,5})?$R\fallowedHosts\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"a\n" +
@@ -1092,12 +1158,13 @@ const file_admiral_api_credential_v1_credential_proto_rawDesc = "" +
 	"\x15GetCredentialResponse\x12E\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2%.admiral.api.credential.v1.CredentialR\n" +
-	"credential\"\x81\x01\n" +
+	"credential\"\xca\x01\n" +
 	"\x16ListCredentialsRequest\x12 \n" +
 	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8a\x01\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\x12G\n" +
+	"\x04type\x18\x04 \x01(\x0e2).admiral.api.credential.v1.CredentialTypeB\b\xbaH\x05\x82\x01\x02\x10\x01R\x04type\"\x8a\x01\n" +
 	"\x17ListCredentialsResponse\x12G\n" +
 	"\vcredentials\x18\x01 \x03(\v2%.admiral.api.credential.v1.CredentialR\vcredentials\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xa8\x01\n" +
@@ -1113,18 +1180,19 @@ const file_admiral_api_credential_v1_credential_proto_rawDesc = "" +
 	"credential\"K\n" +
 	"\x17DeleteCredentialRequest\x120\n" +
 	"\rcredential_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\fcredentialId\"\x1a\n" +
-	"\x18DeleteCredentialResponse*\x90\x01\n" +
+	"\x18DeleteCredentialResponse*\xb0\x01\n" +
 	"\x0eCredentialType\x12\x1f\n" +
 	"\x1bCREDENTIAL_TYPE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17CREDENTIAL_TYPE_SSH_KEY\x10\x01\x12\x1e\n" +
 	"\x1aCREDENTIAL_TYPE_BASIC_AUTH\x10\x02\x12 \n" +
-	"\x1cCREDENTIAL_TYPE_BEARER_TOKEN\x10\x032\xd0\b\n" +
+	"\x1cCREDENTIAL_TYPE_BEARER_TOKEN\x10\x03\x12\x1e\n" +
+	"\x1aCREDENTIAL_TYPE_GITHUB_APP\x10\x042\xcb\b\n" +
 	"\rCredentialAPI\x12\xd2\x01\n" +
 	"\x10CreateCredential\x122.admiral.api.credential.v1.CreateCredentialRequest\x1a3.admiral.api.credential.v1.CreateCredentialResponse\"U\xbaG\"\n" +
 	"\vCredentials\x12\x13Create a credential\xa2\x97$\x12\n" +
-	"\x10credential:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/credentials\x12\xd7\x01\n" +
-	"\rGetCredential\x12/.admiral.api.credential.v1.GetCredentialRequest\x1a0.admiral.api.credential.v1.GetCredentialResponse\"c\xbaG$\n" +
-	"\vCredentials\x12\x15Retrieve a credential\xa2\x97$\x11\n" +
+	"\x10credential:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/credentials\x12\xd2\x01\n" +
+	"\rGetCredential\x12/.admiral.api.credential.v1.GetCredentialRequest\x1a0.admiral.api.credential.v1.GetCredentialResponse\"^\xbaG\x1f\n" +
+	"\vCredentials\x12\x10Get a credential\xa2\x97$\x11\n" +
 	"\x0fcredential:read\x82\xd3\xe4\x93\x02!\x12\x1f/v1/credentials/{credential_id}\x12\xc8\x01\n" +
 	"\x0fListCredentials\x121.admiral.api.credential.v1.ListCredentialsRequest\x1a2.admiral.api.credential.v1.ListCredentialsResponse\"N\xbaG\x1f\n" +
 	"\vCredentials\x12\x10List credentials\xa2\x97$\x11\n" +
@@ -1150,64 +1218,67 @@ func file_admiral_api_credential_v1_credential_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_api_credential_v1_credential_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_admiral_api_credential_v1_credential_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_admiral_api_credential_v1_credential_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_admiral_api_credential_v1_credential_proto_goTypes = []any{
 	(CredentialType)(0),              // 0: admiral.api.credential.v1.CredentialType
 	(*SSHKeyAuth)(nil),               // 1: admiral.api.credential.v1.SSHKeyAuth
 	(*BasicAuth)(nil),                // 2: admiral.api.credential.v1.BasicAuth
 	(*BearerTokenAuth)(nil),          // 3: admiral.api.credential.v1.BearerTokenAuth
-	(*AuthConfig)(nil),               // 4: admiral.api.credential.v1.AuthConfig
-	(*Credential)(nil),               // 5: admiral.api.credential.v1.Credential
-	(*CreateCredentialRequest)(nil),  // 6: admiral.api.credential.v1.CreateCredentialRequest
-	(*CreateCredentialResponse)(nil), // 7: admiral.api.credential.v1.CreateCredentialResponse
-	(*GetCredentialRequest)(nil),     // 8: admiral.api.credential.v1.GetCredentialRequest
-	(*GetCredentialResponse)(nil),    // 9: admiral.api.credential.v1.GetCredentialResponse
-	(*ListCredentialsRequest)(nil),   // 10: admiral.api.credential.v1.ListCredentialsRequest
-	(*ListCredentialsResponse)(nil),  // 11: admiral.api.credential.v1.ListCredentialsResponse
-	(*UpdateCredentialRequest)(nil),  // 12: admiral.api.credential.v1.UpdateCredentialRequest
-	(*UpdateCredentialResponse)(nil), // 13: admiral.api.credential.v1.UpdateCredentialResponse
-	(*DeleteCredentialRequest)(nil),  // 14: admiral.api.credential.v1.DeleteCredentialRequest
-	(*DeleteCredentialResponse)(nil), // 15: admiral.api.credential.v1.DeleteCredentialResponse
-	nil,                              // 16: admiral.api.credential.v1.Credential.LabelsEntry
-	nil,                              // 17: admiral.api.credential.v1.CreateCredentialRequest.LabelsEntry
-	(*v1.ActorRef)(nil),              // 18: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),    // 19: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),    // 20: google.protobuf.FieldMask
+	(*GitHubAppAuth)(nil),            // 4: admiral.api.credential.v1.GitHubAppAuth
+	(*AuthConfig)(nil),               // 5: admiral.api.credential.v1.AuthConfig
+	(*Credential)(nil),               // 6: admiral.api.credential.v1.Credential
+	(*CreateCredentialRequest)(nil),  // 7: admiral.api.credential.v1.CreateCredentialRequest
+	(*CreateCredentialResponse)(nil), // 8: admiral.api.credential.v1.CreateCredentialResponse
+	(*GetCredentialRequest)(nil),     // 9: admiral.api.credential.v1.GetCredentialRequest
+	(*GetCredentialResponse)(nil),    // 10: admiral.api.credential.v1.GetCredentialResponse
+	(*ListCredentialsRequest)(nil),   // 11: admiral.api.credential.v1.ListCredentialsRequest
+	(*ListCredentialsResponse)(nil),  // 12: admiral.api.credential.v1.ListCredentialsResponse
+	(*UpdateCredentialRequest)(nil),  // 13: admiral.api.credential.v1.UpdateCredentialRequest
+	(*UpdateCredentialResponse)(nil), // 14: admiral.api.credential.v1.UpdateCredentialResponse
+	(*DeleteCredentialRequest)(nil),  // 15: admiral.api.credential.v1.DeleteCredentialRequest
+	(*DeleteCredentialResponse)(nil), // 16: admiral.api.credential.v1.DeleteCredentialResponse
+	nil,                              // 17: admiral.api.credential.v1.Credential.LabelsEntry
+	nil,                              // 18: admiral.api.credential.v1.CreateCredentialRequest.LabelsEntry
+	(*v1.ActorRef)(nil),              // 19: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),    // 20: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),    // 21: google.protobuf.FieldMask
 }
 var file_admiral_api_credential_v1_credential_proto_depIdxs = []int32{
 	1,  // 0: admiral.api.credential.v1.AuthConfig.ssh_key:type_name -> admiral.api.credential.v1.SSHKeyAuth
 	2,  // 1: admiral.api.credential.v1.AuthConfig.basic_auth:type_name -> admiral.api.credential.v1.BasicAuth
 	3,  // 2: admiral.api.credential.v1.AuthConfig.bearer_token:type_name -> admiral.api.credential.v1.BearerTokenAuth
-	0,  // 3: admiral.api.credential.v1.Credential.type:type_name -> admiral.api.credential.v1.CredentialType
-	4,  // 4: admiral.api.credential.v1.Credential.auth_config:type_name -> admiral.api.credential.v1.AuthConfig
-	16, // 5: admiral.api.credential.v1.Credential.labels:type_name -> admiral.api.credential.v1.Credential.LabelsEntry
-	18, // 6: admiral.api.credential.v1.Credential.created_by:type_name -> admiral.common.v1.ActorRef
-	19, // 7: admiral.api.credential.v1.Credential.created_at:type_name -> google.protobuf.Timestamp
-	19, // 8: admiral.api.credential.v1.Credential.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 9: admiral.api.credential.v1.CreateCredentialRequest.type:type_name -> admiral.api.credential.v1.CredentialType
-	4,  // 10: admiral.api.credential.v1.CreateCredentialRequest.auth_config:type_name -> admiral.api.credential.v1.AuthConfig
-	17, // 11: admiral.api.credential.v1.CreateCredentialRequest.labels:type_name -> admiral.api.credential.v1.CreateCredentialRequest.LabelsEntry
-	5,  // 12: admiral.api.credential.v1.CreateCredentialResponse.credential:type_name -> admiral.api.credential.v1.Credential
-	5,  // 13: admiral.api.credential.v1.GetCredentialResponse.credential:type_name -> admiral.api.credential.v1.Credential
-	5,  // 14: admiral.api.credential.v1.ListCredentialsResponse.credentials:type_name -> admiral.api.credential.v1.Credential
-	5,  // 15: admiral.api.credential.v1.UpdateCredentialRequest.credential:type_name -> admiral.api.credential.v1.Credential
-	20, // 16: admiral.api.credential.v1.UpdateCredentialRequest.update_mask:type_name -> google.protobuf.FieldMask
-	5,  // 17: admiral.api.credential.v1.UpdateCredentialResponse.credential:type_name -> admiral.api.credential.v1.Credential
-	6,  // 18: admiral.api.credential.v1.CredentialAPI.CreateCredential:input_type -> admiral.api.credential.v1.CreateCredentialRequest
-	8,  // 19: admiral.api.credential.v1.CredentialAPI.GetCredential:input_type -> admiral.api.credential.v1.GetCredentialRequest
-	10, // 20: admiral.api.credential.v1.CredentialAPI.ListCredentials:input_type -> admiral.api.credential.v1.ListCredentialsRequest
-	12, // 21: admiral.api.credential.v1.CredentialAPI.UpdateCredential:input_type -> admiral.api.credential.v1.UpdateCredentialRequest
-	14, // 22: admiral.api.credential.v1.CredentialAPI.DeleteCredential:input_type -> admiral.api.credential.v1.DeleteCredentialRequest
-	7,  // 23: admiral.api.credential.v1.CredentialAPI.CreateCredential:output_type -> admiral.api.credential.v1.CreateCredentialResponse
-	9,  // 24: admiral.api.credential.v1.CredentialAPI.GetCredential:output_type -> admiral.api.credential.v1.GetCredentialResponse
-	11, // 25: admiral.api.credential.v1.CredentialAPI.ListCredentials:output_type -> admiral.api.credential.v1.ListCredentialsResponse
-	13, // 26: admiral.api.credential.v1.CredentialAPI.UpdateCredential:output_type -> admiral.api.credential.v1.UpdateCredentialResponse
-	15, // 27: admiral.api.credential.v1.CredentialAPI.DeleteCredential:output_type -> admiral.api.credential.v1.DeleteCredentialResponse
-	23, // [23:28] is the sub-list for method output_type
-	18, // [18:23] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	4,  // 3: admiral.api.credential.v1.AuthConfig.github_app:type_name -> admiral.api.credential.v1.GitHubAppAuth
+	0,  // 4: admiral.api.credential.v1.Credential.type:type_name -> admiral.api.credential.v1.CredentialType
+	5,  // 5: admiral.api.credential.v1.Credential.auth_config:type_name -> admiral.api.credential.v1.AuthConfig
+	17, // 6: admiral.api.credential.v1.Credential.labels:type_name -> admiral.api.credential.v1.Credential.LabelsEntry
+	19, // 7: admiral.api.credential.v1.Credential.created_by:type_name -> admiral.common.v1.ActorRef
+	20, // 8: admiral.api.credential.v1.Credential.created_at:type_name -> google.protobuf.Timestamp
+	20, // 9: admiral.api.credential.v1.Credential.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 10: admiral.api.credential.v1.CreateCredentialRequest.type:type_name -> admiral.api.credential.v1.CredentialType
+	5,  // 11: admiral.api.credential.v1.CreateCredentialRequest.auth_config:type_name -> admiral.api.credential.v1.AuthConfig
+	18, // 12: admiral.api.credential.v1.CreateCredentialRequest.labels:type_name -> admiral.api.credential.v1.CreateCredentialRequest.LabelsEntry
+	6,  // 13: admiral.api.credential.v1.CreateCredentialResponse.credential:type_name -> admiral.api.credential.v1.Credential
+	6,  // 14: admiral.api.credential.v1.GetCredentialResponse.credential:type_name -> admiral.api.credential.v1.Credential
+	0,  // 15: admiral.api.credential.v1.ListCredentialsRequest.type:type_name -> admiral.api.credential.v1.CredentialType
+	6,  // 16: admiral.api.credential.v1.ListCredentialsResponse.credentials:type_name -> admiral.api.credential.v1.Credential
+	6,  // 17: admiral.api.credential.v1.UpdateCredentialRequest.credential:type_name -> admiral.api.credential.v1.Credential
+	21, // 18: admiral.api.credential.v1.UpdateCredentialRequest.update_mask:type_name -> google.protobuf.FieldMask
+	6,  // 19: admiral.api.credential.v1.UpdateCredentialResponse.credential:type_name -> admiral.api.credential.v1.Credential
+	7,  // 20: admiral.api.credential.v1.CredentialAPI.CreateCredential:input_type -> admiral.api.credential.v1.CreateCredentialRequest
+	9,  // 21: admiral.api.credential.v1.CredentialAPI.GetCredential:input_type -> admiral.api.credential.v1.GetCredentialRequest
+	11, // 22: admiral.api.credential.v1.CredentialAPI.ListCredentials:input_type -> admiral.api.credential.v1.ListCredentialsRequest
+	13, // 23: admiral.api.credential.v1.CredentialAPI.UpdateCredential:input_type -> admiral.api.credential.v1.UpdateCredentialRequest
+	15, // 24: admiral.api.credential.v1.CredentialAPI.DeleteCredential:input_type -> admiral.api.credential.v1.DeleteCredentialRequest
+	8,  // 25: admiral.api.credential.v1.CredentialAPI.CreateCredential:output_type -> admiral.api.credential.v1.CreateCredentialResponse
+	10, // 26: admiral.api.credential.v1.CredentialAPI.GetCredential:output_type -> admiral.api.credential.v1.GetCredentialResponse
+	12, // 27: admiral.api.credential.v1.CredentialAPI.ListCredentials:output_type -> admiral.api.credential.v1.ListCredentialsResponse
+	14, // 28: admiral.api.credential.v1.CredentialAPI.UpdateCredential:output_type -> admiral.api.credential.v1.UpdateCredentialResponse
+	16, // 29: admiral.api.credential.v1.CredentialAPI.DeleteCredential:output_type -> admiral.api.credential.v1.DeleteCredentialResponse
+	25, // [25:30] is the sub-list for method output_type
+	20, // [20:25] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_credential_v1_credential_proto_init() }
@@ -1215,10 +1286,11 @@ func file_admiral_api_credential_v1_credential_proto_init() {
 	if File_admiral_api_credential_v1_credential_proto != nil {
 		return
 	}
-	file_admiral_api_credential_v1_credential_proto_msgTypes[3].OneofWrappers = []any{
+	file_admiral_api_credential_v1_credential_proto_msgTypes[4].OneofWrappers = []any{
 		(*AuthConfig_SshKey)(nil),
 		(*AuthConfig_BasicAuth)(nil),
 		(*AuthConfig_BearerToken)(nil),
+		(*AuthConfig_GithubApp)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1226,7 +1298,7 @@ func file_admiral_api_credential_v1_credential_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_credential_v1_credential_proto_rawDesc), len(file_admiral_api_credential_v1_credential_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

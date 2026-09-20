@@ -36,6 +36,9 @@ const (
 	// RegistryAPIPublishComponentProcedure is the fully-qualified name of the RegistryAPI's
 	// PublishComponent RPC.
 	RegistryAPIPublishComponentProcedure = "/admiral.api.registry.v1.RegistryAPI/PublishComponent"
+	// RegistryAPIPullComponentProcedure is the fully-qualified name of the RegistryAPI's PullComponent
+	// RPC.
+	RegistryAPIPullComponentProcedure = "/admiral.api.registry.v1.RegistryAPI/PullComponent"
 	// RegistryAPIListComponentsProcedure is the fully-qualified name of the RegistryAPI's
 	// ListComponents RPC.
 	RegistryAPIListComponentsProcedure = "/admiral.api.registry.v1.RegistryAPI/ListComponents"
@@ -82,6 +85,17 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *connect.Request[v1.PublishComponentRequest]) (*connect.Response[v1.PublishComponentResponse], error)
+	// PullComponent publishes an artifact the tenant does not own: a chart in
+	// an HTTP repository or an OCI registry, a module in a module registry, a
+	// git repository at a ref, an archive. Admiral fetches it with the
+	// credentials named, closes it over what it reaches, scans it, and
+	// records the revision with provenance saying where it came from. The
+	// bytes are a copy: upstream may move the tag and the revision does not.
+	// The same resolution under the same name is the same revision, returned
+	// with `unchanged` set.
+	//
+	// Scope: `component:publish`
+	PullComponent(context.Context, *connect.Request[v1.PullComponentRequest]) (*connect.Response[v1.PullComponentResponse], error)
 	// ListComponents pages through the registry.
 	//
 	// Scope: `component:read`
@@ -149,6 +163,12 @@ func NewRegistryAPIClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(registryAPIMethods.ByName("PublishComponent")),
 			connect.WithClientOptions(opts...),
 		),
+		pullComponent: connect.NewClient[v1.PullComponentRequest, v1.PullComponentResponse](
+			httpClient,
+			baseURL+RegistryAPIPullComponentProcedure,
+			connect.WithSchema(registryAPIMethods.ByName("PullComponent")),
+			connect.WithClientOptions(opts...),
+		),
 		listComponents: connect.NewClient[v1.ListComponentsRequest, v1.ListComponentsResponse](
 			httpClient,
 			baseURL+RegistryAPIListComponentsProcedure,
@@ -209,6 +229,7 @@ func NewRegistryAPIClient(httpClient connect.HTTPClient, baseURL string, opts ..
 // registryAPIClient implements RegistryAPIClient.
 type registryAPIClient struct {
 	publishComponent  *connect.Client[v1.PublishComponentRequest, v1.PublishComponentResponse]
+	pullComponent     *connect.Client[v1.PullComponentRequest, v1.PullComponentResponse]
 	listComponents    *connect.Client[v1.ListComponentsRequest, v1.ListComponentsResponse]
 	getComponent      *connect.Client[v1.GetComponentRequest, v1.GetComponentResponse]
 	updateComponent   *connect.Client[v1.UpdateComponentRequest, v1.UpdateComponentResponse]
@@ -223,6 +244,11 @@ type registryAPIClient struct {
 // PublishComponent calls admiral.api.registry.v1.RegistryAPI.PublishComponent.
 func (c *registryAPIClient) PublishComponent(ctx context.Context, req *connect.Request[v1.PublishComponentRequest]) (*connect.Response[v1.PublishComponentResponse], error) {
 	return c.publishComponent.CallUnary(ctx, req)
+}
+
+// PullComponent calls admiral.api.registry.v1.RegistryAPI.PullComponent.
+func (c *registryAPIClient) PullComponent(ctx context.Context, req *connect.Request[v1.PullComponentRequest]) (*connect.Response[v1.PullComponentResponse], error) {
+	return c.pullComponent.CallUnary(ctx, req)
 }
 
 // ListComponents calls admiral.api.registry.v1.RegistryAPI.ListComponents.
@@ -290,6 +316,17 @@ type RegistryAPIHandler interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *connect.Request[v1.PublishComponentRequest]) (*connect.Response[v1.PublishComponentResponse], error)
+	// PullComponent publishes an artifact the tenant does not own: a chart in
+	// an HTTP repository or an OCI registry, a module in a module registry, a
+	// git repository at a ref, an archive. Admiral fetches it with the
+	// credentials named, closes it over what it reaches, scans it, and
+	// records the revision with provenance saying where it came from. The
+	// bytes are a copy: upstream may move the tag and the revision does not.
+	// The same resolution under the same name is the same revision, returned
+	// with `unchanged` set.
+	//
+	// Scope: `component:publish`
+	PullComponent(context.Context, *connect.Request[v1.PullComponentRequest]) (*connect.Response[v1.PullComponentResponse], error)
 	// ListComponents pages through the registry.
 	//
 	// Scope: `component:read`
@@ -353,6 +390,12 @@ func NewRegistryAPIHandler(svc RegistryAPIHandler, opts ...connect.HandlerOption
 		connect.WithSchema(registryAPIMethods.ByName("PublishComponent")),
 		connect.WithHandlerOptions(opts...),
 	)
+	registryAPIPullComponentHandler := connect.NewUnaryHandler(
+		RegistryAPIPullComponentProcedure,
+		svc.PullComponent,
+		connect.WithSchema(registryAPIMethods.ByName("PullComponent")),
+		connect.WithHandlerOptions(opts...),
+	)
 	registryAPIListComponentsHandler := connect.NewUnaryHandler(
 		RegistryAPIListComponentsProcedure,
 		svc.ListComponents,
@@ -411,6 +454,8 @@ func NewRegistryAPIHandler(svc RegistryAPIHandler, opts ...connect.HandlerOption
 		switch r.URL.Path {
 		case RegistryAPIPublishComponentProcedure:
 			registryAPIPublishComponentHandler.ServeHTTP(w, r)
+		case RegistryAPIPullComponentProcedure:
+			registryAPIPullComponentHandler.ServeHTTP(w, r)
 		case RegistryAPIListComponentsProcedure:
 			registryAPIListComponentsHandler.ServeHTTP(w, r)
 		case RegistryAPIGetComponentProcedure:
@@ -440,6 +485,10 @@ type UnimplementedRegistryAPIHandler struct{}
 
 func (UnimplementedRegistryAPIHandler) PublishComponent(context.Context, *connect.Request[v1.PublishComponentRequest]) (*connect.Response[v1.PublishComponentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.registry.v1.RegistryAPI.PublishComponent is not implemented"))
+}
+
+func (UnimplementedRegistryAPIHandler) PullComponent(context.Context, *connect.Request[v1.PullComponentRequest]) (*connect.Response[v1.PullComponentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.registry.v1.RegistryAPI.PullComponent is not implemented"))
 }
 
 func (UnimplementedRegistryAPIHandler) ListComponents(context.Context, *connect.Request[v1.ListComponentsRequest]) (*connect.Response[v1.ListComponentsResponse], error) {

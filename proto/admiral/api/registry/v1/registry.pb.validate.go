@@ -1791,6 +1791,614 @@ var _ interface {
 	ErrorName() string
 } = PublishComponentResponseValidationError{}
 
+// Validate checks the field values on PullSource with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *PullSource) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullSource with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in PullSourceMultiError, or
+// nil if none found.
+func (m *PullSource) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullSource) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	switch v := m.Source.(type) {
+	case *PullSource_OciChart:
+		if v == nil {
+			err := PullSourceValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetOciChart()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "OciChart",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "OciChart",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetOciChart()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PullSourceValidationError{
+					field:  "OciChart",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *PullSource_HelmChart_:
+		if v == nil {
+			err := PullSourceValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetHelmChart()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "HelmChart",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "HelmChart",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetHelmChart()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PullSourceValidationError{
+					field:  "HelmChart",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *PullSource_RegistryModule_:
+		if v == nil {
+			err := PullSourceValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetRegistryModule()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "RegistryModule",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "RegistryModule",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetRegistryModule()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PullSourceValidationError{
+					field:  "RegistryModule",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *PullSource_GitTree_:
+		if v == nil {
+			err := PullSourceValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetGitTree()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "GitTree",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "GitTree",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetGitTree()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PullSourceValidationError{
+					field:  "GitTree",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *PullSource_Archive_:
+		if v == nil {
+			err := PullSourceValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetArchive()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "Archive",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PullSourceValidationError{
+						field:  "Archive",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetArchive()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PullSourceValidationError{
+					field:  "Archive",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
+	if len(errors) > 0 {
+		return PullSourceMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullSourceMultiError is an error wrapping multiple validation errors
+// returned by PullSource.ValidateAll() if the designated constraints aren't met.
+type PullSourceMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullSourceMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullSourceMultiError) AllErrors() []error { return m }
+
+// PullSourceValidationError is the validation error returned by
+// PullSource.Validate if the designated constraints aren't met.
+type PullSourceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullSourceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullSourceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullSourceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullSourceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullSourceValidationError) ErrorName() string { return "PullSourceValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PullSourceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullSource.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullSourceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullSourceValidationError{}
+
+// Validate checks the field values on PullComponentRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullComponentRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullComponentRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullComponentRequestMultiError, or nil if none found.
+func (m *PullComponentRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullComponentRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	if all {
+		switch v := interface{}(m.GetSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PullComponentRequestValidationError{
+					field:  "Source",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PullComponentRequestValidationError{
+					field:  "Source",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PullComponentRequestValidationError{
+				field:  "Source",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Description
+
+	// no validation rules for Labels
+
+	if len(errors) > 0 {
+		return PullComponentRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullComponentRequestMultiError is an error wrapping multiple validation
+// errors returned by PullComponentRequest.ValidateAll() if the designated
+// constraints aren't met.
+type PullComponentRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullComponentRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullComponentRequestMultiError) AllErrors() []error { return m }
+
+// PullComponentRequestValidationError is the validation error returned by
+// PullComponentRequest.Validate if the designated constraints aren't met.
+type PullComponentRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullComponentRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullComponentRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullComponentRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullComponentRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullComponentRequestValidationError) ErrorName() string {
+	return "PullComponentRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullComponentRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullComponentRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullComponentRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullComponentRequestValidationError{}
+
+// Validate checks the field values on PullComponentResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullComponentResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullComponentResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullComponentResponseMultiError, or nil if none found.
+func (m *PullComponentResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullComponentResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetComponent()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PullComponentResponseValidationError{
+					field:  "Component",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PullComponentResponseValidationError{
+					field:  "Component",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetComponent()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PullComponentResponseValidationError{
+				field:  "Component",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetRevision()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PullComponentResponseValidationError{
+					field:  "Revision",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PullComponentResponseValidationError{
+					field:  "Revision",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRevision()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PullComponentResponseValidationError{
+				field:  "Revision",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Unchanged
+
+	if len(errors) > 0 {
+		return PullComponentResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullComponentResponseMultiError is an error wrapping multiple validation
+// errors returned by PullComponentResponse.ValidateAll() if the designated
+// constraints aren't met.
+type PullComponentResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullComponentResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullComponentResponseMultiError) AllErrors() []error { return m }
+
+// PullComponentResponseValidationError is the validation error returned by
+// PullComponentResponse.Validate if the designated constraints aren't met.
+type PullComponentResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullComponentResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullComponentResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullComponentResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullComponentResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullComponentResponseValidationError) ErrorName() string {
+	return "PullComponentResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullComponentResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullComponentResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullComponentResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullComponentResponseValidationError{}
+
 // Validate checks the field values on ListComponentsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -4016,3 +4624,535 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteTagResponseValidationError{}
+
+// Validate checks the field values on PullSource_OCIChart with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullSource_OCIChart) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullSource_OCIChart with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullSource_OCIChartMultiError, or nil if none found.
+func (m *PullSource_OCIChart) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullSource_OCIChart) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Reference
+
+	// no validation rules for Version
+
+	if len(errors) > 0 {
+		return PullSource_OCIChartMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullSource_OCIChartMultiError is an error wrapping multiple validation
+// errors returned by PullSource_OCIChart.ValidateAll() if the designated
+// constraints aren't met.
+type PullSource_OCIChartMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullSource_OCIChartMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullSource_OCIChartMultiError) AllErrors() []error { return m }
+
+// PullSource_OCIChartValidationError is the validation error returned by
+// PullSource_OCIChart.Validate if the designated constraints aren't met.
+type PullSource_OCIChartValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullSource_OCIChartValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullSource_OCIChartValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullSource_OCIChartValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullSource_OCIChartValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullSource_OCIChartValidationError) ErrorName() string {
+	return "PullSource_OCIChartValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullSource_OCIChartValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullSource_OCIChart.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullSource_OCIChartValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullSource_OCIChartValidationError{}
+
+// Validate checks the field values on PullSource_HelmChart with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullSource_HelmChart) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullSource_HelmChart with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullSource_HelmChartMultiError, or nil if none found.
+func (m *PullSource_HelmChart) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullSource_HelmChart) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Repository
+
+	// no validation rules for Chart
+
+	// no validation rules for Version
+
+	if len(errors) > 0 {
+		return PullSource_HelmChartMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullSource_HelmChartMultiError is an error wrapping multiple validation
+// errors returned by PullSource_HelmChart.ValidateAll() if the designated
+// constraints aren't met.
+type PullSource_HelmChartMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullSource_HelmChartMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullSource_HelmChartMultiError) AllErrors() []error { return m }
+
+// PullSource_HelmChartValidationError is the validation error returned by
+// PullSource_HelmChart.Validate if the designated constraints aren't met.
+type PullSource_HelmChartValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullSource_HelmChartValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullSource_HelmChartValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullSource_HelmChartValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullSource_HelmChartValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullSource_HelmChartValidationError) ErrorName() string {
+	return "PullSource_HelmChartValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullSource_HelmChartValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullSource_HelmChart.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullSource_HelmChartValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullSource_HelmChartValidationError{}
+
+// Validate checks the field values on PullSource_RegistryModule with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullSource_RegistryModule) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullSource_RegistryModule with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullSource_RegistryModuleMultiError, or nil if none found.
+func (m *PullSource_RegistryModule) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullSource_RegistryModule) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Address
+
+	// no validation rules for Version
+
+	if len(errors) > 0 {
+		return PullSource_RegistryModuleMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullSource_RegistryModuleMultiError is an error wrapping multiple validation
+// errors returned by PullSource_RegistryModule.ValidateAll() if the
+// designated constraints aren't met.
+type PullSource_RegistryModuleMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullSource_RegistryModuleMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullSource_RegistryModuleMultiError) AllErrors() []error { return m }
+
+// PullSource_RegistryModuleValidationError is the validation error returned by
+// PullSource_RegistryModule.Validate if the designated constraints aren't met.
+type PullSource_RegistryModuleValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullSource_RegistryModuleValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullSource_RegistryModuleValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullSource_RegistryModuleValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullSource_RegistryModuleValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullSource_RegistryModuleValidationError) ErrorName() string {
+	return "PullSource_RegistryModuleValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullSource_RegistryModuleValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullSource_RegistryModule.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullSource_RegistryModuleValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullSource_RegistryModuleValidationError{}
+
+// Validate checks the field values on PullSource_GitTree with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullSource_GitTree) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullSource_GitTree with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullSource_GitTreeMultiError, or nil if none found.
+func (m *PullSource_GitTree) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullSource_GitTree) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Url
+
+	// no validation rules for Ref
+
+	// no validation rules for Path
+
+	if len(errors) > 0 {
+		return PullSource_GitTreeMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullSource_GitTreeMultiError is an error wrapping multiple validation errors
+// returned by PullSource_GitTree.ValidateAll() if the designated constraints
+// aren't met.
+type PullSource_GitTreeMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullSource_GitTreeMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullSource_GitTreeMultiError) AllErrors() []error { return m }
+
+// PullSource_GitTreeValidationError is the validation error returned by
+// PullSource_GitTree.Validate if the designated constraints aren't met.
+type PullSource_GitTreeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullSource_GitTreeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullSource_GitTreeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullSource_GitTreeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullSource_GitTreeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullSource_GitTreeValidationError) ErrorName() string {
+	return "PullSource_GitTreeValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullSource_GitTreeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullSource_GitTree.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullSource_GitTreeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullSource_GitTreeValidationError{}
+
+// Validate checks the field values on PullSource_Archive with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PullSource_Archive) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PullSource_Archive with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PullSource_ArchiveMultiError, or nil if none found.
+func (m *PullSource_Archive) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PullSource_Archive) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Url
+
+	if len(errors) > 0 {
+		return PullSource_ArchiveMultiError(errors)
+	}
+
+	return nil
+}
+
+// PullSource_ArchiveMultiError is an error wrapping multiple validation errors
+// returned by PullSource_Archive.ValidateAll() if the designated constraints
+// aren't met.
+type PullSource_ArchiveMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PullSource_ArchiveMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PullSource_ArchiveMultiError) AllErrors() []error { return m }
+
+// PullSource_ArchiveValidationError is the validation error returned by
+// PullSource_Archive.Validate if the designated constraints aren't met.
+type PullSource_ArchiveValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PullSource_ArchiveValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PullSource_ArchiveValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PullSource_ArchiveValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PullSource_ArchiveValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PullSource_ArchiveValidationError) ErrorName() string {
+	return "PullSource_ArchiveValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PullSource_ArchiveValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPullSource_Archive.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PullSource_ArchiveValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PullSource_ArchiveValidationError{}
