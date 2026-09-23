@@ -27,7 +27,7 @@ const (
 	RegistryAPI_DeleteComponent_FullMethodName   = "/admiral.api.registry.v1.RegistryAPI/DeleteComponent"
 	RegistryAPI_ListRevisions_FullMethodName     = "/admiral.api.registry.v1.RegistryAPI/ListRevisions"
 	RegistryAPI_GetRevision_FullMethodName       = "/admiral.api.registry.v1.RegistryAPI/GetRevision"
-	RegistryAPI_DeprecateRevision_FullMethodName = "/admiral.api.registry.v1.RegistryAPI/DeprecateRevision"
+	RegistryAPI_SetRevisionStatus_FullMethodName = "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus"
 	RegistryAPI_SetTag_FullMethodName            = "/admiral.api.registry.v1.RegistryAPI/SetTag"
 	RegistryAPI_DeleteTag_FullMethodName         = "/admiral.api.registry.v1.RegistryAPI/DeleteTag"
 )
@@ -42,8 +42,8 @@ const (
 // A component here is a REGISTRY ENTRY -- the thing `admiral component
 // publish` creates and later publishes land under -- not an instance running
 // in an environment. Both are called component on purpose; the verbs and the
-// address forms carry the distinction. Publish, tag and deprecate act on the
-// registry (this service); add, update and copy act inside a change set.
+// address forms carry the distinction. Publish, tag and status changes act on
+// the registry (this service); add, update and copy act inside a change set.
 // `cloud-sql:v1.2.0` is registry-speak, `my-api/prod/users-db` is
 // environment-speak.
 //
@@ -54,8 +54,8 @@ const (
 // once assigned, floating tags (latest, main) may.
 //
 // Publishing the same bytes under the same name twice yields the same
-// revision. Revisions are never deleted; deprecation refuses new adoption
-// while what already pins the revision keeps running.
+// revision. Revisions are never deleted; revoking one refuses new adoption
+// while what already pins it keeps running.
 type RegistryAPIClient interface {
 	// PublishComponent uploads a bundle and records it as a revision, creating
 	// the component on first use.
@@ -115,13 +115,11 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:read`
 	GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error)
-	// DeprecateRevision refuses new adoption of a revision with a recorded
-	// reason. Environments already pinned to it keep running and warn.
-	// One-way: FAILED_PRECONDITION if already deprecated, with the reason that
-	// was recorded first.
+	// SetRevisionStatus moves a revision between PUBLISHED, DEPRECATED and
+	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
 	//
 	// Scope: `component:write`
-	DeprecateRevision(ctx context.Context, in *DeprecateRevisionRequest, opts ...grpc.CallOption) (*DeprecateRevisionResponse, error)
+	SetRevisionStatus(ctx context.Context, in *SetRevisionStatusRequest, opts ...grpc.CallOption) (*SetRevisionStatusResponse, error)
 	// SetTag points a tag at a revision, creating it or moving it. A semver tag
 	// may be created and never moved: FAILED_PRECONDITION on an attempt to
 	// repoint one, with the rule in the message. Setting a tag to the revision
@@ -224,10 +222,10 @@ func (c *registryAPIClient) GetRevision(ctx context.Context, in *GetRevisionRequ
 	return out, nil
 }
 
-func (c *registryAPIClient) DeprecateRevision(ctx context.Context, in *DeprecateRevisionRequest, opts ...grpc.CallOption) (*DeprecateRevisionResponse, error) {
+func (c *registryAPIClient) SetRevisionStatus(ctx context.Context, in *SetRevisionStatusRequest, opts ...grpc.CallOption) (*SetRevisionStatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeprecateRevisionResponse)
-	err := c.cc.Invoke(ctx, RegistryAPI_DeprecateRevision_FullMethodName, in, out, cOpts...)
+	out := new(SetRevisionStatusResponse)
+	err := c.cc.Invoke(ctx, RegistryAPI_SetRevisionStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -264,8 +262,8 @@ func (c *registryAPIClient) DeleteTag(ctx context.Context, in *DeleteTagRequest,
 // A component here is a REGISTRY ENTRY -- the thing `admiral component
 // publish` creates and later publishes land under -- not an instance running
 // in an environment. Both are called component on purpose; the verbs and the
-// address forms carry the distinction. Publish, tag and deprecate act on the
-// registry (this service); add, update and copy act inside a change set.
+// address forms carry the distinction. Publish, tag and status changes act on
+// the registry (this service); add, update and copy act inside a change set.
 // `cloud-sql:v1.2.0` is registry-speak, `my-api/prod/users-db` is
 // environment-speak.
 //
@@ -276,8 +274,8 @@ func (c *registryAPIClient) DeleteTag(ctx context.Context, in *DeleteTagRequest,
 // once assigned, floating tags (latest, main) may.
 //
 // Publishing the same bytes under the same name twice yields the same
-// revision. Revisions are never deleted; deprecation refuses new adoption
-// while what already pins the revision keeps running.
+// revision. Revisions are never deleted; revoking one refuses new adoption
+// while what already pins it keeps running.
 type RegistryAPIServer interface {
 	// PublishComponent uploads a bundle and records it as a revision, creating
 	// the component on first use.
@@ -337,13 +335,11 @@ type RegistryAPIServer interface {
 	//
 	// Scope: `component:read`
 	GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error)
-	// DeprecateRevision refuses new adoption of a revision with a recorded
-	// reason. Environments already pinned to it keep running and warn.
-	// One-way: FAILED_PRECONDITION if already deprecated, with the reason that
-	// was recorded first.
+	// SetRevisionStatus moves a revision between PUBLISHED, DEPRECATED and
+	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
 	//
 	// Scope: `component:write`
-	DeprecateRevision(context.Context, *DeprecateRevisionRequest) (*DeprecateRevisionResponse, error)
+	SetRevisionStatus(context.Context, *SetRevisionStatusRequest) (*SetRevisionStatusResponse, error)
 	// SetTag points a tag at a revision, creating it or moving it. A semver tag
 	// may be created and never moved: FAILED_PRECONDITION on an attempt to
 	// repoint one, with the rule in the message. Setting a tag to the revision
@@ -389,8 +385,8 @@ func (UnimplementedRegistryAPIServer) ListRevisions(context.Context, *ListRevisi
 func (UnimplementedRegistryAPIServer) GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRevision not implemented")
 }
-func (UnimplementedRegistryAPIServer) DeprecateRevision(context.Context, *DeprecateRevisionRequest) (*DeprecateRevisionResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeprecateRevision not implemented")
+func (UnimplementedRegistryAPIServer) SetRevisionStatus(context.Context, *SetRevisionStatusRequest) (*SetRevisionStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetRevisionStatus not implemented")
 }
 func (UnimplementedRegistryAPIServer) SetTag(context.Context, *SetTagRequest) (*SetTagResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetTag not implemented")
@@ -562,20 +558,20 @@ func _RegistryAPI_GetRevision_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RegistryAPI_DeprecateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeprecateRevisionRequest)
+func _RegistryAPI_SetRevisionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetRevisionStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RegistryAPIServer).DeprecateRevision(ctx, in)
+		return srv.(RegistryAPIServer).SetRevisionStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RegistryAPI_DeprecateRevision_FullMethodName,
+		FullMethod: RegistryAPI_SetRevisionStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RegistryAPIServer).DeprecateRevision(ctx, req.(*DeprecateRevisionRequest))
+		return srv.(RegistryAPIServer).SetRevisionStatus(ctx, req.(*SetRevisionStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -656,8 +652,8 @@ var RegistryAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RegistryAPI_GetRevision_Handler,
 		},
 		{
-			MethodName: "DeprecateRevision",
-			Handler:    _RegistryAPI_DeprecateRevision_Handler,
+			MethodName: "SetRevisionStatus",
+			Handler:    _RegistryAPI_SetRevisionStatus_Handler,
 		},
 		{
 			MethodName: "SetTag",

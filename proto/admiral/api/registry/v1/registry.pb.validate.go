@@ -390,11 +390,11 @@ func (m *Revision) validate(all bool) error {
 	// no validation rules for Status
 
 	if all {
-		switch v := interface{}(m.GetDeprecatedAt()).(type) {
+		switch v := interface{}(m.GetStatusChangedAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, RevisionValidationError{
-					field:  "DeprecatedAt",
+					field:  "StatusChangedAt",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -402,23 +402,23 @@ func (m *Revision) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, RevisionValidationError{
-					field:  "DeprecatedAt",
+					field:  "StatusChangedAt",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetDeprecatedAt()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetStatusChangedAt()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return RevisionValidationError{
-				field:  "DeprecatedAt",
+				field:  "StatusChangedAt",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
 	}
 
-	// no validation rules for DeprecationReason
+	// no validation rules for StatusReason
 
 	if all {
 		switch v := interface{}(m.GetCreatedBy()).(type) {
@@ -4264,22 +4264,22 @@ var _ interface {
 	ErrorName() string
 } = GetRevisionResponseValidationError{}
 
-// Validate checks the field values on DeprecateRevisionRequest with the rules
+// Validate checks the field values on SetRevisionStatusRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DeprecateRevisionRequest) Validate() error {
+func (m *SetRevisionStatusRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on DeprecateRevisionRequest with the
+// ValidateAll checks the field values on SetRevisionStatusRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// DeprecateRevisionRequestMultiError, or nil if none found.
-func (m *DeprecateRevisionRequest) ValidateAll() error {
+// SetRevisionStatusRequestMultiError, or nil if none found.
+func (m *SetRevisionStatusRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *DeprecateRevisionRequest) validate(all bool) error {
+func (m *SetRevisionStatusRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -4290,22 +4290,24 @@ func (m *DeprecateRevisionRequest) validate(all bool) error {
 
 	// no validation rules for Digest
 
+	// no validation rules for Status
+
 	// no validation rules for Reason
 
 	if len(errors) > 0 {
-		return DeprecateRevisionRequestMultiError(errors)
+		return SetRevisionStatusRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// DeprecateRevisionRequestMultiError is an error wrapping multiple validation
-// errors returned by DeprecateRevisionRequest.ValidateAll() if the designated
+// SetRevisionStatusRequestMultiError is an error wrapping multiple validation
+// errors returned by SetRevisionStatusRequest.ValidateAll() if the designated
 // constraints aren't met.
-type DeprecateRevisionRequestMultiError []error
+type SetRevisionStatusRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m DeprecateRevisionRequestMultiError) Error() string {
+func (m SetRevisionStatusRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -4314,11 +4316,11 @@ func (m DeprecateRevisionRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m DeprecateRevisionRequestMultiError) AllErrors() []error { return m }
+func (m SetRevisionStatusRequestMultiError) AllErrors() []error { return m }
 
-// DeprecateRevisionRequestValidationError is the validation error returned by
-// DeprecateRevisionRequest.Validate if the designated constraints aren't met.
-type DeprecateRevisionRequestValidationError struct {
+// SetRevisionStatusRequestValidationError is the validation error returned by
+// SetRevisionStatusRequest.Validate if the designated constraints aren't met.
+type SetRevisionStatusRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -4326,24 +4328,24 @@ type DeprecateRevisionRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e DeprecateRevisionRequestValidationError) Field() string { return e.field }
+func (e SetRevisionStatusRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DeprecateRevisionRequestValidationError) Reason() string { return e.reason }
+func (e SetRevisionStatusRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DeprecateRevisionRequestValidationError) Cause() error { return e.cause }
+func (e SetRevisionStatusRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DeprecateRevisionRequestValidationError) Key() bool { return e.key }
+func (e SetRevisionStatusRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DeprecateRevisionRequestValidationError) ErrorName() string {
-	return "DeprecateRevisionRequestValidationError"
+func (e SetRevisionStatusRequestValidationError) ErrorName() string {
+	return "SetRevisionStatusRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e DeprecateRevisionRequestValidationError) Error() string {
+func (e SetRevisionStatusRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -4355,14 +4357,14 @@ func (e DeprecateRevisionRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDeprecateRevisionRequest.%s: %s%s",
+		"invalid %sSetRevisionStatusRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DeprecateRevisionRequestValidationError{}
+var _ error = SetRevisionStatusRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -4370,24 +4372,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DeprecateRevisionRequestValidationError{}
+} = SetRevisionStatusRequestValidationError{}
 
-// Validate checks the field values on DeprecateRevisionResponse with the rules
+// Validate checks the field values on SetRevisionStatusResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DeprecateRevisionResponse) Validate() error {
+func (m *SetRevisionStatusResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on DeprecateRevisionResponse with the
+// ValidateAll checks the field values on SetRevisionStatusResponse with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// DeprecateRevisionResponseMultiError, or nil if none found.
-func (m *DeprecateRevisionResponse) ValidateAll() error {
+// SetRevisionStatusResponseMultiError, or nil if none found.
+func (m *SetRevisionStatusResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *DeprecateRevisionResponse) validate(all bool) error {
+func (m *SetRevisionStatusResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -4398,7 +4400,7 @@ func (m *DeprecateRevisionResponse) validate(all bool) error {
 		switch v := interface{}(m.GetRevision()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, DeprecateRevisionResponseValidationError{
+				errors = append(errors, SetRevisionStatusResponseValidationError{
 					field:  "Revision",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -4406,7 +4408,7 @@ func (m *DeprecateRevisionResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, DeprecateRevisionResponseValidationError{
+				errors = append(errors, SetRevisionStatusResponseValidationError{
 					field:  "Revision",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -4415,7 +4417,7 @@ func (m *DeprecateRevisionResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetRevision()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return DeprecateRevisionResponseValidationError{
+			return SetRevisionStatusResponseValidationError{
 				field:  "Revision",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -4424,19 +4426,19 @@ func (m *DeprecateRevisionResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return DeprecateRevisionResponseMultiError(errors)
+		return SetRevisionStatusResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// DeprecateRevisionResponseMultiError is an error wrapping multiple validation
-// errors returned by DeprecateRevisionResponse.ValidateAll() if the
+// SetRevisionStatusResponseMultiError is an error wrapping multiple validation
+// errors returned by SetRevisionStatusResponse.ValidateAll() if the
 // designated constraints aren't met.
-type DeprecateRevisionResponseMultiError []error
+type SetRevisionStatusResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m DeprecateRevisionResponseMultiError) Error() string {
+func (m SetRevisionStatusResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -4445,11 +4447,11 @@ func (m DeprecateRevisionResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m DeprecateRevisionResponseMultiError) AllErrors() []error { return m }
+func (m SetRevisionStatusResponseMultiError) AllErrors() []error { return m }
 
-// DeprecateRevisionResponseValidationError is the validation error returned by
-// DeprecateRevisionResponse.Validate if the designated constraints aren't met.
-type DeprecateRevisionResponseValidationError struct {
+// SetRevisionStatusResponseValidationError is the validation error returned by
+// SetRevisionStatusResponse.Validate if the designated constraints aren't met.
+type SetRevisionStatusResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -4457,24 +4459,24 @@ type DeprecateRevisionResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e DeprecateRevisionResponseValidationError) Field() string { return e.field }
+func (e SetRevisionStatusResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DeprecateRevisionResponseValidationError) Reason() string { return e.reason }
+func (e SetRevisionStatusResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DeprecateRevisionResponseValidationError) Cause() error { return e.cause }
+func (e SetRevisionStatusResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DeprecateRevisionResponseValidationError) Key() bool { return e.key }
+func (e SetRevisionStatusResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DeprecateRevisionResponseValidationError) ErrorName() string {
-	return "DeprecateRevisionResponseValidationError"
+func (e SetRevisionStatusResponseValidationError) ErrorName() string {
+	return "SetRevisionStatusResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e DeprecateRevisionResponseValidationError) Error() string {
+func (e SetRevisionStatusResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -4486,14 +4488,14 @@ func (e DeprecateRevisionResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDeprecateRevisionResponse.%s: %s%s",
+		"invalid %sSetRevisionStatusResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DeprecateRevisionResponseValidationError{}
+var _ error = SetRevisionStatusResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -4501,7 +4503,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DeprecateRevisionResponseValidationError{}
+} = SetRevisionStatusResponseValidationError{}
 
 // Validate checks the field values on SetTagRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

@@ -89,8 +89,10 @@ const (
 	RevisionStatus_REVISION_STATUS_UNSPECIFIED RevisionStatus = 0
 	// Adoptable: a change set may pin it.
 	RevisionStatus_PUBLISHED RevisionStatus = 1
-	// Refuses new adoption; what already pins it keeps running with a warning.
+	// Still adoptable, with a warning; what already pins it warns too.
 	RevisionStatus_DEPRECATED RevisionStatus = 2
+	// Refuses new adoption; what already pins it keeps running with a warning.
+	RevisionStatus_REVOKED RevisionStatus = 3
 )
 
 // Enum value maps for RevisionStatus.
@@ -99,11 +101,13 @@ var (
 		0: "REVISION_STATUS_UNSPECIFIED",
 		1: "PUBLISHED",
 		2: "DEPRECATED",
+		3: "REVOKED",
 	}
 	RevisionStatus_value = map[string]int32{
 		"REVISION_STATUS_UNSPECIFIED": 0,
 		"PUBLISHED":                   1,
 		"DEPRECATED":                  2,
+		"REVOKED":                     3,
 	}
 )
 
@@ -361,7 +365,7 @@ func (x *Component) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Revision is one published artifact. Immutable except for deprecation.
+// Revision is one published artifact. Immutable except for its status.
 type Revision struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier (UUID). Internal handle; references use the digest.
@@ -383,9 +387,10 @@ type Revision struct {
 	// the findings delta between two revisions is what an upgrade review reads.
 	Findings []*Finding     `protobuf:"bytes,8,rep,name=findings,proto3" json:"findings,omitempty"`
 	Status   RevisionStatus `protobuf:"varint,9,opt,name=status,proto3,enum=admiral.api.registry.v1.RevisionStatus" json:"status,omitempty"`
-	// Set only when DEPRECATED.
-	DeprecatedAt      *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=deprecated_at,json=deprecatedAt,proto3" json:"deprecated_at,omitempty"`
-	DeprecationReason string                 `protobuf:"bytes,11,opt,name=deprecation_reason,json=deprecationReason,proto3" json:"deprecation_reason,omitempty"`
+	// When and why the status last changed. Unset on a revision that has only
+	// ever been PUBLISHED.
+	StatusChangedAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=status_changed_at,json=statusChangedAt,proto3" json:"status_changed_at,omitempty"`
+	StatusReason    string                 `protobuf:"bytes,11,opt,name=status_reason,json=statusReason,proto3" json:"status_reason,omitempty"`
 	// The tags currently naming this revision.
 	Tags          []string               `protobuf:"bytes,12,rep,name=tags,proto3" json:"tags,omitempty"`
 	CreatedBy     *v1.ActorRef           `protobuf:"bytes,13,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
@@ -487,16 +492,16 @@ func (x *Revision) GetStatus() RevisionStatus {
 	return RevisionStatus_REVISION_STATUS_UNSPECIFIED
 }
 
-func (x *Revision) GetDeprecatedAt() *timestamppb.Timestamp {
+func (x *Revision) GetStatusChangedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.DeprecatedAt
+		return x.StatusChangedAt
 	}
 	return nil
 }
 
-func (x *Revision) GetDeprecationReason() string {
+func (x *Revision) GetStatusReason() string {
 	if x != nil {
-		return x.DeprecationReason
+		return x.StatusReason
 	}
 	return ""
 }
@@ -2178,7 +2183,7 @@ type ListRevisionsRequest struct {
 	ComponentId string                 `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
 	// Filter expression. Filterable fields:
 	//   - `kind`: TERRAFORM, HELM, MANIFESTS.
-	//   - `status`: PUBLISHED, DEPRECATED.
+	//   - `status`: PUBLISHED, DEPRECATED, REVOKED.
 	//
 	// Example: `field['status'] = 'PUBLISHED'`
 	Filter        string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
@@ -2399,35 +2404,37 @@ func (x *GetRevisionResponse) GetRevision() *Revision {
 	return nil
 }
 
-// DeprecateRevisionRequest names a revision by digest and says why.
-type DeprecateRevisionRequest struct {
+// SetRevisionStatusRequest names a revision by digest, its new status, and
+// why.
+type SetRevisionStatusRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	ComponentId string                 `protobuf:"bytes,1,opt,name=component_id,json=componentId,proto3" json:"component_id,omitempty"`
-	// `sha256:<hex>`. A digest, not a tag: what is being deprecated is the
-	// bytes, and a floating tag might name different bytes by the time anyone
-	// reads the reason.
-	Digest string `protobuf:"bytes,2,opt,name=digest,proto3" json:"digest,omitempty"`
-	// Shown to anyone who tries to adopt the revision, and to every
-	// environment still running it.
-	Reason        string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	// `sha256:<hex>`. A digest, not a tag: the status belongs to the bytes, and
+	// a floating tag might name different bytes by the time anyone reads the
+	// reason.
+	Digest string         `protobuf:"bytes,2,opt,name=digest,proto3" json:"digest,omitempty"`
+	Status RevisionStatus `protobuf:"varint,3,opt,name=status,proto3,enum=admiral.api.registry.v1.RevisionStatus" json:"status,omitempty"`
+	// Shown to anyone who adopts or tries to adopt the revision, and to every
+	// environment running it.
+	Reason        string `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeprecateRevisionRequest) Reset() {
-	*x = DeprecateRevisionRequest{}
+func (x *SetRevisionStatusRequest) Reset() {
+	*x = SetRevisionStatusRequest{}
 	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeprecateRevisionRequest) String() string {
+func (x *SetRevisionStatusRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeprecateRevisionRequest) ProtoMessage() {}
+func (*SetRevisionStatusRequest) ProtoMessage() {}
 
-func (x *DeprecateRevisionRequest) ProtoReflect() protoreflect.Message {
+func (x *SetRevisionStatusRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2439,54 +2446,61 @@ func (x *DeprecateRevisionRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeprecateRevisionRequest.ProtoReflect.Descriptor instead.
-func (*DeprecateRevisionRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SetRevisionStatusRequest.ProtoReflect.Descriptor instead.
+func (*SetRevisionStatusRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *DeprecateRevisionRequest) GetComponentId() string {
+func (x *SetRevisionStatusRequest) GetComponentId() string {
 	if x != nil {
 		return x.ComponentId
 	}
 	return ""
 }
 
-func (x *DeprecateRevisionRequest) GetDigest() string {
+func (x *SetRevisionStatusRequest) GetDigest() string {
 	if x != nil {
 		return x.Digest
 	}
 	return ""
 }
 
-func (x *DeprecateRevisionRequest) GetReason() string {
+func (x *SetRevisionStatusRequest) GetStatus() RevisionStatus {
+	if x != nil {
+		return x.Status
+	}
+	return RevisionStatus_REVISION_STATUS_UNSPECIFIED
+}
+
+func (x *SetRevisionStatusRequest) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-// DeprecateRevisionResponse contains the revision with its new status.
-type DeprecateRevisionResponse struct {
+// SetRevisionStatusResponse contains the revision with its new status.
+type SetRevisionStatusResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Revision      *Revision              `protobuf:"bytes,1,opt,name=revision,proto3" json:"revision,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeprecateRevisionResponse) Reset() {
-	*x = DeprecateRevisionResponse{}
+func (x *SetRevisionStatusResponse) Reset() {
+	*x = SetRevisionStatusResponse{}
 	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeprecateRevisionResponse) String() string {
+func (x *SetRevisionStatusResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeprecateRevisionResponse) ProtoMessage() {}
+func (*SetRevisionStatusResponse) ProtoMessage() {}
 
-func (x *DeprecateRevisionResponse) ProtoReflect() protoreflect.Message {
+func (x *SetRevisionStatusResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2498,12 +2512,12 @@ func (x *DeprecateRevisionResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeprecateRevisionResponse.ProtoReflect.Descriptor instead.
-func (*DeprecateRevisionResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use SetRevisionStatusResponse.ProtoReflect.Descriptor instead.
+func (*SetRevisionStatusResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *DeprecateRevisionResponse) GetRevision() *Revision {
+func (x *SetRevisionStatusResponse) GetRevision() *Revision {
 	if x != nil {
 		return x.Revision
 	}
@@ -3008,7 +3022,7 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"updated_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xf4\x05\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xf1\x05\n" +
 	"\bRevision\x12\x13\n" +
 	"\x02id\x18\x01 \x01(\tB\x03\xe0A\x03R\x02id\x12&\n" +
 	"\fcomponent_id\x18\x02 \x01(\tB\x03\xe0A\x03R\vcomponentId\x12\x1b\n" +
@@ -3021,10 +3035,10 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"provenance\x18\a \x01(\v2#.admiral.api.registry.v1.ProvenanceB\x03\xe0A\x03R\n" +
 	"provenance\x12A\n" +
 	"\bfindings\x18\b \x03(\v2 .admiral.api.registry.v1.FindingB\x03\xe0A\x03R\bfindings\x12D\n" +
-	"\x06status\x18\t \x01(\x0e2'.admiral.api.registry.v1.RevisionStatusB\x03\xe0A\x03R\x06status\x12D\n" +
-	"\rdeprecated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\fdeprecatedAt\x122\n" +
-	"\x12deprecation_reason\x18\v \x01(\tB\x03\xe0A\x03R\x11deprecationReason\x12\x17\n" +
+	"\x06status\x18\t \x01(\x0e2'.admiral.api.registry.v1.RevisionStatusB\x03\xe0A\x03R\x06status\x12K\n" +
+	"\x11status_changed_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\x0fstatusChangedAt\x12(\n" +
+	"\rstatus_reason\x18\v \x01(\tB\x03\xe0A\x03R\fstatusReason\x12\x17\n" +
 	"\x04tags\x18\f \x03(\tB\x03\xe0A\x03R\x04tags\x12?\n" +
 	"\n" +
 	"created_by\x18\r \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
@@ -3195,12 +3209,13 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\fcomponent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12f\n" +
 	"\treference\x18\x02 \x01(\tBH\xe0A\x02\xbaHBr@\x10\x01\x18\x80\x0129^(sha256:[0-9a-f]{64}|[A-Za-z0-9][A-Za-z0-9._+-]{0,127})$R\treference\"T\n" +
 	"\x13GetRevisionResponse\x12=\n" +
-	"\brevision\x18\x01 \x01(\v2!.admiral.api.registry.v1.RevisionR\brevision\"\xaa\x01\n" +
-	"\x18DeprecateRevisionRequest\x12.\n" +
+	"\brevision\x18\x01 \x01(\v2!.admiral.api.registry.v1.RevisionR\brevision\"\xfa\x01\n" +
+	"\x18SetRevisionStatusRequest\x12.\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x127\n" +
-	"\x06digest\x18\x02 \x01(\tB\x1f\xe0A\x02\xbaH\x19r\x172\x15^sha256:[0-9a-f]{64}$R\x06digest\x12%\n" +
-	"\x06reason\x18\x03 \x01(\tB\r\xe0A\x02\xbaH\ar\x05\x10\x01\x18\x80\bR\x06reason\"Z\n" +
-	"\x19DeprecateRevisionResponse\x12=\n" +
+	"\x06digest\x18\x02 \x01(\tB\x1f\xe0A\x02\xbaH\x19r\x172\x15^sha256:[0-9a-f]{64}$R\x06digest\x12N\n" +
+	"\x06status\x18\x03 \x01(\x0e2'.admiral.api.registry.v1.RevisionStatusB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x06status\x12%\n" +
+	"\x06reason\x18\x04 \x01(\tB\r\xe0A\x02\xbaH\ar\x05\x10\x01\x18\x80\bR\x06reason\"Z\n" +
+	"\x19SetRevisionStatusResponse\x12=\n" +
 	"\brevision\x18\x01 \x01(\v2!.admiral.api.registry.v1.RevisionR\brevision\"\xc0\x01\n" +
 	"\rSetTagRequest\x12.\n" +
 	"\fcomponent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\vcomponentId\x12F\n" +
@@ -3216,12 +3231,13 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x1aCOMPONENT_KIND_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tTERRAFORM\x10\x01\x12\b\n" +
 	"\x04HELM\x10\x02\x12\r\n" +
-	"\tMANIFESTS\x10\x03*P\n" +
+	"\tMANIFESTS\x10\x03*]\n" +
 	"\x0eRevisionStatus\x12\x1f\n" +
 	"\x1bREVISION_STATUS_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tPUBLISHED\x10\x01\x12\x0e\n" +
 	"\n" +
-	"DEPRECATED\x10\x02*j\n" +
+	"DEPRECATED\x10\x02\x12\v\n" +
+	"\aREVOKED\x10\x03*j\n" +
 	"\x0fFindingSeverity\x12 \n" +
 	"\x1cFINDING_SEVERITY_UNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04INFO\x10\x01\x12\a\n" +
@@ -3234,7 +3250,7 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x1bPROVENANCE_KIND_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05LOCAL\x10\x01\x12\a\n" +
 	"\x03GIT\x10\x02\x12\b\n" +
-	"\x04PULL\x10\x032\xed\x12\n" +
+	"\x04PULL\x10\x032\xf1\x12\n" +
 	"\vRegistryAPI\x12\xde\x01\n" +
 	"\x10PublishComponent\x120.admiral.api.registry.v1.PublishComponentRequest\x1a1.admiral.api.registry.v1.PublishComponentResponse\"e\xbaG*\n" +
 	"\n" +
@@ -3267,11 +3283,11 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\vGetRevision\x12+.admiral.api.registry.v1.GetRevisionRequest\x1a,.admiral.api.registry.v1.GetRevisionResponse\"s\xbaG!\n" +
 	"\n" +
 	"Components\x12\x13Retrieve a revision\xa2\x97$\x10\n" +
-	"\x0ecomponent:read\x82\xd3\xe4\x93\x025\x123/v1/components/{component_id}/revisions/{reference}\x12\xfb\x01\n" +
-	"\x11DeprecateRevision\x121.admiral.api.registry.v1.DeprecateRevisionRequest\x1a2.admiral.api.registry.v1.DeprecateRevisionResponse\"\x7f\xbaG\"\n" +
+	"\x0ecomponent:read\x82\xd3\xe4\x93\x025\x123/v1/components/{component_id}/revisions/{reference}\x12\xff\x01\n" +
+	"\x11SetRevisionStatus\x121.admiral.api.registry.v1.SetRevisionStatusRequest\x1a2.admiral.api.registry.v1.SetRevisionStatusResponse\"\x82\x01\xbaG%\n" +
 	"\n" +
-	"Components\x12\x14Deprecate a revision\xa2\x97$\x11\n" +
-	"\x0fcomponent:write\x82\xd3\xe4\x93\x02?:\x01*\":/v1/components/{component_id}/revisions/{digest}:deprecate\x12\xc0\x01\n" +
+	"Components\x12\x17Set a revision's status\xa2\x97$\x11\n" +
+	"\x0fcomponent:write\x82\xd3\xe4\x93\x02?:\x01*\":/v1/components/{component_id}/revisions/{digest}:setStatus\x12\xc0\x01\n" +
 	"\x06SetTag\x12&.admiral.api.registry.v1.SetTagRequest\x1a'.admiral.api.registry.v1.SetTagResponse\"e\xbaG\x17\n" +
 	"\n" +
 	"Components\x12\tSet a tag\xa2\x97$\x13\n" +
@@ -3330,8 +3346,8 @@ var file_admiral_api_registry_v1_registry_proto_goTypes = []any{
 	(*ListRevisionsResponse)(nil),     // 30: admiral.api.registry.v1.ListRevisionsResponse
 	(*GetRevisionRequest)(nil),        // 31: admiral.api.registry.v1.GetRevisionRequest
 	(*GetRevisionResponse)(nil),       // 32: admiral.api.registry.v1.GetRevisionResponse
-	(*DeprecateRevisionRequest)(nil),  // 33: admiral.api.registry.v1.DeprecateRevisionRequest
-	(*DeprecateRevisionResponse)(nil), // 34: admiral.api.registry.v1.DeprecateRevisionResponse
+	(*SetRevisionStatusRequest)(nil),  // 33: admiral.api.registry.v1.SetRevisionStatusRequest
+	(*SetRevisionStatusResponse)(nil), // 34: admiral.api.registry.v1.SetRevisionStatusResponse
 	(*SetTagRequest)(nil),             // 35: admiral.api.registry.v1.SetTagRequest
 	(*SetTagResponse)(nil),            // 36: admiral.api.registry.v1.SetTagResponse
 	(*DeleteTagRequest)(nil),          // 37: admiral.api.registry.v1.DeleteTagRequest
@@ -3361,7 +3377,7 @@ var file_admiral_api_registry_v1_registry_proto_depIdxs = []int32{
 	11, // 7: admiral.api.registry.v1.Revision.provenance:type_name -> admiral.api.registry.v1.Provenance
 	14, // 8: admiral.api.registry.v1.Revision.findings:type_name -> admiral.api.registry.v1.Finding
 	1,  // 9: admiral.api.registry.v1.Revision.status:type_name -> admiral.api.registry.v1.RevisionStatus
-	49, // 10: admiral.api.registry.v1.Revision.deprecated_at:type_name -> google.protobuf.Timestamp
+	49, // 10: admiral.api.registry.v1.Revision.status_changed_at:type_name -> google.protobuf.Timestamp
 	48, // 11: admiral.api.registry.v1.Revision.created_by:type_name -> admiral.common.v1.ActorRef
 	49, // 12: admiral.api.registry.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
 	49, // 13: admiral.api.registry.v1.Tag.created_at:type_name -> google.protobuf.Timestamp
@@ -3396,35 +3412,36 @@ var file_admiral_api_registry_v1_registry_proto_depIdxs = []int32{
 	4,  // 42: admiral.api.registry.v1.UpdateComponentResponse.component:type_name -> admiral.api.registry.v1.Component
 	5,  // 43: admiral.api.registry.v1.ListRevisionsResponse.revisions:type_name -> admiral.api.registry.v1.Revision
 	5,  // 44: admiral.api.registry.v1.GetRevisionResponse.revision:type_name -> admiral.api.registry.v1.Revision
-	5,  // 45: admiral.api.registry.v1.DeprecateRevisionResponse.revision:type_name -> admiral.api.registry.v1.Revision
-	6,  // 46: admiral.api.registry.v1.SetTagResponse.tag:type_name -> admiral.api.registry.v1.Tag
-	15, // 47: admiral.api.registry.v1.RegistryAPI.PublishComponent:input_type -> admiral.api.registry.v1.PublishComponentRequest
-	18, // 48: admiral.api.registry.v1.RegistryAPI.PullComponent:input_type -> admiral.api.registry.v1.PullComponentRequest
-	20, // 49: admiral.api.registry.v1.RegistryAPI.ListComponents:input_type -> admiral.api.registry.v1.ListComponentsRequest
-	22, // 50: admiral.api.registry.v1.RegistryAPI.GetComponent:input_type -> admiral.api.registry.v1.GetComponentRequest
-	24, // 51: admiral.api.registry.v1.RegistryAPI.UpdateComponent:input_type -> admiral.api.registry.v1.UpdateComponentRequest
-	27, // 52: admiral.api.registry.v1.RegistryAPI.DeleteComponent:input_type -> admiral.api.registry.v1.DeleteComponentRequest
-	29, // 53: admiral.api.registry.v1.RegistryAPI.ListRevisions:input_type -> admiral.api.registry.v1.ListRevisionsRequest
-	31, // 54: admiral.api.registry.v1.RegistryAPI.GetRevision:input_type -> admiral.api.registry.v1.GetRevisionRequest
-	33, // 55: admiral.api.registry.v1.RegistryAPI.DeprecateRevision:input_type -> admiral.api.registry.v1.DeprecateRevisionRequest
-	35, // 56: admiral.api.registry.v1.RegistryAPI.SetTag:input_type -> admiral.api.registry.v1.SetTagRequest
-	37, // 57: admiral.api.registry.v1.RegistryAPI.DeleteTag:input_type -> admiral.api.registry.v1.DeleteTagRequest
-	16, // 58: admiral.api.registry.v1.RegistryAPI.PublishComponent:output_type -> admiral.api.registry.v1.PublishComponentResponse
-	19, // 59: admiral.api.registry.v1.RegistryAPI.PullComponent:output_type -> admiral.api.registry.v1.PullComponentResponse
-	21, // 60: admiral.api.registry.v1.RegistryAPI.ListComponents:output_type -> admiral.api.registry.v1.ListComponentsResponse
-	23, // 61: admiral.api.registry.v1.RegistryAPI.GetComponent:output_type -> admiral.api.registry.v1.GetComponentResponse
-	26, // 62: admiral.api.registry.v1.RegistryAPI.UpdateComponent:output_type -> admiral.api.registry.v1.UpdateComponentResponse
-	28, // 63: admiral.api.registry.v1.RegistryAPI.DeleteComponent:output_type -> admiral.api.registry.v1.DeleteComponentResponse
-	30, // 64: admiral.api.registry.v1.RegistryAPI.ListRevisions:output_type -> admiral.api.registry.v1.ListRevisionsResponse
-	32, // 65: admiral.api.registry.v1.RegistryAPI.GetRevision:output_type -> admiral.api.registry.v1.GetRevisionResponse
-	34, // 66: admiral.api.registry.v1.RegistryAPI.DeprecateRevision:output_type -> admiral.api.registry.v1.DeprecateRevisionResponse
-	36, // 67: admiral.api.registry.v1.RegistryAPI.SetTag:output_type -> admiral.api.registry.v1.SetTagResponse
-	38, // 68: admiral.api.registry.v1.RegistryAPI.DeleteTag:output_type -> admiral.api.registry.v1.DeleteTagResponse
-	58, // [58:69] is the sub-list for method output_type
-	47, // [47:58] is the sub-list for method input_type
-	47, // [47:47] is the sub-list for extension type_name
-	47, // [47:47] is the sub-list for extension extendee
-	0,  // [0:47] is the sub-list for field type_name
+	1,  // 45: admiral.api.registry.v1.SetRevisionStatusRequest.status:type_name -> admiral.api.registry.v1.RevisionStatus
+	5,  // 46: admiral.api.registry.v1.SetRevisionStatusResponse.revision:type_name -> admiral.api.registry.v1.Revision
+	6,  // 47: admiral.api.registry.v1.SetTagResponse.tag:type_name -> admiral.api.registry.v1.Tag
+	15, // 48: admiral.api.registry.v1.RegistryAPI.PublishComponent:input_type -> admiral.api.registry.v1.PublishComponentRequest
+	18, // 49: admiral.api.registry.v1.RegistryAPI.PullComponent:input_type -> admiral.api.registry.v1.PullComponentRequest
+	20, // 50: admiral.api.registry.v1.RegistryAPI.ListComponents:input_type -> admiral.api.registry.v1.ListComponentsRequest
+	22, // 51: admiral.api.registry.v1.RegistryAPI.GetComponent:input_type -> admiral.api.registry.v1.GetComponentRequest
+	24, // 52: admiral.api.registry.v1.RegistryAPI.UpdateComponent:input_type -> admiral.api.registry.v1.UpdateComponentRequest
+	27, // 53: admiral.api.registry.v1.RegistryAPI.DeleteComponent:input_type -> admiral.api.registry.v1.DeleteComponentRequest
+	29, // 54: admiral.api.registry.v1.RegistryAPI.ListRevisions:input_type -> admiral.api.registry.v1.ListRevisionsRequest
+	31, // 55: admiral.api.registry.v1.RegistryAPI.GetRevision:input_type -> admiral.api.registry.v1.GetRevisionRequest
+	33, // 56: admiral.api.registry.v1.RegistryAPI.SetRevisionStatus:input_type -> admiral.api.registry.v1.SetRevisionStatusRequest
+	35, // 57: admiral.api.registry.v1.RegistryAPI.SetTag:input_type -> admiral.api.registry.v1.SetTagRequest
+	37, // 58: admiral.api.registry.v1.RegistryAPI.DeleteTag:input_type -> admiral.api.registry.v1.DeleteTagRequest
+	16, // 59: admiral.api.registry.v1.RegistryAPI.PublishComponent:output_type -> admiral.api.registry.v1.PublishComponentResponse
+	19, // 60: admiral.api.registry.v1.RegistryAPI.PullComponent:output_type -> admiral.api.registry.v1.PullComponentResponse
+	21, // 61: admiral.api.registry.v1.RegistryAPI.ListComponents:output_type -> admiral.api.registry.v1.ListComponentsResponse
+	23, // 62: admiral.api.registry.v1.RegistryAPI.GetComponent:output_type -> admiral.api.registry.v1.GetComponentResponse
+	26, // 63: admiral.api.registry.v1.RegistryAPI.UpdateComponent:output_type -> admiral.api.registry.v1.UpdateComponentResponse
+	28, // 64: admiral.api.registry.v1.RegistryAPI.DeleteComponent:output_type -> admiral.api.registry.v1.DeleteComponentResponse
+	30, // 65: admiral.api.registry.v1.RegistryAPI.ListRevisions:output_type -> admiral.api.registry.v1.ListRevisionsResponse
+	32, // 66: admiral.api.registry.v1.RegistryAPI.GetRevision:output_type -> admiral.api.registry.v1.GetRevisionResponse
+	34, // 67: admiral.api.registry.v1.RegistryAPI.SetRevisionStatus:output_type -> admiral.api.registry.v1.SetRevisionStatusResponse
+	36, // 68: admiral.api.registry.v1.RegistryAPI.SetTag:output_type -> admiral.api.registry.v1.SetTagResponse
+	38, // 69: admiral.api.registry.v1.RegistryAPI.DeleteTag:output_type -> admiral.api.registry.v1.DeleteTagResponse
+	59, // [59:70] is the sub-list for method output_type
+	48, // [48:59] is the sub-list for method input_type
+	48, // [48:48] is the sub-list for extension type_name
+	48, // [48:48] is the sub-list for extension extendee
+	0,  // [0:48] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_registry_v1_registry_proto_init() }

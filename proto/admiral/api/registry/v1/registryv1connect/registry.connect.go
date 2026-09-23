@@ -56,9 +56,9 @@ const (
 	RegistryAPIListRevisionsProcedure = "/admiral.api.registry.v1.RegistryAPI/ListRevisions"
 	// RegistryAPIGetRevisionProcedure is the fully-qualified name of the RegistryAPI's GetRevision RPC.
 	RegistryAPIGetRevisionProcedure = "/admiral.api.registry.v1.RegistryAPI/GetRevision"
-	// RegistryAPIDeprecateRevisionProcedure is the fully-qualified name of the RegistryAPI's
-	// DeprecateRevision RPC.
-	RegistryAPIDeprecateRevisionProcedure = "/admiral.api.registry.v1.RegistryAPI/DeprecateRevision"
+	// RegistryAPISetRevisionStatusProcedure is the fully-qualified name of the RegistryAPI's
+	// SetRevisionStatus RPC.
+	RegistryAPISetRevisionStatusProcedure = "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus"
 	// RegistryAPISetTagProcedure is the fully-qualified name of the RegistryAPI's SetTag RPC.
 	RegistryAPISetTagProcedure = "/admiral.api.registry.v1.RegistryAPI/SetTag"
 	// RegistryAPIDeleteTagProcedure is the fully-qualified name of the RegistryAPI's DeleteTag RPC.
@@ -125,13 +125,11 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:read`
 	GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error)
-	// DeprecateRevision refuses new adoption of a revision with a recorded
-	// reason. Environments already pinned to it keep running and warn.
-	// One-way: FAILED_PRECONDITION if already deprecated, with the reason that
-	// was recorded first.
+	// SetRevisionStatus moves a revision between PUBLISHED, DEPRECATED and
+	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
 	//
 	// Scope: `component:write`
-	DeprecateRevision(context.Context, *connect.Request[v1.DeprecateRevisionRequest]) (*connect.Response[v1.DeprecateRevisionResponse], error)
+	SetRevisionStatus(context.Context, *connect.Request[v1.SetRevisionStatusRequest]) (*connect.Response[v1.SetRevisionStatusResponse], error)
 	// SetTag points a tag at a revision, creating it or moving it. A semver tag
 	// may be created and never moved: FAILED_PRECONDITION on an attempt to
 	// repoint one, with the rule in the message. Setting a tag to the revision
@@ -205,10 +203,10 @@ func NewRegistryAPIClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(registryAPIMethods.ByName("GetRevision")),
 			connect.WithClientOptions(opts...),
 		),
-		deprecateRevision: connect.NewClient[v1.DeprecateRevisionRequest, v1.DeprecateRevisionResponse](
+		setRevisionStatus: connect.NewClient[v1.SetRevisionStatusRequest, v1.SetRevisionStatusResponse](
 			httpClient,
-			baseURL+RegistryAPIDeprecateRevisionProcedure,
-			connect.WithSchema(registryAPIMethods.ByName("DeprecateRevision")),
+			baseURL+RegistryAPISetRevisionStatusProcedure,
+			connect.WithSchema(registryAPIMethods.ByName("SetRevisionStatus")),
 			connect.WithClientOptions(opts...),
 		),
 		setTag: connect.NewClient[v1.SetTagRequest, v1.SetTagResponse](
@@ -236,7 +234,7 @@ type registryAPIClient struct {
 	deleteComponent   *connect.Client[v1.DeleteComponentRequest, v1.DeleteComponentResponse]
 	listRevisions     *connect.Client[v1.ListRevisionsRequest, v1.ListRevisionsResponse]
 	getRevision       *connect.Client[v1.GetRevisionRequest, v1.GetRevisionResponse]
-	deprecateRevision *connect.Client[v1.DeprecateRevisionRequest, v1.DeprecateRevisionResponse]
+	setRevisionStatus *connect.Client[v1.SetRevisionStatusRequest, v1.SetRevisionStatusResponse]
 	setTag            *connect.Client[v1.SetTagRequest, v1.SetTagResponse]
 	deleteTag         *connect.Client[v1.DeleteTagRequest, v1.DeleteTagResponse]
 }
@@ -281,9 +279,9 @@ func (c *registryAPIClient) GetRevision(ctx context.Context, req *connect.Reques
 	return c.getRevision.CallUnary(ctx, req)
 }
 
-// DeprecateRevision calls admiral.api.registry.v1.RegistryAPI.DeprecateRevision.
-func (c *registryAPIClient) DeprecateRevision(ctx context.Context, req *connect.Request[v1.DeprecateRevisionRequest]) (*connect.Response[v1.DeprecateRevisionResponse], error) {
-	return c.deprecateRevision.CallUnary(ctx, req)
+// SetRevisionStatus calls admiral.api.registry.v1.RegistryAPI.SetRevisionStatus.
+func (c *registryAPIClient) SetRevisionStatus(ctx context.Context, req *connect.Request[v1.SetRevisionStatusRequest]) (*connect.Response[v1.SetRevisionStatusResponse], error) {
+	return c.setRevisionStatus.CallUnary(ctx, req)
 }
 
 // SetTag calls admiral.api.registry.v1.RegistryAPI.SetTag.
@@ -356,13 +354,11 @@ type RegistryAPIHandler interface {
 	//
 	// Scope: `component:read`
 	GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error)
-	// DeprecateRevision refuses new adoption of a revision with a recorded
-	// reason. Environments already pinned to it keep running and warn.
-	// One-way: FAILED_PRECONDITION if already deprecated, with the reason that
-	// was recorded first.
+	// SetRevisionStatus moves a revision between PUBLISHED, DEPRECATED and
+	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
 	//
 	// Scope: `component:write`
-	DeprecateRevision(context.Context, *connect.Request[v1.DeprecateRevisionRequest]) (*connect.Response[v1.DeprecateRevisionResponse], error)
+	SetRevisionStatus(context.Context, *connect.Request[v1.SetRevisionStatusRequest]) (*connect.Response[v1.SetRevisionStatusResponse], error)
 	// SetTag points a tag at a revision, creating it or moving it. A semver tag
 	// may be created and never moved: FAILED_PRECONDITION on an attempt to
 	// repoint one, with the rule in the message. Setting a tag to the revision
@@ -432,10 +428,10 @@ func NewRegistryAPIHandler(svc RegistryAPIHandler, opts ...connect.HandlerOption
 		connect.WithSchema(registryAPIMethods.ByName("GetRevision")),
 		connect.WithHandlerOptions(opts...),
 	)
-	registryAPIDeprecateRevisionHandler := connect.NewUnaryHandler(
-		RegistryAPIDeprecateRevisionProcedure,
-		svc.DeprecateRevision,
-		connect.WithSchema(registryAPIMethods.ByName("DeprecateRevision")),
+	registryAPISetRevisionStatusHandler := connect.NewUnaryHandler(
+		RegistryAPISetRevisionStatusProcedure,
+		svc.SetRevisionStatus,
+		connect.WithSchema(registryAPIMethods.ByName("SetRevisionStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
 	registryAPISetTagHandler := connect.NewUnaryHandler(
@@ -468,8 +464,8 @@ func NewRegistryAPIHandler(svc RegistryAPIHandler, opts ...connect.HandlerOption
 			registryAPIListRevisionsHandler.ServeHTTP(w, r)
 		case RegistryAPIGetRevisionProcedure:
 			registryAPIGetRevisionHandler.ServeHTTP(w, r)
-		case RegistryAPIDeprecateRevisionProcedure:
-			registryAPIDeprecateRevisionHandler.ServeHTTP(w, r)
+		case RegistryAPISetRevisionStatusProcedure:
+			registryAPISetRevisionStatusHandler.ServeHTTP(w, r)
 		case RegistryAPISetTagProcedure:
 			registryAPISetTagHandler.ServeHTTP(w, r)
 		case RegistryAPIDeleteTagProcedure:
@@ -515,8 +511,8 @@ func (UnimplementedRegistryAPIHandler) GetRevision(context.Context, *connect.Req
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.registry.v1.RegistryAPI.GetRevision is not implemented"))
 }
 
-func (UnimplementedRegistryAPIHandler) DeprecateRevision(context.Context, *connect.Request[v1.DeprecateRevisionRequest]) (*connect.Response[v1.DeprecateRevisionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.registry.v1.RegistryAPI.DeprecateRevision is not implemented"))
+func (UnimplementedRegistryAPIHandler) SetRevisionStatus(context.Context, *connect.Request[v1.SetRevisionStatusRequest]) (*connect.Response[v1.SetRevisionStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.registry.v1.RegistryAPI.SetRevisionStatus is not implemented"))
 }
 
 func (UnimplementedRegistryAPIHandler) SetTag(context.Context, *connect.Request[v1.SetTagRequest]) (*connect.Response[v1.SetTagResponse], error) {
