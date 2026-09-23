@@ -846,7 +846,15 @@ type Provenance struct {
 	// The credentials the platform presented while fetching, for PULL: which
 	// secret reached which hosts. Lineage, not a grant; a later pull attaches
 	// its own. Set by the server; ignored on a publish request.
-	Credentials   []*PresentedCredential `protobuf:"bytes,8,rep,name=credentials,proto3" json:"credentials,omitempty"`
+	Credentials []*PresentedCredential `protobuf:"bytes,8,rep,name=credentials,proto3" json:"credentials,omitempty"`
+	// The message of the commit that produced these bytes, as written, so a
+	// reader deciding whether to move to this revision can see what changed.
+	// Captured at publish because it cannot be recovered after a force-push or
+	// once the source is gone. Empty when there is no commit, or upstream
+	// carried no notes.
+	CommitMessage string `protobuf:"bytes,9,opt,name=commit_message,json=commitMessage,proto3" json:"commit_message,omitempty"`
+	// Who wrote that commit, by name. Not the email address.
+	CommitAuthor  string `protobuf:"bytes,10,opt,name=commit_author,json=commitAuthor,proto3" json:"commit_author,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -935,6 +943,20 @@ func (x *Provenance) GetCredentials() []*PresentedCredential {
 		return x.Credentials
 	}
 	return nil
+}
+
+func (x *Provenance) GetCommitMessage() string {
+	if x != nil {
+		return x.CommitMessage
+	}
+	return ""
+}
+
+func (x *Provenance) GetCommitAuthor() string {
+	if x != nil {
+		return x.CommitAuthor
+	}
+	return ""
 }
 
 // PresentedCredential is one credential a pull presented, as it was named at
@@ -2937,7 +2959,7 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x0eContractOutput\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1c\n" +
-	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xb6\x02\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\x96\x03\n" +
 	"\n" +
 	"Provenance\x12;\n" +
 	"\x04kind\x18\x01 \x01(\x0e2'.admiral.api.registry.v1.ProvenanceKindR\x04kind\x12\x10\n" +
@@ -2947,7 +2969,10 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x04path\x18\x05 \x01(\tR\x04path\x12\x14\n" +
 	"\x05dirty\x18\x06 \x01(\bR\x05dirty\x120\n" +
 	"\x04pins\x18\a \x03(\v2\x1c.admiral.api.registry.v1.PinR\x04pins\x12S\n" +
-	"\vcredentials\x18\b \x03(\v2,.admiral.api.registry.v1.PresentedCredentialB\x03\xe0A\x03R\vcredentials\"O\n" +
+	"\vcredentials\x18\b \x03(\v2,.admiral.api.registry.v1.PresentedCredentialB\x03\xe0A\x03R\vcredentials\x12/\n" +
+	"\x0ecommit_message\x18\t \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\rcommitMessage\x12-\n" +
+	"\rcommit_author\x18\n" +
+	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\fcommitAuthor\"O\n" +
 	"\x13PresentedCredential\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +

@@ -1233,6 +1233,10 @@ func (m *Provenance) validate(all bool) error {
 
 	}
 
+	// no validation rules for CommitMessage
+
+	// no validation rules for CommitAuthor
+
 	if len(errors) > 0 {
 		return ProvenanceMultiError(errors)
 	}
