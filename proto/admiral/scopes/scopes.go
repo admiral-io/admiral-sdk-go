@@ -48,6 +48,8 @@ const (
 	AgentWrite       = "agent:write"
 	AppRead          = "app:read"
 	AppWrite         = "app:write"
+	ChangesetRead    = "changeset:read"
+	ChangesetWrite   = "changeset:write"
 	ComponentPublish = "component:publish"
 	ComponentRead    = "component:read"
 	ComponentWrite   = "component:write"
@@ -77,7 +79,8 @@ type Group struct {
 // entry; GroupOf finds it.
 var Groups = map[string]Group{
 	"agent":      {Name: "agent", Description: "Execution agents, their tokens, and the jobs and workloads they run."},
-	"app":        {Name: "app", Description: "Applications and their change sets."},
+	"app":        {Name: "app", Description: "Applications."},
+	"changeset":  {Name: "changeset", Description: "Change sets, their revisions, and the component values they propose."},
 	"component":  {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
 	"credential": {Name: "credential", Description: "Credentials for external systems."},
 	"env":        {Name: "env", Description: "Deployment environments and the components in them."},
@@ -146,13 +149,24 @@ var Catalog = map[string]Scope{
 	},
 	AppRead: {
 		Name:         AppRead,
-		Description:  "Read applications, change sets, and change set diffs.",
+		Description:  "Read applications.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	AppWrite: {
 		Name:         AppWrite,
-		Description:  "Create, update, and delete applications; manage change sets and their entries and variables.",
+		Description:  "Create, update, and delete applications.",
 		Implies:      []string{AppRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ChangesetRead: {
+		Name:         ChangesetRead,
+		Description:  "Read change sets, their revisions and diffs, and the values they propose.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ChangesetWrite: {
+		Name:         ChangesetWrite,
+		Description:  "Create, edit, and discard change sets.",
+		Implies:      []string{ChangesetRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	ComponentPublish: {
@@ -250,6 +264,7 @@ var Catalog = map[string]Scope{
 var impliesClosure = map[string][]string{
 	AgentWrite:       []string{AgentRead},
 	AppWrite:         []string{AppRead},
+	ChangesetWrite:   []string{ChangesetRead},
 	ComponentPublish: []string{ComponentRead},
 	ComponentWrite:   []string{ComponentPublish, ComponentRead},
 	CredentialWrite:  []string{CredentialRead},

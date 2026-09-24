@@ -19,150 +19,85 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ChangeSetAPI_CreateChangeSet_FullMethodName  = "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet"
-	ChangeSetAPI_GetChangeSet_FullMethodName     = "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet"
-	ChangeSetAPI_ListChangeSets_FullMethodName   = "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets"
-	ChangeSetAPI_UpdateChangeSet_FullMethodName  = "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet"
-	ChangeSetAPI_DiscardChangeSet_FullMethodName = "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet"
-	ChangeSetAPI_DiffChangeSet_FullMethodName    = "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet"
-	ChangeSetAPI_CopyChangeSet_FullMethodName    = "/admiral.api.changeset.v1.ChangeSetAPI/CopyChangeSet"
-	ChangeSetAPI_SetEntry_FullMethodName         = "/admiral.api.changeset.v1.ChangeSetAPI/SetEntry"
-	ChangeSetAPI_RemoveEntry_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/RemoveEntry"
-	ChangeSetAPI_SetVariable_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/SetVariable"
-	ChangeSetAPI_RemoveVariable_FullMethodName   = "/admiral.api.changeset.v1.ChangeSetAPI/RemoveVariable"
+	ChangeSetAPI_CreateChangeSet_FullMethodName    = "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet"
+	ChangeSetAPI_EditChangeSet_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/EditChangeSet"
+	ChangeSetAPI_GetChangeSet_FullMethodName       = "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet"
+	ChangeSetAPI_ListChangeSets_FullMethodName     = "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets"
+	ChangeSetAPI_DiscardChangeSet_FullMethodName   = "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet"
+	ChangeSetAPI_GetComponentValues_FullMethodName = "/admiral.api.changeset.v1.ChangeSetAPI/GetComponentValues"
+	ChangeSetAPI_DiffChangeSet_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet"
+	ChangeSetAPI_GetRevision_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision"
+	ChangeSetAPI_ListRevisions_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/ListRevisions"
 )
 
 // ChangeSetAPIClient is the client API for ChangeSetAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ChangeSetAPI manages change sets: scoped, isolated proposals to mutate the
-// deployed state of an application within a single environment.
+// ChangeSetAPI manages change sets: proposals against the components of one
+// environment. Add a component from the registry, move its pin, set or
+// remove values, remove it; each request cuts one immutable revision.
+// Nothing here plans or applies.
 //
-// A change set bundles component changes (add a component, change a version,
-// destroy a component) and variable changes (set or remove a key) into one
-// reviewable, deployable unit. Multiple change sets can be open simultaneously
-// for the same application+environment by different authors. They isolate
-// the editing phase so concurrent work does not collide.
+// A change set is addressed by its id, `cs-` and twelve base36 characters.
 //
-// Change sets are immutable once they leave OPEN status. Mutations
-// (SetEntry, RemoveEntry, SetVariable, RemoveVariable, UpdateChangeSet,
-// DiscardChangeSet) all reject when the change set is DEPLOYED or DISCARDED.
-//
-// Lifecycle: OPEN -> DEPLOYED (via deploy) or OPEN -> DISCARDED (explicit
-// abandon). No backtracking.
+// Values are JSON text in `*_json` fields, so an integer above 2^53 keeps
+// every digit. A map whose only key is `$ref` is a reference to another
+// component's output (`{"$ref": "users-db.connection_name"}`); a real value
+// of that shape is written with `$$ref`.
 type ChangeSetAPIClient interface {
-	// CreateChangeSet opens a new change set for an (application, environment)
-	// pair.
+	// CreateChangeSet opens a draft against an environment. Edits given here
+	// cut revision 1 in the same request; with none, the draft has no revision
+	// until its first edit.
 	//
-	// Multiple change sets can be open against the same target simultaneously.
-	// Conflicts are detected at deploy time, not at create time.
-	//
-	// Scope: `app:write`
+	// Scope: `changeset:write`
 	CreateChangeSet(ctx context.Context, in *CreateChangeSetRequest, opts ...grpc.CallOption) (*CreateChangeSetResponse, error)
-	// GetChangeSet retrieves a change set by ID, including all of its component
-	// entries and variable entries inline.
+	// EditChangeSet applies the edits in order and cuts exactly one revision.
 	//
-	// Scope: `app:read`
+	// FAILED_PRECONDITION when `if_revision` or an upload's `from_revision` is
+	// not the head (the message names the head), when the change set is not a
+	// draft, and when a pin names a revoked revision (the message carries the
+	// recorded reason). ALREADY_EXISTS when a component name is live or held
+	// by another draft (the message names which). A contract violation is
+	// accepted: it is stored on the revision and returned.
+	//
+	// Scope: `changeset:write`
+	EditChangeSet(ctx context.Context, in *EditChangeSetRequest, opts ...grpc.CallOption) (*EditChangeSetResponse, error)
+	// GetChangeSet returns a change set and its head revision with entries.
+	//
+	// Scope: `changeset:read`
 	GetChangeSet(ctx context.Context, in *GetChangeSetRequest, opts ...grpc.CallOption) (*GetChangeSetResponse, error)
-	// ListChangeSets returns a paginated list of change sets.
+	// ListChangeSets pages through one environment's change sets, oldest
+	// first.
 	//
-	// Common filter fields: `application_id`, `environment_id`, `status`. The
-	// returned `ChangeSet` records do not include entries or variable entries;
-	// call GetChangeSet for the full record.
-	//
-	// Scope: `app:read`
+	// Scope: `changeset:read`
 	ListChangeSets(ctx context.Context, in *ListChangeSetsRequest, opts ...grpc.CallOption) (*ListChangeSetsResponse, error)
-	// UpdateChangeSet updates a change set's mutable metadata.
-	// Use `update_mask` to specify which fields to update. Only `title` and
-	// `description` are mutable; all other fields are immutable or transitioned
-	// via dedicated RPCs.
+	// DiscardChangeSet abandons a draft and releases the component names it
+	// reserved. FAILED_PRECONDITION when it is already discarded.
 	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	UpdateChangeSet(ctx context.Context, in *UpdateChangeSetRequest, opts ...grpc.CallOption) (*UpdateChangeSetResponse, error)
-	// DiscardChangeSet abandons an OPEN change set. The record is preserved for
-	// audit but no entries can be added or modified. Status becomes DISCARDED
-	// (terminal). Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
+	// Scope: `changeset:write`
 	DiscardChangeSet(ctx context.Context, in *DiscardChangeSetRequest, opts ...grpc.CallOption) (*DiscardChangeSetResponse, error)
-	// DiffChangeSet computes a structural diff for an OPEN change set: the
-	// per-entry deltas relative to current env HEAD, the per-variable deltas
-	// relative to current env variables, and the deployed components whose
-	// `values_template` references a name touched by this change set ("if you
-	// apply this, these other components will also re-plan").
+	// GetComponentValues returns one component's values as the head revision
+	// leaves them, with the head's number, which an upload sends back as
+	// `from_revision`.
 	//
-	// Sensitive values are never returned. Changed-but-masked entries set
-	// `sensitive=true` and omit `old`/`new` so the reviewer knows a change is
-	// present without seeing the value.
+	// Scope: `changeset:read`
+	GetComponentValues(ctx context.Context, in *GetComponentValuesRequest, opts ...grpc.CallOption) (*GetComponentValuesResponse, error)
+	// DiffChangeSet returns, per component the head revision touches, the
+	// action, the pin before and after, each changed path before and after,
+	// and the component's violations.
 	//
-	// Available for change sets in any status; for non-OPEN change sets the
-	// result reflects the diff against the env's CURRENT HEAD, not the env's
-	// state at the time the change set was deployed.
-	//
-	// Scope: `app:read`
+	// Scope: `changeset:read`
 	DiffChangeSet(ctx context.Context, in *DiffChangeSetRequest, opts ...grpc.CallOption) (*DiffChangeSetResponse, error)
-	// CopyChangeSet creates a new OPEN change set in a target environment by
-	// copying every entry and variable entry from the source. The new change
-	// set's `copied_from_id` points back to the source for audit (promotion
-	// chain). The source change set is not modified.
+	// GetRevision returns one revision with its entries and ops.
 	//
-	// The target application is the source's application; only the environment
-	// can be retargeted. After copying, the resulting change set can be
-	// modified (entries added, removed, or rewritten) before being deployed.
+	// Scope: `changeset:read`
+	GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error)
+	// ListRevisions pages through a change set's revisions, oldest first,
+	// without their entries.
 	//
-	// Scope: `app:write`
-	CopyChangeSet(ctx context.Context, in *CopyChangeSetRequest, opts ...grpc.CallOption) (*CopyChangeSetResponse, error)
-	// SetEntry creates or replaces an entry for a component name within the
-	// change set. One name = one entry; calling SetEntry for an existing name
-	// overwrites the prior entry.
-	//
-	// The `change_type` field selects the operation:
-	//   - CREATE: add a new component. Requires `catalog_item_id`. Rejects if a
-	//     component with the same name already exists in the application.
-	//   - UPDATE: change an existing component. The name must match an
-	//     existing component in the application. Only non-empty optional
-	//     fields are recorded as changes.
-	//   - DESTROY: schedule the component for terraform destroy at deploy.
-	//   - ORPHAN: detach from management without destroying infrastructure.
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	SetEntry(ctx context.Context, in *SetEntryRequest, opts ...grpc.CallOption) (*SetEntryResponse, error)
-	// RemoveEntry deletes a single component entry from an OPEN change set.
-	// Removes the proposal entirely; this does NOT mark the component for
-	// destruction. To destroy a component, use SetEntry with `change_type =
-	// DESTROY`.
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	RemoveEntry(ctx context.Context, in *RemoveEntryRequest, opts ...grpc.CallOption) (*RemoveEntryResponse, error)
-	// SetVariable creates or replaces a variable entry for a key within the
-	// change set. One key = one entry. At deploy time, the variable's value is
-	// upserted in the target environment.
-	//
-	// To delete a variable on apply, use RemoveVariable; it writes a
-	// tombstone entry on the change set so the apply phase removes the key.
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	SetVariable(ctx context.Context, in *SetVariableRequest, opts ...grpc.CallOption) (*SetVariableResponse, error)
-	// RemoveVariable records the intent to delete a variable on apply. Writes
-	// a tombstone variable entry (value absent) so the apply phase removes the
-	// key from the target environment.
-	//
-	// To withdraw the deletion intent before deploy, call SetVariable for the
-	// same key with the desired value (which overwrites the tombstone).
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	RemoveVariable(ctx context.Context, in *RemoveVariableRequest, opts ...grpc.CallOption) (*RemoveVariableResponse, error)
+	// Scope: `changeset:read`
+	ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error)
 }
 
 type changeSetAPIClient struct {
@@ -177,6 +112,16 @@ func (c *changeSetAPIClient) CreateChangeSet(ctx context.Context, in *CreateChan
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateChangeSetResponse)
 	err := c.cc.Invoke(ctx, ChangeSetAPI_CreateChangeSet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) EditChangeSet(ctx context.Context, in *EditChangeSetRequest, opts ...grpc.CallOption) (*EditChangeSetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EditChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_EditChangeSet_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -203,20 +148,20 @@ func (c *changeSetAPIClient) ListChangeSets(ctx context.Context, in *ListChangeS
 	return out, nil
 }
 
-func (c *changeSetAPIClient) UpdateChangeSet(ctx context.Context, in *UpdateChangeSetRequest, opts ...grpc.CallOption) (*UpdateChangeSetResponse, error) {
+func (c *changeSetAPIClient) DiscardChangeSet(ctx context.Context, in *DiscardChangeSetRequest, opts ...grpc.CallOption) (*DiscardChangeSetResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateChangeSetResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_UpdateChangeSet_FullMethodName, in, out, cOpts...)
+	out := new(DiscardChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_DiscardChangeSet_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *changeSetAPIClient) DiscardChangeSet(ctx context.Context, in *DiscardChangeSetRequest, opts ...grpc.CallOption) (*DiscardChangeSetResponse, error) {
+func (c *changeSetAPIClient) GetComponentValues(ctx context.Context, in *GetComponentValuesRequest, opts ...grpc.CallOption) (*GetComponentValuesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DiscardChangeSetResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_DiscardChangeSet_FullMethodName, in, out, cOpts...)
+	out := new(GetComponentValuesResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetComponentValues_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -233,50 +178,20 @@ func (c *changeSetAPIClient) DiffChangeSet(ctx context.Context, in *DiffChangeSe
 	return out, nil
 }
 
-func (c *changeSetAPIClient) CopyChangeSet(ctx context.Context, in *CopyChangeSetRequest, opts ...grpc.CallOption) (*CopyChangeSetResponse, error) {
+func (c *changeSetAPIClient) GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CopyChangeSetResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_CopyChangeSet_FullMethodName, in, out, cOpts...)
+	out := new(GetRevisionResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetRevision_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *changeSetAPIClient) SetEntry(ctx context.Context, in *SetEntryRequest, opts ...grpc.CallOption) (*SetEntryResponse, error) {
+func (c *changeSetAPIClient) ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SetEntryResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_SetEntry_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *changeSetAPIClient) RemoveEntry(ctx context.Context, in *RemoveEntryRequest, opts ...grpc.CallOption) (*RemoveEntryResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RemoveEntryResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_RemoveEntry_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *changeSetAPIClient) SetVariable(ctx context.Context, in *SetVariableRequest, opts ...grpc.CallOption) (*SetVariableResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SetVariableResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_SetVariable_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *changeSetAPIClient) RemoveVariable(ctx context.Context, in *RemoveVariableRequest, opts ...grpc.CallOption) (*RemoveVariableResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RemoveVariableResponse)
-	err := c.cc.Invoke(ctx, ChangeSetAPI_RemoveVariable_FullMethodName, in, out, cOpts...)
+	out := new(ListRevisionsResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_ListRevisions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -287,133 +202,70 @@ func (c *changeSetAPIClient) RemoveVariable(ctx context.Context, in *RemoveVaria
 // All implementations should embed UnimplementedChangeSetAPIServer
 // for forward compatibility.
 //
-// ChangeSetAPI manages change sets: scoped, isolated proposals to mutate the
-// deployed state of an application within a single environment.
+// ChangeSetAPI manages change sets: proposals against the components of one
+// environment. Add a component from the registry, move its pin, set or
+// remove values, remove it; each request cuts one immutable revision.
+// Nothing here plans or applies.
 //
-// A change set bundles component changes (add a component, change a version,
-// destroy a component) and variable changes (set or remove a key) into one
-// reviewable, deployable unit. Multiple change sets can be open simultaneously
-// for the same application+environment by different authors. They isolate
-// the editing phase so concurrent work does not collide.
+// A change set is addressed by its id, `cs-` and twelve base36 characters.
 //
-// Change sets are immutable once they leave OPEN status. Mutations
-// (SetEntry, RemoveEntry, SetVariable, RemoveVariable, UpdateChangeSet,
-// DiscardChangeSet) all reject when the change set is DEPLOYED or DISCARDED.
-//
-// Lifecycle: OPEN -> DEPLOYED (via deploy) or OPEN -> DISCARDED (explicit
-// abandon). No backtracking.
+// Values are JSON text in `*_json` fields, so an integer above 2^53 keeps
+// every digit. A map whose only key is `$ref` is a reference to another
+// component's output (`{"$ref": "users-db.connection_name"}`); a real value
+// of that shape is written with `$$ref`.
 type ChangeSetAPIServer interface {
-	// CreateChangeSet opens a new change set for an (application, environment)
-	// pair.
+	// CreateChangeSet opens a draft against an environment. Edits given here
+	// cut revision 1 in the same request; with none, the draft has no revision
+	// until its first edit.
 	//
-	// Multiple change sets can be open against the same target simultaneously.
-	// Conflicts are detected at deploy time, not at create time.
-	//
-	// Scope: `app:write`
+	// Scope: `changeset:write`
 	CreateChangeSet(context.Context, *CreateChangeSetRequest) (*CreateChangeSetResponse, error)
-	// GetChangeSet retrieves a change set by ID, including all of its component
-	// entries and variable entries inline.
+	// EditChangeSet applies the edits in order and cuts exactly one revision.
 	//
-	// Scope: `app:read`
+	// FAILED_PRECONDITION when `if_revision` or an upload's `from_revision` is
+	// not the head (the message names the head), when the change set is not a
+	// draft, and when a pin names a revoked revision (the message carries the
+	// recorded reason). ALREADY_EXISTS when a component name is live or held
+	// by another draft (the message names which). A contract violation is
+	// accepted: it is stored on the revision and returned.
+	//
+	// Scope: `changeset:write`
+	EditChangeSet(context.Context, *EditChangeSetRequest) (*EditChangeSetResponse, error)
+	// GetChangeSet returns a change set and its head revision with entries.
+	//
+	// Scope: `changeset:read`
 	GetChangeSet(context.Context, *GetChangeSetRequest) (*GetChangeSetResponse, error)
-	// ListChangeSets returns a paginated list of change sets.
+	// ListChangeSets pages through one environment's change sets, oldest
+	// first.
 	//
-	// Common filter fields: `application_id`, `environment_id`, `status`. The
-	// returned `ChangeSet` records do not include entries or variable entries;
-	// call GetChangeSet for the full record.
-	//
-	// Scope: `app:read`
+	// Scope: `changeset:read`
 	ListChangeSets(context.Context, *ListChangeSetsRequest) (*ListChangeSetsResponse, error)
-	// UpdateChangeSet updates a change set's mutable metadata.
-	// Use `update_mask` to specify which fields to update. Only `title` and
-	// `description` are mutable; all other fields are immutable or transitioned
-	// via dedicated RPCs.
+	// DiscardChangeSet abandons a draft and releases the component names it
+	// reserved. FAILED_PRECONDITION when it is already discarded.
 	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	UpdateChangeSet(context.Context, *UpdateChangeSetRequest) (*UpdateChangeSetResponse, error)
-	// DiscardChangeSet abandons an OPEN change set. The record is preserved for
-	// audit but no entries can be added or modified. Status becomes DISCARDED
-	// (terminal). Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
+	// Scope: `changeset:write`
 	DiscardChangeSet(context.Context, *DiscardChangeSetRequest) (*DiscardChangeSetResponse, error)
-	// DiffChangeSet computes a structural diff for an OPEN change set: the
-	// per-entry deltas relative to current env HEAD, the per-variable deltas
-	// relative to current env variables, and the deployed components whose
-	// `values_template` references a name touched by this change set ("if you
-	// apply this, these other components will also re-plan").
+	// GetComponentValues returns one component's values as the head revision
+	// leaves them, with the head's number, which an upload sends back as
+	// `from_revision`.
 	//
-	// Sensitive values are never returned. Changed-but-masked entries set
-	// `sensitive=true` and omit `old`/`new` so the reviewer knows a change is
-	// present without seeing the value.
+	// Scope: `changeset:read`
+	GetComponentValues(context.Context, *GetComponentValuesRequest) (*GetComponentValuesResponse, error)
+	// DiffChangeSet returns, per component the head revision touches, the
+	// action, the pin before and after, each changed path before and after,
+	// and the component's violations.
 	//
-	// Available for change sets in any status; for non-OPEN change sets the
-	// result reflects the diff against the env's CURRENT HEAD, not the env's
-	// state at the time the change set was deployed.
-	//
-	// Scope: `app:read`
+	// Scope: `changeset:read`
 	DiffChangeSet(context.Context, *DiffChangeSetRequest) (*DiffChangeSetResponse, error)
-	// CopyChangeSet creates a new OPEN change set in a target environment by
-	// copying every entry and variable entry from the source. The new change
-	// set's `copied_from_id` points back to the source for audit (promotion
-	// chain). The source change set is not modified.
+	// GetRevision returns one revision with its entries and ops.
 	//
-	// The target application is the source's application; only the environment
-	// can be retargeted. After copying, the resulting change set can be
-	// modified (entries added, removed, or rewritten) before being deployed.
+	// Scope: `changeset:read`
+	GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error)
+	// ListRevisions pages through a change set's revisions, oldest first,
+	// without their entries.
 	//
-	// Scope: `app:write`
-	CopyChangeSet(context.Context, *CopyChangeSetRequest) (*CopyChangeSetResponse, error)
-	// SetEntry creates or replaces an entry for a component name within the
-	// change set. One name = one entry; calling SetEntry for an existing name
-	// overwrites the prior entry.
-	//
-	// The `change_type` field selects the operation:
-	//   - CREATE: add a new component. Requires `catalog_item_id`. Rejects if a
-	//     component with the same name already exists in the application.
-	//   - UPDATE: change an existing component. The name must match an
-	//     existing component in the application. Only non-empty optional
-	//     fields are recorded as changes.
-	//   - DESTROY: schedule the component for terraform destroy at deploy.
-	//   - ORPHAN: detach from management without destroying infrastructure.
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	SetEntry(context.Context, *SetEntryRequest) (*SetEntryResponse, error)
-	// RemoveEntry deletes a single component entry from an OPEN change set.
-	// Removes the proposal entirely; this does NOT mark the component for
-	// destruction. To destroy a component, use SetEntry with `change_type =
-	// DESTROY`.
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	RemoveEntry(context.Context, *RemoveEntryRequest) (*RemoveEntryResponse, error)
-	// SetVariable creates or replaces a variable entry for a key within the
-	// change set. One key = one entry. At deploy time, the variable's value is
-	// upserted in the target environment.
-	//
-	// To delete a variable on apply, use RemoveVariable; it writes a
-	// tombstone entry on the change set so the apply phase removes the key.
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	SetVariable(context.Context, *SetVariableRequest) (*SetVariableResponse, error)
-	// RemoveVariable records the intent to delete a variable on apply. Writes
-	// a tombstone variable entry (value absent) so the apply phase removes the
-	// key from the target environment.
-	//
-	// To withdraw the deletion intent before deploy, call SetVariable for the
-	// same key with the desired value (which overwrites the tombstone).
-	//
-	// Rejected when the change set is not OPEN.
-	//
-	// Scope: `app:write`
-	RemoveVariable(context.Context, *RemoveVariableRequest) (*RemoveVariableResponse, error)
+	// Scope: `changeset:read`
+	ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error)
 }
 
 // UnimplementedChangeSetAPIServer should be embedded to have
@@ -426,35 +278,29 @@ type UnimplementedChangeSetAPIServer struct{}
 func (UnimplementedChangeSetAPIServer) CreateChangeSet(context.Context, *CreateChangeSetRequest) (*CreateChangeSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateChangeSet not implemented")
 }
+func (UnimplementedChangeSetAPIServer) EditChangeSet(context.Context, *EditChangeSetRequest) (*EditChangeSetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method EditChangeSet not implemented")
+}
 func (UnimplementedChangeSetAPIServer) GetChangeSet(context.Context, *GetChangeSetRequest) (*GetChangeSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetChangeSet not implemented")
 }
 func (UnimplementedChangeSetAPIServer) ListChangeSets(context.Context, *ListChangeSetsRequest) (*ListChangeSetsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListChangeSets not implemented")
 }
-func (UnimplementedChangeSetAPIServer) UpdateChangeSet(context.Context, *UpdateChangeSetRequest) (*UpdateChangeSetResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateChangeSet not implemented")
-}
 func (UnimplementedChangeSetAPIServer) DiscardChangeSet(context.Context, *DiscardChangeSetRequest) (*DiscardChangeSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DiscardChangeSet not implemented")
+}
+func (UnimplementedChangeSetAPIServer) GetComponentValues(context.Context, *GetComponentValuesRequest) (*GetComponentValuesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetComponentValues not implemented")
 }
 func (UnimplementedChangeSetAPIServer) DiffChangeSet(context.Context, *DiffChangeSetRequest) (*DiffChangeSetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DiffChangeSet not implemented")
 }
-func (UnimplementedChangeSetAPIServer) CopyChangeSet(context.Context, *CopyChangeSetRequest) (*CopyChangeSetResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CopyChangeSet not implemented")
+func (UnimplementedChangeSetAPIServer) GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRevision not implemented")
 }
-func (UnimplementedChangeSetAPIServer) SetEntry(context.Context, *SetEntryRequest) (*SetEntryResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SetEntry not implemented")
-}
-func (UnimplementedChangeSetAPIServer) RemoveEntry(context.Context, *RemoveEntryRequest) (*RemoveEntryResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RemoveEntry not implemented")
-}
-func (UnimplementedChangeSetAPIServer) SetVariable(context.Context, *SetVariableRequest) (*SetVariableResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SetVariable not implemented")
-}
-func (UnimplementedChangeSetAPIServer) RemoveVariable(context.Context, *RemoveVariableRequest) (*RemoveVariableResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RemoveVariable not implemented")
+func (UnimplementedChangeSetAPIServer) ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListRevisions not implemented")
 }
 func (UnimplementedChangeSetAPIServer) testEmbeddedByValue() {}
 
@@ -490,6 +336,24 @@ func _ChangeSetAPI_CreateChangeSet_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ChangeSetAPIServer).CreateChangeSet(ctx, req.(*CreateChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_EditChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditChangeSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).EditChangeSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_EditChangeSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).EditChangeSet(ctx, req.(*EditChangeSetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -530,24 +394,6 @@ func _ChangeSetAPI_ListChangeSets_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChangeSetAPI_UpdateChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateChangeSetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChangeSetAPIServer).UpdateChangeSet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChangeSetAPI_UpdateChangeSet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChangeSetAPIServer).UpdateChangeSet(ctx, req.(*UpdateChangeSetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ChangeSetAPI_DiscardChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DiscardChangeSetRequest)
 	if err := dec(in); err != nil {
@@ -562,6 +408,24 @@ func _ChangeSetAPI_DiscardChangeSet_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ChangeSetAPIServer).DiscardChangeSet(ctx, req.(*DiscardChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_GetComponentValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetComponentValuesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).GetComponentValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_GetComponentValues_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).GetComponentValues(ctx, req.(*GetComponentValuesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -584,92 +448,38 @@ func _ChangeSetAPI_DiffChangeSet_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChangeSetAPI_CopyChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CopyChangeSetRequest)
+func _ChangeSetAPI_GetRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRevisionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChangeSetAPIServer).CopyChangeSet(ctx, in)
+		return srv.(ChangeSetAPIServer).GetRevision(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChangeSetAPI_CopyChangeSet_FullMethodName,
+		FullMethod: ChangeSetAPI_GetRevision_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChangeSetAPIServer).CopyChangeSet(ctx, req.(*CopyChangeSetRequest))
+		return srv.(ChangeSetAPIServer).GetRevision(ctx, req.(*GetRevisionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ChangeSetAPI_SetEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetEntryRequest)
+func _ChangeSetAPI_ListRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRevisionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChangeSetAPIServer).SetEntry(ctx, in)
+		return srv.(ChangeSetAPIServer).ListRevisions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ChangeSetAPI_SetEntry_FullMethodName,
+		FullMethod: ChangeSetAPI_ListRevisions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChangeSetAPIServer).SetEntry(ctx, req.(*SetEntryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ChangeSetAPI_RemoveEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveEntryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChangeSetAPIServer).RemoveEntry(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChangeSetAPI_RemoveEntry_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChangeSetAPIServer).RemoveEntry(ctx, req.(*RemoveEntryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ChangeSetAPI_SetVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetVariableRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChangeSetAPIServer).SetVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChangeSetAPI_SetVariable_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChangeSetAPIServer).SetVariable(ctx, req.(*SetVariableRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ChangeSetAPI_RemoveVariable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveVariableRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChangeSetAPIServer).RemoveVariable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ChangeSetAPI_RemoveVariable_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChangeSetAPIServer).RemoveVariable(ctx, req.(*RemoveVariableRequest))
+		return srv.(ChangeSetAPIServer).ListRevisions(ctx, req.(*ListRevisionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -686,6 +496,10 @@ var ChangeSetAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ChangeSetAPI_CreateChangeSet_Handler,
 		},
 		{
+			MethodName: "EditChangeSet",
+			Handler:    _ChangeSetAPI_EditChangeSet_Handler,
+		},
+		{
 			MethodName: "GetChangeSet",
 			Handler:    _ChangeSetAPI_GetChangeSet_Handler,
 		},
@@ -694,36 +508,24 @@ var ChangeSetAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ChangeSetAPI_ListChangeSets_Handler,
 		},
 		{
-			MethodName: "UpdateChangeSet",
-			Handler:    _ChangeSetAPI_UpdateChangeSet_Handler,
-		},
-		{
 			MethodName: "DiscardChangeSet",
 			Handler:    _ChangeSetAPI_DiscardChangeSet_Handler,
+		},
+		{
+			MethodName: "GetComponentValues",
+			Handler:    _ChangeSetAPI_GetComponentValues_Handler,
 		},
 		{
 			MethodName: "DiffChangeSet",
 			Handler:    _ChangeSetAPI_DiffChangeSet_Handler,
 		},
 		{
-			MethodName: "CopyChangeSet",
-			Handler:    _ChangeSetAPI_CopyChangeSet_Handler,
+			MethodName: "GetRevision",
+			Handler:    _ChangeSetAPI_GetRevision_Handler,
 		},
 		{
-			MethodName: "SetEntry",
-			Handler:    _ChangeSetAPI_SetEntry_Handler,
-		},
-		{
-			MethodName: "RemoveEntry",
-			Handler:    _ChangeSetAPI_RemoveEntry_Handler,
-		},
-		{
-			MethodName: "SetVariable",
-			Handler:    _ChangeSetAPI_SetVariable_Handler,
-		},
-		{
-			MethodName: "RemoveVariable",
-			Handler:    _ChangeSetAPI_RemoveVariable_Handler,
+			MethodName: "ListRevisions",
+			Handler:    _ChangeSetAPI_ListRevisions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

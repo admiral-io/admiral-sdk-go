@@ -3250,16 +3250,16 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x1bPROVENANCE_KIND_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05LOCAL\x10\x01\x12\a\n" +
 	"\x03GIT\x10\x02\x12\b\n" +
-	"\x04PULL\x10\x032\xf1\x12\n" +
+	"\x04PULL\x10\x032\xf2\x12\n" +
 	"\vRegistryAPI\x12\xde\x01\n" +
 	"\x10PublishComponent\x120.admiral.api.registry.v1.PublishComponentRequest\x1a1.admiral.api.registry.v1.PublishComponentResponse\"e\xbaG*\n" +
 	"\n" +
 	"Components\x12\x1cPublish a component revision\xa2\x97$\x13\n" +
-	"\x11component:publish\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/components:publish\x12\xf6\x01\n" +
+	"\x11component:publish\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/components/publish\x12\xf6\x01\n" +
 	"\rPullComponent\x12-.admiral.api.registry.v1.PullComponentRequest\x1a..admiral.api.registry.v1.PullComponentResponse\"\x85\x01\xbaGM\n" +
 	"\n" +
 	"Components\x12?Pull and publish an artifact from a registry, repository or URL\xa2\x97$\x13\n" +
-	"\x11component:publish\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/components:pull\x12\xbd\x01\n" +
+	"\x11component:publish\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/v1/components/pull\x12\xbd\x01\n" +
 	"\x0eListComponents\x12..admiral.api.registry.v1.ListComponentsRequest\x1a/.admiral.api.registry.v1.ListComponentsResponse\"J\xbaG\x1d\n" +
 	"\n" +
 	"Components\x12\x0fList components\xa2\x97$\x10\n" +
@@ -3283,11 +3283,11 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\vGetRevision\x12+.admiral.api.registry.v1.GetRevisionRequest\x1a,.admiral.api.registry.v1.GetRevisionResponse\"s\xbaG!\n" +
 	"\n" +
 	"Components\x12\x13Retrieve a revision\xa2\x97$\x10\n" +
-	"\x0ecomponent:read\x82\xd3\xe4\x93\x025\x123/v1/components/{component_id}/revisions/{reference}\x12\xff\x01\n" +
-	"\x11SetRevisionStatus\x121.admiral.api.registry.v1.SetRevisionStatusRequest\x1a2.admiral.api.registry.v1.SetRevisionStatusResponse\"\x82\x01\xbaG%\n" +
+	"\x0ecomponent:read\x82\xd3\xe4\x93\x025\x123/v1/components/{component_id}/revisions/{reference}\x12\x80\x02\n" +
+	"\x11SetRevisionStatus\x121.admiral.api.registry.v1.SetRevisionStatusRequest\x1a2.admiral.api.registry.v1.SetRevisionStatusResponse\"\x83\x01\xbaG%\n" +
 	"\n" +
 	"Components\x12\x17Set a revision's status\xa2\x97$\x11\n" +
-	"\x0fcomponent:write\x82\xd3\xe4\x93\x02?:\x01*\":/v1/components/{component_id}/revisions/{digest}:setStatus\x12\xc0\x01\n" +
+	"\x0fcomponent:write\x82\xd3\xe4\x93\x02@:\x01*\";/v1/components/{component_id}/revisions/{digest}/set-status\x12\xc0\x01\n" +
 	"\x06SetTag\x12&.admiral.api.registry.v1.SetTagRequest\x1a'.admiral.api.registry.v1.SetTagResponse\"e\xbaG\x17\n" +
 	"\n" +
 	"Components\x12\tSet a tag\xa2\x97$\x13\n" +

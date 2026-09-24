@@ -544,7 +544,7 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PublishComponent", runtime.WithHTTPPathPattern("/v1/components:publish"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PublishComponent", runtime.WithHTTPPathPattern("/v1/components/publish"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -564,7 +564,7 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PullComponent", runtime.WithHTTPPathPattern("/v1/components:pull"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PullComponent", runtime.WithHTTPPathPattern("/v1/components/pull"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -704,7 +704,7 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{digest}:setStatus"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{digest}/set-status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -802,7 +802,7 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PublishComponent", runtime.WithHTTPPathPattern("/v1/components:publish"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PublishComponent", runtime.WithHTTPPathPattern("/v1/components/publish"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -819,7 +819,7 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PullComponent", runtime.WithHTTPPathPattern("/v1/components:pull"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/PullComponent", runtime.WithHTTPPathPattern("/v1/components/pull"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -938,7 +938,7 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{digest}:setStatus"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{digest}/set-status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -989,15 +989,15 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_RegistryAPI_PublishComponent_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "components"}, "publish"))
-	pattern_RegistryAPI_PullComponent_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "components"}, "pull"))
+	pattern_RegistryAPI_PublishComponent_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "components", "publish"}, ""))
+	pattern_RegistryAPI_PullComponent_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "components", "pull"}, ""))
 	pattern_RegistryAPI_ListComponents_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "components"}, ""))
 	pattern_RegistryAPI_GetComponent_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 3, 0, 4, 1, 5, 2}, []string{"v1", "components", "name"}, ""))
 	pattern_RegistryAPI_UpdateComponent_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "components", "component_id"}, ""))
 	pattern_RegistryAPI_DeleteComponent_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "components", "component_id"}, ""))
 	pattern_RegistryAPI_ListRevisions_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "components", "component_id", "revisions"}, ""))
 	pattern_RegistryAPI_GetRevision_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "revisions", "reference"}, ""))
-	pattern_RegistryAPI_SetRevisionStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "revisions", "digest"}, "setStatus"))
+	pattern_RegistryAPI_SetRevisionStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "components", "component_id", "revisions", "digest", "set-status"}, ""))
 	pattern_RegistryAPI_SetTag_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "tags", "name"}, ""))
 	pattern_RegistryAPI_DeleteTag_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "tags", "name"}, ""))
 )
