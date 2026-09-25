@@ -151,6 +151,35 @@ func (m *Cluster) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetKeysReportedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterValidationError{
+					field:  "KeysReportedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterValidationError{
+					field:  "KeysReportedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetKeysReportedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterValidationError{
+				field:  "KeysReportedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
 	}
@@ -275,6 +304,18 @@ func (m *ClusterTrust) validate(all bool) error {
 			errors = append(errors, err)
 		}
 		// no validation rules for JwksJson
+	case *ClusterTrust_AcceptReported:
+		if v == nil {
+			err := ClusterTrustValidationError{
+				field:  "Trust",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		// no validation rules for AcceptReported
 	default:
 		_ = v // ensures v is used
 	}
