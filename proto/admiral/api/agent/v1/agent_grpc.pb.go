@@ -19,181 +19,126 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentAPI_CreateAgent_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/CreateAgent"
-	AgentAPI_GetAgent_FullMethodName                  = "/admiral.api.agent.v1.AgentAPI/GetAgent"
-	AgentAPI_ListAgents_FullMethodName                = "/admiral.api.agent.v1.AgentAPI/ListAgents"
-	AgentAPI_UpdateAgent_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/UpdateAgent"
-	AgentAPI_DeleteAgent_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/DeleteAgent"
-	AgentAPI_GetAgentStatus_FullMethodName            = "/admiral.api.agent.v1.AgentAPI/GetAgentStatus"
-	AgentAPI_ClearAgentIdentityBinding_FullMethodName = "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding"
-	AgentAPI_CreateApiKey_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/CreateApiKey"
-	AgentAPI_ListApiKeys_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/ListApiKeys"
-	AgentAPI_GetApiKey_FullMethodName                 = "/admiral.api.agent.v1.AgentAPI/GetApiKey"
-	AgentAPI_RevokeApiKey_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/RevokeApiKey"
-	AgentAPI_ListAgentJobs_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/ListAgentJobs"
-	AgentAPI_ListWorkloads_FullMethodName             = "/admiral.api.agent.v1.AgentAPI/ListWorkloads"
-	AgentAPI_GetWorkload_FullMethodName               = "/admiral.api.agent.v1.AgentAPI/GetWorkload"
-	AgentAPI_ListWorkloadEvents_FullMethodName        = "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents"
+	AgentAPI_CreateCluster_FullMethodName       = "/admiral.api.agent.v1.AgentAPI/CreateCluster"
+	AgentAPI_GetCluster_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/GetCluster"
+	AgentAPI_ListClusters_FullMethodName        = "/admiral.api.agent.v1.AgentAPI/ListClusters"
+	AgentAPI_SetClusterTrust_FullMethodName     = "/admiral.api.agent.v1.AgentAPI/SetClusterTrust"
+	AgentAPI_DeleteCluster_FullMethodName       = "/admiral.api.agent.v1.AgentAPI/DeleteCluster"
+	AgentAPI_CreateAgent_FullMethodName         = "/admiral.api.agent.v1.AgentAPI/CreateAgent"
+	AgentAPI_GetAgent_FullMethodName            = "/admiral.api.agent.v1.AgentAPI/GetAgent"
+	AgentAPI_ListAgents_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/ListAgents"
+	AgentAPI_UpdateAgent_FullMethodName         = "/admiral.api.agent.v1.AgentAPI/UpdateAgent"
+	AgentAPI_DeleteAgent_FullMethodName         = "/admiral.api.agent.v1.AgentAPI/DeleteAgent"
+	AgentAPI_CreateEnrollmentKey_FullMethodName = "/admiral.api.agent.v1.AgentAPI/CreateEnrollmentKey"
+	AgentAPI_GrantAgentUse_FullMethodName       = "/admiral.api.agent.v1.AgentAPI/GrantAgentUse"
+	AgentAPI_RevokeAgentUse_FullMethodName      = "/admiral.api.agent.v1.AgentAPI/RevokeAgentUse"
+	AgentAPI_ListAgentGrants_FullMethodName     = "/admiral.api.agent.v1.AgentAPI/ListAgentGrants"
+	AgentAPI_GetJob_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/GetJob"
+	AgentAPI_ListJobs_FullMethodName            = "/admiral.api.agent.v1.AgentAPI/ListJobs"
+	AgentAPI_CancelJob_FullMethodName           = "/admiral.api.agent.v1.AgentAPI/CancelJob"
 )
 
 // AgentAPIClient is the client API for AgentAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AgentAPI is the management surface for execution agents: their lifecycle,
-// their API keys, and read-only visibility into the work they have done. It is
-// the human-facing half of the agent contract, called with a user's own API key
-// from the CLI, Terraform provider, or web app.
+// AgentAPI manages what runs work in a customer's cluster: the clusters
+// Admiral trusts, the agents in them, who may use each agent, and the jobs the
+// platform hands them.
 //
-// An agent's key is bound to the agent's service account
-// (BINDING_TYPE_SERVICE_ACCOUNT), not to the agent record: an agent HAS a
-// service account rather than being one, so its credential rotates without
-// touching the agent.
+// A cluster is trusted, not a token. Admiral holds its service-account token
+// issuer (a public URL it fetches keys from) or its public keys (uploaded), and
+// an agent is one namespace and service account in it. The agent proves who it
+// is with the short-lived token its own cluster issues; no long-lived secret
+// exists. A cluster without keys yet is PENDING until a person sets them or an
+// agent enrolls it with a single-use enrollment key.
 //
-// The execution protocol the agents themselves speak lives in AgentRuntimeAPI
-// (runtime.proto). That half is reachable only with a service-account-bound
-// key, excluded from the public OpenAPI
-// surface, and changes with the agent binaries. Keeping the two apart means the
-// documented management contract is not versioned against the churn of job
-// bundles, hooks, and engines.
-//
-// Both agent kinds are managed here and share one identity, lifecycle, and
-// key model:
-//
-//   - TERRAFORM agents are the execution plane for infrastructure operations
-//     (plan, apply, destroy) run by a terraform-semantic engine (Terraform or
-//     OpenTofu, selected per job via JobBundle.engine).
-//
-//   - KUBERNETES agents are the control plane for Kubernetes clusters,
-//     reporting workload telemetry and applying rendered manifest revisions.
-//
-// Administrators create an agent via CreateAgent (passing the kind), which
-// returns an API key for deploying the agent binary. Once the
-// agent boots and begins reporting through AgentRuntimeAPI, the server
-// transitions its health from PENDING to HEALTHY.
-//
-// Management routes follow /v1/agents/... (plural, with IDs); the runtime
-// protocol uses /v1/agent/... (singular, no ID; derived from the key's binding).
-//
-// Message definitions live in companion files: jobs.proto (TERRAFORM execution)
-// and workloads.proto (KUBERNETES telemetry and revision delivery).
+// An environment deploys through the agent it selects, and may select only an
+// agent whose owner granted use to the whole tenant, one of its teams, or its
+// application.
 type AgentAPIClient interface {
-	// ---------------------------------------------------------------------------
-	// Admin CRUD
-	// ---------------------------------------------------------------------------
-	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial API key. The agent starts in PENDING
-	// health status until it begins reporting.
+	// CreateCluster records a cluster to trust. Give its issuer URL when the
+	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
+	// to leave it PENDING for an agent to enroll.
 	//
-	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the key's auto-assigned scopes. The kind is immutable.
+	// Scope: `agent:write`
+	CreateCluster(ctx context.Context, in *CreateClusterRequest, opts ...grpc.CallOption) (*CreateClusterResponse, error)
+	// GetCluster returns a cluster and the key ids it trusts.
 	//
-	// The response includes a `plain_text_key`: the raw API key secret shown
-	// exactly once. Deploy this key to the agent binary for authentication.
+	// Scope: `agent:read`
+	GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*GetClusterResponse, error)
+	// ListClusters lists the tenant's clusters.
+	//
+	// Scope: `agent:read`
+	ListClusters(ctx context.Context, in *ListClustersRequest, opts ...grpc.CallOption) (*ListClustersResponse, error)
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
+	// It is how a person rotates the keys of a cluster whose key was replaced
+	// outright.
+	//
+	// Scope: `agent:write`
+	SetClusterTrust(ctx context.Context, in *SetClusterTrustRequest, opts ...grpc.CallOption) (*SetClusterTrustResponse, error)
+	// DeleteCluster removes a cluster and its agents. Their leases end at once.
+	//
+	// Scope: `agent:write`
+	DeleteCluster(ctx context.Context, in *DeleteClusterRequest, opts ...grpc.CallOption) (*DeleteClusterResponse, error)
+	// CreateAgent records an agent: a namespace and service account in a
+	// cluster. With `enrollment_key` set, the response carries a single-use key
+	// the agent enrolls the cluster with.
 	//
 	// Scope: `agent:write`
 	CreateAgent(ctx context.Context, in *CreateAgentRequest, opts ...grpc.CallOption) (*CreateAgentResponse, error)
-	// GetAgent retrieves an agent by ID.
-	//
-	// Returns the Agent record with its server-derived health_status. For detailed
-	// telemetry (capacity, node/workload counts), use GetAgentStatus instead.
+	// GetAgent returns an agent, what it last reported, and its ceiling.
 	//
 	// Scope: `agent:read`
 	GetAgent(ctx context.Context, in *GetAgentRequest, opts ...grpc.CallOption) (*GetAgentResponse, error)
-	// ListAgents returns a paginated list of agents within the caller's tenant.
-	// Filter by `kind` to list only TERRAFORM or KUBERNETES agents.
+	// ListAgents lists agents, optionally in one cluster or usable by one
+	// application.
 	//
 	// Scope: `agent:read`
 	ListAgents(ctx context.Context, in *ListAgentsRequest, opts ...grpc.CallOption) (*ListAgentsResponse, error)
-	// UpdateAgent updates an agent's mutable fields.
-	// Use `update_mask` to specify which fields to update.
-	// The `kind` is immutable and cannot be updated.
+	// UpdateAgent changes an agent's name and ceiling. The ceiling is set here
+	// and only here; an agent never reports it.
 	//
 	// Scope: `agent:write`
 	UpdateAgent(ctx context.Context, in *UpdateAgentRequest, opts ...grpc.CallOption) (*UpdateAgentResponse, error)
-	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
-	// to this agent will be failed. This action cannot be undone.
+	// DeleteAgent removes an agent. Its leases end in the same transaction, and
+	// environments that selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(ctx context.Context, in *DeleteAgentRequest, opts ...grpc.CallOption) (*DeleteAgentResponse, error)
-	// GetAgentStatus retrieves the current telemetry snapshot for an agent.
-	// Returns the server-derived health status plus the latest kind-specific
-	// status: capacity metrics for TERRAFORM agents, cluster telemetry for KUBERNETES
-	// agents.
-	//
-	// Returns NOT_FOUND if the agent does not exist. If the agent exists but has
-	// not reported yet, health_status will be PENDING and status will be absent.
-	//
-	// Scope: `agent:read`
-	GetAgentStatus(ctx context.Context, in *GetAgentStatusRequest, opts ...grpc.CallOption) (*GetAgentStatusResponse, error)
-	// ClearAgentIdentityBinding opens a bounded grace window during which the next
-	// KUBERNETES agent telemetry push that reports a different kube-system UID will
-	// re-pin the agent's identity. Use for DR, cluster rebuilds, or a mistaken
-	// initial binding. The existing pin is left intact, so if no agent reconnects
-	// before the window expires the original binding stands. Audit-logged.
-	//
-	// Only valid for KUBERNETES agents; TERRAFORM agents have no identity binding.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls its cluster
+	// with. It can do nothing else, expires within an hour, and is revoked the
+	// moment it is used.
 	//
 	// Scope: `agent:write`
-	ClearAgentIdentityBinding(ctx context.Context, in *ClearAgentIdentityBindingRequest, opts ...grpc.CallOption) (*ClearAgentIdentityBindingResponse, error)
-	// ---------------------------------------------------------------------------
-	// API keys
-	// ---------------------------------------------------------------------------
-	// CreateApiKey creates a new API key bound to the specified agent's service
-	// account. Scopes are auto-assigned from the agent's kind and cannot be
-	// overridden. The response includes the raw secret, shown exactly once.
-	//
-	// Use this to create additional API keys for an existing agent (e.g., for
-	// zero-downtime key rotation). The initial key is created automatically by
-	// CreateAgent.
+	CreateEnrollmentKey(ctx context.Context, in *CreateEnrollmentKeyRequest, opts ...grpc.CallOption) (*CreateEnrollmentKeyResponse, error)
+	// GrantAgentUse lets the whole tenant, a team, or an application's
+	// environments select an agent. Only the agent's owner or a tenant admin may.
 	//
 	// Scope: `agent:write`
-	CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error)
-	// ListApiKeys returns a paginated list of API keys bound to the specified
-	// agent. Secrets are never included.
-	//
-	// Scope: `agent:read`
-	ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error)
-	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
-	// secret is never included. Key IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the key
-	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
-	//
-	// Scope: `agent:read`
-	GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error)
-	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active key for
-	// the agent, the agent will become disconnected. Key IDs are globally unique,
-	// so no agent scoping is required in the path; authorization is enforced via
-	// the `agent:write` scope, not by path prefix.
+	GrantAgentUse(ctx context.Context, in *GrantAgentUseRequest, opts ...grpc.CallOption) (*GrantAgentUseResponse, error)
+	// RevokeAgentUse withdraws a grant. Environments that selected the agent
+	// under it keep the selection until they change it, but claim nothing new.
 	//
 	// Scope: `agent:write`
-	RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error)
-	// ---------------------------------------------------------------------------
-	// Read-only observability. Messages: jobs.proto, workloads.proto.
-	// ---------------------------------------------------------------------------
-	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
-	// Provides admin read-only visibility into agent workload.
+	RevokeAgentUse(ctx context.Context, in *RevokeAgentUseRequest, opts ...grpc.CallOption) (*RevokeAgentUseResponse, error)
+	// ListAgentGrants lists who may use an agent.
 	//
 	// Scope: `agent:read`
-	ListAgentJobs(ctx context.Context, in *ListAgentJobsRequest, opts ...grpc.CallOption) (*ListAgentJobsResponse, error)
-	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
-	// agent's cluster.
+	ListAgentGrants(ctx context.Context, in *ListAgentGrantsRequest, opts ...grpc.CallOption) (*ListAgentGrantsResponse, error)
+	// GetJob returns a job, with why it is waiting when it is.
 	//
 	// Scope: `agent:read`
-	ListWorkloads(ctx context.Context, in *ListWorkloadsRequest, opts ...grpc.CallOption) (*ListWorkloadsResponse, error)
-	// GetWorkload returns a single workload with its full detail: the rich snapshot
-	// (sync, per-resource inventory with field owners, conditions) that ListWorkloads
-	// omits.
+	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
+	// ListJobs lists jobs for an agent or an environment, newest first.
 	//
 	// Scope: `agent:read`
-	GetWorkload(ctx context.Context, in *GetWorkloadRequest, opts ...grpc.CallOption) (*GetWorkloadResponse, error)
-	// ListWorkloadEvents returns a paginated list of Kubernetes events observed for
-	// a KUBERNETES agent's managed resources, deduplicated by event UID.
+	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
+	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
+	// running one learns it on its next lease renewal.
 	//
-	// Scope: `agent:read`
-	ListWorkloadEvents(ctx context.Context, in *ListWorkloadEventsRequest, opts ...grpc.CallOption) (*ListWorkloadEventsResponse, error)
+	// Scope: `agent:write`
+	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
 }
 
 type agentAPIClient struct {
@@ -202,6 +147,56 @@ type agentAPIClient struct {
 
 func NewAgentAPIClient(cc grpc.ClientConnInterface) AgentAPIClient {
 	return &agentAPIClient{cc}
+}
+
+func (c *agentAPIClient) CreateCluster(ctx context.Context, in *CreateClusterRequest, opts ...grpc.CallOption) (*CreateClusterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateClusterResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_CreateCluster_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentAPIClient) GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*GetClusterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetClusterResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_GetCluster_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentAPIClient) ListClusters(ctx context.Context, in *ListClustersRequest, opts ...grpc.CallOption) (*ListClustersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListClustersResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_ListClusters_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentAPIClient) SetClusterTrust(ctx context.Context, in *SetClusterTrustRequest, opts ...grpc.CallOption) (*SetClusterTrustResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetClusterTrustResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_SetClusterTrust_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentAPIClient) DeleteCluster(ctx context.Context, in *DeleteClusterRequest, opts ...grpc.CallOption) (*DeleteClusterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteClusterResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_DeleteCluster_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *agentAPIClient) CreateAgent(ctx context.Context, in *CreateAgentRequest, opts ...grpc.CallOption) (*CreateAgentResponse, error) {
@@ -254,100 +249,70 @@ func (c *agentAPIClient) DeleteAgent(ctx context.Context, in *DeleteAgentRequest
 	return out, nil
 }
 
-func (c *agentAPIClient) GetAgentStatus(ctx context.Context, in *GetAgentStatusRequest, opts ...grpc.CallOption) (*GetAgentStatusResponse, error) {
+func (c *agentAPIClient) CreateEnrollmentKey(ctx context.Context, in *CreateEnrollmentKeyRequest, opts ...grpc.CallOption) (*CreateEnrollmentKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetAgentStatusResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetAgentStatus_FullMethodName, in, out, cOpts...)
+	out := new(CreateEnrollmentKeyResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_CreateEnrollmentKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) ClearAgentIdentityBinding(ctx context.Context, in *ClearAgentIdentityBindingRequest, opts ...grpc.CallOption) (*ClearAgentIdentityBindingResponse, error) {
+func (c *agentAPIClient) GrantAgentUse(ctx context.Context, in *GrantAgentUseRequest, opts ...grpc.CallOption) (*GrantAgentUseResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ClearAgentIdentityBindingResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ClearAgentIdentityBinding_FullMethodName, in, out, cOpts...)
+	out := new(GrantAgentUseResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_GrantAgentUse_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error) {
+func (c *agentAPIClient) RevokeAgentUse(ctx context.Context, in *RevokeAgentUseRequest, opts ...grpc.CallOption) (*RevokeAgentUseResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateApiKeyResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_CreateApiKey_FullMethodName, in, out, cOpts...)
+	out := new(RevokeAgentUseResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_RevokeAgentUse_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error) {
+func (c *agentAPIClient) ListAgentGrants(ctx context.Context, in *ListAgentGrantsRequest, opts ...grpc.CallOption) (*ListAgentGrantsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListApiKeysResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListApiKeys_FullMethodName, in, out, cOpts...)
+	out := new(ListAgentGrantsResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_ListAgentGrants_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error) {
+func (c *agentAPIClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetApiKeyResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetApiKey_FullMethodName, in, out, cOpts...)
+	out := new(GetJobResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_GetJob_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error) {
+func (c *agentAPIClient) ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RevokeApiKeyResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_RevokeApiKey_FullMethodName, in, out, cOpts...)
+	out := new(ListJobsResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_ListJobs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentAPIClient) ListAgentJobs(ctx context.Context, in *ListAgentJobsRequest, opts ...grpc.CallOption) (*ListAgentJobsResponse, error) {
+func (c *agentAPIClient) CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListAgentJobsResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListAgentJobs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ListWorkloads(ctx context.Context, in *ListWorkloadsRequest, opts ...grpc.CallOption) (*ListWorkloadsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListWorkloadsResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListWorkloads_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) GetWorkload(ctx context.Context, in *GetWorkloadRequest, opts ...grpc.CallOption) (*GetWorkloadResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetWorkloadResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetWorkload_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, in *ListWorkloadEventsRequest, opts ...grpc.CallOption) (*ListWorkloadEventsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListWorkloadEventsResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListWorkloadEvents_FullMethodName, in, out, cOpts...)
+	out := new(CancelJobResponse)
+	err := c.cc.Invoke(ctx, AgentAPI_CancelJob_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -358,160 +323,103 @@ func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, in *ListWorkloa
 // All implementations should embed UnimplementedAgentAPIServer
 // for forward compatibility.
 //
-// AgentAPI is the management surface for execution agents: their lifecycle,
-// their API keys, and read-only visibility into the work they have done. It is
-// the human-facing half of the agent contract, called with a user's own API key
-// from the CLI, Terraform provider, or web app.
+// AgentAPI manages what runs work in a customer's cluster: the clusters
+// Admiral trusts, the agents in them, who may use each agent, and the jobs the
+// platform hands them.
 //
-// An agent's key is bound to the agent's service account
-// (BINDING_TYPE_SERVICE_ACCOUNT), not to the agent record: an agent HAS a
-// service account rather than being one, so its credential rotates without
-// touching the agent.
+// A cluster is trusted, not a token. Admiral holds its service-account token
+// issuer (a public URL it fetches keys from) or its public keys (uploaded), and
+// an agent is one namespace and service account in it. The agent proves who it
+// is with the short-lived token its own cluster issues; no long-lived secret
+// exists. A cluster without keys yet is PENDING until a person sets them or an
+// agent enrolls it with a single-use enrollment key.
 //
-// The execution protocol the agents themselves speak lives in AgentRuntimeAPI
-// (runtime.proto). That half is reachable only with a service-account-bound
-// key, excluded from the public OpenAPI
-// surface, and changes with the agent binaries. Keeping the two apart means the
-// documented management contract is not versioned against the churn of job
-// bundles, hooks, and engines.
-//
-// Both agent kinds are managed here and share one identity, lifecycle, and
-// key model:
-//
-//   - TERRAFORM agents are the execution plane for infrastructure operations
-//     (plan, apply, destroy) run by a terraform-semantic engine (Terraform or
-//     OpenTofu, selected per job via JobBundle.engine).
-//
-//   - KUBERNETES agents are the control plane for Kubernetes clusters,
-//     reporting workload telemetry and applying rendered manifest revisions.
-//
-// Administrators create an agent via CreateAgent (passing the kind), which
-// returns an API key for deploying the agent binary. Once the
-// agent boots and begins reporting through AgentRuntimeAPI, the server
-// transitions its health from PENDING to HEALTHY.
-//
-// Management routes follow /v1/agents/... (plural, with IDs); the runtime
-// protocol uses /v1/agent/... (singular, no ID; derived from the key's binding).
-//
-// Message definitions live in companion files: jobs.proto (TERRAFORM execution)
-// and workloads.proto (KUBERNETES telemetry and revision delivery).
+// An environment deploys through the agent it selects, and may select only an
+// agent whose owner granted use to the whole tenant, one of its teams, or its
+// application.
 type AgentAPIServer interface {
-	// ---------------------------------------------------------------------------
-	// Admin CRUD
-	// ---------------------------------------------------------------------------
-	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial API key. The agent starts in PENDING
-	// health status until it begins reporting.
+	// CreateCluster records a cluster to trust. Give its issuer URL when the
+	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
+	// to leave it PENDING for an agent to enroll.
 	//
-	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the key's auto-assigned scopes. The kind is immutable.
+	// Scope: `agent:write`
+	CreateCluster(context.Context, *CreateClusterRequest) (*CreateClusterResponse, error)
+	// GetCluster returns a cluster and the key ids it trusts.
 	//
-	// The response includes a `plain_text_key`: the raw API key secret shown
-	// exactly once. Deploy this key to the agent binary for authentication.
+	// Scope: `agent:read`
+	GetCluster(context.Context, *GetClusterRequest) (*GetClusterResponse, error)
+	// ListClusters lists the tenant's clusters.
+	//
+	// Scope: `agent:read`
+	ListClusters(context.Context, *ListClustersRequest) (*ListClustersResponse, error)
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
+	// It is how a person rotates the keys of a cluster whose key was replaced
+	// outright.
+	//
+	// Scope: `agent:write`
+	SetClusterTrust(context.Context, *SetClusterTrustRequest) (*SetClusterTrustResponse, error)
+	// DeleteCluster removes a cluster and its agents. Their leases end at once.
+	//
+	// Scope: `agent:write`
+	DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error)
+	// CreateAgent records an agent: a namespace and service account in a
+	// cluster. With `enrollment_key` set, the response carries a single-use key
+	// the agent enrolls the cluster with.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *CreateAgentRequest) (*CreateAgentResponse, error)
-	// GetAgent retrieves an agent by ID.
-	//
-	// Returns the Agent record with its server-derived health_status. For detailed
-	// telemetry (capacity, node/workload counts), use GetAgentStatus instead.
+	// GetAgent returns an agent, what it last reported, and its ceiling.
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *GetAgentRequest) (*GetAgentResponse, error)
-	// ListAgents returns a paginated list of agents within the caller's tenant.
-	// Filter by `kind` to list only TERRAFORM or KUBERNETES agents.
+	// ListAgents lists agents, optionally in one cluster or usable by one
+	// application.
 	//
 	// Scope: `agent:read`
 	ListAgents(context.Context, *ListAgentsRequest) (*ListAgentsResponse, error)
-	// UpdateAgent updates an agent's mutable fields.
-	// Use `update_mask` to specify which fields to update.
-	// The `kind` is immutable and cannot be updated.
+	// UpdateAgent changes an agent's name and ceiling. The ceiling is set here
+	// and only here; an agent never reports it.
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *UpdateAgentRequest) (*UpdateAgentResponse, error)
-	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
-	// to this agent will be failed. This action cannot be undone.
+	// DeleteAgent removes an agent. Its leases end in the same transaction, and
+	// environments that selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *DeleteAgentRequest) (*DeleteAgentResponse, error)
-	// GetAgentStatus retrieves the current telemetry snapshot for an agent.
-	// Returns the server-derived health status plus the latest kind-specific
-	// status: capacity metrics for TERRAFORM agents, cluster telemetry for KUBERNETES
-	// agents.
-	//
-	// Returns NOT_FOUND if the agent does not exist. If the agent exists but has
-	// not reported yet, health_status will be PENDING and status will be absent.
-	//
-	// Scope: `agent:read`
-	GetAgentStatus(context.Context, *GetAgentStatusRequest) (*GetAgentStatusResponse, error)
-	// ClearAgentIdentityBinding opens a bounded grace window during which the next
-	// KUBERNETES agent telemetry push that reports a different kube-system UID will
-	// re-pin the agent's identity. Use for DR, cluster rebuilds, or a mistaken
-	// initial binding. The existing pin is left intact, so if no agent reconnects
-	// before the window expires the original binding stands. Audit-logged.
-	//
-	// Only valid for KUBERNETES agents; TERRAFORM agents have no identity binding.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls its cluster
+	// with. It can do nothing else, expires within an hour, and is revoked the
+	// moment it is used.
 	//
 	// Scope: `agent:write`
-	ClearAgentIdentityBinding(context.Context, *ClearAgentIdentityBindingRequest) (*ClearAgentIdentityBindingResponse, error)
-	// ---------------------------------------------------------------------------
-	// API keys
-	// ---------------------------------------------------------------------------
-	// CreateApiKey creates a new API key bound to the specified agent's service
-	// account. Scopes are auto-assigned from the agent's kind and cannot be
-	// overridden. The response includes the raw secret, shown exactly once.
-	//
-	// Use this to create additional API keys for an existing agent (e.g., for
-	// zero-downtime key rotation). The initial key is created automatically by
-	// CreateAgent.
+	CreateEnrollmentKey(context.Context, *CreateEnrollmentKeyRequest) (*CreateEnrollmentKeyResponse, error)
+	// GrantAgentUse lets the whole tenant, a team, or an application's
+	// environments select an agent. Only the agent's owner or a tenant admin may.
 	//
 	// Scope: `agent:write`
-	CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
-	// ListApiKeys returns a paginated list of API keys bound to the specified
-	// agent. Secrets are never included.
-	//
-	// Scope: `agent:read`
-	ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error)
-	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
-	// secret is never included. Key IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the key
-	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
-	//
-	// Scope: `agent:read`
-	GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error)
-	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active key for
-	// the agent, the agent will become disconnected. Key IDs are globally unique,
-	// so no agent scoping is required in the path; authorization is enforced via
-	// the `agent:write` scope, not by path prefix.
+	GrantAgentUse(context.Context, *GrantAgentUseRequest) (*GrantAgentUseResponse, error)
+	// RevokeAgentUse withdraws a grant. Environments that selected the agent
+	// under it keep the selection until they change it, but claim nothing new.
 	//
 	// Scope: `agent:write`
-	RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error)
-	// ---------------------------------------------------------------------------
-	// Read-only observability. Messages: jobs.proto, workloads.proto.
-	// ---------------------------------------------------------------------------
-	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
-	// Provides admin read-only visibility into agent workload.
+	RevokeAgentUse(context.Context, *RevokeAgentUseRequest) (*RevokeAgentUseResponse, error)
+	// ListAgentGrants lists who may use an agent.
 	//
 	// Scope: `agent:read`
-	ListAgentJobs(context.Context, *ListAgentJobsRequest) (*ListAgentJobsResponse, error)
-	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
-	// agent's cluster.
+	ListAgentGrants(context.Context, *ListAgentGrantsRequest) (*ListAgentGrantsResponse, error)
+	// GetJob returns a job, with why it is waiting when it is.
 	//
 	// Scope: `agent:read`
-	ListWorkloads(context.Context, *ListWorkloadsRequest) (*ListWorkloadsResponse, error)
-	// GetWorkload returns a single workload with its full detail: the rich snapshot
-	// (sync, per-resource inventory with field owners, conditions) that ListWorkloads
-	// omits.
+	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
+	// ListJobs lists jobs for an agent or an environment, newest first.
 	//
 	// Scope: `agent:read`
-	GetWorkload(context.Context, *GetWorkloadRequest) (*GetWorkloadResponse, error)
-	// ListWorkloadEvents returns a paginated list of Kubernetes events observed for
-	// a KUBERNETES agent's managed resources, deduplicated by event UID.
+	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
+	// running one learns it on its next lease renewal.
 	//
-	// Scope: `agent:read`
-	ListWorkloadEvents(context.Context, *ListWorkloadEventsRequest) (*ListWorkloadEventsResponse, error)
+	// Scope: `agent:write`
+	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
 }
 
 // UnimplementedAgentAPIServer should be embedded to have
@@ -521,6 +429,21 @@ type AgentAPIServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAgentAPIServer struct{}
 
+func (UnimplementedAgentAPIServer) CreateCluster(context.Context, *CreateClusterRequest) (*CreateClusterResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateCluster not implemented")
+}
+func (UnimplementedAgentAPIServer) GetCluster(context.Context, *GetClusterRequest) (*GetClusterResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCluster not implemented")
+}
+func (UnimplementedAgentAPIServer) ListClusters(context.Context, *ListClustersRequest) (*ListClustersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListClusters not implemented")
+}
+func (UnimplementedAgentAPIServer) SetClusterTrust(context.Context, *SetClusterTrustRequest) (*SetClusterTrustResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetClusterTrust not implemented")
+}
+func (UnimplementedAgentAPIServer) DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteCluster not implemented")
+}
 func (UnimplementedAgentAPIServer) CreateAgent(context.Context, *CreateAgentRequest) (*CreateAgentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateAgent not implemented")
 }
@@ -536,35 +459,26 @@ func (UnimplementedAgentAPIServer) UpdateAgent(context.Context, *UpdateAgentRequ
 func (UnimplementedAgentAPIServer) DeleteAgent(context.Context, *DeleteAgentRequest) (*DeleteAgentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAgent not implemented")
 }
-func (UnimplementedAgentAPIServer) GetAgentStatus(context.Context, *GetAgentStatusRequest) (*GetAgentStatusResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetAgentStatus not implemented")
+func (UnimplementedAgentAPIServer) CreateEnrollmentKey(context.Context, *CreateEnrollmentKeyRequest) (*CreateEnrollmentKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateEnrollmentKey not implemented")
 }
-func (UnimplementedAgentAPIServer) ClearAgentIdentityBinding(context.Context, *ClearAgentIdentityBindingRequest) (*ClearAgentIdentityBindingResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ClearAgentIdentityBinding not implemented")
+func (UnimplementedAgentAPIServer) GrantAgentUse(context.Context, *GrantAgentUseRequest) (*GrantAgentUseResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GrantAgentUse not implemented")
 }
-func (UnimplementedAgentAPIServer) CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateApiKey not implemented")
+func (UnimplementedAgentAPIServer) RevokeAgentUse(context.Context, *RevokeAgentUseRequest) (*RevokeAgentUseResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeAgentUse not implemented")
 }
-func (UnimplementedAgentAPIServer) ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListApiKeys not implemented")
+func (UnimplementedAgentAPIServer) ListAgentGrants(context.Context, *ListAgentGrantsRequest) (*ListAgentGrantsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAgentGrants not implemented")
 }
-func (UnimplementedAgentAPIServer) GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetApiKey not implemented")
+func (UnimplementedAgentAPIServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetJob not implemented")
 }
-func (UnimplementedAgentAPIServer) RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RevokeApiKey not implemented")
+func (UnimplementedAgentAPIServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListJobs not implemented")
 }
-func (UnimplementedAgentAPIServer) ListAgentJobs(context.Context, *ListAgentJobsRequest) (*ListAgentJobsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListAgentJobs not implemented")
-}
-func (UnimplementedAgentAPIServer) ListWorkloads(context.Context, *ListWorkloadsRequest) (*ListWorkloadsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListWorkloads not implemented")
-}
-func (UnimplementedAgentAPIServer) GetWorkload(context.Context, *GetWorkloadRequest) (*GetWorkloadResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetWorkload not implemented")
-}
-func (UnimplementedAgentAPIServer) ListWorkloadEvents(context.Context, *ListWorkloadEventsRequest) (*ListWorkloadEventsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListWorkloadEvents not implemented")
+func (UnimplementedAgentAPIServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CancelJob not implemented")
 }
 func (UnimplementedAgentAPIServer) testEmbeddedByValue() {}
 
@@ -584,6 +498,96 @@ func RegisterAgentAPIServer(s grpc.ServiceRegistrar, srv AgentAPIServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AgentAPI_ServiceDesc, srv)
+}
+
+func _AgentAPI_CreateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAPIServer).CreateCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAPI_CreateCluster_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAPIServer).CreateCluster(ctx, req.(*CreateClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentAPI_GetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAPIServer).GetCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAPI_GetCluster_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAPIServer).GetCluster(ctx, req.(*GetClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentAPI_ListClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClustersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAPIServer).ListClusters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAPI_ListClusters_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAPIServer).ListClusters(ctx, req.(*ListClustersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentAPI_SetClusterTrust_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetClusterTrustRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAPIServer).SetClusterTrust(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAPI_SetClusterTrust_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAPIServer).SetClusterTrust(ctx, req.(*SetClusterTrustRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentAPI_DeleteCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClusterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAPIServer).DeleteCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAPI_DeleteCluster_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAPIServer).DeleteCluster(ctx, req.(*DeleteClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AgentAPI_CreateAgent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -676,182 +680,128 @@ func _AgentAPI_DeleteAgent_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_GetAgentStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAgentStatusRequest)
+func _AgentAPI_CreateEnrollmentKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateEnrollmentKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).GetAgentStatus(ctx, in)
+		return srv.(AgentAPIServer).CreateEnrollmentKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_GetAgentStatus_FullMethodName,
+		FullMethod: AgentAPI_CreateEnrollmentKey_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetAgentStatus(ctx, req.(*GetAgentStatusRequest))
+		return srv.(AgentAPIServer).CreateEnrollmentKey(ctx, req.(*CreateEnrollmentKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_ClearAgentIdentityBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClearAgentIdentityBindingRequest)
+func _AgentAPI_GrantAgentUse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GrantAgentUseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).ClearAgentIdentityBinding(ctx, in)
+		return srv.(AgentAPIServer).GrantAgentUse(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_ClearAgentIdentityBinding_FullMethodName,
+		FullMethod: AgentAPI_GrantAgentUse_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ClearAgentIdentityBinding(ctx, req.(*ClearAgentIdentityBindingRequest))
+		return srv.(AgentAPIServer).GrantAgentUse(ctx, req.(*GrantAgentUseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_CreateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateApiKeyRequest)
+func _AgentAPI_RevokeAgentUse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeAgentUseRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).CreateApiKey(ctx, in)
+		return srv.(AgentAPIServer).RevokeAgentUse(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_CreateApiKey_FullMethodName,
+		FullMethod: AgentAPI_RevokeAgentUse_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).CreateApiKey(ctx, req.(*CreateApiKeyRequest))
+		return srv.(AgentAPIServer).RevokeAgentUse(ctx, req.(*RevokeAgentUseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_ListApiKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListApiKeysRequest)
+func _AgentAPI_ListAgentGrants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAgentGrantsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).ListApiKeys(ctx, in)
+		return srv.(AgentAPIServer).ListAgentGrants(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_ListApiKeys_FullMethodName,
+		FullMethod: AgentAPI_ListAgentGrants_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListApiKeys(ctx, req.(*ListApiKeysRequest))
+		return srv.(AgentAPIServer).ListAgentGrants(ctx, req.(*ListAgentGrantsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_GetApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetApiKeyRequest)
+func _AgentAPI_GetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).GetApiKey(ctx, in)
+		return srv.(AgentAPIServer).GetJob(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_GetApiKey_FullMethodName,
+		FullMethod: AgentAPI_GetJob_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetApiKey(ctx, req.(*GetApiKeyRequest))
+		return srv.(AgentAPIServer).GetJob(ctx, req.(*GetJobRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_RevokeApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokeApiKeyRequest)
+func _AgentAPI_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListJobsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).RevokeApiKey(ctx, in)
+		return srv.(AgentAPIServer).ListJobs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_RevokeApiKey_FullMethodName,
+		FullMethod: AgentAPI_ListJobs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).RevokeApiKey(ctx, req.(*RevokeApiKeyRequest))
+		return srv.(AgentAPIServer).ListJobs(ctx, req.(*ListJobsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_ListAgentJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAgentJobsRequest)
+func _AgentAPI_CancelJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentAPIServer).ListAgentJobs(ctx, in)
+		return srv.(AgentAPIServer).CancelJob(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentAPI_ListAgentJobs_FullMethodName,
+		FullMethod: AgentAPI_CancelJob_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListAgentJobs(ctx, req.(*ListAgentJobsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ListWorkloads_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListWorkloadsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ListWorkloads(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ListWorkloads_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListWorkloads(ctx, req.(*ListWorkloadsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_GetWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWorkloadRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).GetWorkload(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_GetWorkload_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetWorkload(ctx, req.(*GetWorkloadRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ListWorkloadEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListWorkloadEventsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ListWorkloadEvents(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ListWorkloadEvents_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListWorkloadEvents(ctx, req.(*ListWorkloadEventsRequest))
+		return srv.(AgentAPIServer).CancelJob(ctx, req.(*CancelJobRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -863,6 +813,26 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "admiral.api.agent.v1.AgentAPI",
 	HandlerType: (*AgentAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateCluster",
+			Handler:    _AgentAPI_CreateCluster_Handler,
+		},
+		{
+			MethodName: "GetCluster",
+			Handler:    _AgentAPI_GetCluster_Handler,
+		},
+		{
+			MethodName: "ListClusters",
+			Handler:    _AgentAPI_ListClusters_Handler,
+		},
+		{
+			MethodName: "SetClusterTrust",
+			Handler:    _AgentAPI_SetClusterTrust_Handler,
+		},
+		{
+			MethodName: "DeleteCluster",
+			Handler:    _AgentAPI_DeleteCluster_Handler,
+		},
 		{
 			MethodName: "CreateAgent",
 			Handler:    _AgentAPI_CreateAgent_Handler,
@@ -884,44 +854,458 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentAPI_DeleteAgent_Handler,
 		},
 		{
-			MethodName: "GetAgentStatus",
-			Handler:    _AgentAPI_GetAgentStatus_Handler,
+			MethodName: "CreateEnrollmentKey",
+			Handler:    _AgentAPI_CreateEnrollmentKey_Handler,
 		},
 		{
-			MethodName: "ClearAgentIdentityBinding",
-			Handler:    _AgentAPI_ClearAgentIdentityBinding_Handler,
+			MethodName: "GrantAgentUse",
+			Handler:    _AgentAPI_GrantAgentUse_Handler,
 		},
 		{
-			MethodName: "CreateApiKey",
-			Handler:    _AgentAPI_CreateApiKey_Handler,
+			MethodName: "RevokeAgentUse",
+			Handler:    _AgentAPI_RevokeAgentUse_Handler,
 		},
 		{
-			MethodName: "ListApiKeys",
-			Handler:    _AgentAPI_ListApiKeys_Handler,
+			MethodName: "ListAgentGrants",
+			Handler:    _AgentAPI_ListAgentGrants_Handler,
 		},
 		{
-			MethodName: "GetApiKey",
-			Handler:    _AgentAPI_GetApiKey_Handler,
+			MethodName: "GetJob",
+			Handler:    _AgentAPI_GetJob_Handler,
 		},
 		{
-			MethodName: "RevokeApiKey",
-			Handler:    _AgentAPI_RevokeApiKey_Handler,
+			MethodName: "ListJobs",
+			Handler:    _AgentAPI_ListJobs_Handler,
 		},
 		{
-			MethodName: "ListAgentJobs",
-			Handler:    _AgentAPI_ListAgentJobs_Handler,
+			MethodName: "CancelJob",
+			Handler:    _AgentAPI_CancelJob_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "admiral/api/agent/v1/agent.proto",
+}
+
+const (
+	AgentRuntimeAPI_Enroll_FullMethodName          = "/admiral.api.agent.v1.AgentRuntimeAPI/Enroll"
+	AgentRuntimeAPI_ReportStatus_FullMethodName    = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportStatus"
+	AgentRuntimeAPI_ClaimJob_FullMethodName        = "/admiral.api.agent.v1.AgentRuntimeAPI/ClaimJob"
+	AgentRuntimeAPI_StartJob_FullMethodName        = "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob"
+	AgentRuntimeAPI_RenewLease_FullMethodName      = "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease"
+	AgentRuntimeAPI_GetJobArtifact_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
+	AgentRuntimeAPI_ReportJobResult_FullMethodName = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
+)
+
+// AgentRuntimeAPIClient is the client API for AgentRuntimeAPI service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// AgentRuntimeAPI is what an agent calls while it works. Its routes live
+// under /v1/agent (singular: the caller is the agent) and are excluded from
+// the public OpenAPI document. The caller is always
+// an agent, identified by its token; no request names an agent.
+//
+// Work is claimed as an offer, started before anything touches the cluster,
+// held by renewing a lease, and reported once per attempt. Every call after
+// the claim carries the attempt and its lease token; a call from an attempt
+// that is not the current one, or whose lease lapsed, changes nothing.
+type AgentRuntimeAPIClient interface {
+	// Enroll sets a PENDING cluster's keys from inside it: the keys the cluster
+	// serves at /openid/v1/jwks, and a service-account token they verify. The
+	// caller authenticates with an enrollment key, which this spends.
+	//
+	// Scope: `agent:enroll`
+	Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error)
+	// ReportStatus records what the agent runs and what its cluster is: version,
+	// Kubernetes version and API groups (which prepare renders against), what its
+	// RBAC allows, and the cluster's current keys. A changed key set is accepted
+	// only when it still holds the key this call was verified with.
+	//
+	// Scope: `agent:status`
+	ReportStatus(ctx context.Context, in *ReportStatusRequest, opts ...grpc.CallOption) (*ReportStatusResponse, error)
+	// ClaimJob waits up to `wait_seconds` for work and returns an offer, or none.
+	// A retry with the same `claim_request_id` returns the same offer, so a lost
+	// response costs nothing. An offer not started within its TTL goes back to
+	// the queue.
+	//
+	// Scope: `agent:exec`
+	ClaimJob(ctx context.Context, in *ClaimJobRequest, opts ...grpc.CallOption) (*ClaimJobResponse, error)
+	// StartJob turns an offer into a lease. Call it before touching the
+	// cluster: an attempt that expires after starting is treated as having
+	// changed it.
+	//
+	// FAILED_PRECONDITION when the offer lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (*StartJobResponse, error)
+	// RenewLease extends a started attempt's lease and says whether to cancel.
+	// A refusal means the lease is gone: stop.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	RenewLease(ctx context.Context, in *RenewLeaseRequest, opts ...grpc.CallOption) (*RenewLeaseResponse, error)
+	// GetJobArtifact returns the job's run artifact, unmasked, to the attempt
+	// holding the lease.
+	//
+	// Scope: `agent:exec`
+	GetJobArtifact(ctx context.Context, in *GetJobArtifactRequest, opts ...grpc.CallOption) (*GetJobArtifactResponse, error)
+	// ReportJobResult ends an attempt. Repeating a report with the same
+	// `report_id` returns the first answer. A report from an attempt that lost
+	// its lease is kept as evidence and changes no state.
+	//
+	// Scope: `agent:exec`
+	ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error)
+}
+
+type agentRuntimeAPIClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAgentRuntimeAPIClient(cc grpc.ClientConnInterface) AgentRuntimeAPIClient {
+	return &agentRuntimeAPIClient{cc}
+}
+
+func (c *agentRuntimeAPIClient) Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EnrollResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_Enroll_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) ReportStatus(ctx context.Context, in *ReportStatusRequest, opts ...grpc.CallOption) (*ReportStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportStatusResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_ReportStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) ClaimJob(ctx context.Context, in *ClaimJobRequest, opts ...grpc.CallOption) (*ClaimJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClaimJobResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_ClaimJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (*StartJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StartJobResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_StartJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) RenewLease(ctx context.Context, in *RenewLeaseRequest, opts ...grpc.CallOption) (*RenewLeaseResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RenewLeaseResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_RenewLease_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, in *GetJobArtifactRequest, opts ...grpc.CallOption) (*GetJobArtifactResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetJobArtifactResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_GetJobArtifact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReportJobResultResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_ReportJobResult_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AgentRuntimeAPIServer is the server API for AgentRuntimeAPI service.
+// All implementations should embed UnimplementedAgentRuntimeAPIServer
+// for forward compatibility.
+//
+// AgentRuntimeAPI is what an agent calls while it works. Its routes live
+// under /v1/agent (singular: the caller is the agent) and are excluded from
+// the public OpenAPI document. The caller is always
+// an agent, identified by its token; no request names an agent.
+//
+// Work is claimed as an offer, started before anything touches the cluster,
+// held by renewing a lease, and reported once per attempt. Every call after
+// the claim carries the attempt and its lease token; a call from an attempt
+// that is not the current one, or whose lease lapsed, changes nothing.
+type AgentRuntimeAPIServer interface {
+	// Enroll sets a PENDING cluster's keys from inside it: the keys the cluster
+	// serves at /openid/v1/jwks, and a service-account token they verify. The
+	// caller authenticates with an enrollment key, which this spends.
+	//
+	// Scope: `agent:enroll`
+	Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error)
+	// ReportStatus records what the agent runs and what its cluster is: version,
+	// Kubernetes version and API groups (which prepare renders against), what its
+	// RBAC allows, and the cluster's current keys. A changed key set is accepted
+	// only when it still holds the key this call was verified with.
+	//
+	// Scope: `agent:status`
+	ReportStatus(context.Context, *ReportStatusRequest) (*ReportStatusResponse, error)
+	// ClaimJob waits up to `wait_seconds` for work and returns an offer, or none.
+	// A retry with the same `claim_request_id` returns the same offer, so a lost
+	// response costs nothing. An offer not started within its TTL goes back to
+	// the queue.
+	//
+	// Scope: `agent:exec`
+	ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error)
+	// StartJob turns an offer into a lease. Call it before touching the
+	// cluster: an attempt that expires after starting is treated as having
+	// changed it.
+	//
+	// FAILED_PRECONDITION when the offer lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	StartJob(context.Context, *StartJobRequest) (*StartJobResponse, error)
+	// RenewLease extends a started attempt's lease and says whether to cancel.
+	// A refusal means the lease is gone: stop.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	RenewLease(context.Context, *RenewLeaseRequest) (*RenewLeaseResponse, error)
+	// GetJobArtifact returns the job's run artifact, unmasked, to the attempt
+	// holding the lease.
+	//
+	// Scope: `agent:exec`
+	GetJobArtifact(context.Context, *GetJobArtifactRequest) (*GetJobArtifactResponse, error)
+	// ReportJobResult ends an attempt. Repeating a report with the same
+	// `report_id` returns the first answer. A report from an attempt that lost
+	// its lease is kept as evidence and changes no state.
+	//
+	// Scope: `agent:exec`
+	ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error)
+}
+
+// UnimplementedAgentRuntimeAPIServer should be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedAgentRuntimeAPIServer struct{}
+
+func (UnimplementedAgentRuntimeAPIServer) Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Enroll not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) ReportStatus(context.Context, *ReportStatusRequest) (*ReportStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportStatus not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ClaimJob not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) StartJob(context.Context, *StartJobRequest) (*StartJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method StartJob not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) RenewLease(context.Context, *RenewLeaseRequest) (*RenewLeaseResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenewLease not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) GetJobArtifact(context.Context, *GetJobArtifactRequest) (*GetJobArtifactResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetJobArtifact not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReportJobResult not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) testEmbeddedByValue() {}
+
+// UnsafeAgentRuntimeAPIServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AgentRuntimeAPIServer will
+// result in compilation errors.
+type UnsafeAgentRuntimeAPIServer interface {
+	mustEmbedUnimplementedAgentRuntimeAPIServer()
+}
+
+func RegisterAgentRuntimeAPIServer(s grpc.ServiceRegistrar, srv AgentRuntimeAPIServer) {
+	// If the following call panics, it indicates UnimplementedAgentRuntimeAPIServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&AgentRuntimeAPI_ServiceDesc, srv)
+}
+
+func _AgentRuntimeAPI_Enroll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnrollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).Enroll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_Enroll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).Enroll(ctx, req.(*EnrollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_ReportStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).ReportStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_ReportStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).ReportStatus(ctx, req.(*ReportStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_ClaimJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClaimJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).ClaimJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_ClaimJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).ClaimJob(ctx, req.(*ClaimJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_StartJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).StartJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_StartJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).StartJob(ctx, req.(*StartJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_RenewLease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenewLeaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).RenewLease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_RenewLease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).RenewLease(ctx, req.(*RenewLeaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_GetJobArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobArtifactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).GetJobArtifact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_GetJobArtifact_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).GetJobArtifact(ctx, req.(*GetJobArtifactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_ReportJobResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportJobResultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).ReportJobResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_ReportJobResult_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).ReportJobResult(ctx, req.(*ReportJobResultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AgentRuntimeAPI_ServiceDesc is the grpc.ServiceDesc for AgentRuntimeAPI service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AgentRuntimeAPI_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "admiral.api.agent.v1.AgentRuntimeAPI",
+	HandlerType: (*AgentRuntimeAPIServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Enroll",
+			Handler:    _AgentRuntimeAPI_Enroll_Handler,
 		},
 		{
-			MethodName: "ListWorkloads",
-			Handler:    _AgentAPI_ListWorkloads_Handler,
+			MethodName: "ReportStatus",
+			Handler:    _AgentRuntimeAPI_ReportStatus_Handler,
 		},
 		{
-			MethodName: "GetWorkload",
-			Handler:    _AgentAPI_GetWorkload_Handler,
+			MethodName: "ClaimJob",
+			Handler:    _AgentRuntimeAPI_ClaimJob_Handler,
 		},
 		{
-			MethodName: "ListWorkloadEvents",
-			Handler:    _AgentAPI_ListWorkloadEvents_Handler,
+			MethodName: "StartJob",
+			Handler:    _AgentRuntimeAPI_StartJob_Handler,
+		},
+		{
+			MethodName: "RenewLease",
+			Handler:    _AgentRuntimeAPI_RenewLease_Handler,
+		},
+		{
+			MethodName: "GetJobArtifact",
+			Handler:    _AgentRuntimeAPI_GetJobArtifact_Handler,
+		},
+		{
+			MethodName: "ReportJobResult",
+			Handler:    _AgentRuntimeAPI_ReportJobResult_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

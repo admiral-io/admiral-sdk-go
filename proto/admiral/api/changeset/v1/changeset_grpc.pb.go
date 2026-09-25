@@ -28,6 +28,9 @@ const (
 	ChangeSetAPI_DiffChangeSet_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet"
 	ChangeSetAPI_GetRevision_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision"
 	ChangeSetAPI_ListRevisions_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/ListRevisions"
+	ChangeSetAPI_PlanChangeSet_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/PlanChangeSet"
+	ChangeSetAPI_GetPrepare_FullMethodName         = "/admiral.api.changeset.v1.ChangeSetAPI/GetPrepare"
+	ChangeSetAPI_GetArtifact_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetArtifact"
 )
 
 // ChangeSetAPIClient is the client API for ChangeSetAPI service.
@@ -98,6 +101,32 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error)
+	// PlanChangeSet asks for a plan of the head revision. The revision is
+	// prepared first: every component it touches is rendered into one
+	// content-addressed run artifact. The call queues that work and returns
+	// at once; GetPrepare reports its progress. Asking again for a revision
+	// already asked for returns the same prepare, except that a prepare which
+	// failed for an infrastructure reason is queued again.
+	//
+	// FAILED_PRECONDITION when the change set is not a draft, has no revision,
+	// or `if_revision` is not the head (the message names the head).
+	//
+	// Scope: `changeset:write`
+	PlanChangeSet(ctx context.Context, in *PlanChangeSetRequest, opts ...grpc.CallOption) (*PlanChangeSetResponse, error)
+	// GetPrepare returns the prepare of one revision: its status, findings,
+	// error and artifact digest. NOT_FOUND when that revision was never
+	// prepared.
+	//
+	// Scope: `changeset:read`
+	GetPrepare(ctx context.Context, in *GetPrepareRequest, opts ...grpc.CallOption) (*GetPrepareResponse, error)
+	// GetArtifact returns a prepared revision's run artifact. Every value
+	// under a Secret's `data` and `stringData` is replaced by `sha256:` and
+	// the first twelve hex characters of its digest, so a change stays
+	// visible and the value does not. FAILED_PRECONDITION when the revision
+	// is not prepared.
+	//
+	// Scope: `changeset:read`
+	GetArtifact(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
 }
 
 type changeSetAPIClient struct {
@@ -198,6 +227,36 @@ func (c *changeSetAPIClient) ListRevisions(ctx context.Context, in *ListRevision
 	return out, nil
 }
 
+func (c *changeSetAPIClient) PlanChangeSet(ctx context.Context, in *PlanChangeSetRequest, opts ...grpc.CallOption) (*PlanChangeSetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlanChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_PlanChangeSet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) GetPrepare(ctx context.Context, in *GetPrepareRequest, opts ...grpc.CallOption) (*GetPrepareResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPrepareResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetPrepare_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) GetArtifact(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetArtifactResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetArtifact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChangeSetAPIServer is the server API for ChangeSetAPI service.
 // All implementations should embed UnimplementedChangeSetAPIServer
 // for forward compatibility.
@@ -266,6 +325,32 @@ type ChangeSetAPIServer interface {
 	//
 	// Scope: `changeset:read`
 	ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error)
+	// PlanChangeSet asks for a plan of the head revision. The revision is
+	// prepared first: every component it touches is rendered into one
+	// content-addressed run artifact. The call queues that work and returns
+	// at once; GetPrepare reports its progress. Asking again for a revision
+	// already asked for returns the same prepare, except that a prepare which
+	// failed for an infrastructure reason is queued again.
+	//
+	// FAILED_PRECONDITION when the change set is not a draft, has no revision,
+	// or `if_revision` is not the head (the message names the head).
+	//
+	// Scope: `changeset:write`
+	PlanChangeSet(context.Context, *PlanChangeSetRequest) (*PlanChangeSetResponse, error)
+	// GetPrepare returns the prepare of one revision: its status, findings,
+	// error and artifact digest. NOT_FOUND when that revision was never
+	// prepared.
+	//
+	// Scope: `changeset:read`
+	GetPrepare(context.Context, *GetPrepareRequest) (*GetPrepareResponse, error)
+	// GetArtifact returns a prepared revision's run artifact. Every value
+	// under a Secret's `data` and `stringData` is replaced by `sha256:` and
+	// the first twelve hex characters of its digest, so a change stays
+	// visible and the value does not. FAILED_PRECONDITION when the revision
+	// is not prepared.
+	//
+	// Scope: `changeset:read`
+	GetArtifact(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
 }
 
 // UnimplementedChangeSetAPIServer should be embedded to have
@@ -301,6 +386,15 @@ func (UnimplementedChangeSetAPIServer) GetRevision(context.Context, *GetRevision
 }
 func (UnimplementedChangeSetAPIServer) ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListRevisions not implemented")
+}
+func (UnimplementedChangeSetAPIServer) PlanChangeSet(context.Context, *PlanChangeSetRequest) (*PlanChangeSetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PlanChangeSet not implemented")
+}
+func (UnimplementedChangeSetAPIServer) GetPrepare(context.Context, *GetPrepareRequest) (*GetPrepareResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPrepare not implemented")
+}
+func (UnimplementedChangeSetAPIServer) GetArtifact(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetArtifact not implemented")
 }
 func (UnimplementedChangeSetAPIServer) testEmbeddedByValue() {}
 
@@ -484,6 +578,60 @@ func _ChangeSetAPI_ListRevisions_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChangeSetAPI_PlanChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlanChangeSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).PlanChangeSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_PlanChangeSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).PlanChangeSet(ctx, req.(*PlanChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_GetPrepare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPrepareRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).GetPrepare(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_GetPrepare_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).GetPrepare(ctx, req.(*GetPrepareRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_GetArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetArtifactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).GetArtifact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_GetArtifact_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).GetArtifact(ctx, req.(*GetArtifactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChangeSetAPI_ServiceDesc is the grpc.ServiceDesc for ChangeSetAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -526,6 +674,18 @@ var ChangeSetAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListRevisions",
 			Handler:    _ChangeSetAPI_ListRevisions_Handler,
+		},
+		{
+			MethodName: "PlanChangeSet",
+			Handler:    _ChangeSetAPI_PlanChangeSet_Handler,
+		},
+		{
+			MethodName: "GetPrepare",
+			Handler:    _ChangeSetAPI_GetPrepare_Handler,
+		},
+		{
+			MethodName: "GetArtifact",
+			Handler:    _ChangeSetAPI_GetArtifact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

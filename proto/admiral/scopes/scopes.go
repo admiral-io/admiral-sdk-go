@@ -41,7 +41,7 @@ const (
 
 // Scope name constants.
 const (
-	AgentDeploy      = "agent:deploy"
+	AgentEnroll      = "agent:enroll"
 	AgentExec        = "agent:exec"
 	AgentRead        = "agent:read"
 	AgentStatus      = "agent:status"
@@ -78,7 +78,7 @@ type Group struct {
 // Groups maps a scope prefix to its group. Every scope's prefix has an
 // entry; GroupOf finds it.
 var Groups = map[string]Group{
-	"agent":      {Name: "agent", Description: "Execution agents, their tokens, and the jobs and workloads they run."},
+	"agent":      {Name: "agent", Description: "Clusters, the agents in them, who may use each, and the jobs they run."},
 	"app":        {Name: "app", Description: "Applications."},
 	"changeset":  {Name: "changeset", Description: "Change sets, their revisions, and the component values they propose."},
 	"component":  {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
@@ -121,29 +121,29 @@ type Scope struct {
 
 // Catalog maps scope name to its definition.
 var Catalog = map[string]Scope{
-	AgentDeploy: {
-		Name:         AgentDeploy,
-		Description:  "Fetch revision bundles and report revision results.",
+	AgentEnroll: {
+		Name:         AgentEnroll,
+		Description:  "Enroll a cluster, once, from inside it. Held only by a single-use enrollment key.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentExec: {
 		Name:         AgentExec,
-		Description:  "Agent runtime job execution — heartbeat, claim jobs, fetch job bundles, and report job results.",
+		Description:  "Agent runtime work — claim, start, renew, fetch the artifact of, and report jobs.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentRead: {
 		Name:         AgentRead,
-		Description:  "Read agents, agent tokens, jobs, workloads, and workload events.",
+		Description:  "Read clusters, agents, who may use them, and their jobs.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	AgentStatus: {
 		Name:         AgentStatus,
-		Description:  "Report agent status, workload status, and workload metrics.",
+		Description:  "Report an agent's status, its cluster's capabilities, and its cluster's keys.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentWrite: {
 		Name:         AgentWrite,
-		Description:  "Create, update, and delete agents; manage agent tokens and identity bindings.",
+		Description:  "Connect clusters; create, update and delete agents; issue enrollment keys; grant use; cancel jobs.",
 		Implies:      []string{AgentRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
@@ -278,10 +278,7 @@ var impliesClosure = map[string][]string{
 // SATProfiles maps an agent kind (lowercased AgentKind enum value) to the
 // scope set the STS stamps on that kind's service account tokens. AgentAPI
 // auto-assigns from this map; agents get no per-token scope selection.
-var SATProfiles = map[string][]string{
-	"kubernetes": []string{AgentDeploy, AgentStatus},
-	"terraform":  []string{AgentExec},
-}
+var SATProfiles = map[string][]string{}
 
 // Covers reports whether the token's scope set covers the required scope:
 // the session wildcard, direct membership, or a transitively implied scope.

@@ -13,8 +13,6 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	durationpb "google.golang.org/protobuf/types/known/durationpb"
-	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -28,174 +26,557 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// AgentKind names the execution contract an agent serves, by its canonical tool.
-// The engine is a sub-axis within a kind (TERRAFORM runs terraform/tofu;
-// KUBERNETES runs helm/kustomize/raw), so a new tool is a new value, not a refactor.
-type AgentKind int32
+type ClusterStatus int32
 
 const (
-	// Default value. Must not be used.
-	AgentKind_AGENT_KIND_UNSPECIFIED AgentKind = 0
-	// Terraform-semantic infrastructure agent (plan/apply/destroy jobs; engines:
-	// terraform, tofu). Managed-service deploys (Lambda/ECS/Cloud Run) also run here
-	// as terraform components.
-	AgentKind_AGENT_KIND_TERRAFORM AgentKind = 1
-	// Kubernetes agent (cluster telemetry + manifest revision delivery/reconcile).
-	AgentKind_AGENT_KIND_KUBERNETES AgentKind = 2
+	ClusterStatus_CLUSTER_STATUS_UNSPECIFIED ClusterStatus = 0
+	// No keys yet: an agent may enroll it.
+	ClusterStatus_PENDING ClusterStatus = 1
+	ClusterStatus_TRUSTED ClusterStatus = 2
 )
 
-// Enum value maps for AgentKind.
+// Enum value maps for ClusterStatus.
 var (
-	AgentKind_name = map[int32]string{
-		0: "AGENT_KIND_UNSPECIFIED",
-		1: "AGENT_KIND_TERRAFORM",
-		2: "AGENT_KIND_KUBERNETES",
+	ClusterStatus_name = map[int32]string{
+		0: "CLUSTER_STATUS_UNSPECIFIED",
+		1: "PENDING",
+		2: "TRUSTED",
 	}
-	AgentKind_value = map[string]int32{
-		"AGENT_KIND_UNSPECIFIED": 0,
-		"AGENT_KIND_TERRAFORM":   1,
-		"AGENT_KIND_KUBERNETES":  2,
+	ClusterStatus_value = map[string]int32{
+		"CLUSTER_STATUS_UNSPECIFIED": 0,
+		"PENDING":                    1,
+		"TRUSTED":                    2,
 	}
 )
 
-func (x AgentKind) Enum() *AgentKind {
-	p := new(AgentKind)
+func (x ClusterStatus) Enum() *ClusterStatus {
+	p := new(ClusterStatus)
 	*p = x
 	return p
 }
 
-func (x AgentKind) String() string {
+func (x ClusterStatus) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (AgentKind) Descriptor() protoreflect.EnumDescriptor {
+func (ClusterStatus) Descriptor() protoreflect.EnumDescriptor {
 	return file_admiral_api_agent_v1_agent_proto_enumTypes[0].Descriptor()
 }
 
-func (AgentKind) Type() protoreflect.EnumType {
+func (ClusterStatus) Type() protoreflect.EnumType {
 	return &file_admiral_api_agent_v1_agent_proto_enumTypes[0]
 }
 
-func (x AgentKind) Number() protoreflect.EnumNumber {
+func (x ClusterStatus) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use AgentKind.Descriptor instead.
-func (AgentKind) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ClusterStatus.Descriptor instead.
+func (ClusterStatus) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{0}
 }
 
-// AgentHealthStatus represents the derived health state of an agent. The status
-// is computed from reporting recency and kind-specific signals (capacity for
-// TERRAFORM; node readiness and workload health for KUBERNETES). The ERROR state is
-// only emitted by KUBERNETES agents.
-type AgentHealthStatus int32
+type AgentHealth int32
 
 const (
-	// Default value. Must not be used.
-	AgentHealthStatus_AGENT_HEALTH_STATUS_UNSPECIFIED AgentHealthStatus = 0
-	// Agent record exists but no report has been received yet.
-	AgentHealthStatus_AGENT_HEALTH_STATUS_PENDING AgentHealthStatus = 1
-	// Reporting within the expected interval; agent operational.
-	AgentHealthStatus_AGENT_HEALTH_STATUS_HEALTHY AgentHealthStatus = 2
-	// Operational but reporting constraints: capacity near limits (TERRAFORM), or some
-	// nodes not ready / workloads degraded (KUBERNETES).
-	AgentHealthStatus_AGENT_HEALTH_STATUS_DEGRADED AgentHealthStatus = 3
-	// (KUBERNETES only) More than 25% nodes not ready or workloads in error state.
-	AgentHealthStatus_AGENT_HEALTH_STATUS_ERROR AgentHealthStatus = 4
-	// No report received within 3x the expected interval.
-	AgentHealthStatus_AGENT_HEALTH_STATUS_UNREACHABLE AgentHealthStatus = 5
+	AgentHealth_AGENT_HEALTH_UNSPECIFIED AgentHealth = 0
+	// Never reported.
+	AgentHealth_NEW    AgentHealth = 1
+	AgentHealth_ONLINE AgentHealth = 2
+	// Has not reported for longer than twice its reporting interval.
+	AgentHealth_OFFLINE AgentHealth = 3
 )
 
-// Enum value maps for AgentHealthStatus.
+// Enum value maps for AgentHealth.
 var (
-	AgentHealthStatus_name = map[int32]string{
-		0: "AGENT_HEALTH_STATUS_UNSPECIFIED",
-		1: "AGENT_HEALTH_STATUS_PENDING",
-		2: "AGENT_HEALTH_STATUS_HEALTHY",
-		3: "AGENT_HEALTH_STATUS_DEGRADED",
-		4: "AGENT_HEALTH_STATUS_ERROR",
-		5: "AGENT_HEALTH_STATUS_UNREACHABLE",
+	AgentHealth_name = map[int32]string{
+		0: "AGENT_HEALTH_UNSPECIFIED",
+		1: "NEW",
+		2: "ONLINE",
+		3: "OFFLINE",
 	}
-	AgentHealthStatus_value = map[string]int32{
-		"AGENT_HEALTH_STATUS_UNSPECIFIED": 0,
-		"AGENT_HEALTH_STATUS_PENDING":     1,
-		"AGENT_HEALTH_STATUS_HEALTHY":     2,
-		"AGENT_HEALTH_STATUS_DEGRADED":    3,
-		"AGENT_HEALTH_STATUS_ERROR":       4,
-		"AGENT_HEALTH_STATUS_UNREACHABLE": 5,
+	AgentHealth_value = map[string]int32{
+		"AGENT_HEALTH_UNSPECIFIED": 0,
+		"NEW":                      1,
+		"ONLINE":                   2,
+		"OFFLINE":                  3,
 	}
 )
 
-func (x AgentHealthStatus) Enum() *AgentHealthStatus {
-	p := new(AgentHealthStatus)
+func (x AgentHealth) Enum() *AgentHealth {
+	p := new(AgentHealth)
 	*p = x
 	return p
 }
 
-func (x AgentHealthStatus) String() string {
+func (x AgentHealth) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (AgentHealthStatus) Descriptor() protoreflect.EnumDescriptor {
+func (AgentHealth) Descriptor() protoreflect.EnumDescriptor {
 	return file_admiral_api_agent_v1_agent_proto_enumTypes[1].Descriptor()
 }
 
-func (AgentHealthStatus) Type() protoreflect.EnumType {
+func (AgentHealth) Type() protoreflect.EnumType {
 	return &file_admiral_api_agent_v1_agent_proto_enumTypes[1]
 }
 
-func (x AgentHealthStatus) Number() protoreflect.EnumNumber {
+func (x AgentHealth) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use AgentHealthStatus.Descriptor instead.
-func (AgentHealthStatus) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use AgentHealth.Descriptor instead.
+func (AgentHealth) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{1}
 }
 
-// Agent represents a registered execution agent within a tenant. The `kind`
-// selects its execution plane: TERRAFORM agents claim and execute infrastructure
-// jobs; KUBERNETES agents report Kubernetes telemetry and apply manifest revisions.
-type Agent struct {
+type JobKind int32
+
+const (
+	JobKind_JOB_KIND_UNSPECIFIED JobKind = 0
+	// Proves an agent can claim, start, renew, fetch and report. Queued when an
+	// agent first reports, and on request.
+	JobKind_PROBE JobKind = 1
+	JobKind_PLAN  JobKind = 2
+	JobKind_APPLY JobKind = 3
+)
+
+// Enum value maps for JobKind.
+var (
+	JobKind_name = map[int32]string{
+		0: "JOB_KIND_UNSPECIFIED",
+		1: "PROBE",
+		2: "PLAN",
+		3: "APPLY",
+	}
+	JobKind_value = map[string]int32{
+		"JOB_KIND_UNSPECIFIED": 0,
+		"PROBE":                1,
+		"PLAN":                 2,
+		"APPLY":                3,
+	}
+)
+
+func (x JobKind) Enum() *JobKind {
+	p := new(JobKind)
+	*p = x
+	return p
+}
+
+func (x JobKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JobKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[2].Descriptor()
+}
+
+func (JobKind) Type() protoreflect.EnumType {
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[2]
+}
+
+func (x JobKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JobKind.Descriptor instead.
+func (JobKind) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{2}
+}
+
+type JobStatus int32
+
+const (
+	JobStatus_JOB_STATUS_UNSPECIFIED JobStatus = 0
+	JobStatus_QUEUED                 JobStatus = 1
+	// Offered to an agent, not yet started.
+	JobStatus_OFFERED   JobStatus = 2
+	JobStatus_RUNNING   JobStatus = 3
+	JobStatus_SUCCEEDED JobStatus = 4
+	JobStatus_FAILED    JobStatus = 5
+	JobStatus_CANCELLED JobStatus = 6
+)
+
+// Enum value maps for JobStatus.
+var (
+	JobStatus_name = map[int32]string{
+		0: "JOB_STATUS_UNSPECIFIED",
+		1: "QUEUED",
+		2: "OFFERED",
+		3: "RUNNING",
+		4: "SUCCEEDED",
+		5: "FAILED",
+		6: "CANCELLED",
+	}
+	JobStatus_value = map[string]int32{
+		"JOB_STATUS_UNSPECIFIED": 0,
+		"QUEUED":                 1,
+		"OFFERED":                2,
+		"RUNNING":                3,
+		"SUCCEEDED":              4,
+		"FAILED":                 5,
+		"CANCELLED":              6,
+	}
+)
+
+func (x JobStatus) Enum() *JobStatus {
+	p := new(JobStatus)
+	*p = x
+	return p
+}
+
+func (x JobStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JobStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[3].Descriptor()
+}
+
+func (JobStatus) Type() protoreflect.EnumType {
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[3]
+}
+
+func (x JobStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JobStatus.Descriptor instead.
+func (JobStatus) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{3}
+}
+
+// WaitReason says why a queued job is not running.
+type WaitReason int32
+
+const (
+	WaitReason_WAIT_REASON_UNSPECIFIED WaitReason = 0
+	WaitReason_NO_AGENT_SELECTED       WaitReason = 1
+	WaitReason_AGENT_NOT_GRANTED       WaitReason = 2
+	WaitReason_AGENT_OFFLINE           WaitReason = 3
+	WaitReason_AGENT_AT_CAPACITY       WaitReason = 4
+	WaitReason_AGENT_TOO_OLD           WaitReason = 5
+	// Another APPLY holds the environment.
+	WaitReason_ENVIRONMENT_BUSY WaitReason = 6
+	// Retrying after a failed attempt.
+	WaitReason_BACKOFF         WaitReason = 7
+	WaitReason_CLUSTER_PENDING WaitReason = 8
+)
+
+// Enum value maps for WaitReason.
+var (
+	WaitReason_name = map[int32]string{
+		0: "WAIT_REASON_UNSPECIFIED",
+		1: "NO_AGENT_SELECTED",
+		2: "AGENT_NOT_GRANTED",
+		3: "AGENT_OFFLINE",
+		4: "AGENT_AT_CAPACITY",
+		5: "AGENT_TOO_OLD",
+		6: "ENVIRONMENT_BUSY",
+		7: "BACKOFF",
+		8: "CLUSTER_PENDING",
+	}
+	WaitReason_value = map[string]int32{
+		"WAIT_REASON_UNSPECIFIED": 0,
+		"NO_AGENT_SELECTED":       1,
+		"AGENT_NOT_GRANTED":       2,
+		"AGENT_OFFLINE":           3,
+		"AGENT_AT_CAPACITY":       4,
+		"AGENT_TOO_OLD":           5,
+		"ENVIRONMENT_BUSY":        6,
+		"BACKOFF":                 7,
+		"CLUSTER_PENDING":         8,
+	}
+)
+
+func (x WaitReason) Enum() *WaitReason {
+	p := new(WaitReason)
+	*p = x
+	return p
+}
+
+func (x WaitReason) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (WaitReason) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[4].Descriptor()
+}
+
+func (WaitReason) Type() protoreflect.EnumType {
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[4]
+}
+
+func (x WaitReason) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use WaitReason.Descriptor instead.
+func (WaitReason) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{4}
+}
+
+type ReportOutcome int32
+
+const (
+	ReportOutcome_REPORT_OUTCOME_UNSPECIFIED ReportOutcome = 0
+	ReportOutcome_ACCEPTED                   ReportOutcome = 1
+	// The same report_id was already accepted.
+	ReportOutcome_DUPLICATE ReportOutcome = 2
+	// The attempt had lost its lease: kept as evidence, no state change.
+	ReportOutcome_LATE ReportOutcome = 3
+)
+
+// Enum value maps for ReportOutcome.
+var (
+	ReportOutcome_name = map[int32]string{
+		0: "REPORT_OUTCOME_UNSPECIFIED",
+		1: "ACCEPTED",
+		2: "DUPLICATE",
+		3: "LATE",
+	}
+	ReportOutcome_value = map[string]int32{
+		"REPORT_OUTCOME_UNSPECIFIED": 0,
+		"ACCEPTED":                   1,
+		"DUPLICATE":                  2,
+		"LATE":                       3,
+	}
+)
+
+func (x ReportOutcome) Enum() *ReportOutcome {
+	p := new(ReportOutcome)
+	*p = x
+	return p
+}
+
+func (x ReportOutcome) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ReportOutcome) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[5].Descriptor()
+}
+
+func (ReportOutcome) Type() protoreflect.EnumType {
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[5]
+}
+
+func (x ReportOutcome) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ReportOutcome.Descriptor instead.
+func (ReportOutcome) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{5}
+}
+
+type Cluster struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Id     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name   string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Status ClusterStatus          `protobuf:"varint,3,opt,name=status,proto3,enum=admiral.api.agent.v1.ClusterStatus" json:"status,omitempty"`
+	// Set when the cluster's issuer is public; keys are fetched from it.
+	IssuerUrl string `protobuf:"bytes,4,opt,name=issuer_url,json=issuerUrl,proto3" json:"issuer_url,omitempty"`
+	// The key ids trusted now.
+	KeyIds        []string               `protobuf:"bytes,5,rep,name=key_ids,json=keyIds,proto3" json:"key_ids,omitempty"`
+	KeysUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=keys_updated_at,json=keysUpdatedAt,proto3" json:"keys_updated_at,omitempty"`
+	CreatedBy     *v1.ActorRef           `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Cluster) Reset() {
+	*x = Cluster{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Cluster) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Cluster) ProtoMessage() {}
+
+func (x *Cluster) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Cluster.ProtoReflect.Descriptor instead.
+func (*Cluster) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Cluster) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Cluster) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Cluster) GetStatus() ClusterStatus {
+	if x != nil {
+		return x.Status
+	}
+	return ClusterStatus_CLUSTER_STATUS_UNSPECIFIED
+}
+
+func (x *Cluster) GetIssuerUrl() string {
+	if x != nil {
+		return x.IssuerUrl
+	}
+	return ""
+}
+
+func (x *Cluster) GetKeyIds() []string {
+	if x != nil {
+		return x.KeyIds
+	}
+	return nil
+}
+
+func (x *Cluster) GetKeysUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.KeysUpdatedAt
+	}
+	return nil
+}
+
+func (x *Cluster) GetCreatedBy() *v1.ActorRef {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return nil
+}
+
+func (x *Cluster) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+// ClusterTrust is how a cluster's tokens are verified.
+type ClusterTrust struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier for the agent (UUID).
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The execution plane this agent serves. Set at creation and immutable
-	// (CreateAgentRequest.kind carries the not_in:[0] requirement). Not validated
-	// here so a partial Agent in UpdateAgentRequest (which omits kind) passes.
-	Kind AgentKind `protobuf:"varint,2,opt,name=kind,proto3,enum=admiral.api.agent.v1.AgentKind" json:"kind,omitempty"`
-	// URL-safe, human-readable identifier (e.g., "prod-terraform" or "prod-us-east-1").
-	// Unique within the tenant. Lowercase alphanumeric and hyphens only, must start
-	// with a letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional longer-form description of the agent's purpose.
-	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	// Arbitrary key-value labels for organizing and filtering agents
-	// (e.g., `{"cloud": "aws", "team": "platform"}`).
-	Labels map[string]string `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Derived health status based on reporting recency and kind-specific signals.
-	HealthStatus AgentHealthStatus `protobuf:"varint,6,opt,name=health_status,json=healthStatus,proto3,enum=admiral.api.agent.v1.AgentHealthStatus" json:"health_status,omitempty"`
-	// (KUBERNETES only) The Kubernetes kube-system namespace UID, bound at agent
-	// registration using a first-write-wins strategy. Used to detect when a key
-	// is accidentally deployed to a different physical cluster. Empty for TERRAFORM
-	// agents.
-	ClusterUid string `protobuf:"bytes,7,opt,name=cluster_uid,json=clusterUid,proto3" json:"cluster_uid,omitempty"`
-	// The user or agent who created this agent (server-populated from key).
-	CreatedBy *v1.ActorRef `protobuf:"bytes,8,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	// When the agent record was created.
-	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When the agent record was last updated via UpdateAgent. Reports/heartbeats
-	// do not bump this field; liveness is exposed separately via GetAgentStatus
-	// and health_status.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Types that are valid to be assigned to Trust:
+	//
+	//	*ClusterTrust_IssuerUrl
+	//	*ClusterTrust_JwksJson
+	Trust         isClusterTrust_Trust `protobuf_oneof:"trust"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClusterTrust) Reset() {
+	*x = ClusterTrust{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClusterTrust) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClusterTrust) ProtoMessage() {}
+
+func (x *ClusterTrust) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClusterTrust.ProtoReflect.Descriptor instead.
+func (*ClusterTrust) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ClusterTrust) GetTrust() isClusterTrust_Trust {
+	if x != nil {
+		return x.Trust
+	}
+	return nil
+}
+
+func (x *ClusterTrust) GetIssuerUrl() string {
+	if x != nil {
+		if x, ok := x.Trust.(*ClusterTrust_IssuerUrl); ok {
+			return x.IssuerUrl
+		}
+	}
+	return ""
+}
+
+func (x *ClusterTrust) GetJwksJson() string {
+	if x != nil {
+		if x, ok := x.Trust.(*ClusterTrust_JwksJson); ok {
+			return x.JwksJson
+		}
+	}
+	return ""
+}
+
+type isClusterTrust_Trust interface {
+	isClusterTrust_Trust()
+}
+
+type ClusterTrust_IssuerUrl struct {
+	// An https URL whose /.well-known/openid-configuration names the keys.
+	IssuerUrl string `protobuf:"bytes,1,opt,name=issuer_url,json=issuerUrl,proto3,oneof"`
+}
+
+type ClusterTrust_JwksJson struct {
+	// A JSON Web Key Set, as the cluster serves it at /openid/v1/jwks.
+	JwksJson string `protobuf:"bytes,2,opt,name=jwks_json,json=jwksJson,proto3,oneof"`
+}
+
+func (*ClusterTrust_IssuerUrl) isClusterTrust_Trust() {}
+
+func (*ClusterTrust_JwksJson) isClusterTrust_Trust() {}
+
+type Agent struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ClusterId      string                 `protobuf:"bytes,2,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	Name           string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Namespace      string                 `protobuf:"bytes,4,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	ServiceAccount string                 `protobuf:"bytes,5,opt,name=service_account,json=serviceAccount,proto3" json:"service_account,omitempty"`
+	Ceiling        *AgentCeiling          `protobuf:"bytes,6,opt,name=ceiling,proto3" json:"ceiling,omitempty"`
+	Health         AgentHealth            `protobuf:"varint,7,opt,name=health,proto3,enum=admiral.api.agent.v1.AgentHealth" json:"health,omitempty"`
+	// What the agent last reported. Absent until it does.
+	Report        *AgentReport           `protobuf:"bytes,8,opt,name=report,proto3" json:"report,omitempty"`
+	CreatedBy     *v1.ActorRef           `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Agent) Reset() {
 	*x = Agent{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[0]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -207,7 +588,7 @@ func (x *Agent) String() string {
 func (*Agent) ProtoMessage() {}
 
 func (x *Agent) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[0]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -220,7 +601,7 @@ func (x *Agent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Agent.ProtoReflect.Descriptor instead.
 func (*Agent) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{0}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Agent) GetId() string {
@@ -230,11 +611,11 @@ func (x *Agent) GetId() string {
 	return ""
 }
 
-func (x *Agent) GetKind() AgentKind {
+func (x *Agent) GetClusterId() string {
 	if x != nil {
-		return x.Kind
+		return x.ClusterId
 	}
-	return AgentKind_AGENT_KIND_UNSPECIFIED
+	return ""
 }
 
 func (x *Agent) GetName() string {
@@ -244,32 +625,39 @@ func (x *Agent) GetName() string {
 	return ""
 }
 
-func (x *Agent) GetDescription() string {
+func (x *Agent) GetNamespace() string {
 	if x != nil {
-		return x.Description
+		return x.Namespace
 	}
 	return ""
 }
 
-func (x *Agent) GetLabels() map[string]string {
+func (x *Agent) GetServiceAccount() string {
 	if x != nil {
-		return x.Labels
+		return x.ServiceAccount
+	}
+	return ""
+}
+
+func (x *Agent) GetCeiling() *AgentCeiling {
+	if x != nil {
+		return x.Ceiling
 	}
 	return nil
 }
 
-func (x *Agent) GetHealthStatus() AgentHealthStatus {
+func (x *Agent) GetHealth() AgentHealth {
 	if x != nil {
-		return x.HealthStatus
+		return x.Health
 	}
-	return AgentHealthStatus_AGENT_HEALTH_STATUS_UNSPECIFIED
+	return AgentHealth_AGENT_HEALTH_UNSPECIFIED
 }
 
-func (x *Agent) GetClusterUid() string {
+func (x *Agent) GetReport() *AgentReport {
 	if x != nil {
-		return x.ClusterUid
+		return x.Report
 	}
-	return ""
+	return nil
 }
 
 func (x *Agent) GetCreatedBy() *v1.ActorRef {
@@ -286,34 +674,1160 @@ func (x *Agent) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Agent) GetUpdatedAt() *timestamppb.Timestamp {
+// AgentCeiling is what the agent's owner allows it, whatever its RBAC allows.
+// The plan refuses what falls outside it.
+type AgentCeiling struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	AllowNamespaceCreation bool                   `protobuf:"varint,1,opt,name=allow_namespace_creation,json=allowNamespaceCreation,proto3" json:"allow_namespace_creation,omitempty"`
+	// Glob patterns; empty allows every namespace.
+	AllowedNamespaces []string `protobuf:"bytes,2,rep,name=allowed_namespaces,json=allowedNamespaces,proto3" json:"allowed_namespaces,omitempty"`
+	DeniedNamespaces  []string `protobuf:"bytes,3,rep,name=denied_namespaces,json=deniedNamespaces,proto3" json:"denied_namespaces,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *AgentCeiling) Reset() {
+	*x = AgentCeiling{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentCeiling) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentCeiling) ProtoMessage() {}
+
+func (x *AgentCeiling) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[3]
 	if x != nil {
-		return x.UpdatedAt
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentCeiling.ProtoReflect.Descriptor instead.
+func (*AgentCeiling) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *AgentCeiling) GetAllowNamespaceCreation() bool {
+	if x != nil {
+		return x.AllowNamespaceCreation
+	}
+	return false
+}
+
+func (x *AgentCeiling) GetAllowedNamespaces() []string {
+	if x != nil {
+		return x.AllowedNamespaces
 	}
 	return nil
 }
 
-// CreateAgentRequest contains the parameters for creating a new agent.
-type CreateAgentRequest struct {
+func (x *AgentCeiling) GetDeniedNamespaces() []string {
+	if x != nil {
+		return x.DeniedNamespaces
+	}
+	return nil
+}
+
+type AgentReport struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	AgentVersion    string                 `protobuf:"bytes,1,opt,name=agent_version,json=agentVersion,proto3" json:"agent_version,omitempty"`
+	ProtocolVersion int32                  `protobuf:"varint,2,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	KubeVersion     string                 `protobuf:"bytes,3,opt,name=kube_version,json=kubeVersion,proto3" json:"kube_version,omitempty"`
+	ApiVersions     []string               `protobuf:"bytes,4,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	Capabilities    *AgentCapabilities     `protobuf:"bytes,5,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
+	ReportedAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=reported_at,json=reportedAt,proto3" json:"reported_at,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *AgentReport) Reset() {
+	*x = AgentReport{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentReport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentReport) ProtoMessage() {}
+
+func (x *AgentReport) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentReport.ProtoReflect.Descriptor instead.
+func (*AgentReport) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *AgentReport) GetAgentVersion() string {
+	if x != nil {
+		return x.AgentVersion
+	}
+	return ""
+}
+
+func (x *AgentReport) GetProtocolVersion() int32 {
+	if x != nil {
+		return x.ProtocolVersion
+	}
+	return 0
+}
+
+func (x *AgentReport) GetKubeVersion() string {
+	if x != nil {
+		return x.KubeVersion
+	}
+	return ""
+}
+
+func (x *AgentReport) GetApiVersions() []string {
+	if x != nil {
+		return x.ApiVersions
+	}
+	return nil
+}
+
+func (x *AgentReport) GetCapabilities() *AgentCapabilities {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
+func (x *AgentReport) GetReportedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReportedAt
+	}
+	return nil
+}
+
+// AgentCapabilities is what the agent's own RBAC lets it do, as it measured.
+type AgentCapabilities struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	CanCreateNamespaces bool                   `protobuf:"varint,1,opt,name=can_create_namespaces,json=canCreateNamespaces,proto3" json:"can_create_namespaces,omitempty"`
+	// Namespaces it may write; empty with `all_namespaces` means everywhere.
+	WritableNamespaces    []string `protobuf:"bytes,2,rep,name=writable_namespaces,json=writableNamespaces,proto3" json:"writable_namespaces,omitempty"`
+	AllNamespaces         bool     `protobuf:"varint,3,opt,name=all_namespaces,json=allNamespaces,proto3" json:"all_namespaces,omitempty"`
+	CanWriteClusterScoped bool     `protobuf:"varint,4,opt,name=can_write_cluster_scoped,json=canWriteClusterScoped,proto3" json:"can_write_cluster_scoped,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *AgentCapabilities) Reset() {
+	*x = AgentCapabilities{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentCapabilities) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentCapabilities) ProtoMessage() {}
+
+func (x *AgentCapabilities) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentCapabilities.ProtoReflect.Descriptor instead.
+func (*AgentCapabilities) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AgentCapabilities) GetCanCreateNamespaces() bool {
+	if x != nil {
+		return x.CanCreateNamespaces
+	}
+	return false
+}
+
+func (x *AgentCapabilities) GetWritableNamespaces() []string {
+	if x != nil {
+		return x.WritableNamespaces
+	}
+	return nil
+}
+
+func (x *AgentCapabilities) GetAllNamespaces() bool {
+	if x != nil {
+		return x.AllNamespaces
+	}
+	return false
+}
+
+func (x *AgentCapabilities) GetCanWriteClusterScoped() bool {
+	if x != nil {
+		return x.CanWriteClusterScoped
+	}
+	return false
+}
+
+// AgentGrant is who may select an agent.
+type AgentGrant struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The execution plane this agent serves (TERRAFORM or KUBERNETES). Selects the
-	// key's auto-assigned scopes and is immutable.
-	Kind AgentKind `protobuf:"varint,1,opt,name=kind,proto3,enum=admiral.api.agent.v1.AgentKind" json:"kind,omitempty"`
-	// URL-safe, human-readable identifier (e.g., "prod-terraform"). Unique within
-	// the tenant. Lowercase alphanumeric and hyphens only, must start with a
-	// letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional longer-form description of the agent's purpose.
-	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// Arbitrary key-value labels for organizing and filtering agents.
-	Labels        map[string]string `protobuf:"bytes,4,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Types that are valid to be assigned to Target:
+	//
+	//	*AgentGrant_Tenant
+	//	*AgentGrant_GroupId
+	//	*AgentGrant_ApplicationId
+	Target        isAgentGrant_Target `protobuf_oneof:"target"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AgentGrant) Reset() {
+	*x = AgentGrant{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentGrant) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentGrant) ProtoMessage() {}
+
+func (x *AgentGrant) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentGrant.ProtoReflect.Descriptor instead.
+func (*AgentGrant) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *AgentGrant) GetTarget() isAgentGrant_Target {
+	if x != nil {
+		return x.Target
+	}
+	return nil
+}
+
+func (x *AgentGrant) GetTenant() bool {
+	if x != nil {
+		if x, ok := x.Target.(*AgentGrant_Tenant); ok {
+			return x.Tenant
+		}
+	}
+	return false
+}
+
+func (x *AgentGrant) GetGroupId() string {
+	if x != nil {
+		if x, ok := x.Target.(*AgentGrant_GroupId); ok {
+			return x.GroupId
+		}
+	}
+	return ""
+}
+
+func (x *AgentGrant) GetApplicationId() string {
+	if x != nil {
+		if x, ok := x.Target.(*AgentGrant_ApplicationId); ok {
+			return x.ApplicationId
+		}
+	}
+	return ""
+}
+
+type isAgentGrant_Target interface {
+	isAgentGrant_Target()
+}
+
+type AgentGrant_Tenant struct {
+	// Every environment in the tenant. Only `true` means anything.
+	Tenant bool `protobuf:"varint,1,opt,name=tenant,proto3,oneof"`
+}
+
+type AgentGrant_GroupId struct {
+	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3,oneof"`
+}
+
+type AgentGrant_ApplicationId struct {
+	ApplicationId string `protobuf:"bytes,3,opt,name=application_id,json=applicationId,proto3,oneof"`
+}
+
+func (*AgentGrant_Tenant) isAgentGrant_Target() {}
+
+func (*AgentGrant_GroupId) isAgentGrant_Target() {}
+
+func (*AgentGrant_ApplicationId) isAgentGrant_Target() {}
+
+type Job struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Kind          JobKind                `protobuf:"varint,2,opt,name=kind,proto3,enum=admiral.api.agent.v1.JobKind" json:"kind,omitempty"`
+	Status        JobStatus              `protobuf:"varint,3,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
+	AgentId       string                 `protobuf:"bytes,4,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	EnvironmentId string                 `protobuf:"bytes,5,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	// `cs-` id; empty for a PROBE.
+	ChangeSetId string `protobuf:"bytes,6,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
+	Revision    int32  `protobuf:"varint,7,opt,name=revision,proto3" json:"revision,omitempty"`
+	// `sha256:<hex>` of the run artifact the job runs.
+	ArtifactDigest string `protobuf:"bytes,8,opt,name=artifact_digest,json=artifactDigest,proto3" json:"artifact_digest,omitempty"`
+	Attempt        int32  `protobuf:"varint,9,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	// Set while QUEUED.
+	WaitReason    WaitReason             `protobuf:"varint,10,opt,name=wait_reason,json=waitReason,proto3,enum=admiral.api.agent.v1.WaitReason" json:"wait_reason,omitempty"`
+	Result        *JobResult             `protobuf:"bytes,11,opt,name=result,proto3" json:"result,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	StartedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	FinishedAt    *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Job) Reset() {
+	*x = Job{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Job) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Job) ProtoMessage() {}
+
+func (x *Job) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Job.ProtoReflect.Descriptor instead.
+func (*Job) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Job) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Job) GetKind() JobKind {
+	if x != nil {
+		return x.Kind
+	}
+	return JobKind_JOB_KIND_UNSPECIFIED
+}
+
+func (x *Job) GetStatus() JobStatus {
+	if x != nil {
+		return x.Status
+	}
+	return JobStatus_JOB_STATUS_UNSPECIFIED
+}
+
+func (x *Job) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+func (x *Job) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *Job) GetChangeSetId() string {
+	if x != nil {
+		return x.ChangeSetId
+	}
+	return ""
+}
+
+func (x *Job) GetRevision() int32 {
+	if x != nil {
+		return x.Revision
+	}
+	return 0
+}
+
+func (x *Job) GetArtifactDigest() string {
+	if x != nil {
+		return x.ArtifactDigest
+	}
+	return ""
+}
+
+func (x *Job) GetAttempt() int32 {
+	if x != nil {
+		return x.Attempt
+	}
+	return 0
+}
+
+func (x *Job) GetWaitReason() WaitReason {
+	if x != nil {
+		return x.WaitReason
+	}
+	return WaitReason_WAIT_REASON_UNSPECIFIED
+}
+
+func (x *Job) GetResult() *JobResult {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *Job) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Job) GetStartedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StartedAt
+	}
+	return nil
+}
+
+func (x *Job) GetFinishedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.FinishedAt
+	}
+	return nil
+}
+
+type JobResult struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// SUCCEEDED, FAILED or CANCELLED.
+	Status  JobStatus `protobuf:"varint,1,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
+	Message string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Steps   []*Step   `protobuf:"bytes,3,rep,name=steps,proto3" json:"steps,omitempty"`
+	// Kind-specific output as JSON text, e.g. a plan.
+	OutputJson    string `protobuf:"bytes,4,opt,name=output_json,json=outputJson,proto3" json:"output_json,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JobResult) Reset() {
+	*x = JobResult{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JobResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JobResult) ProtoMessage() {}
+
+func (x *JobResult) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JobResult.ProtoReflect.Descriptor instead.
+func (*JobResult) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *JobResult) GetStatus() JobStatus {
+	if x != nil {
+		return x.Status
+	}
+	return JobStatus_JOB_STATUS_UNSPECIFIED
+}
+
+func (x *JobResult) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *JobResult) GetSteps() []*Step {
+	if x != nil {
+		return x.Steps
+	}
+	return nil
+}
+
+func (x *JobResult) GetOutputJson() string {
+	if x != nil {
+		return x.OutputJson
+	}
+	return ""
+}
+
+// Step is one component's part of a job.
+type Step struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	Status        JobStatus              `protobuf:"varint,2,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Step) Reset() {
+	*x = Step{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Step) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Step) ProtoMessage() {}
+
+func (x *Step) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Step.ProtoReflect.Descriptor instead.
+func (*Step) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Step) GetComponent() string {
+	if x != nil {
+		return x.Component
+	}
+	return ""
+}
+
+func (x *Step) GetStatus() JobStatus {
+	if x != nil {
+		return x.Status
+	}
+	return JobStatus_JOB_STATUS_UNSPECIFIED
+}
+
+func (x *Step) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+// Offer is work claimed for an agent, not yet started.
+type Offer struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Job     *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	Attempt int32                  `protobuf:"varint,2,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	// Presented on every later call for this attempt. Shown once.
+	LeaseToken      string `protobuf:"bytes,3,opt,name=lease_token,json=leaseToken,proto3" json:"lease_token,omitempty"`
+	OfferTtlSeconds int32  `protobuf:"varint,4,opt,name=offer_ttl_seconds,json=offerTtlSeconds,proto3" json:"offer_ttl_seconds,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *Offer) Reset() {
+	*x = Offer{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Offer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Offer) ProtoMessage() {}
+
+func (x *Offer) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Offer.ProtoReflect.Descriptor instead.
+func (*Offer) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Offer) GetJob() *Job {
+	if x != nil {
+		return x.Job
+	}
+	return nil
+}
+
+func (x *Offer) GetAttempt() int32 {
+	if x != nil {
+		return x.Attempt
+	}
+	return 0
+}
+
+func (x *Offer) GetLeaseToken() string {
+	if x != nil {
+		return x.LeaseToken
+	}
+	return ""
+}
+
+func (x *Offer) GetOfferTtlSeconds() int32 {
+	if x != nil {
+		return x.OfferTtlSeconds
+	}
+	return 0
+}
+
+type CreateClusterRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Absent leaves the cluster PENDING for an agent to enroll.
+	Trust         *ClusterTrust `protobuf:"bytes,2,opt,name=trust,proto3" json:"trust,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateClusterRequest) Reset() {
+	*x = CreateClusterRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateClusterRequest) ProtoMessage() {}
+
+func (x *CreateClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateClusterRequest.ProtoReflect.Descriptor instead.
+func (*CreateClusterRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CreateClusterRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateClusterRequest) GetTrust() *ClusterTrust {
+	if x != nil {
+		return x.Trust
+	}
+	return nil
+}
+
+type CreateClusterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Cluster       *Cluster               `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateClusterResponse) Reset() {
+	*x = CreateClusterResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateClusterResponse) ProtoMessage() {}
+
+func (x *CreateClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateClusterResponse.ProtoReflect.Descriptor instead.
+func (*CreateClusterResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *CreateClusterResponse) GetCluster() *Cluster {
+	if x != nil {
+		return x.Cluster
+	}
+	return nil
+}
+
+type GetClusterRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClusterId     string                 `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetClusterRequest) Reset() {
+	*x = GetClusterRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetClusterRequest) ProtoMessage() {}
+
+func (x *GetClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetClusterRequest.ProtoReflect.Descriptor instead.
+func (*GetClusterRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetClusterRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+type GetClusterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Cluster       *Cluster               `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetClusterResponse) Reset() {
+	*x = GetClusterResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetClusterResponse) ProtoMessage() {}
+
+func (x *GetClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetClusterResponse.ProtoReflect.Descriptor instead.
+func (*GetClusterResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetClusterResponse) GetCluster() *Cluster {
+	if x != nil {
+		return x.Cluster
+	}
+	return nil
+}
+
+type ListClustersRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PageSize      int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListClustersRequest) Reset() {
+	*x = ListClustersRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListClustersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListClustersRequest) ProtoMessage() {}
+
+func (x *ListClustersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListClustersRequest.ProtoReflect.Descriptor instead.
+func (*ListClustersRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListClustersRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListClustersRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+type ListClustersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Clusters      []*Cluster             `protobuf:"bytes,1,rep,name=clusters,proto3" json:"clusters,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListClustersResponse) Reset() {
+	*x = ListClustersResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListClustersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListClustersResponse) ProtoMessage() {}
+
+func (x *ListClustersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListClustersResponse.ProtoReflect.Descriptor instead.
+func (*ListClustersResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ListClustersResponse) GetClusters() []*Cluster {
+	if x != nil {
+		return x.Clusters
+	}
+	return nil
+}
+
+func (x *ListClustersResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
+type SetClusterTrustRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClusterId     string                 `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	Trust         *ClusterTrust          `protobuf:"bytes,2,opt,name=trust,proto3" json:"trust,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetClusterTrustRequest) Reset() {
+	*x = SetClusterTrustRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetClusterTrustRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetClusterTrustRequest) ProtoMessage() {}
+
+func (x *SetClusterTrustRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetClusterTrustRequest.ProtoReflect.Descriptor instead.
+func (*SetClusterTrustRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *SetClusterTrustRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *SetClusterTrustRequest) GetTrust() *ClusterTrust {
+	if x != nil {
+		return x.Trust
+	}
+	return nil
+}
+
+type SetClusterTrustResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Cluster       *Cluster               `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetClusterTrustResponse) Reset() {
+	*x = SetClusterTrustResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetClusterTrustResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetClusterTrustResponse) ProtoMessage() {}
+
+func (x *SetClusterTrustResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetClusterTrustResponse.ProtoReflect.Descriptor instead.
+func (*SetClusterTrustResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *SetClusterTrustResponse) GetCluster() *Cluster {
+	if x != nil {
+		return x.Cluster
+	}
+	return nil
+}
+
+type DeleteClusterRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClusterId     string                 `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteClusterRequest) Reset() {
+	*x = DeleteClusterRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteClusterRequest) ProtoMessage() {}
+
+func (x *DeleteClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteClusterRequest.ProtoReflect.Descriptor instead.
+func (*DeleteClusterRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *DeleteClusterRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+type DeleteClusterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteClusterResponse) Reset() {
+	*x = DeleteClusterResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteClusterResponse) ProtoMessage() {}
+
+func (x *DeleteClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteClusterResponse.ProtoReflect.Descriptor instead.
+func (*DeleteClusterResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{20}
+}
+
+type CreateAgentRequest struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	ClusterId string                 `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	Name      string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// The namespace and service account the agent runs as.
+	Namespace      string        `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	ServiceAccount string        `protobuf:"bytes,4,opt,name=service_account,json=serviceAccount,proto3" json:"service_account,omitempty"`
+	Ceiling        *AgentCeiling `protobuf:"bytes,5,opt,name=ceiling,proto3" json:"ceiling,omitempty"`
+	// Who may use it. Absent grants the whole tenant when this is the tenant's
+	// first agent, and nobody otherwise.
+	Grants []*AgentGrant `protobuf:"bytes,6,rep,name=grants,proto3" json:"grants,omitempty"`
+	// Issue a single-use enrollment key with the agent.
+	EnrollmentKey bool `protobuf:"varint,7,opt,name=enrollment_key,json=enrollmentKey,proto3" json:"enrollment_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateAgentRequest) Reset() {
 	*x = CreateAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[1]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -325,7 +1839,7 @@ func (x *CreateAgentRequest) String() string {
 func (*CreateAgentRequest) ProtoMessage() {}
 
 func (x *CreateAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[1]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -338,14 +1852,14 @@ func (x *CreateAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAgentRequest.ProtoReflect.Descriptor instead.
 func (*CreateAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{1}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *CreateAgentRequest) GetKind() AgentKind {
+func (x *CreateAgentRequest) GetClusterId() string {
 	if x != nil {
-		return x.Kind
+		return x.ClusterId
 	}
-	return AgentKind_AGENT_KIND_UNSPECIFIED
+	return ""
 }
 
 func (x *CreateAgentRequest) GetName() string {
@@ -355,36 +1869,54 @@ func (x *CreateAgentRequest) GetName() string {
 	return ""
 }
 
-func (x *CreateAgentRequest) GetDescription() string {
+func (x *CreateAgentRequest) GetNamespace() string {
 	if x != nil {
-		return x.Description
+		return x.Namespace
 	}
 	return ""
 }
 
-func (x *CreateAgentRequest) GetLabels() map[string]string {
+func (x *CreateAgentRequest) GetServiceAccount() string {
 	if x != nil {
-		return x.Labels
+		return x.ServiceAccount
+	}
+	return ""
+}
+
+func (x *CreateAgentRequest) GetCeiling() *AgentCeiling {
+	if x != nil {
+		return x.Ceiling
 	}
 	return nil
 }
 
-// CreateAgentResponse contains the newly created agent and its initial API key.
+func (x *CreateAgentRequest) GetGrants() []*AgentGrant {
+	if x != nil {
+		return x.Grants
+	}
+	return nil
+}
+
+func (x *CreateAgentRequest) GetEnrollmentKey() bool {
+	if x != nil {
+		return x.EnrollmentKey
+	}
+	return false
+}
+
 type CreateAgentResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created agent. Health status will be PENDING until it begins reporting.
-	Agent *Agent `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
-	// The raw API key secret (e.g., "adms_pL2mN5oQ8rS1..."). Shown exactly once
-	// and cannot be retrieved again. Deploy this key to the agent binary for
-	// authentication. For additional keys, use CreateApiKey.
-	PlainTextKey  string `protobuf:"bytes,2,opt,name=plain_text_key,json=plainTextKey,proto3" json:"plain_text_key,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Agent  *Agent                 `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
+	Grants []*AgentGrant          `protobuf:"bytes,2,rep,name=grants,proto3" json:"grants,omitempty"`
+	// Set when asked for. Shown once.
+	EnrollmentKey *EnrollmentKey `protobuf:"bytes,3,opt,name=enrollment_key,json=enrollmentKey,proto3" json:"enrollment_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateAgentResponse) Reset() {
 	*x = CreateAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[2]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -396,7 +1928,7 @@ func (x *CreateAgentResponse) String() string {
 func (*CreateAgentResponse) ProtoMessage() {}
 
 func (x *CreateAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[2]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -409,7 +1941,7 @@ func (x *CreateAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAgentResponse.ProtoReflect.Descriptor instead.
 func (*CreateAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{2}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateAgentResponse) GetAgent() *Agent {
@@ -419,25 +1951,82 @@ func (x *CreateAgentResponse) GetAgent() *Agent {
 	return nil
 }
 
-func (x *CreateAgentResponse) GetPlainTextKey() string {
+func (x *CreateAgentResponse) GetGrants() []*AgentGrant {
 	if x != nil {
-		return x.PlainTextKey
+		return x.Grants
+	}
+	return nil
+}
+
+func (x *CreateAgentResponse) GetEnrollmentKey() *EnrollmentKey {
+	if x != nil {
+		return x.EnrollmentKey
+	}
+	return nil
+}
+
+type EnrollmentKey struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnrollmentKey) Reset() {
+	*x = EnrollmentKey{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnrollmentKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnrollmentKey) ProtoMessage() {}
+
+func (x *EnrollmentKey) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnrollmentKey.ProtoReflect.Descriptor instead.
+func (*EnrollmentKey) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *EnrollmentKey) GetKey() string {
+	if x != nil {
+		return x.Key
 	}
 	return ""
 }
 
-// GetAgentRequest identifies an agent to retrieve.
+func (x *EnrollmentKey) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
 type GetAgentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the agent (UUID).
-	AgentId       string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetAgentRequest) Reset() {
 	*x = GetAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[3]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -449,7 +2038,7 @@ func (x *GetAgentRequest) String() string {
 func (*GetAgentRequest) ProtoMessage() {}
 
 func (x *GetAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[3]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -462,7 +2051,7 @@ func (x *GetAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentRequest.ProtoReflect.Descriptor instead.
 func (*GetAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{3}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetAgentRequest) GetAgentId() string {
@@ -472,18 +2061,16 @@ func (x *GetAgentRequest) GetAgentId() string {
 	return ""
 }
 
-// GetAgentResponse contains the agent record.
 type GetAgentResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The retrieved agent, including its server-derived health_status.
-	Agent         *Agent `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Agent         *Agent                 `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetAgentResponse) Reset() {
 	*x = GetAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[4]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -495,7 +2082,7 @@ func (x *GetAgentResponse) String() string {
 func (*GetAgentResponse) ProtoMessage() {}
 
 func (x *GetAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[4]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -508,7 +2095,7 @@ func (x *GetAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentResponse.ProtoReflect.Descriptor instead.
 func (*GetAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{4}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetAgentResponse) GetAgent() *Agent {
@@ -518,32 +2105,20 @@ func (x *GetAgentResponse) GetAgent() *Agent {
 	return nil
 }
 
-// ListAgentsRequest contains pagination and filter parameters.
 type ListAgentsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
-	// API documentation for the full operator and predicate reference).
-	//
-	// Filterable fields:
-	//   - `kind`: filter by agent kind (TERRAFORM, KUBERNETES).
-	//   - `name`: filter by agent name.
-	//   - `health_status`: filter by health status.
-	//   - `labels.key`: filter by label key.
-	//
-	// Example: `field['kind'] = 'KUBERNETES' AND field['health_status'] = 'HEALTHY'`
-	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of agents to return per page. Defaults to 50 when omitted or
-	// 0; must not exceed 100.
-	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	ClusterId *string                `protobuf:"bytes,1,opt,name=cluster_id,json=clusterId,proto3,oneof" json:"cluster_id,omitempty"`
+	// Only agents this application's environments may select.
+	ApplicationId *string `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3,oneof" json:"application_id,omitempty"`
+	PageSize      int32   `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string  `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListAgentsRequest) Reset() {
 	*x = ListAgentsRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[5]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -555,7 +2130,7 @@ func (x *ListAgentsRequest) String() string {
 func (*ListAgentsRequest) ProtoMessage() {}
 
 func (x *ListAgentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[5]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -568,12 +2143,19 @@ func (x *ListAgentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentsRequest.ProtoReflect.Descriptor instead.
 func (*ListAgentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{5}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{26}
 }
 
-func (x *ListAgentsRequest) GetFilter() string {
-	if x != nil {
-		return x.Filter
+func (x *ListAgentsRequest) GetClusterId() string {
+	if x != nil && x.ClusterId != nil {
+		return *x.ClusterId
+	}
+	return ""
+}
+
+func (x *ListAgentsRequest) GetApplicationId() string {
+	if x != nil && x.ApplicationId != nil {
+		return *x.ApplicationId
 	}
 	return ""
 }
@@ -592,20 +2174,17 @@ func (x *ListAgentsRequest) GetPageToken() string {
 	return ""
 }
 
-// ListAgentsResponse contains a page of agents.
 type ListAgentsResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of agents.
-	Agents []*Agent `protobuf:"bytes,1,rep,name=agents,proto3" json:"agents,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Agents        []*Agent               `protobuf:"bytes,1,rep,name=agents,proto3" json:"agents,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListAgentsResponse) Reset() {
 	*x = ListAgentsResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[6]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -617,7 +2196,7 @@ func (x *ListAgentsResponse) String() string {
 func (*ListAgentsResponse) ProtoMessage() {}
 
 func (x *ListAgentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[6]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -630,7 +2209,7 @@ func (x *ListAgentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentsResponse.ProtoReflect.Descriptor instead.
 func (*ListAgentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{6}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ListAgentsResponse) GetAgents() []*Agent {
@@ -647,23 +2226,19 @@ func (x *ListAgentsResponse) GetNextPageToken() string {
 	return ""
 }
 
-// UpdateAgentRequest contains the agent fields to update.
 type UpdateAgentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The agent with updated fields. The `id` field is required. Only fields named
-	// in `update_mask` are updated. `kind` is immutable and cannot be updated.
-	Agent *Agent `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
-	// The set of fields to update. Optional; if omitted, all populated fields
-	// are updated. Pass `*` for full replacement. Supported fields: `name`,
-	// `description`, `labels`.
-	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	AgentId string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Name    *string                `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	// Replaces the ceiling when set.
+	Ceiling       *AgentCeiling `protobuf:"bytes,3,opt,name=ceiling,proto3" json:"ceiling,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateAgentRequest) Reset() {
 	*x = UpdateAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[7]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -675,7 +2250,7 @@ func (x *UpdateAgentRequest) String() string {
 func (*UpdateAgentRequest) ProtoMessage() {}
 
 func (x *UpdateAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[7]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -688,35 +2263,40 @@ func (x *UpdateAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAgentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{7}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{28}
 }
 
-func (x *UpdateAgentRequest) GetAgent() *Agent {
+func (x *UpdateAgentRequest) GetAgentId() string {
 	if x != nil {
-		return x.Agent
+		return x.AgentId
+	}
+	return ""
+}
+
+func (x *UpdateAgentRequest) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
+	}
+	return ""
+}
+
+func (x *UpdateAgentRequest) GetCeiling() *AgentCeiling {
+	if x != nil {
+		return x.Ceiling
 	}
 	return nil
 }
 
-func (x *UpdateAgentRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
-	if x != nil {
-		return x.UpdateMask
-	}
-	return nil
-}
-
-// UpdateAgentResponse contains the updated agent.
 type UpdateAgentResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The updated agent.
-	Agent         *Agent `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Agent         *Agent                 `protobuf:"bytes,1,opt,name=agent,proto3" json:"agent,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateAgentResponse) Reset() {
 	*x = UpdateAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[8]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -728,7 +2308,7 @@ func (x *UpdateAgentResponse) String() string {
 func (*UpdateAgentResponse) ProtoMessage() {}
 
 func (x *UpdateAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[8]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -741,7 +2321,7 @@ func (x *UpdateAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAgentResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{8}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *UpdateAgentResponse) GetAgent() *Agent {
@@ -751,19 +2331,16 @@ func (x *UpdateAgentResponse) GetAgent() *Agent {
 	return nil
 }
 
-// DeleteAgentRequest identifies an agent to delete.
 type DeleteAgentRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the agent to delete (UUID). All API keys bound to
-	// its service account are revoked.
-	AgentId       string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DeleteAgentRequest) Reset() {
 	*x = DeleteAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -775,7 +2352,7 @@ func (x *DeleteAgentRequest) String() string {
 func (*DeleteAgentRequest) ProtoMessage() {}
 
 func (x *DeleteAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -788,7 +2365,7 @@ func (x *DeleteAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAgentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *DeleteAgentRequest) GetAgentId() string {
@@ -798,7 +2375,6 @@ func (x *DeleteAgentRequest) GetAgentId() string {
 	return ""
 }
 
-// DeleteAgentResponse is empty on success.
 type DeleteAgentResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -807,7 +2383,7 @@ type DeleteAgentResponse struct {
 
 func (x *DeleteAgentResponse) Reset() {
 	*x = DeleteAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -819,7 +2395,7 @@ func (x *DeleteAgentResponse) String() string {
 func (*DeleteAgentResponse) ProtoMessage() {}
 
 func (x *DeleteAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -832,38 +2408,31 @@ func (x *DeleteAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAgentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{31}
 }
 
-// ClearAgentIdentityBindingRequest opens a rebind grace window for a KUBERNETES
-// agent.
-type ClearAgentIdentityBindingRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The Admiral agent record ID (UUID), not the kube-system UID.
-	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	// Free-text audit reason for the rebind (e.g. "DR rebuild 2026-05-30").
-	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
-	// How long the grace window stays open. Defaults to 1h server-side if unset.
-	GraceWindow   *durationpb.Duration `protobuf:"bytes,3,opt,name=grace_window,json=graceWindow,proto3" json:"grace_window,omitempty"`
+type CreateEnrollmentKeyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ClearAgentIdentityBindingRequest) Reset() {
-	*x = ClearAgentIdentityBindingRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+func (x *CreateEnrollmentKeyRequest) Reset() {
+	*x = CreateEnrollmentKeyRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ClearAgentIdentityBindingRequest) String() string {
+func (x *CreateEnrollmentKeyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClearAgentIdentityBindingRequest) ProtoMessage() {}
+func (*CreateEnrollmentKeyRequest) ProtoMessage() {}
 
-func (x *ClearAgentIdentityBindingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+func (x *CreateEnrollmentKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -874,58 +2443,40 @@ func (x *ClearAgentIdentityBindingRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClearAgentIdentityBindingRequest.ProtoReflect.Descriptor instead.
-func (*ClearAgentIdentityBindingRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{11}
+// Deprecated: Use CreateEnrollmentKeyRequest.ProtoReflect.Descriptor instead.
+func (*CreateEnrollmentKeyRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{32}
 }
 
-func (x *ClearAgentIdentityBindingRequest) GetAgentId() string {
+func (x *CreateEnrollmentKeyRequest) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-func (x *ClearAgentIdentityBindingRequest) GetReason() string {
-	if x != nil {
-		return x.Reason
-	}
-	return ""
-}
-
-func (x *ClearAgentIdentityBindingRequest) GetGraceWindow() *durationpb.Duration {
-	if x != nil {
-		return x.GraceWindow
-	}
-	return nil
-}
-
-// ClearAgentIdentityBindingResponse acknowledges the rebind window.
-type ClearAgentIdentityBindingResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Whether the rebind grace window was opened.
-	Accepted bool `protobuf:"varint,1,opt,name=accepted,proto3" json:"accepted,omitempty"`
-	// When the grace window expires.
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+type CreateEnrollmentKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnrollmentKey *EnrollmentKey         `protobuf:"bytes,1,opt,name=enrollment_key,json=enrollmentKey,proto3" json:"enrollment_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ClearAgentIdentityBindingResponse) Reset() {
-	*x = ClearAgentIdentityBindingResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+func (x *CreateEnrollmentKeyResponse) Reset() {
+	*x = CreateEnrollmentKeyResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ClearAgentIdentityBindingResponse) String() string {
+func (x *CreateEnrollmentKeyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClearAgentIdentityBindingResponse) ProtoMessage() {}
+func (*CreateEnrollmentKeyResponse) ProtoMessage() {}
 
-func (x *ClearAgentIdentityBindingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+func (x *CreateEnrollmentKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -936,49 +2487,41 @@ func (x *ClearAgentIdentityBindingResponse) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClearAgentIdentityBindingResponse.ProtoReflect.Descriptor instead.
-func (*ClearAgentIdentityBindingResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{12}
+// Deprecated: Use CreateEnrollmentKeyResponse.ProtoReflect.Descriptor instead.
+func (*CreateEnrollmentKeyResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{33}
 }
 
-func (x *ClearAgentIdentityBindingResponse) GetAccepted() bool {
+func (x *CreateEnrollmentKeyResponse) GetEnrollmentKey() *EnrollmentKey {
 	if x != nil {
-		return x.Accepted
-	}
-	return false
-}
-
-func (x *ClearAgentIdentityBindingResponse) GetExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ExpiresAt
+		return x.EnrollmentKey
 	}
 	return nil
 }
 
-// GetAgentStatusRequest identifies an agent whose status to retrieve.
-type GetAgentStatusRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the agent (UUID).
-	AgentId       string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+type GrantAgentUseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Grant         *AgentGrant            `protobuf:"bytes,2,opt,name=grant,proto3" json:"grant,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAgentStatusRequest) Reset() {
-	*x = GetAgentStatusRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+func (x *GrantAgentUseRequest) Reset() {
+	*x = GrantAgentUseRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAgentStatusRequest) String() string {
+func (x *GrantAgentUseRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAgentStatusRequest) ProtoMessage() {}
+func (*GrantAgentUseRequest) ProtoMessage() {}
 
-func (x *GetAgentStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+func (x *GrantAgentUseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -989,54 +2532,46 @@ func (x *GetAgentStatusRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAgentStatusRequest.ProtoReflect.Descriptor instead.
-func (*GetAgentStatusRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{13}
+// Deprecated: Use GrantAgentUseRequest.ProtoReflect.Descriptor instead.
+func (*GrantAgentUseRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{34}
 }
 
-func (x *GetAgentStatusRequest) GetAgentId() string {
+func (x *GrantAgentUseRequest) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-// GetAgentStatusResponse contains the server-derived health status and the latest
-// kind-specific status snapshot. If the agent has not reported yet, health_status
-// will be PENDING and status will be absent.
-type GetAgentStatusResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Server-derived health status based on reporting recency and kind signals.
-	HealthStatus AgentHealthStatus `protobuf:"varint,1,opt,name=health_status,json=healthStatus,proto3,enum=admiral.api.agent.v1.AgentHealthStatus" json:"health_status,omitempty"`
-	// The latest kind-specific status snapshot. Exactly one is populated, matching
-	// the agent's kind. Absent entirely if no report has been received yet.
-	//
-	// Types that are valid to be assigned to Status:
-	//
-	//	*GetAgentStatusResponse_Terraform
-	//	*GetAgentStatusResponse_Kubernetes
-	Status isGetAgentStatusResponse_Status `protobuf_oneof:"status"`
-	// When the latest report was received.
-	ReportedAt    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=reported_at,json=reportedAt,proto3" json:"reported_at,omitempty"`
+func (x *GrantAgentUseRequest) GetGrant() *AgentGrant {
+	if x != nil {
+		return x.Grant
+	}
+	return nil
+}
+
+type GrantAgentUseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetAgentStatusResponse) Reset() {
-	*x = GetAgentStatusResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+func (x *GrantAgentUseResponse) Reset() {
+	*x = GrantAgentUseResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetAgentStatusResponse) String() string {
+func (x *GrantAgentUseResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetAgentStatusResponse) ProtoMessage() {}
+func (*GrantAgentUseResponse) ProtoMessage() {}
 
-func (x *GetAgentStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+func (x *GrantAgentUseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1047,295 +2582,375 @@ func (x *GetAgentStatusResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetAgentStatusResponse.ProtoReflect.Descriptor instead.
-func (*GetAgentStatusResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{14}
+// Deprecated: Use GrantAgentUseResponse.ProtoReflect.Descriptor instead.
+func (*GrantAgentUseResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *GetAgentStatusResponse) GetHealthStatus() AgentHealthStatus {
+type RevokeAgentUseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	Grant         *AgentGrant            `protobuf:"bytes,2,opt,name=grant,proto3" json:"grant,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeAgentUseRequest) Reset() {
+	*x = RevokeAgentUseRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeAgentUseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeAgentUseRequest) ProtoMessage() {}
+
+func (x *RevokeAgentUseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[36]
 	if x != nil {
-		return x.HealthStatus
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
 	}
-	return AgentHealthStatus_AGENT_HEALTH_STATUS_UNSPECIFIED
+	return mi.MessageOf(x)
 }
 
-func (x *GetAgentStatusResponse) GetStatus() isGetAgentStatusResponse_Status {
+// Deprecated: Use RevokeAgentUseRequest.ProtoReflect.Descriptor instead.
+func (*RevokeAgentUseRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *RevokeAgentUseRequest) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+func (x *RevokeAgentUseRequest) GetGrant() *AgentGrant {
+	if x != nil {
+		return x.Grant
+	}
+	return nil
+}
+
+type RevokeAgentUseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeAgentUseResponse) Reset() {
+	*x = RevokeAgentUseResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeAgentUseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeAgentUseResponse) ProtoMessage() {}
+
+func (x *RevokeAgentUseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeAgentUseResponse.ProtoReflect.Descriptor instead.
+func (*RevokeAgentUseResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{37}
+}
+
+type ListAgentGrantsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAgentGrantsRequest) Reset() {
+	*x = ListAgentGrantsRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAgentGrantsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAgentGrantsRequest) ProtoMessage() {}
+
+func (x *ListAgentGrantsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAgentGrantsRequest.ProtoReflect.Descriptor instead.
+func (*ListAgentGrantsRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ListAgentGrantsRequest) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+type ListAgentGrantsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Grants        []*AgentGrant          `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAgentGrantsResponse) Reset() {
+	*x = ListAgentGrantsResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAgentGrantsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAgentGrantsResponse) ProtoMessage() {}
+
+func (x *ListAgentGrantsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAgentGrantsResponse.ProtoReflect.Descriptor instead.
+func (*ListAgentGrantsResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *ListAgentGrantsResponse) GetGrants() []*AgentGrant {
+	if x != nil {
+		return x.Grants
+	}
+	return nil
+}
+
+type GetJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJobRequest) Reset() {
+	*x = GetJobRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobRequest) ProtoMessage() {}
+
+func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
+func (*GetJobRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *GetJobRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+type GetJobResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJobResponse) Reset() {
+	*x = GetJobResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobResponse) ProtoMessage() {}
+
+func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobResponse.ProtoReflect.Descriptor instead.
+func (*GetJobResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *GetJobResponse) GetJob() *Job {
+	if x != nil {
+		return x.Job
+	}
+	return nil
+}
+
+type ListJobsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       *string                `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3,oneof" json:"agent_id,omitempty"`
+	EnvironmentId *string                `protobuf:"bytes,2,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
+	// UNSPECIFIED lists every status.
+	Status        JobStatus `protobuf:"varint,3,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
+	PageSize      int32     `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string    `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListJobsRequest) Reset() {
+	*x = ListJobsRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListJobsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListJobsRequest) ProtoMessage() {}
+
+func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
+func (*ListJobsRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *ListJobsRequest) GetAgentId() string {
+	if x != nil && x.AgentId != nil {
+		return *x.AgentId
+	}
+	return ""
+}
+
+func (x *ListJobsRequest) GetEnvironmentId() string {
+	if x != nil && x.EnvironmentId != nil {
+		return *x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *ListJobsRequest) GetStatus() JobStatus {
 	if x != nil {
 		return x.Status
 	}
-	return nil
+	return JobStatus_JOB_STATUS_UNSPECIFIED
 }
 
-func (x *GetAgentStatusResponse) GetTerraform() *TerraformAgentStatus {
-	if x != nil {
-		if x, ok := x.Status.(*GetAgentStatusResponse_Terraform); ok {
-			return x.Terraform
-		}
-	}
-	return nil
-}
-
-func (x *GetAgentStatusResponse) GetKubernetes() *KubernetesAgentStatus {
-	if x != nil {
-		if x, ok := x.Status.(*GetAgentStatusResponse_Kubernetes); ok {
-			return x.Kubernetes
-		}
-	}
-	return nil
-}
-
-func (x *GetAgentStatusResponse) GetReportedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ReportedAt
-	}
-	return nil
-}
-
-type isGetAgentStatusResponse_Status interface {
-	isGetAgentStatusResponse_Status()
-}
-
-type GetAgentStatusResponse_Terraform struct {
-	// Capacity snapshot for a TERRAFORM agent.
-	Terraform *TerraformAgentStatus `protobuf:"bytes,2,opt,name=terraform,proto3,oneof"`
-}
-
-type GetAgentStatusResponse_Kubernetes struct {
-	// Cluster telemetry snapshot for a KUBERNETES agent.
-	Kubernetes *KubernetesAgentStatus `protobuf:"bytes,3,opt,name=kubernetes,proto3,oneof"`
-}
-
-func (*GetAgentStatusResponse_Terraform) isGetAgentStatusResponse_Status() {}
-
-func (*GetAgentStatusResponse_Kubernetes) isGetAgentStatusResponse_Status() {}
-
-// CreateApiKeyRequest contains the parameters for creating a new API key bound to
-// an agent.
-type CreateApiKeyRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The agent to bind this key to (UUID).
-	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	// URL-safe, human-readable identifier for the key (e.g., "prod-agent-key").
-	// Unique within the agent's keys. Lowercase alphanumeric and hyphens only,
-	// must start with a letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional expiration time. If unset, the key does not expire.
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateApiKeyRequest) Reset() {
-	*x = CreateApiKeyRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateApiKeyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateApiKeyRequest) ProtoMessage() {}
-
-func (x *CreateApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateApiKeyRequest.ProtoReflect.Descriptor instead.
-func (*CreateApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *CreateApiKeyRequest) GetAgentId() string {
-	if x != nil {
-		return x.AgentId
-	}
-	return ""
-}
-
-func (x *CreateApiKeyRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *CreateApiKeyRequest) GetExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return nil
-}
-
-// CreateApiKeyResponse contains the newly created API key.
-type CreateApiKeyResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The created key metadata. Scopes are auto-assigned from the agent's kind.
-	ApiKey *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
-	// The raw secret. Shown exactly once and cannot be retrieved again.
-	PlainTextKey  string `protobuf:"bytes,2,opt,name=plain_text_key,json=plainTextKey,proto3" json:"plain_text_key,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateApiKeyResponse) Reset() {
-	*x = CreateApiKeyResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateApiKeyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateApiKeyResponse) ProtoMessage() {}
-
-func (x *CreateApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateApiKeyResponse.ProtoReflect.Descriptor instead.
-func (*CreateApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *CreateApiKeyResponse) GetApiKey() *v1.ApiKey {
-	if x != nil {
-		return x.ApiKey
-	}
-	return nil
-}
-
-func (x *CreateApiKeyResponse) GetPlainTextKey() string {
-	if x != nil {
-		return x.PlainTextKey
-	}
-	return ""
-}
-
-// ListApiKeysRequest contains pagination and filter parameters.
-type ListApiKeysRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The agent to list keys for (UUID).
-	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
-	// API documentation for the full operator and predicate reference).
-	//
-	// Filterable fields:
-	//   - `name`: filter by key name.
-	//   - `status`: filter by key status (ACTIVE, REVOKED).
-	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of keys to return per page. Defaults to 50 when omitted or
-	// 0; must not exceed 100.
-	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListApiKeysRequest) Reset() {
-	*x = ListApiKeysRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListApiKeysRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListApiKeysRequest) ProtoMessage() {}
-
-func (x *ListApiKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListApiKeysRequest.ProtoReflect.Descriptor instead.
-func (*ListApiKeysRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *ListApiKeysRequest) GetAgentId() string {
-	if x != nil {
-		return x.AgentId
-	}
-	return ""
-}
-
-func (x *ListApiKeysRequest) GetFilter() string {
-	if x != nil {
-		return x.Filter
-	}
-	return ""
-}
-
-func (x *ListApiKeysRequest) GetPageSize() int32 {
+func (x *ListJobsRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
 	return 0
 }
 
-func (x *ListApiKeysRequest) GetPageToken() string {
+func (x *ListJobsRequest) GetPageToken() string {
 	if x != nil {
 		return x.PageToken
 	}
 	return ""
 }
 
-// ListApiKeysResponse contains a page of agent API key metadata.
-type ListApiKeysResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The list of keys. Secrets are never included.
-	ApiKeys []*v1.ApiKey `protobuf:"bytes,1,rep,name=api_keys,json=apiKeys,proto3" json:"api_keys,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+type ListJobsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Jobs          []*Job                 `protobuf:"bytes,1,rep,name=jobs,proto3" json:"jobs,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListApiKeysResponse) Reset() {
-	*x = ListApiKeysResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
+func (x *ListJobsResponse) Reset() {
+	*x = ListJobsResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListApiKeysResponse) String() string {
+func (x *ListJobsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListApiKeysResponse) ProtoMessage() {}
+func (*ListJobsResponse) ProtoMessage() {}
 
-func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
+func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1346,50 +2961,47 @@ func (x *ListApiKeysResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListApiKeysResponse.ProtoReflect.Descriptor instead.
-func (*ListApiKeysResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{18}
+// Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
+func (*ListJobsResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{43}
 }
 
-func (x *ListApiKeysResponse) GetApiKeys() []*v1.ApiKey {
+func (x *ListJobsResponse) GetJobs() []*Job {
 	if x != nil {
-		return x.ApiKeys
+		return x.Jobs
 	}
 	return nil
 }
 
-func (x *ListApiKeysResponse) GetNextPageToken() string {
+func (x *ListJobsResponse) GetNextPageToken() string {
 	if x != nil {
 		return x.NextPageToken
 	}
 	return ""
 }
 
-// GetApiKeyRequest identifies an agent API key to retrieve. Key IDs are globally
-// unique; the server resolves the parent agent from the key ID.
-type GetApiKeyRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the key (UUID).
-	TokenId       string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
+type CancelJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetApiKeyRequest) Reset() {
-	*x = GetApiKeyRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
+func (x *CancelJobRequest) Reset() {
+	*x = CancelJobRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetApiKeyRequest) String() string {
+func (x *CancelJobRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetApiKeyRequest) ProtoMessage() {}
+func (*CancelJobRequest) ProtoMessage() {}
 
-func (x *GetApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
+func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1400,42 +3012,40 @@ func (x *GetApiKeyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetApiKeyRequest.ProtoReflect.Descriptor instead.
-func (*GetApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{19}
+// Deprecated: Use CancelJobRequest.ProtoReflect.Descriptor instead.
+func (*CancelJobRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{44}
 }
 
-func (x *GetApiKeyRequest) GetTokenId() string {
+func (x *CancelJobRequest) GetJobId() string {
 	if x != nil {
-		return x.TokenId
+		return x.JobId
 	}
 	return ""
 }
 
-// GetApiKeyResponse contains the requested agent API key metadata.
-type GetApiKeyResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The key metadata. The key secret is never included.
-	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+type CancelJobResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetApiKeyResponse) Reset() {
-	*x = GetApiKeyResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
+func (x *CancelJobResponse) Reset() {
+	*x = CancelJobResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetApiKeyResponse) String() string {
+func (x *CancelJobResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetApiKeyResponse) ProtoMessage() {}
+func (*CancelJobResponse) ProtoMessage() {}
 
-func (x *GetApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
+func (x *CancelJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1446,43 +3056,43 @@ func (x *GetApiKeyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetApiKeyResponse.ProtoReflect.Descriptor instead.
-func (*GetApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{20}
+// Deprecated: Use CancelJobResponse.ProtoReflect.Descriptor instead.
+func (*CancelJobResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{45}
 }
 
-func (x *GetApiKeyResponse) GetApiKey() *v1.ApiKey {
+func (x *CancelJobResponse) GetJob() *Job {
 	if x != nil {
-		return x.ApiKey
+		return x.Job
 	}
 	return nil
 }
 
-// RevokeApiKeyRequest identifies an agent API key to revoke. Key IDs are
-// globally unique; the server resolves the parent agent from the key ID.
-type RevokeApiKeyRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the key to revoke (UUID).
-	TokenId       string `protobuf:"bytes,1,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
+// Attempt names the attempt a call belongs to.
+type Attempt struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Attempt       int32                  `protobuf:"varint,2,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	LeaseToken    string                 `protobuf:"bytes,3,opt,name=lease_token,json=leaseToken,proto3" json:"lease_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RevokeApiKeyRequest) Reset() {
-	*x = RevokeApiKeyRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
+func (x *Attempt) Reset() {
+	*x = Attempt{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RevokeApiKeyRequest) String() string {
+func (x *Attempt) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RevokeApiKeyRequest) ProtoMessage() {}
+func (*Attempt) ProtoMessage() {}
 
-func (x *RevokeApiKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
+func (x *Attempt) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1493,42 +3103,60 @@ func (x *RevokeApiKeyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RevokeApiKeyRequest.ProtoReflect.Descriptor instead.
-func (*RevokeApiKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{21}
+// Deprecated: Use Attempt.ProtoReflect.Descriptor instead.
+func (*Attempt) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{46}
 }
 
-func (x *RevokeApiKeyRequest) GetTokenId() string {
+func (x *Attempt) GetJobId() string {
 	if x != nil {
-		return x.TokenId
+		return x.JobId
 	}
 	return ""
 }
 
-// RevokeApiKeyResponse contains the revoked agent API key metadata.
-type RevokeApiKeyResponse struct {
+func (x *Attempt) GetAttempt() int32 {
+	if x != nil {
+		return x.Attempt
+	}
+	return 0
+}
+
+func (x *Attempt) GetLeaseToken() string {
+	if x != nil {
+		return x.LeaseToken
+	}
+	return ""
+}
+
+type EnrollRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The key metadata with updated status.
-	ApiKey        *v1.ApiKey `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	// The cluster's keys, as served at /openid/v1/jwks.
+	JwksJson string `protobuf:"bytes,1,opt,name=jwks_json,json=jwksJson,proto3" json:"jwks_json,omitempty"`
+	// A token the cluster issued this agent, audience Admiral. It must verify
+	// against `jwks_json` and name the agent's namespace and service account.
+	ServiceAccountToken string `protobuf:"bytes,2,opt,name=service_account_token,json=serviceAccountToken,proto3" json:"service_account_token,omitempty"`
+	// The kube-system namespace UID: an accident detector, not a proof.
+	ClusterUid    string `protobuf:"bytes,3,opt,name=cluster_uid,json=clusterUid,proto3" json:"cluster_uid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RevokeApiKeyResponse) Reset() {
-	*x = RevokeApiKeyResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
+func (x *EnrollRequest) Reset() {
+	*x = EnrollRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RevokeApiKeyResponse) String() string {
+func (x *EnrollRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RevokeApiKeyResponse) ProtoMessage() {}
+func (*EnrollRequest) ProtoMessage() {}
 
-func (x *RevokeApiKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
+func (x *EnrollRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1539,130 +3167,1217 @@ func (x *RevokeApiKeyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RevokeApiKeyResponse.ProtoReflect.Descriptor instead.
-func (*RevokeApiKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{22}
+// Deprecated: Use EnrollRequest.ProtoReflect.Descriptor instead.
+func (*EnrollRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{47}
 }
 
-func (x *RevokeApiKeyResponse) GetApiKey() *v1.ApiKey {
+func (x *EnrollRequest) GetJwksJson() string {
 	if x != nil {
-		return x.ApiKey
+		return x.JwksJson
+	}
+	return ""
+}
+
+func (x *EnrollRequest) GetServiceAccountToken() string {
+	if x != nil {
+		return x.ServiceAccountToken
+	}
+	return ""
+}
+
+func (x *EnrollRequest) GetClusterUid() string {
+	if x != nil {
+		return x.ClusterUid
+	}
+	return ""
+}
+
+type EnrollResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Cluster       *Cluster               `protobuf:"bytes,1,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	Agent         *Agent                 `protobuf:"bytes,2,opt,name=agent,proto3" json:"agent,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnrollResponse) Reset() {
+	*x = EnrollResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnrollResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnrollResponse) ProtoMessage() {}
+
+func (x *EnrollResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnrollResponse.ProtoReflect.Descriptor instead.
+func (*EnrollResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *EnrollResponse) GetCluster() *Cluster {
+	if x != nil {
+		return x.Cluster
 	}
 	return nil
+}
+
+func (x *EnrollResponse) GetAgent() *Agent {
+	if x != nil {
+		return x.Agent
+	}
+	return nil
+}
+
+type ReportStatusRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	AgentVersion    string                 `protobuf:"bytes,1,opt,name=agent_version,json=agentVersion,proto3" json:"agent_version,omitempty"`
+	ProtocolVersion int32                  `protobuf:"varint,2,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	KubeVersion     string                 `protobuf:"bytes,3,opt,name=kube_version,json=kubeVersion,proto3" json:"kube_version,omitempty"`
+	ApiVersions     []string               `protobuf:"bytes,4,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	Capabilities    *AgentCapabilities     `protobuf:"bytes,5,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
+	// The cluster's current keys, when the agent can read them. Accepted only
+	// when they still hold the key this call's token was verified with.
+	JwksJson      string `protobuf:"bytes,6,opt,name=jwks_json,json=jwksJson,proto3" json:"jwks_json,omitempty"`
+	ClusterUid    string `protobuf:"bytes,7,opt,name=cluster_uid,json=clusterUid,proto3" json:"cluster_uid,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportStatusRequest) Reset() {
+	*x = ReportStatusRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportStatusRequest) ProtoMessage() {}
+
+func (x *ReportStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportStatusRequest.ProtoReflect.Descriptor instead.
+func (*ReportStatusRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *ReportStatusRequest) GetAgentVersion() string {
+	if x != nil {
+		return x.AgentVersion
+	}
+	return ""
+}
+
+func (x *ReportStatusRequest) GetProtocolVersion() int32 {
+	if x != nil {
+		return x.ProtocolVersion
+	}
+	return 0
+}
+
+func (x *ReportStatusRequest) GetKubeVersion() string {
+	if x != nil {
+		return x.KubeVersion
+	}
+	return ""
+}
+
+func (x *ReportStatusRequest) GetApiVersions() []string {
+	if x != nil {
+		return x.ApiVersions
+	}
+	return nil
+}
+
+func (x *ReportStatusRequest) GetCapabilities() *AgentCapabilities {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
+func (x *ReportStatusRequest) GetJwksJson() string {
+	if x != nil {
+		return x.JwksJson
+	}
+	return ""
+}
+
+func (x *ReportStatusRequest) GetClusterUid() string {
+	if x != nil {
+		return x.ClusterUid
+	}
+	return ""
+}
+
+type ReportStatusResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	NextReportSeconds int32                  `protobuf:"varint,1,opt,name=next_report_seconds,json=nextReportSeconds,proto3" json:"next_report_seconds,omitempty"`
+	// False when the reported key set was not taken as the cluster's keys. The
+	// rest of the report is still stored.
+	KeysAccepted  bool `protobuf:"varint,2,opt,name=keys_accepted,json=keysAccepted,proto3" json:"keys_accepted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportStatusResponse) Reset() {
+	*x = ReportStatusResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportStatusResponse) ProtoMessage() {}
+
+func (x *ReportStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportStatusResponse.ProtoReflect.Descriptor instead.
+func (*ReportStatusResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *ReportStatusResponse) GetNextReportSeconds() int32 {
+	if x != nil {
+		return x.NextReportSeconds
+	}
+	return 0
+}
+
+func (x *ReportStatusResponse) GetKeysAccepted() bool {
+	if x != nil {
+		return x.KeysAccepted
+	}
+	return false
+}
+
+// Slots is how many more jobs of a kind the agent will take now.
+type Slots struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Kind  JobKind                `protobuf:"varint,1,opt,name=kind,proto3,enum=admiral.api.agent.v1.JobKind" json:"kind,omitempty"`
+	Free  int32                  `protobuf:"varint,2,opt,name=free,proto3" json:"free,omitempty"`
+	// The most of this kind the agent runs at once. The server offers no more
+	// than this, whatever `free` says.
+	Capacity      int32 `protobuf:"varint,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Slots) Reset() {
+	*x = Slots{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Slots) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Slots) ProtoMessage() {}
+
+func (x *Slots) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Slots.ProtoReflect.Descriptor instead.
+func (*Slots) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *Slots) GetKind() JobKind {
+	if x != nil {
+		return x.Kind
+	}
+	return JobKind_JOB_KIND_UNSPECIFIED
+}
+
+func (x *Slots) GetFree() int32 {
+	if x != nil {
+		return x.Free
+	}
+	return 0
+}
+
+func (x *Slots) GetCapacity() int32 {
+	if x != nil {
+		return x.Capacity
+	}
+	return 0
+}
+
+type ClaimJobRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Chosen by the agent per claim, with at least 128 random bits (22
+	// base64url characters); a retry with the same id returns the same offer.
+	// The lease token derives from it, so it is as secret as the token.
+	ClaimRequestId  string `protobuf:"bytes,1,opt,name=claim_request_id,json=claimRequestId,proto3" json:"claim_request_id,omitempty"`
+	ProtocolVersion int32  `protobuf:"varint,2,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	// The newest run artifact schema the agent reads.
+	ArtifactSchema int32    `protobuf:"varint,3,opt,name=artifact_schema,json=artifactSchema,proto3" json:"artifact_schema,omitempty"`
+	Slots          []*Slots `protobuf:"bytes,4,rep,name=slots,proto3" json:"slots,omitempty"`
+	// How long to wait for work. At most 20; the server may answer sooner.
+	WaitSeconds   int32 `protobuf:"varint,5,opt,name=wait_seconds,json=waitSeconds,proto3" json:"wait_seconds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimJobRequest) Reset() {
+	*x = ClaimJobRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimJobRequest) ProtoMessage() {}
+
+func (x *ClaimJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimJobRequest.ProtoReflect.Descriptor instead.
+func (*ClaimJobRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *ClaimJobRequest) GetClaimRequestId() string {
+	if x != nil {
+		return x.ClaimRequestId
+	}
+	return ""
+}
+
+func (x *ClaimJobRequest) GetProtocolVersion() int32 {
+	if x != nil {
+		return x.ProtocolVersion
+	}
+	return 0
+}
+
+func (x *ClaimJobRequest) GetArtifactSchema() int32 {
+	if x != nil {
+		return x.ArtifactSchema
+	}
+	return 0
+}
+
+func (x *ClaimJobRequest) GetSlots() []*Slots {
+	if x != nil {
+		return x.Slots
+	}
+	return nil
+}
+
+func (x *ClaimJobRequest) GetWaitSeconds() int32 {
+	if x != nil {
+		return x.WaitSeconds
+	}
+	return 0
+}
+
+type ClaimJobResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Absent when there was nothing to offer.
+	Offer         *Offer `protobuf:"bytes,1,opt,name=offer,proto3" json:"offer,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimJobResponse) Reset() {
+	*x = ClaimJobResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimJobResponse) ProtoMessage() {}
+
+func (x *ClaimJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimJobResponse.ProtoReflect.Descriptor instead.
+func (*ClaimJobResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *ClaimJobResponse) GetOffer() *Offer {
+	if x != nil {
+		return x.Offer
+	}
+	return nil
+}
+
+type StartJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attempt       *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartJobRequest) Reset() {
+	*x = StartJobRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartJobRequest) ProtoMessage() {}
+
+func (x *StartJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartJobRequest.ProtoReflect.Descriptor instead.
+func (*StartJobRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *StartJobRequest) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
+type StartJobResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Renew before this passes, measured from when the request was sent.
+	LeaseTtlSeconds int32 `protobuf:"varint,1,opt,name=lease_ttl_seconds,json=leaseTtlSeconds,proto3" json:"lease_ttl_seconds,omitempty"`
+	// The job is failed once it has run this long, renewed or not.
+	MaxRunSeconds int32 `protobuf:"varint,2,opt,name=max_run_seconds,json=maxRunSeconds,proto3" json:"max_run_seconds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartJobResponse) Reset() {
+	*x = StartJobResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartJobResponse) ProtoMessage() {}
+
+func (x *StartJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartJobResponse.ProtoReflect.Descriptor instead.
+func (*StartJobResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *StartJobResponse) GetLeaseTtlSeconds() int32 {
+	if x != nil {
+		return x.LeaseTtlSeconds
+	}
+	return 0
+}
+
+func (x *StartJobResponse) GetMaxRunSeconds() int32 {
+	if x != nil {
+		return x.MaxRunSeconds
+	}
+	return 0
+}
+
+type Progress struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	CompletedSteps   int32                  `protobuf:"varint,1,opt,name=completed_steps,json=completedSteps,proto3" json:"completed_steps,omitempty"`
+	TotalSteps       int32                  `protobuf:"varint,2,opt,name=total_steps,json=totalSteps,proto3" json:"total_steps,omitempty"`
+	CurrentComponent string                 `protobuf:"bytes,3,opt,name=current_component,json=currentComponent,proto3" json:"current_component,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *Progress) Reset() {
+	*x = Progress{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Progress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Progress) ProtoMessage() {}
+
+func (x *Progress) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Progress.ProtoReflect.Descriptor instead.
+func (*Progress) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *Progress) GetCompletedSteps() int32 {
+	if x != nil {
+		return x.CompletedSteps
+	}
+	return 0
+}
+
+func (x *Progress) GetTotalSteps() int32 {
+	if x != nil {
+		return x.TotalSteps
+	}
+	return 0
+}
+
+func (x *Progress) GetCurrentComponent() string {
+	if x != nil {
+		return x.CurrentComponent
+	}
+	return ""
+}
+
+type RenewLeaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attempt       *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	Progress      *Progress              `protobuf:"bytes,2,opt,name=progress,proto3" json:"progress,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenewLeaseRequest) Reset() {
+	*x = RenewLeaseRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[57]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenewLeaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenewLeaseRequest) ProtoMessage() {}
+
+func (x *RenewLeaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[57]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenewLeaseRequest.ProtoReflect.Descriptor instead.
+func (*RenewLeaseRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{57}
+}
+
+func (x *RenewLeaseRequest) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
+func (x *RenewLeaseRequest) GetProgress() *Progress {
+	if x != nil {
+		return x.Progress
+	}
+	return nil
+}
+
+type RenewLeaseResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	LeaseTtlSeconds int32                  `protobuf:"varint,1,opt,name=lease_ttl_seconds,json=leaseTtlSeconds,proto3" json:"lease_ttl_seconds,omitempty"`
+	// Stop, clean up, and report CANCELLED. The lease stays valid meanwhile.
+	CancelRequested bool `protobuf:"varint,2,opt,name=cancel_requested,json=cancelRequested,proto3" json:"cancel_requested,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *RenewLeaseResponse) Reset() {
+	*x = RenewLeaseResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[58]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenewLeaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenewLeaseResponse) ProtoMessage() {}
+
+func (x *RenewLeaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[58]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenewLeaseResponse.ProtoReflect.Descriptor instead.
+func (*RenewLeaseResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{58}
+}
+
+func (x *RenewLeaseResponse) GetLeaseTtlSeconds() int32 {
+	if x != nil {
+		return x.LeaseTtlSeconds
+	}
+	return 0
+}
+
+func (x *RenewLeaseResponse) GetCancelRequested() bool {
+	if x != nil {
+		return x.CancelRequested
+	}
+	return false
+}
+
+type GetJobArtifactRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attempt       *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJobArtifactRequest) Reset() {
+	*x = GetJobArtifactRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[59]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobArtifactRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobArtifactRequest) ProtoMessage() {}
+
+func (x *GetJobArtifactRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[59]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobArtifactRequest.ProtoReflect.Descriptor instead.
+func (*GetJobArtifactRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{59}
+}
+
+func (x *GetJobArtifactRequest) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
+type GetJobArtifactResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ArtifactDigest string                 `protobuf:"bytes,1,opt,name=artifact_digest,json=artifactDigest,proto3" json:"artifact_digest,omitempty"`
+	Artifact       []byte                 `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *GetJobArtifactResponse) Reset() {
+	*x = GetJobArtifactResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[60]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobArtifactResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobArtifactResponse) ProtoMessage() {}
+
+func (x *GetJobArtifactResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[60]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobArtifactResponse.ProtoReflect.Descriptor instead.
+func (*GetJobArtifactResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{60}
+}
+
+func (x *GetJobArtifactResponse) GetArtifactDigest() string {
+	if x != nil {
+		return x.ArtifactDigest
+	}
+	return ""
+}
+
+func (x *GetJobArtifactResponse) GetArtifact() []byte {
+	if x != nil {
+		return x.Artifact
+	}
+	return nil
+}
+
+type ReportJobResultRequest struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Attempt *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	// Chosen by the agent; a retry with the same id returns the first answer.
+	ReportId      string     `protobuf:"bytes,2,opt,name=report_id,json=reportId,proto3" json:"report_id,omitempty"`
+	Result        *JobResult `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportJobResultRequest) Reset() {
+	*x = ReportJobResultRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[61]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportJobResultRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportJobResultRequest) ProtoMessage() {}
+
+func (x *ReportJobResultRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[61]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportJobResultRequest.ProtoReflect.Descriptor instead.
+func (*ReportJobResultRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{61}
+}
+
+func (x *ReportJobResultRequest) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
+func (x *ReportJobResultRequest) GetReportId() string {
+	if x != nil {
+		return x.ReportId
+	}
+	return ""
+}
+
+func (x *ReportJobResultRequest) GetResult() *JobResult {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+type ReportJobResultResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Outcome       ReportOutcome          `protobuf:"varint,1,opt,name=outcome,proto3,enum=admiral.api.agent.v1.ReportOutcome" json:"outcome,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportJobResultResponse) Reset() {
+	*x = ReportJobResultResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[62]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportJobResultResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportJobResultResponse) ProtoMessage() {}
+
+func (x *ReportJobResultResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[62]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportJobResultResponse.ProtoReflect.Descriptor instead.
+func (*ReportJobResultResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{62}
+}
+
+func (x *ReportJobResultResponse) GetOutcome() ReportOutcome {
+	if x != nil {
+		return x.Outcome
+	}
+	return ReportOutcome_REPORT_OUTCOME_UNSPECIFIED
 }
 
 var File_admiral_api_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
-	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1fadmiral/api/agent/v1/jobs.proto\x1a$admiral/api/agent/v1/workloads.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1eadmiral/common/v1/apikey.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1egoogle/protobuf/duration.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9e\x05\n" +
-	"\x05Agent\x12\x1e\n" +
-	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x128\n" +
-	"\x04kind\x18\x02 \x01(\x0e2\x1f.admiral.api.agent.v1.AgentKindB\x03\xe0A\x05R\x04kind\x12@\n" +
-	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12X\n" +
-	"\x06labels\x18\x05 \x03(\v2'.admiral.api.agent.v1.Agent.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12Q\n" +
-	"\rhealth_status\x18\x06 \x01(\x0e2'.admiral.api.agent.v1.AgentHealthStatusB\x03\xe0A\x03R\fhealthStatus\x12$\n" +
-	"\vcluster_uid\x18\a \x01(\tB\x03\xe0A\x03R\n" +
-	"clusterUid\x12?\n" +
+	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x80\x03\n" +
+	"\aCluster\x12\x13\n" +
+	"\x02id\x18\x01 \x01(\tB\x03\xe0A\x03R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12@\n" +
+	"\x06status\x18\x03 \x01(\x0e2#.admiral.api.agent.v1.ClusterStatusB\x03\xe0A\x03R\x06status\x12\"\n" +
 	"\n" +
-	"created_by\x18\b \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
+	"issuer_url\x18\x04 \x01(\tB\x03\xe0A\x03R\tissuerUrl\x12\x1c\n" +
+	"\akey_ids\x18\x05 \x03(\tB\x03\xe0A\x03R\x06keyIds\x12G\n" +
+	"\x0fkeys_updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\rkeysUpdatedAt\x12?\n" +
 	"\n" +
-	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
+	"created_by\x18\a \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
-	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xeb\x02\n" +
-	"\x12CreateAgentRequest\x12B\n" +
-	"\x04kind\x18\x01 \x01(\x0e2\x1f.admiral.api.agent.v1.AgentKindB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04kind\x12C\n" +
-	"\x04name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12e\n" +
-	"\x06labels\x18\x04 \x03(\v24.admiral.api.agent.v1.CreateAgentRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"n\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\"{\n" +
+	"\fClusterTrust\x126\n" +
+	"\n" +
+	"issuer_url\x18\x01 \x01(\tB\x15\xbaH\x12r\x10\x18\x80\x10:\bhttps://\x88\x01\x01H\x00R\tissuerUrl\x12*\n" +
+	"\tjwks_json\x18\x02 \x01(\tB\v\xbaH\br\x06\x10\x02\x18\x80\x80\x04H\x00R\bjwksJsonB\a\n" +
+	"\x05trust\"\xe4\x03\n" +
+	"\x05Agent\x12\x13\n" +
+	"\x02id\x18\x01 \x01(\tB\x03\xe0A\x03R\x02id\x12\"\n" +
+	"\n" +
+	"cluster_id\x18\x02 \x01(\tB\x03\xe0A\x03R\tclusterId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12!\n" +
+	"\tnamespace\x18\x04 \x01(\tB\x03\xe0A\x03R\tnamespace\x12,\n" +
+	"\x0fservice_account\x18\x05 \x01(\tB\x03\xe0A\x03R\x0eserviceAccount\x12<\n" +
+	"\aceiling\x18\x06 \x01(\v2\".admiral.api.agent.v1.AgentCeilingR\aceiling\x12>\n" +
+	"\x06health\x18\a \x01(\x0e2!.admiral.api.agent.v1.AgentHealthB\x03\xe0A\x03R\x06health\x12>\n" +
+	"\x06report\x18\b \x01(\v2!.admiral.api.agent.v1.AgentReportB\x03\xe0A\x03R\x06report\x12?\n" +
+	"\n" +
+	"created_by\x18\t \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\"\xc8\x01\n" +
+	"\fAgentCeiling\x128\n" +
+	"\x18allow_namespace_creation\x18\x01 \x01(\bR\x16allowNamespaceCreation\x12?\n" +
+	"\x12allowed_namespaces\x18\x02 \x03(\tB\x10\xbaH\r\x92\x01\n" +
+	"\x10@\"\x06r\x04\x10\x01\x18?R\x11allowedNamespaces\x12=\n" +
+	"\x11denied_namespaces\x18\x03 \x03(\tB\x10\xbaH\r\x92\x01\n" +
+	"\x10@\"\x06r\x04\x10\x01\x18?R\x10deniedNamespaces\"\xad\x02\n" +
+	"\vAgentReport\x12#\n" +
+	"\ragent_version\x18\x01 \x01(\tR\fagentVersion\x12)\n" +
+	"\x10protocol_version\x18\x02 \x01(\x05R\x0fprotocolVersion\x12!\n" +
+	"\fkube_version\x18\x03 \x01(\tR\vkubeVersion\x12!\n" +
+	"\fapi_versions\x18\x04 \x03(\tR\vapiVersions\x12K\n" +
+	"\fcapabilities\x18\x05 \x01(\v2'.admiral.api.agent.v1.AgentCapabilitiesR\fcapabilities\x12;\n" +
+	"\vreported_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"reportedAt\"\xd8\x01\n" +
+	"\x11AgentCapabilities\x122\n" +
+	"\x15can_create_namespaces\x18\x01 \x01(\bR\x13canCreateNamespaces\x12/\n" +
+	"\x13writable_namespaces\x18\x02 \x03(\tR\x12writableNamespaces\x12%\n" +
+	"\x0eall_namespaces\x18\x03 \x01(\bR\rallNamespaces\x127\n" +
+	"\x18can_write_cluster_scoped\x18\x04 \x01(\bR\x15canWriteClusterScoped\"\x9a\x01\n" +
+	"\n" +
+	"AgentGrant\x12!\n" +
+	"\x06tenant\x18\x01 \x01(\bB\a\xbaH\x04j\x02\b\x01H\x00R\x06tenant\x12%\n" +
+	"\bgroup_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\agroupId\x121\n" +
+	"\x0eapplication_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationIdB\x0f\n" +
+	"\x06target\x12\x05\xbaH\x02\b\x01\"\xf5\x04\n" +
+	"\x03Job\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x121\n" +
+	"\x04kind\x18\x02 \x01(\x0e2\x1d.admiral.api.agent.v1.JobKindR\x04kind\x127\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusR\x06status\x12\x19\n" +
+	"\bagent_id\x18\x04 \x01(\tR\aagentId\x12%\n" +
+	"\x0eenvironment_id\x18\x05 \x01(\tR\renvironmentId\x12\"\n" +
+	"\rchange_set_id\x18\x06 \x01(\tR\vchangeSetId\x12\x1a\n" +
+	"\brevision\x18\a \x01(\x05R\brevision\x12'\n" +
+	"\x0fartifact_digest\x18\b \x01(\tR\x0eartifactDigest\x12\x18\n" +
+	"\aattempt\x18\t \x01(\x05R\aattempt\x12A\n" +
+	"\vwait_reason\x18\n" +
+	" \x01(\x0e2 .admiral.api.agent.v1.WaitReasonR\n" +
+	"waitReason\x127\n" +
+	"\x06result\x18\v \x01(\v2\x1f.admiral.api.agent.v1.JobResultR\x06result\x129\n" +
+	"\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"started_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12;\n" +
+	"\vfinished_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"finishedAt\"\xcb\x01\n" +
+	"\tJobResult\x12E\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\f\xbaH\t\x82\x01\x06\x18\x04\x18\x05\x18\x06R\x06status\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x120\n" +
+	"\x05steps\x18\x03 \x03(\v2\x1a.admiral.api.agent.v1.StepR\x05steps\x12+\n" +
+	"\voutput_json\x18\x04 \x01(\tB\n" +
+	"\xbaH\ar\x05\x18\x80\x80\x80\bR\n" +
+	"outputJson\"\x81\x01\n" +
+	"\x04Step\x12\x1c\n" +
+	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12A\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06status\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"\xa0\x01\n" +
+	"\x05Offer\x12+\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.admiral.api.agent.v1.JobR\x03job\x12\x18\n" +
+	"\aattempt\x18\x02 \x01(\x05R\aattempt\x12$\n" +
+	"\vlease_token\x18\x03 \x01(\tB\x03\x80\x01\x01R\n" +
+	"leaseToken\x12*\n" +
+	"\x11offer_ttl_seconds\x18\x04 \x01(\x05R\x0fofferTtlSeconds\"\x95\x01\n" +
+	"\x14CreateClusterRequest\x12C\n" +
+	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x128\n" +
+	"\x05trust\x18\x02 \x01(\v2\".admiral.api.agent.v1.ClusterTrustR\x05trust\"P\n" +
+	"\x15CreateClusterResponse\x127\n" +
+	"\acluster\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.ClusterR\acluster\"?\n" +
+	"\x11GetClusterRequest\x12*\n" +
+	"\n" +
+	"cluster_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\"M\n" +
+	"\x12GetClusterResponse\x127\n" +
+	"\acluster\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.ClusterR\acluster\"\\\n" +
+	"\x13ListClustersRequest\x12&\n" +
+	"\tpage_size\x18\x01 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"y\n" +
+	"\x14ListClustersResponse\x129\n" +
+	"\bclusters\x18\x01 \x03(\v2\x1d.admiral.api.agent.v1.ClusterR\bclusters\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x89\x01\n" +
+	"\x16SetClusterTrustRequest\x12*\n" +
+	"\n" +
+	"cluster_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\x12C\n" +
+	"\x05trust\x18\x02 \x01(\v2\".admiral.api.agent.v1.ClusterTrustB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x05trust\"R\n" +
+	"\x17SetClusterTrustResponse\x127\n" +
+	"\acluster\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.ClusterR\acluster\"B\n" +
+	"\x14DeleteClusterRequest\x12*\n" +
+	"\n" +
+	"cluster_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\"\x17\n" +
+	"\x15DeleteClusterResponse\"\xe0\x03\n" +
+	"\x12CreateAgentRequest\x12*\n" +
+	"\n" +
+	"cluster_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\tclusterId\x12C\n" +
+	"\x04name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12P\n" +
+	"\tnamespace\x18\x03 \x01(\tB2\xe0A\x02\xbaH,r*\x10\x01\x18?2$^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$R\tnamespace\x12^\n" +
+	"\x0fservice_account\x18\x04 \x01(\tB5\xe0A\x02\xbaH/r-\x10\x01\x18\xfd\x012&^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$R\x0eserviceAccount\x12<\n" +
+	"\aceiling\x18\x05 \x01(\v2\".admiral.api.agent.v1.AgentCeilingR\aceiling\x12B\n" +
+	"\x06grants\x18\x06 \x03(\v2 .admiral.api.agent.v1.AgentGrantB\b\xbaH\x05\x92\x01\x02\x10@R\x06grants\x12%\n" +
+	"\x0eenrollment_key\x18\a \x01(\bR\renrollmentKey\"\xce\x01\n" +
 	"\x13CreateAgentResponse\x121\n" +
-	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\x12$\n" +
-	"\x0eplain_text_key\x18\x02 \x01(\tR\fplainTextKey\"9\n" +
+	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\x128\n" +
+	"\x06grants\x18\x02 \x03(\v2 .admiral.api.agent.v1.AgentGrantR\x06grants\x12J\n" +
+	"\x0eenrollment_key\x18\x03 \x01(\v2#.admiral.api.agent.v1.EnrollmentKeyR\renrollmentKey\"a\n" +
+	"\rEnrollmentKey\x12\x15\n" +
+	"\x03key\x18\x01 \x01(\tB\x03\x80\x01\x01R\x03key\x129\n" +
+	"\n" +
+	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"9\n" +
 	"\x0fGetAgentRequest\x12&\n" +
 	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\"E\n" +
 	"\x10GetAgentResponse\x121\n" +
-	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\"|\n" +
-	"\x11ListAgentsRequest\x12 \n" +
-	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
-	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
+	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\"\xe0\x01\n" +
+	"\x11ListAgentsRequest\x12,\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"q\n" +
+	"cluster_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\tclusterId\x88\x01\x01\x124\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\rapplicationId\x88\x01\x01\x12&\n" +
+	"\tpage_size\x18\x03 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x04 \x01(\tR\tpageTokenB\r\n" +
+	"\v_cluster_idB\x11\n" +
+	"\x0f_application_id\"q\n" +
 	"\x12ListAgentsResponse\x123\n" +
 	"\x06agents\x18\x01 \x03(\v2\x1b.admiral.api.agent.v1.AgentR\x06agents\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\x8f\x01\n" +
-	"\x12UpdateAgentRequest\x12<\n" +
-	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x05agent\x12;\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
-	"updateMask\"H\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xc8\x01\n" +
+	"\x12UpdateAgentRequest\x12&\n" +
+	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12C\n" +
+	"\x04name\x18\x02 \x01(\tB*\xbaH'r%\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$H\x00R\x04name\x88\x01\x01\x12<\n" +
+	"\aceiling\x18\x03 \x01(\v2\".admiral.api.agent.v1.AgentCeilingR\aceilingB\a\n" +
+	"\x05_name\"H\n" +
 	"\x13UpdateAgentResponse\x121\n" +
 	"\x05agent\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\"<\n" +
 	"\x12DeleteAgentRequest\x12&\n" +
 	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\"\x15\n" +
-	"\x13DeleteAgentResponse\"\xa9\x01\n" +
-	" ClearAgentIdentityBindingRequest\x12&\n" +
-	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12\x1f\n" +
-	"\x06reason\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06reason\x12<\n" +
-	"\fgrace_window\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\vgraceWindow\"z\n" +
-	"!ClearAgentIdentityBindingResponse\x12\x1a\n" +
-	"\baccepted\x18\x01 \x01(\bR\baccepted\x129\n" +
+	"\x13DeleteAgentResponse\"D\n" +
+	"\x1aCreateEnrollmentKeyRequest\x12&\n" +
+	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\"i\n" +
+	"\x1bCreateEnrollmentKeyResponse\x12J\n" +
+	"\x0eenrollment_key\x18\x01 \x01(\v2#.admiral.api.agent.v1.EnrollmentKeyR\renrollmentKey\"\x81\x01\n" +
+	"\x14GrantAgentUseRequest\x12&\n" +
+	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12A\n" +
+	"\x05grant\x18\x02 \x01(\v2 .admiral.api.agent.v1.AgentGrantB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x05grant\"\x17\n" +
+	"\x15GrantAgentUseResponse\"\x82\x01\n" +
+	"\x15RevokeAgentUseRequest\x12&\n" +
+	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12A\n" +
+	"\x05grant\x18\x02 \x01(\v2 .admiral.api.agent.v1.AgentGrantB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x05grant\"\x18\n" +
+	"\x16RevokeAgentUseResponse\"@\n" +
+	"\x16ListAgentGrantsRequest\x12&\n" +
+	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\"S\n" +
+	"\x17ListAgentGrantsResponse\x128\n" +
+	"\x06grants\x18\x01 \x03(\v2 .admiral.api.agent.v1.AgentGrantR\x06grants\"3\n" +
+	"\rGetJobRequest\x12\"\n" +
+	"\x06job_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x05jobId\"=\n" +
+	"\x0eGetJobResponse\x12+\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.admiral.api.agent.v1.JobR\x03job\"\x84\x03\n" +
+	"\x0fListJobsRequest\x12(\n" +
+	"\bagent_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\aagentId\x88\x01\x01\x124\n" +
+	"\x0eenvironment_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x01R\renvironmentId\x88\x01\x01\x12A\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06status\x12&\n" +
+	"\tpage_size\x18\x04 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"?\n" +
-	"\x15GetAgentStatusRequest\x12&\n" +
-	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\"\xc8\x02\n" +
-	"\x16GetAgentStatusResponse\x12L\n" +
-	"\rhealth_status\x18\x01 \x01(\x0e2'.admiral.api.agent.v1.AgentHealthStatusR\fhealthStatus\x12J\n" +
-	"\tterraform\x18\x02 \x01(\v2*.admiral.api.agent.v1.TerraformAgentStatusH\x00R\tterraform\x12M\n" +
+	"page_token\x18\x05 \x01(\tR\tpageToken:g\xbaHd\x1ab\n" +
+	"\x0flist_jobs.scope\x12\x1fname an agent or an environment\x1a.has(this.agent_id) || has(this.environment_id)B\v\n" +
+	"\t_agent_idB\x11\n" +
+	"\x0f_environment_id\"i\n" +
+	"\x10ListJobsResponse\x12-\n" +
+	"\x04jobs\x18\x01 \x03(\v2\x19.admiral.api.agent.v1.JobR\x04jobs\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"6\n" +
+	"\x10CancelJobRequest\x12\"\n" +
+	"\x06job_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x05jobId\"@\n" +
+	"\x11CancelJobResponse\x12+\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.admiral.api.agent.v1.JobR\x03job\"\x80\x01\n" +
+	"\aAttempt\x12\"\n" +
+	"\x06job_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\x05jobId\x12!\n" +
+	"\aattempt\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\aattempt\x12.\n" +
+	"\vlease_token\x18\x03 \x01(\tB\r\xbaH\ar\x05\x10\x10\x18\x80\x01\x80\x01\x01R\n" +
+	"leaseToken\"\xa7\x01\n" +
+	"\rEnrollRequest\x12(\n" +
+	"\tjwks_json\x18\x01 \x01(\tB\v\xbaH\br\x06\x10\x02\x18\x80\x80\x04R\bjwksJson\x12B\n" +
+	"\x15service_account_token\x18\x02 \x01(\tB\x0e\xbaH\br\x06\x10\x10\x18\x80\x80\x01\x80\x01\x01R\x13serviceAccountToken\x12(\n" +
+	"\vcluster_uid\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18@R\n" +
+	"clusterUid\"|\n" +
+	"\x0eEnrollResponse\x127\n" +
+	"\acluster\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.ClusterR\acluster\x121\n" +
+	"\x05agent\x18\x02 \x01(\v2\x1b.admiral.api.agent.v1.AgentR\x05agent\"\xf0\x02\n" +
+	"\x13ReportStatusRequest\x12,\n" +
+	"\ragent_version\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x18@R\fagentVersion\x122\n" +
+	"\x10protocol_version\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\x0fprotocolVersion\x12*\n" +
+	"\fkube_version\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18@R\vkubeVersion\x12,\n" +
+	"\fapi_versions\x18\x04 \x03(\tB\t\xbaH\x06\x92\x01\x03\x10\x80\x10R\vapiVersions\x12K\n" +
+	"\fcapabilities\x18\x05 \x01(\v2'.admiral.api.agent.v1.AgentCapabilitiesR\fcapabilities\x12&\n" +
+	"\tjwks_json\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\bjwksJson\x12(\n" +
+	"\vcluster_uid\x18\a \x01(\tB\a\xbaH\x04r\x02\x18@R\n" +
+	"clusterUid\"k\n" +
+	"\x14ReportStatusResponse\x12.\n" +
+	"\x13next_report_seconds\x18\x01 \x01(\x05R\x11nextReportSeconds\x12#\n" +
+	"\rkeys_accepted\x18\x02 \x01(\bR\fkeysAccepted\"\x8c\x01\n" +
+	"\x05Slots\x12=\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\x1d.admiral.api.agent.v1.JobKindB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04kind\x12\x1d\n" +
+	"\x04free\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18@(\x00R\x04free\x12%\n" +
+	"\bcapacity\x18\x03 \x01(\x05B\t\xbaH\x06\x1a\x04\x18@(\x00R\bcapacity\"\x9c\x02\n" +
+	"\x0fClaimJobRequest\x126\n" +
+	"\x10claim_request_id\x18\x01 \x01(\tB\f\xbaH\x06r\x04\x10\x16\x18@\x80\x01\x01R\x0eclaimRequestId\x122\n" +
+	"\x10protocol_version\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\x0fprotocolVersion\x120\n" +
+	"\x0fartifact_schema\x18\x03 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\x0eartifactSchema\x12=\n" +
+	"\x05slots\x18\x04 \x03(\v2\x1b.admiral.api.agent.v1.SlotsB\n" +
+	"\xbaH\a\x92\x01\x04\b\x01\x10\bR\x05slots\x12,\n" +
+	"\fwait_seconds\x18\x05 \x01(\x05B\t\xbaH\x06\x1a\x04\x18\x14(\x00R\vwaitSeconds\"E\n" +
+	"\x10ClaimJobResponse\x121\n" +
+	"\x05offer\x18\x01 \x01(\v2\x1b.admiral.api.agent.v1.OfferR\x05offer\"U\n" +
+	"\x0fStartJobRequest\x12B\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\"f\n" +
+	"\x10StartJobResponse\x12*\n" +
+	"\x11lease_ttl_seconds\x18\x01 \x01(\x05R\x0fleaseTtlSeconds\x12&\n" +
+	"\x0fmax_run_seconds\x18\x02 \x01(\x05R\rmaxRunSeconds\"\x8a\x01\n" +
+	"\bProgress\x12'\n" +
+	"\x0fcompleted_steps\x18\x01 \x01(\x05R\x0ecompletedSteps\x12\x1f\n" +
+	"\vtotal_steps\x18\x02 \x01(\x05R\n" +
+	"totalSteps\x124\n" +
+	"\x11current_component\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18?R\x10currentComponent\"\x93\x01\n" +
+	"\x11RenewLeaseRequest\x12B\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\x12:\n" +
+	"\bprogress\x18\x02 \x01(\v2\x1e.admiral.api.agent.v1.ProgressR\bprogress\"k\n" +
+	"\x12RenewLeaseResponse\x12*\n" +
+	"\x11lease_ttl_seconds\x18\x01 \x01(\x05R\x0fleaseTtlSeconds\x12)\n" +
+	"\x10cancel_requested\x18\x02 \x01(\bR\x0fcancelRequested\"[\n" +
+	"\x15GetJobArtifactRequest\x12B\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\"]\n" +
+	"\x16GetJobArtifactResponse\x12'\n" +
+	"\x0fartifact_digest\x18\x01 \x01(\tR\x0eartifactDigest\x12\x1a\n" +
+	"\bartifact\x18\x02 \x01(\fR\bartifact\"\xc8\x01\n" +
+	"\x16ReportJobResultRequest\x12B\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\x12&\n" +
+	"\treport_id\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18@R\breportId\x12B\n" +
+	"\x06result\x18\x03 \x01(\v2\x1f.admiral.api.agent.v1.JobResultB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x06result\"X\n" +
+	"\x17ReportJobResultResponse\x12=\n" +
+	"\aoutcome\x18\x01 \x01(\x0e2#.admiral.api.agent.v1.ReportOutcomeR\aoutcome*I\n" +
+	"\rClusterStatus\x12\x1e\n" +
+	"\x1aCLUSTER_STATUS_UNSPECIFIED\x10\x00\x12\v\n" +
+	"\aPENDING\x10\x01\x12\v\n" +
+	"\aTRUSTED\x10\x02*M\n" +
+	"\vAgentHealth\x12\x1c\n" +
+	"\x18AGENT_HEALTH_UNSPECIFIED\x10\x00\x12\a\n" +
+	"\x03NEW\x10\x01\x12\n" +
 	"\n" +
-	"kubernetes\x18\x03 \x01(\v2+.admiral.api.agent.v1.KubernetesAgentStatusH\x00R\n" +
-	"kubernetes\x12;\n" +
-	"\vreported_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"reportedAtB\b\n" +
-	"\x06status\"\xbd\x01\n" +
-	"\x13CreateApiKeyRequest\x12&\n" +
-	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12C\n" +
-	"\x04name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x129\n" +
+	"\x06ONLINE\x10\x02\x12\v\n" +
+	"\aOFFLINE\x10\x03*C\n" +
+	"\aJobKind\x12\x18\n" +
+	"\x14JOB_KIND_UNSPECIFIED\x10\x00\x12\t\n" +
+	"\x05PROBE\x10\x01\x12\b\n" +
+	"\x04PLAN\x10\x02\x12\t\n" +
+	"\x05APPLY\x10\x03*w\n" +
+	"\tJobStatus\x12\x1a\n" +
+	"\x16JOB_STATUS_UNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"p\n" +
-	"\x14CreateApiKeyResponse\x122\n" +
-	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\x12$\n" +
-	"\x0eplain_text_key\x18\x02 \x01(\tR\fplainTextKey\"\xa5\x01\n" +
-	"\x12ListApiKeysRequest\x12&\n" +
-	"\bagent_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\aagentId\x12 \n" +
-	"\x06filter\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
-	"\tpage_size\x18\x03 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
+	"\x06QUEUED\x10\x01\x12\v\n" +
+	"\aOFFERED\x10\x02\x12\v\n" +
+	"\aRUNNING\x10\x03\x12\r\n" +
+	"\tSUCCEEDED\x10\x04\x12\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\"s\n" +
-	"\x13ListApiKeysResponse\x124\n" +
-	"\bapi_keys\x18\x01 \x03(\v2\x19.admiral.common.v1.ApiKeyR\aapiKeys\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\":\n" +
-	"\x10GetApiKeyRequest\x12&\n" +
-	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"G\n" +
-	"\x11GetApiKeyResponse\x122\n" +
-	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey\"=\n" +
-	"\x13RevokeApiKeyRequest\x12&\n" +
-	"\btoken_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\atokenId\"J\n" +
-	"\x14RevokeApiKeyResponse\x122\n" +
-	"\aapi_key\x18\x01 \x01(\v2\x19.admiral.common.v1.ApiKeyR\x06apiKey*\\\n" +
-	"\tAgentKind\x12\x1a\n" +
-	"\x16AGENT_KIND_UNSPECIFIED\x10\x00\x12\x18\n" +
-	"\x14AGENT_KIND_TERRAFORM\x10\x01\x12\x19\n" +
-	"\x15AGENT_KIND_KUBERNETES\x10\x02*\xe0\x01\n" +
-	"\x11AgentHealthStatus\x12#\n" +
-	"\x1fAGENT_HEALTH_STATUS_UNSPECIFIED\x10\x00\x12\x1f\n" +
-	"\x1bAGENT_HEALTH_STATUS_PENDING\x10\x01\x12\x1f\n" +
-	"\x1bAGENT_HEALTH_STATUS_HEALTHY\x10\x02\x12 \n" +
-	"\x1cAGENT_HEALTH_STATUS_DEGRADED\x10\x03\x12\x1d\n" +
-	"\x19AGENT_HEALTH_STATUS_ERROR\x10\x04\x12#\n" +
-	"\x1fAGENT_HEALTH_STATUS_UNREACHABLE\x10\x052\xdc\x16\n" +
-	"\bAgentAPI\x12\xa6\x01\n" +
+	"\x06FAILED\x10\x05\x12\r\n" +
+	"\tCANCELLED\x10\x06*\xcc\x01\n" +
+	"\n" +
+	"WaitReason\x12\x1b\n" +
+	"\x17WAIT_REASON_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11NO_AGENT_SELECTED\x10\x01\x12\x15\n" +
+	"\x11AGENT_NOT_GRANTED\x10\x02\x12\x11\n" +
+	"\rAGENT_OFFLINE\x10\x03\x12\x15\n" +
+	"\x11AGENT_AT_CAPACITY\x10\x04\x12\x11\n" +
+	"\rAGENT_TOO_OLD\x10\x05\x12\x14\n" +
+	"\x10ENVIRONMENT_BUSY\x10\x06\x12\v\n" +
+	"\aBACKOFF\x10\a\x12\x13\n" +
+	"\x0fCLUSTER_PENDING\x10\b*V\n" +
+	"\rReportOutcome\x12\x1e\n" +
+	"\x1aREPORT_OUTCOME_UNSPECIFIED\x10\x00\x12\f\n" +
+	"\bACCEPTED\x10\x01\x12\r\n" +
+	"\tDUPLICATE\x10\x02\x12\b\n" +
+	"\x04LATE\x10\x032\xad\x18\n" +
+	"\bAgentAPI\x12\xb2\x01\n" +
+	"\rCreateCluster\x12*.admiral.api.agent.v1.CreateClusterRequest\x1a+.admiral.api.agent.v1.CreateClusterResponse\"H\xbaG\x1d\n" +
+	"\bClusters\x12\x11Connect a cluster\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v1/clusters\x12\xb3\x01\n" +
+	"\n" +
+	"GetCluster\x12'.admiral.api.agent.v1.GetClusterRequest\x1a(.admiral.api.agent.v1.GetClusterResponse\"R\xbaG\x1e\n" +
+	"\bClusters\x12\x12Retrieve a cluster\xa2\x97$\f\n" +
+	"\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/clusters/{cluster_id}\x12\xa7\x01\n" +
+	"\fListClusters\x12).admiral.api.agent.v1.ListClustersRequest\x1a*.admiral.api.agent.v1.ListClustersResponse\"@\xbaG\x19\n" +
+	"\bClusters\x12\rList clusters\xa2\x97$\f\n" +
+	"\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/clusters\x12\xd6\x01\n" +
+	"\x0fSetClusterTrust\x12,.admiral.api.agent.v1.SetClusterTrustRequest\x1a-.admiral.api.agent.v1.SetClusterTrustResponse\"f\xbaG(\n" +
+	"\bClusters\x12\x1cSet how a cluster is trusted\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/v1/clusters/{cluster_id}/trust\x12\xbb\x01\n" +
+	"\rDeleteCluster\x12*.admiral.api.agent.v1.DeleteClusterRequest\x1a+.admiral.api.agent.v1.DeleteClusterResponse\"Q\xbaG\x1c\n" +
+	"\bClusters\x12\x10Delete a cluster\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x1b*\x19/v1/clusters/{cluster_id}\x12\xa6\x01\n" +
 	"\vCreateAgent\x12(.admiral.api.agent.v1.CreateAgentRequest\x1a).admiral.api.agent.v1.CreateAgentResponse\"B\xbaG\x19\n" +
 	"\x06Agents\x12\x0fCreate an agent\xa2\x97$\r\n" +
 	"\vagent:write\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
@@ -1679,47 +4394,64 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"/v1/agents\x12\xb1\x01\n" +
 	"\vUpdateAgent\x12(.admiral.api.agent.v1.UpdateAgentRequest\x1a).admiral.api.agent.v1.UpdateAgentResponse\"M\xbaG\x19\n" +
 	"\x06Agents\x12\x0fUpdate an agent\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/agents/{agent.id}\x12\xae\x01\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/agents/{agent_id}\x12\xae\x01\n" +
 	"\vDeleteAgent\x12(.admiral.api.agent.v1.DeleteAgentRequest\x1a).admiral.api.agent.v1.DeleteAgentResponse\"J\xbaG\x19\n" +
 	"\x06Agents\x12\x0fDelete an agent\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x17*\x15/v1/agents/{agent_id}\x12\xc3\x01\n" +
-	"\x0eGetAgentStatus\x12+.admiral.api.agent.v1.GetAgentStatusRequest\x1a,.admiral.api.agent.v1.GetAgentStatusResponse\"V\xbaG\x1f\n" +
-	"\x06Agents\x12\x15Retrieve agent status\xa2\x97$\f\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x17*\x15/v1/agents/{agent_id}\x12\xe1\x01\n" +
+	"\x13CreateEnrollmentKey\x120.admiral.api.agent.v1.CreateEnrollmentKeyRequest\x1a1.admiral.api.agent.v1.CreateEnrollmentKeyResponse\"e\xbaG!\n" +
+	"\x06Agents\x12\x17Issue an enrollment key\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02*:\x01*\"%/v1/agents/{agent_id}/enrollment-keys\x12\xc4\x01\n" +
+	"\rGrantAgentUse\x12*.admiral.api.agent.v1.GrantAgentUseRequest\x1a+.admiral.api.agent.v1.GrantAgentUseResponse\"Z\xbaG\x1f\n" +
+	"\x06Agents\x12\x15Grant use of an agent\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/agents/{agent_id}/grants\x12\xcf\x01\n" +
+	"\x0eRevokeAgentUse\x12+.admiral.api.agent.v1.RevokeAgentUseRequest\x1a,.admiral.api.agent.v1.RevokeAgentUseResponse\"b\xbaG \n" +
+	"\x06Agents\x12\x16Revoke use of an agent\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/agents/{agent_id}/grants/revoke\x12\xca\x01\n" +
+	"\x0fListAgentGrants\x12,.admiral.api.agent.v1.ListAgentGrantsRequest\x1a-.admiral.api.agent.v1.ListAgentGrantsResponse\"Z\xbaG#\n" +
+	"\x06Agents\x12\x19List who may use an agent\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/status\x12\x84\x02\n" +
-	"\x19ClearAgentIdentityBinding\x126.admiral.api.agent.v1.ClearAgentIdentityBindingRequest\x1a7.admiral.api.agent.v1.ClearAgentIdentityBindingResponse\"v\xbaG+\n" +
-	"\x06Agents\x12!Clear an agent's identity binding\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x021:\x01*\",/v1/agents/{agent_id}/clear-identity-binding\x12\xc7\x01\n" +
-	"\fCreateApiKey\x12).admiral.api.agent.v1.CreateApiKeyRequest\x1a*.admiral.api.agent.v1.CreateApiKeyResponse\"`\xbaG%\n" +
-	"\fAgent Tokens\x12\x15Create an agent token\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/v1/agents/{agent_id}/tokens\x12\xbc\x01\n" +
-	"\vListApiKeys\x12(.admiral.api.agent.v1.ListApiKeysRequest\x1a).admiral.api.agent.v1.ListApiKeysResponse\"X\xbaG!\n" +
-	"\fAgent Tokens\x12\x11List agent tokens\xa2\x97$\f\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/grants\x12\x97\x01\n" +
+	"\x06GetJob\x12#.admiral.api.agent.v1.GetJobRequest\x1a$.admiral.api.agent.v1.GetJobResponse\"B\xbaG\x16\n" +
+	"\x04Jobs\x12\x0eRetrieve a job\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/tokens\x12\xbc\x01\n" +
-	"\tGetApiKey\x12&.admiral.api.agent.v1.GetApiKeyRequest\x1a'.admiral.api.agent.v1.GetApiKeyResponse\"^\xbaG'\n" +
-	"\fAgent Tokens\x12\x17Retrieve an agent token\xa2\x97$\f\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/jobs/{job_id}\x12\x8f\x01\n" +
+	"\bListJobs\x12%.admiral.api.agent.v1.ListJobsRequest\x1a&.admiral.api.agent.v1.ListJobsResponse\"4\xbaG\x11\n" +
+	"\x04Jobs\x12\tList jobs\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/tokens/{token_id}\x12\xce\x01\n" +
-	"\fRevokeApiKey\x12).admiral.api.agent.v1.RevokeApiKeyRequest\x1a*.admiral.api.agent.v1.RevokeApiKeyResponse\"g\xbaG%\n" +
-	"\fAgent Tokens\x12\x15Revoke an agent token\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02(:\x01*\"#/v1/agents/tokens/{token_id}/revoke\x12\xb8\x01\n" +
-	"\rListAgentJobs\x12*.admiral.api.agent.v1.ListAgentJobsRequest\x1a+.admiral.api.agent.v1.ListAgentJobsResponse\"N\xbaG\x19\n" +
-	"\x06Agents\x12\x0fList agent jobs\xa2\x97$\f\n" +
+	"agent:read\x82\xd3\xe4\x93\x02\n" +
+	"\x12\b/v1/jobs\x12\xa9\x01\n" +
+	"\tCancelJob\x12&.admiral.api.agent.v1.CancelJobRequest\x1a'.admiral.api.agent.v1.CancelJobResponse\"K\xbaG\x14\n" +
+	"\x04Jobs\x12\fCancel a job\xa2\x97$\r\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/jobs/{job_id}/cancel2\x9c\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/agents/{agent_id}/jobs\x12\xbc\x01\n" +
-	"\rListWorkloads\x12*.admiral.api.agent.v1.ListWorkloadsRequest\x1a+.admiral.api.agent.v1.ListWorkloadsResponse\"R\xbaG\x18\n" +
-	"\x06Agents\x12\x0eList workloads\xa2\x97$\f\n" +
+	"\x0fAgentRuntimeAPI\x12\xa6\x01\n" +
+	"\x06Enroll\x12#.admiral.api.agent.v1.EnrollRequest\x1a$.admiral.api.agent.v1.EnrollResponse\"Q\xbaG!\n" +
+	"\rAgent Runtime\x12\x10Enroll a cluster\xa2\x97$\x0e\n" +
+	"\fagent:enroll\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/agent/enroll\x12\xbb\x01\n" +
+	"\fReportStatus\x12).admiral.api.agent.v1.ReportStatusRequest\x1a*.admiral.api.agent.v1.ReportStatusResponse\"T\xbaG$\n" +
+	"\rAgent Runtime\x12\x13Report agent status\xa2\x97$\x0e\n" +
+	"\fagent:status\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/agent/status\x12\xa9\x01\n" +
+	"\bClaimJob\x12%.admiral.api.agent.v1.ClaimJobRequest\x1a&.admiral.api.agent.v1.ClaimJobResponse\"N\xbaG\x1c\n" +
+	"\rAgent Runtime\x12\vClaim a job\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02!\x12\x1f/v1/agents/{agent_id}/workloads\x12\xc9\x01\n" +
-	"\vGetWorkload\x12(.admiral.api.agent.v1.GetWorkloadRequest\x1a).admiral.api.agent.v1.GetWorkloadResponse\"e\xbaG\x1d\n" +
-	"\x06Agents\x12\x13Retrieve a workload\xa2\x97$\f\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/claim\x12\xa9\x01\n" +
+	"\bStartJob\x12%.admiral.api.agent.v1.StartJobRequest\x1a&.admiral.api.agent.v1.StartJobResponse\"N\xbaG\x1c\n" +
+	"\rAgent Runtime\x12\vStart a job\xa2\x97$\f\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02/\x12-/v1/agents/{agent_id}/workloads/{workload_id}\x12\xce\x01\n" +
-	"\x12ListWorkloadEvents\x12/.admiral.api.agent.v1.ListWorkloadEventsRequest\x1a0.admiral.api.agent.v1.ListWorkloadEventsResponse\"U\xbaG\x1e\n" +
-	"\x06Agents\x12\x14List workload events\xa2\x97$\f\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/start\x12\xb5\x01\n" +
 	"\n" +
-	"agent:read\x82\xd3\xe4\x93\x02\x1e\x12\x1c/v1/agents/{agent_id}/eventsB\xcf\x01\n" +
+	"RenewLease\x12'.admiral.api.agent.v1.RenewLeaseRequest\x1a(.admiral.api.agent.v1.RenewLeaseResponse\"T\xbaG\"\n" +
+	"\rAgent Runtime\x12\x11Renew a job lease\xa2\x97$\f\n" +
+	"\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/agent/jobs/renew\x12\xc7\x01\n" +
+	"\x0eGetJobArtifact\x12+.admiral.api.agent.v1.GetJobArtifactRequest\x1a,.admiral.api.agent.v1.GetJobArtifactResponse\"Z\xbaG%\n" +
+	"\rAgent Runtime\x12\x14Fetch a job artifact\xa2\x97$\f\n" +
+	"\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/agent/jobs/artifact\x12\xc7\x01\n" +
+	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"W\xbaG$\n" +
+	"\rAgent Runtime\x12\x13Report a job result\xa2\x97$\f\n" +
+	"\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/v1/agent/jobs/resultB\xcf\x01\n" +
 	"\x18com.admiral.api.agent.v1B\n" +
 	"AgentProtoP\x01Z4go.admiral.io/sdk/proto/admiral/api/agent/v1;agentv1\xa2\x02\x03AAA\xaa\x02\x14Admiral.Api.Agent.V1\xca\x02\x14Admiral\\Api\\Agent\\V1\xe2\x02 Admiral\\Api\\Agent\\V1\\GPBMetadata\xea\x02\x17Admiral::Api::Agent::V1b\x06proto3"
 
@@ -1735,113 +4467,194 @@ func file_admiral_api_agent_v1_agent_proto_rawDescGZIP() []byte {
 	return file_admiral_api_agent_v1_agent_proto_rawDescData
 }
 
-var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 63)
 var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
-	(AgentKind)(0),                            // 0: admiral.api.agent.v1.AgentKind
-	(AgentHealthStatus)(0),                    // 1: admiral.api.agent.v1.AgentHealthStatus
-	(*Agent)(nil),                             // 2: admiral.api.agent.v1.Agent
-	(*CreateAgentRequest)(nil),                // 3: admiral.api.agent.v1.CreateAgentRequest
-	(*CreateAgentResponse)(nil),               // 4: admiral.api.agent.v1.CreateAgentResponse
-	(*GetAgentRequest)(nil),                   // 5: admiral.api.agent.v1.GetAgentRequest
-	(*GetAgentResponse)(nil),                  // 6: admiral.api.agent.v1.GetAgentResponse
-	(*ListAgentsRequest)(nil),                 // 7: admiral.api.agent.v1.ListAgentsRequest
-	(*ListAgentsResponse)(nil),                // 8: admiral.api.agent.v1.ListAgentsResponse
-	(*UpdateAgentRequest)(nil),                // 9: admiral.api.agent.v1.UpdateAgentRequest
-	(*UpdateAgentResponse)(nil),               // 10: admiral.api.agent.v1.UpdateAgentResponse
-	(*DeleteAgentRequest)(nil),                // 11: admiral.api.agent.v1.DeleteAgentRequest
-	(*DeleteAgentResponse)(nil),               // 12: admiral.api.agent.v1.DeleteAgentResponse
-	(*ClearAgentIdentityBindingRequest)(nil),  // 13: admiral.api.agent.v1.ClearAgentIdentityBindingRequest
-	(*ClearAgentIdentityBindingResponse)(nil), // 14: admiral.api.agent.v1.ClearAgentIdentityBindingResponse
-	(*GetAgentStatusRequest)(nil),             // 15: admiral.api.agent.v1.GetAgentStatusRequest
-	(*GetAgentStatusResponse)(nil),            // 16: admiral.api.agent.v1.GetAgentStatusResponse
-	(*CreateApiKeyRequest)(nil),               // 17: admiral.api.agent.v1.CreateApiKeyRequest
-	(*CreateApiKeyResponse)(nil),              // 18: admiral.api.agent.v1.CreateApiKeyResponse
-	(*ListApiKeysRequest)(nil),                // 19: admiral.api.agent.v1.ListApiKeysRequest
-	(*ListApiKeysResponse)(nil),               // 20: admiral.api.agent.v1.ListApiKeysResponse
-	(*GetApiKeyRequest)(nil),                  // 21: admiral.api.agent.v1.GetApiKeyRequest
-	(*GetApiKeyResponse)(nil),                 // 22: admiral.api.agent.v1.GetApiKeyResponse
-	(*RevokeApiKeyRequest)(nil),               // 23: admiral.api.agent.v1.RevokeApiKeyRequest
-	(*RevokeApiKeyResponse)(nil),              // 24: admiral.api.agent.v1.RevokeApiKeyResponse
-	nil,                                       // 25: admiral.api.agent.v1.Agent.LabelsEntry
-	nil,                                       // 26: admiral.api.agent.v1.CreateAgentRequest.LabelsEntry
-	(*v1.ActorRef)(nil),                       // 27: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),             // 28: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),             // 29: google.protobuf.FieldMask
-	(*durationpb.Duration)(nil),               // 30: google.protobuf.Duration
-	(*TerraformAgentStatus)(nil),              // 31: admiral.api.agent.v1.TerraformAgentStatus
-	(*KubernetesAgentStatus)(nil),             // 32: admiral.api.agent.v1.KubernetesAgentStatus
-	(*v1.ApiKey)(nil),                         // 33: admiral.common.v1.ApiKey
-	(*ListAgentJobsRequest)(nil),              // 34: admiral.api.agent.v1.ListAgentJobsRequest
-	(*ListWorkloadsRequest)(nil),              // 35: admiral.api.agent.v1.ListWorkloadsRequest
-	(*GetWorkloadRequest)(nil),                // 36: admiral.api.agent.v1.GetWorkloadRequest
-	(*ListWorkloadEventsRequest)(nil),         // 37: admiral.api.agent.v1.ListWorkloadEventsRequest
-	(*ListAgentJobsResponse)(nil),             // 38: admiral.api.agent.v1.ListAgentJobsResponse
-	(*ListWorkloadsResponse)(nil),             // 39: admiral.api.agent.v1.ListWorkloadsResponse
-	(*GetWorkloadResponse)(nil),               // 40: admiral.api.agent.v1.GetWorkloadResponse
-	(*ListWorkloadEventsResponse)(nil),        // 41: admiral.api.agent.v1.ListWorkloadEventsResponse
+	(ClusterStatus)(0),                  // 0: admiral.api.agent.v1.ClusterStatus
+	(AgentHealth)(0),                    // 1: admiral.api.agent.v1.AgentHealth
+	(JobKind)(0),                        // 2: admiral.api.agent.v1.JobKind
+	(JobStatus)(0),                      // 3: admiral.api.agent.v1.JobStatus
+	(WaitReason)(0),                     // 4: admiral.api.agent.v1.WaitReason
+	(ReportOutcome)(0),                  // 5: admiral.api.agent.v1.ReportOutcome
+	(*Cluster)(nil),                     // 6: admiral.api.agent.v1.Cluster
+	(*ClusterTrust)(nil),                // 7: admiral.api.agent.v1.ClusterTrust
+	(*Agent)(nil),                       // 8: admiral.api.agent.v1.Agent
+	(*AgentCeiling)(nil),                // 9: admiral.api.agent.v1.AgentCeiling
+	(*AgentReport)(nil),                 // 10: admiral.api.agent.v1.AgentReport
+	(*AgentCapabilities)(nil),           // 11: admiral.api.agent.v1.AgentCapabilities
+	(*AgentGrant)(nil),                  // 12: admiral.api.agent.v1.AgentGrant
+	(*Job)(nil),                         // 13: admiral.api.agent.v1.Job
+	(*JobResult)(nil),                   // 14: admiral.api.agent.v1.JobResult
+	(*Step)(nil),                        // 15: admiral.api.agent.v1.Step
+	(*Offer)(nil),                       // 16: admiral.api.agent.v1.Offer
+	(*CreateClusterRequest)(nil),        // 17: admiral.api.agent.v1.CreateClusterRequest
+	(*CreateClusterResponse)(nil),       // 18: admiral.api.agent.v1.CreateClusterResponse
+	(*GetClusterRequest)(nil),           // 19: admiral.api.agent.v1.GetClusterRequest
+	(*GetClusterResponse)(nil),          // 20: admiral.api.agent.v1.GetClusterResponse
+	(*ListClustersRequest)(nil),         // 21: admiral.api.agent.v1.ListClustersRequest
+	(*ListClustersResponse)(nil),        // 22: admiral.api.agent.v1.ListClustersResponse
+	(*SetClusterTrustRequest)(nil),      // 23: admiral.api.agent.v1.SetClusterTrustRequest
+	(*SetClusterTrustResponse)(nil),     // 24: admiral.api.agent.v1.SetClusterTrustResponse
+	(*DeleteClusterRequest)(nil),        // 25: admiral.api.agent.v1.DeleteClusterRequest
+	(*DeleteClusterResponse)(nil),       // 26: admiral.api.agent.v1.DeleteClusterResponse
+	(*CreateAgentRequest)(nil),          // 27: admiral.api.agent.v1.CreateAgentRequest
+	(*CreateAgentResponse)(nil),         // 28: admiral.api.agent.v1.CreateAgentResponse
+	(*EnrollmentKey)(nil),               // 29: admiral.api.agent.v1.EnrollmentKey
+	(*GetAgentRequest)(nil),             // 30: admiral.api.agent.v1.GetAgentRequest
+	(*GetAgentResponse)(nil),            // 31: admiral.api.agent.v1.GetAgentResponse
+	(*ListAgentsRequest)(nil),           // 32: admiral.api.agent.v1.ListAgentsRequest
+	(*ListAgentsResponse)(nil),          // 33: admiral.api.agent.v1.ListAgentsResponse
+	(*UpdateAgentRequest)(nil),          // 34: admiral.api.agent.v1.UpdateAgentRequest
+	(*UpdateAgentResponse)(nil),         // 35: admiral.api.agent.v1.UpdateAgentResponse
+	(*DeleteAgentRequest)(nil),          // 36: admiral.api.agent.v1.DeleteAgentRequest
+	(*DeleteAgentResponse)(nil),         // 37: admiral.api.agent.v1.DeleteAgentResponse
+	(*CreateEnrollmentKeyRequest)(nil),  // 38: admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	(*CreateEnrollmentKeyResponse)(nil), // 39: admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	(*GrantAgentUseRequest)(nil),        // 40: admiral.api.agent.v1.GrantAgentUseRequest
+	(*GrantAgentUseResponse)(nil),       // 41: admiral.api.agent.v1.GrantAgentUseResponse
+	(*RevokeAgentUseRequest)(nil),       // 42: admiral.api.agent.v1.RevokeAgentUseRequest
+	(*RevokeAgentUseResponse)(nil),      // 43: admiral.api.agent.v1.RevokeAgentUseResponse
+	(*ListAgentGrantsRequest)(nil),      // 44: admiral.api.agent.v1.ListAgentGrantsRequest
+	(*ListAgentGrantsResponse)(nil),     // 45: admiral.api.agent.v1.ListAgentGrantsResponse
+	(*GetJobRequest)(nil),               // 46: admiral.api.agent.v1.GetJobRequest
+	(*GetJobResponse)(nil),              // 47: admiral.api.agent.v1.GetJobResponse
+	(*ListJobsRequest)(nil),             // 48: admiral.api.agent.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),            // 49: admiral.api.agent.v1.ListJobsResponse
+	(*CancelJobRequest)(nil),            // 50: admiral.api.agent.v1.CancelJobRequest
+	(*CancelJobResponse)(nil),           // 51: admiral.api.agent.v1.CancelJobResponse
+	(*Attempt)(nil),                     // 52: admiral.api.agent.v1.Attempt
+	(*EnrollRequest)(nil),               // 53: admiral.api.agent.v1.EnrollRequest
+	(*EnrollResponse)(nil),              // 54: admiral.api.agent.v1.EnrollResponse
+	(*ReportStatusRequest)(nil),         // 55: admiral.api.agent.v1.ReportStatusRequest
+	(*ReportStatusResponse)(nil),        // 56: admiral.api.agent.v1.ReportStatusResponse
+	(*Slots)(nil),                       // 57: admiral.api.agent.v1.Slots
+	(*ClaimJobRequest)(nil),             // 58: admiral.api.agent.v1.ClaimJobRequest
+	(*ClaimJobResponse)(nil),            // 59: admiral.api.agent.v1.ClaimJobResponse
+	(*StartJobRequest)(nil),             // 60: admiral.api.agent.v1.StartJobRequest
+	(*StartJobResponse)(nil),            // 61: admiral.api.agent.v1.StartJobResponse
+	(*Progress)(nil),                    // 62: admiral.api.agent.v1.Progress
+	(*RenewLeaseRequest)(nil),           // 63: admiral.api.agent.v1.RenewLeaseRequest
+	(*RenewLeaseResponse)(nil),          // 64: admiral.api.agent.v1.RenewLeaseResponse
+	(*GetJobArtifactRequest)(nil),       // 65: admiral.api.agent.v1.GetJobArtifactRequest
+	(*GetJobArtifactResponse)(nil),      // 66: admiral.api.agent.v1.GetJobArtifactResponse
+	(*ReportJobResultRequest)(nil),      // 67: admiral.api.agent.v1.ReportJobResultRequest
+	(*ReportJobResultResponse)(nil),     // 68: admiral.api.agent.v1.ReportJobResultResponse
+	(*timestamppb.Timestamp)(nil),       // 69: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                 // 70: admiral.common.v1.ActorRef
 }
 var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
-	0,  // 0: admiral.api.agent.v1.Agent.kind:type_name -> admiral.api.agent.v1.AgentKind
-	25, // 1: admiral.api.agent.v1.Agent.labels:type_name -> admiral.api.agent.v1.Agent.LabelsEntry
-	1,  // 2: admiral.api.agent.v1.Agent.health_status:type_name -> admiral.api.agent.v1.AgentHealthStatus
-	27, // 3: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
-	28, // 4: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
-	28, // 5: admiral.api.agent.v1.Agent.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 6: admiral.api.agent.v1.CreateAgentRequest.kind:type_name -> admiral.api.agent.v1.AgentKind
-	26, // 7: admiral.api.agent.v1.CreateAgentRequest.labels:type_name -> admiral.api.agent.v1.CreateAgentRequest.LabelsEntry
-	2,  // 8: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	2,  // 9: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	2,  // 10: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
-	2,  // 11: admiral.api.agent.v1.UpdateAgentRequest.agent:type_name -> admiral.api.agent.v1.Agent
-	29, // 12: admiral.api.agent.v1.UpdateAgentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	2,  // 13: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	30, // 14: admiral.api.agent.v1.ClearAgentIdentityBindingRequest.grace_window:type_name -> google.protobuf.Duration
-	28, // 15: admiral.api.agent.v1.ClearAgentIdentityBindingResponse.expires_at:type_name -> google.protobuf.Timestamp
-	1,  // 16: admiral.api.agent.v1.GetAgentStatusResponse.health_status:type_name -> admiral.api.agent.v1.AgentHealthStatus
-	31, // 17: admiral.api.agent.v1.GetAgentStatusResponse.terraform:type_name -> admiral.api.agent.v1.TerraformAgentStatus
-	32, // 18: admiral.api.agent.v1.GetAgentStatusResponse.kubernetes:type_name -> admiral.api.agent.v1.KubernetesAgentStatus
-	28, // 19: admiral.api.agent.v1.GetAgentStatusResponse.reported_at:type_name -> google.protobuf.Timestamp
-	28, // 20: admiral.api.agent.v1.CreateApiKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
-	33, // 21: admiral.api.agent.v1.CreateApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	33, // 22: admiral.api.agent.v1.ListApiKeysResponse.api_keys:type_name -> admiral.common.v1.ApiKey
-	33, // 23: admiral.api.agent.v1.GetApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	33, // 24: admiral.api.agent.v1.RevokeApiKeyResponse.api_key:type_name -> admiral.common.v1.ApiKey
-	3,  // 25: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
-	5,  // 26: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
-	7,  // 27: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
-	9,  // 28: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
-	11, // 29: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
-	15, // 30: admiral.api.agent.v1.AgentAPI.GetAgentStatus:input_type -> admiral.api.agent.v1.GetAgentStatusRequest
-	13, // 31: admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding:input_type -> admiral.api.agent.v1.ClearAgentIdentityBindingRequest
-	17, // 32: admiral.api.agent.v1.AgentAPI.CreateApiKey:input_type -> admiral.api.agent.v1.CreateApiKeyRequest
-	19, // 33: admiral.api.agent.v1.AgentAPI.ListApiKeys:input_type -> admiral.api.agent.v1.ListApiKeysRequest
-	21, // 34: admiral.api.agent.v1.AgentAPI.GetApiKey:input_type -> admiral.api.agent.v1.GetApiKeyRequest
-	23, // 35: admiral.api.agent.v1.AgentAPI.RevokeApiKey:input_type -> admiral.api.agent.v1.RevokeApiKeyRequest
-	34, // 36: admiral.api.agent.v1.AgentAPI.ListAgentJobs:input_type -> admiral.api.agent.v1.ListAgentJobsRequest
-	35, // 37: admiral.api.agent.v1.AgentAPI.ListWorkloads:input_type -> admiral.api.agent.v1.ListWorkloadsRequest
-	36, // 38: admiral.api.agent.v1.AgentAPI.GetWorkload:input_type -> admiral.api.agent.v1.GetWorkloadRequest
-	37, // 39: admiral.api.agent.v1.AgentAPI.ListWorkloadEvents:input_type -> admiral.api.agent.v1.ListWorkloadEventsRequest
-	4,  // 40: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
-	6,  // 41: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
-	8,  // 42: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
-	10, // 43: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
-	12, // 44: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
-	16, // 45: admiral.api.agent.v1.AgentAPI.GetAgentStatus:output_type -> admiral.api.agent.v1.GetAgentStatusResponse
-	14, // 46: admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding:output_type -> admiral.api.agent.v1.ClearAgentIdentityBindingResponse
-	18, // 47: admiral.api.agent.v1.AgentAPI.CreateApiKey:output_type -> admiral.api.agent.v1.CreateApiKeyResponse
-	20, // 48: admiral.api.agent.v1.AgentAPI.ListApiKeys:output_type -> admiral.api.agent.v1.ListApiKeysResponse
-	22, // 49: admiral.api.agent.v1.AgentAPI.GetApiKey:output_type -> admiral.api.agent.v1.GetApiKeyResponse
-	24, // 50: admiral.api.agent.v1.AgentAPI.RevokeApiKey:output_type -> admiral.api.agent.v1.RevokeApiKeyResponse
-	38, // 51: admiral.api.agent.v1.AgentAPI.ListAgentJobs:output_type -> admiral.api.agent.v1.ListAgentJobsResponse
-	39, // 52: admiral.api.agent.v1.AgentAPI.ListWorkloads:output_type -> admiral.api.agent.v1.ListWorkloadsResponse
-	40, // 53: admiral.api.agent.v1.AgentAPI.GetWorkload:output_type -> admiral.api.agent.v1.GetWorkloadResponse
-	41, // 54: admiral.api.agent.v1.AgentAPI.ListWorkloadEvents:output_type -> admiral.api.agent.v1.ListWorkloadEventsResponse
-	40, // [40:55] is the sub-list for method output_type
-	25, // [25:40] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	0,  // 0: admiral.api.agent.v1.Cluster.status:type_name -> admiral.api.agent.v1.ClusterStatus
+	69, // 1: admiral.api.agent.v1.Cluster.keys_updated_at:type_name -> google.protobuf.Timestamp
+	70, // 2: admiral.api.agent.v1.Cluster.created_by:type_name -> admiral.common.v1.ActorRef
+	69, // 3: admiral.api.agent.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
+	9,  // 4: admiral.api.agent.v1.Agent.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	1,  // 5: admiral.api.agent.v1.Agent.health:type_name -> admiral.api.agent.v1.AgentHealth
+	10, // 6: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
+	70, // 7: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
+	69, // 8: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
+	11, // 9: admiral.api.agent.v1.AgentReport.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
+	69, // 10: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
+	2,  // 11: admiral.api.agent.v1.Job.kind:type_name -> admiral.api.agent.v1.JobKind
+	3,  // 12: admiral.api.agent.v1.Job.status:type_name -> admiral.api.agent.v1.JobStatus
+	4,  // 13: admiral.api.agent.v1.Job.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
+	14, // 14: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
+	69, // 15: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	69, // 16: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	69, // 17: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
+	3,  // 18: admiral.api.agent.v1.JobResult.status:type_name -> admiral.api.agent.v1.JobStatus
+	15, // 19: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
+	3,  // 20: admiral.api.agent.v1.Step.status:type_name -> admiral.api.agent.v1.JobStatus
+	13, // 21: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
+	7,  // 22: admiral.api.agent.v1.CreateClusterRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
+	6,  // 23: admiral.api.agent.v1.CreateClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	6,  // 24: admiral.api.agent.v1.GetClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	6,  // 25: admiral.api.agent.v1.ListClustersResponse.clusters:type_name -> admiral.api.agent.v1.Cluster
+	7,  // 26: admiral.api.agent.v1.SetClusterTrustRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
+	6,  // 27: admiral.api.agent.v1.SetClusterTrustResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	9,  // 28: admiral.api.agent.v1.CreateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	12, // 29: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	8,  // 30: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	12, // 31: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	29, // 32: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	69, // 33: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
+	8,  // 34: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	8,  // 35: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
+	9,  // 36: admiral.api.agent.v1.UpdateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	8,  // 37: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	29, // 38: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	12, // 39: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	12, // 40: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	12, // 41: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	13, // 42: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	3,  // 43: admiral.api.agent.v1.ListJobsRequest.status:type_name -> admiral.api.agent.v1.JobStatus
+	13, // 44: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
+	13, // 45: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	6,  // 46: admiral.api.agent.v1.EnrollResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	8,  // 47: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	11, // 48: admiral.api.agent.v1.ReportStatusRequest.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
+	2,  // 49: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
+	57, // 50: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
+	16, // 51: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
+	52, // 52: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	52, // 53: admiral.api.agent.v1.RenewLeaseRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	62, // 54: admiral.api.agent.v1.RenewLeaseRequest.progress:type_name -> admiral.api.agent.v1.Progress
+	52, // 55: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	52, // 56: admiral.api.agent.v1.ReportJobResultRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	14, // 57: admiral.api.agent.v1.ReportJobResultRequest.result:type_name -> admiral.api.agent.v1.JobResult
+	5,  // 58: admiral.api.agent.v1.ReportJobResultResponse.outcome:type_name -> admiral.api.agent.v1.ReportOutcome
+	17, // 59: admiral.api.agent.v1.AgentAPI.CreateCluster:input_type -> admiral.api.agent.v1.CreateClusterRequest
+	19, // 60: admiral.api.agent.v1.AgentAPI.GetCluster:input_type -> admiral.api.agent.v1.GetClusterRequest
+	21, // 61: admiral.api.agent.v1.AgentAPI.ListClusters:input_type -> admiral.api.agent.v1.ListClustersRequest
+	23, // 62: admiral.api.agent.v1.AgentAPI.SetClusterTrust:input_type -> admiral.api.agent.v1.SetClusterTrustRequest
+	25, // 63: admiral.api.agent.v1.AgentAPI.DeleteCluster:input_type -> admiral.api.agent.v1.DeleteClusterRequest
+	27, // 64: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
+	30, // 65: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
+	32, // 66: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
+	34, // 67: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
+	36, // 68: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
+	38, // 69: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	40, // 70: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
+	42, // 71: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
+	44, // 72: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
+	46, // 73: admiral.api.agent.v1.AgentAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
+	48, // 74: admiral.api.agent.v1.AgentAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
+	50, // 75: admiral.api.agent.v1.AgentAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
+	53, // 76: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
+	55, // 77: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:input_type -> admiral.api.agent.v1.ReportStatusRequest
+	58, // 78: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
+	60, // 79: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
+	63, // 80: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:input_type -> admiral.api.agent.v1.RenewLeaseRequest
+	65, // 81: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
+	67, // 82: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:input_type -> admiral.api.agent.v1.ReportJobResultRequest
+	18, // 83: admiral.api.agent.v1.AgentAPI.CreateCluster:output_type -> admiral.api.agent.v1.CreateClusterResponse
+	20, // 84: admiral.api.agent.v1.AgentAPI.GetCluster:output_type -> admiral.api.agent.v1.GetClusterResponse
+	22, // 85: admiral.api.agent.v1.AgentAPI.ListClusters:output_type -> admiral.api.agent.v1.ListClustersResponse
+	24, // 86: admiral.api.agent.v1.AgentAPI.SetClusterTrust:output_type -> admiral.api.agent.v1.SetClusterTrustResponse
+	26, // 87: admiral.api.agent.v1.AgentAPI.DeleteCluster:output_type -> admiral.api.agent.v1.DeleteClusterResponse
+	28, // 88: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
+	31, // 89: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
+	33, // 90: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
+	35, // 91: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
+	37, // 92: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
+	39, // 93: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	41, // 94: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
+	43, // 95: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
+	45, // 96: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
+	47, // 97: admiral.api.agent.v1.AgentAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
+	49, // 98: admiral.api.agent.v1.AgentAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
+	51, // 99: admiral.api.agent.v1.AgentAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
+	54, // 100: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
+	56, // 101: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:output_type -> admiral.api.agent.v1.ReportStatusResponse
+	59, // 102: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
+	61, // 103: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
+	64, // 104: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:output_type -> admiral.api.agent.v1.RenewLeaseResponse
+	66, // 105: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
+	68, // 106: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:output_type -> admiral.api.agent.v1.ReportJobResultResponse
+	83, // [83:107] is the sub-list for method output_type
+	59, // [59:83] is the sub-list for method input_type
+	59, // [59:59] is the sub-list for extension type_name
+	59, // [59:59] is the sub-list for extension extendee
+	0,  // [0:59] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_agent_v1_agent_proto_init() }
@@ -1849,21 +4662,27 @@ func file_admiral_api_agent_v1_agent_proto_init() {
 	if File_admiral_api_agent_v1_agent_proto != nil {
 		return
 	}
-	file_admiral_api_agent_v1_jobs_proto_init()
-	file_admiral_api_agent_v1_workloads_proto_init()
-	file_admiral_api_agent_v1_agent_proto_msgTypes[14].OneofWrappers = []any{
-		(*GetAgentStatusResponse_Terraform)(nil),
-		(*GetAgentStatusResponse_Kubernetes)(nil),
+	file_admiral_api_agent_v1_agent_proto_msgTypes[1].OneofWrappers = []any{
+		(*ClusterTrust_IssuerUrl)(nil),
+		(*ClusterTrust_JwksJson)(nil),
 	}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[6].OneofWrappers = []any{
+		(*AgentGrant_Tenant)(nil),
+		(*AgentGrant_GroupId)(nil),
+		(*AgentGrant_ApplicationId)(nil),
+	}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[26].OneofWrappers = []any{}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[28].OneofWrappers = []any{}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[42].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_agent_v1_agent_proto_rawDesc), len(file_admiral_api_agent_v1_agent_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   25,
+			NumEnums:      6,
+			NumMessages:   63,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_admiral_api_agent_v1_agent_proto_goTypes,
 		DependencyIndexes: file_admiral_api_agent_v1_agent_proto_depIdxs,

@@ -23,6 +23,8 @@ const _ = connect.IsAtLeastVersion1_13_0
 const (
 	// AgentAPIName is the fully-qualified name of the AgentAPI service.
 	AgentAPIName = "admiral.api.agent.v1.AgentAPI"
+	// AgentRuntimeAPIName is the fully-qualified name of the AgentRuntimeAPI service.
+	AgentRuntimeAPIName = "admiral.api.agent.v1.AgentRuntimeAPI"
 )
 
 // These constants are the fully-qualified names of the RPCs defined in this package. They're
@@ -33,6 +35,17 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// AgentAPICreateClusterProcedure is the fully-qualified name of the AgentAPI's CreateCluster RPC.
+	AgentAPICreateClusterProcedure = "/admiral.api.agent.v1.AgentAPI/CreateCluster"
+	// AgentAPIGetClusterProcedure is the fully-qualified name of the AgentAPI's GetCluster RPC.
+	AgentAPIGetClusterProcedure = "/admiral.api.agent.v1.AgentAPI/GetCluster"
+	// AgentAPIListClustersProcedure is the fully-qualified name of the AgentAPI's ListClusters RPC.
+	AgentAPIListClustersProcedure = "/admiral.api.agent.v1.AgentAPI/ListClusters"
+	// AgentAPISetClusterTrustProcedure is the fully-qualified name of the AgentAPI's SetClusterTrust
+	// RPC.
+	AgentAPISetClusterTrustProcedure = "/admiral.api.agent.v1.AgentAPI/SetClusterTrust"
+	// AgentAPIDeleteClusterProcedure is the fully-qualified name of the AgentAPI's DeleteCluster RPC.
+	AgentAPIDeleteClusterProcedure = "/admiral.api.agent.v1.AgentAPI/DeleteCluster"
 	// AgentAPICreateAgentProcedure is the fully-qualified name of the AgentAPI's CreateAgent RPC.
 	AgentAPICreateAgentProcedure = "/admiral.api.agent.v1.AgentAPI/CreateAgent"
 	// AgentAPIGetAgentProcedure is the fully-qualified name of the AgentAPI's GetAgent RPC.
@@ -43,148 +56,128 @@ const (
 	AgentAPIUpdateAgentProcedure = "/admiral.api.agent.v1.AgentAPI/UpdateAgent"
 	// AgentAPIDeleteAgentProcedure is the fully-qualified name of the AgentAPI's DeleteAgent RPC.
 	AgentAPIDeleteAgentProcedure = "/admiral.api.agent.v1.AgentAPI/DeleteAgent"
-	// AgentAPIGetAgentStatusProcedure is the fully-qualified name of the AgentAPI's GetAgentStatus RPC.
-	AgentAPIGetAgentStatusProcedure = "/admiral.api.agent.v1.AgentAPI/GetAgentStatus"
-	// AgentAPIClearAgentIdentityBindingProcedure is the fully-qualified name of the AgentAPI's
-	// ClearAgentIdentityBinding RPC.
-	AgentAPIClearAgentIdentityBindingProcedure = "/admiral.api.agent.v1.AgentAPI/ClearAgentIdentityBinding"
-	// AgentAPICreateApiKeyProcedure is the fully-qualified name of the AgentAPI's CreateApiKey RPC.
-	AgentAPICreateApiKeyProcedure = "/admiral.api.agent.v1.AgentAPI/CreateApiKey"
-	// AgentAPIListApiKeysProcedure is the fully-qualified name of the AgentAPI's ListApiKeys RPC.
-	AgentAPIListApiKeysProcedure = "/admiral.api.agent.v1.AgentAPI/ListApiKeys"
-	// AgentAPIGetApiKeyProcedure is the fully-qualified name of the AgentAPI's GetApiKey RPC.
-	AgentAPIGetApiKeyProcedure = "/admiral.api.agent.v1.AgentAPI/GetApiKey"
-	// AgentAPIRevokeApiKeyProcedure is the fully-qualified name of the AgentAPI's RevokeApiKey RPC.
-	AgentAPIRevokeApiKeyProcedure = "/admiral.api.agent.v1.AgentAPI/RevokeApiKey"
-	// AgentAPIListAgentJobsProcedure is the fully-qualified name of the AgentAPI's ListAgentJobs RPC.
-	AgentAPIListAgentJobsProcedure = "/admiral.api.agent.v1.AgentAPI/ListAgentJobs"
-	// AgentAPIListWorkloadsProcedure is the fully-qualified name of the AgentAPI's ListWorkloads RPC.
-	AgentAPIListWorkloadsProcedure = "/admiral.api.agent.v1.AgentAPI/ListWorkloads"
-	// AgentAPIGetWorkloadProcedure is the fully-qualified name of the AgentAPI's GetWorkload RPC.
-	AgentAPIGetWorkloadProcedure = "/admiral.api.agent.v1.AgentAPI/GetWorkload"
-	// AgentAPIListWorkloadEventsProcedure is the fully-qualified name of the AgentAPI's
-	// ListWorkloadEvents RPC.
-	AgentAPIListWorkloadEventsProcedure = "/admiral.api.agent.v1.AgentAPI/ListWorkloadEvents"
+	// AgentAPICreateEnrollmentKeyProcedure is the fully-qualified name of the AgentAPI's
+	// CreateEnrollmentKey RPC.
+	AgentAPICreateEnrollmentKeyProcedure = "/admiral.api.agent.v1.AgentAPI/CreateEnrollmentKey"
+	// AgentAPIGrantAgentUseProcedure is the fully-qualified name of the AgentAPI's GrantAgentUse RPC.
+	AgentAPIGrantAgentUseProcedure = "/admiral.api.agent.v1.AgentAPI/GrantAgentUse"
+	// AgentAPIRevokeAgentUseProcedure is the fully-qualified name of the AgentAPI's RevokeAgentUse RPC.
+	AgentAPIRevokeAgentUseProcedure = "/admiral.api.agent.v1.AgentAPI/RevokeAgentUse"
+	// AgentAPIListAgentGrantsProcedure is the fully-qualified name of the AgentAPI's ListAgentGrants
+	// RPC.
+	AgentAPIListAgentGrantsProcedure = "/admiral.api.agent.v1.AgentAPI/ListAgentGrants"
+	// AgentAPIGetJobProcedure is the fully-qualified name of the AgentAPI's GetJob RPC.
+	AgentAPIGetJobProcedure = "/admiral.api.agent.v1.AgentAPI/GetJob"
+	// AgentAPIListJobsProcedure is the fully-qualified name of the AgentAPI's ListJobs RPC.
+	AgentAPIListJobsProcedure = "/admiral.api.agent.v1.AgentAPI/ListJobs"
+	// AgentAPICancelJobProcedure is the fully-qualified name of the AgentAPI's CancelJob RPC.
+	AgentAPICancelJobProcedure = "/admiral.api.agent.v1.AgentAPI/CancelJob"
+	// AgentRuntimeAPIEnrollProcedure is the fully-qualified name of the AgentRuntimeAPI's Enroll RPC.
+	AgentRuntimeAPIEnrollProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/Enroll"
+	// AgentRuntimeAPIReportStatusProcedure is the fully-qualified name of the AgentRuntimeAPI's
+	// ReportStatus RPC.
+	AgentRuntimeAPIReportStatusProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportStatus"
+	// AgentRuntimeAPIClaimJobProcedure is the fully-qualified name of the AgentRuntimeAPI's ClaimJob
+	// RPC.
+	AgentRuntimeAPIClaimJobProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/ClaimJob"
+	// AgentRuntimeAPIStartJobProcedure is the fully-qualified name of the AgentRuntimeAPI's StartJob
+	// RPC.
+	AgentRuntimeAPIStartJobProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob"
+	// AgentRuntimeAPIRenewLeaseProcedure is the fully-qualified name of the AgentRuntimeAPI's
+	// RenewLease RPC.
+	AgentRuntimeAPIRenewLeaseProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease"
+	// AgentRuntimeAPIGetJobArtifactProcedure is the fully-qualified name of the AgentRuntimeAPI's
+	// GetJobArtifact RPC.
+	AgentRuntimeAPIGetJobArtifactProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
+	// AgentRuntimeAPIReportJobResultProcedure is the fully-qualified name of the AgentRuntimeAPI's
+	// ReportJobResult RPC.
+	AgentRuntimeAPIReportJobResultProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
 )
 
 // AgentAPIClient is a client for the admiral.api.agent.v1.AgentAPI service.
 type AgentAPIClient interface {
-	// ---------------------------------------------------------------------------
-	// Admin CRUD
-	// ---------------------------------------------------------------------------
-	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial API key. The agent starts in PENDING
-	// health status until it begins reporting.
+	// CreateCluster records a cluster to trust. Give its issuer URL when the
+	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
+	// to leave it PENDING for an agent to enroll.
 	//
-	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the key's auto-assigned scopes. The kind is immutable.
+	// Scope: `agent:write`
+	CreateCluster(context.Context, *connect.Request[v1.CreateClusterRequest]) (*connect.Response[v1.CreateClusterResponse], error)
+	// GetCluster returns a cluster and the key ids it trusts.
 	//
-	// The response includes a `plain_text_key`: the raw API key secret shown
-	// exactly once. Deploy this key to the agent binary for authentication.
+	// Scope: `agent:read`
+	GetCluster(context.Context, *connect.Request[v1.GetClusterRequest]) (*connect.Response[v1.GetClusterResponse], error)
+	// ListClusters lists the tenant's clusters.
+	//
+	// Scope: `agent:read`
+	ListClusters(context.Context, *connect.Request[v1.ListClustersRequest]) (*connect.Response[v1.ListClustersResponse], error)
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
+	// It is how a person rotates the keys of a cluster whose key was replaced
+	// outright.
+	//
+	// Scope: `agent:write`
+	SetClusterTrust(context.Context, *connect.Request[v1.SetClusterTrustRequest]) (*connect.Response[v1.SetClusterTrustResponse], error)
+	// DeleteCluster removes a cluster and its agents. Their leases end at once.
+	//
+	// Scope: `agent:write`
+	DeleteCluster(context.Context, *connect.Request[v1.DeleteClusterRequest]) (*connect.Response[v1.DeleteClusterResponse], error)
+	// CreateAgent records an agent: a namespace and service account in a
+	// cluster. With `enrollment_key` set, the response carries a single-use key
+	// the agent enrolls the cluster with.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *connect.Request[v1.CreateAgentRequest]) (*connect.Response[v1.CreateAgentResponse], error)
-	// GetAgent retrieves an agent by ID.
-	//
-	// Returns the Agent record with its server-derived health_status. For detailed
-	// telemetry (capacity, node/workload counts), use GetAgentStatus instead.
+	// GetAgent returns an agent, what it last reported, and its ceiling.
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *connect.Request[v1.GetAgentRequest]) (*connect.Response[v1.GetAgentResponse], error)
-	// ListAgents returns a paginated list of agents within the caller's tenant.
-	// Filter by `kind` to list only TERRAFORM or KUBERNETES agents.
+	// ListAgents lists agents, optionally in one cluster or usable by one
+	// application.
 	//
 	// Scope: `agent:read`
 	ListAgents(context.Context, *connect.Request[v1.ListAgentsRequest]) (*connect.Response[v1.ListAgentsResponse], error)
-	// UpdateAgent updates an agent's mutable fields.
-	// Use `update_mask` to specify which fields to update.
-	// The `kind` is immutable and cannot be updated.
+	// UpdateAgent changes an agent's name and ceiling. The ceiling is set here
+	// and only here; an agent never reports it.
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *connect.Request[v1.UpdateAgentRequest]) (*connect.Response[v1.UpdateAgentResponse], error)
-	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
-	// to this agent will be failed. This action cannot be undone.
+	// DeleteAgent removes an agent. Its leases end in the same transaction, and
+	// environments that selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *connect.Request[v1.DeleteAgentRequest]) (*connect.Response[v1.DeleteAgentResponse], error)
-	// GetAgentStatus retrieves the current telemetry snapshot for an agent.
-	// Returns the server-derived health status plus the latest kind-specific
-	// status: capacity metrics for TERRAFORM agents, cluster telemetry for KUBERNETES
-	// agents.
-	//
-	// Returns NOT_FOUND if the agent does not exist. If the agent exists but has
-	// not reported yet, health_status will be PENDING and status will be absent.
-	//
-	// Scope: `agent:read`
-	GetAgentStatus(context.Context, *connect.Request[v1.GetAgentStatusRequest]) (*connect.Response[v1.GetAgentStatusResponse], error)
-	// ClearAgentIdentityBinding opens a bounded grace window during which the next
-	// KUBERNETES agent telemetry push that reports a different kube-system UID will
-	// re-pin the agent's identity. Use for DR, cluster rebuilds, or a mistaken
-	// initial binding. The existing pin is left intact, so if no agent reconnects
-	// before the window expires the original binding stands. Audit-logged.
-	//
-	// Only valid for KUBERNETES agents; TERRAFORM agents have no identity binding.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls its cluster
+	// with. It can do nothing else, expires within an hour, and is revoked the
+	// moment it is used.
 	//
 	// Scope: `agent:write`
-	ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error)
-	// ---------------------------------------------------------------------------
-	// API keys
-	// ---------------------------------------------------------------------------
-	// CreateApiKey creates a new API key bound to the specified agent's service
-	// account. Scopes are auto-assigned from the agent's kind and cannot be
-	// overridden. The response includes the raw secret, shown exactly once.
-	//
-	// Use this to create additional API keys for an existing agent (e.g., for
-	// zero-downtime key rotation). The initial key is created automatically by
-	// CreateAgent.
+	CreateEnrollmentKey(context.Context, *connect.Request[v1.CreateEnrollmentKeyRequest]) (*connect.Response[v1.CreateEnrollmentKeyResponse], error)
+	// GrantAgentUse lets the whole tenant, a team, or an application's
+	// environments select an agent. Only the agent's owner or a tenant admin may.
 	//
 	// Scope: `agent:write`
-	CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error)
-	// ListApiKeys returns a paginated list of API keys bound to the specified
-	// agent. Secrets are never included.
-	//
-	// Scope: `agent:read`
-	ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error)
-	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
-	// secret is never included. Key IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the key
-	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
-	//
-	// Scope: `agent:read`
-	GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error)
-	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active key for
-	// the agent, the agent will become disconnected. Key IDs are globally unique,
-	// so no agent scoping is required in the path; authorization is enforced via
-	// the `agent:write` scope, not by path prefix.
+	GrantAgentUse(context.Context, *connect.Request[v1.GrantAgentUseRequest]) (*connect.Response[v1.GrantAgentUseResponse], error)
+	// RevokeAgentUse withdraws a grant. Environments that selected the agent
+	// under it keep the selection until they change it, but claim nothing new.
 	//
 	// Scope: `agent:write`
-	RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error)
-	// ---------------------------------------------------------------------------
-	// Read-only observability. Messages: jobs.proto, workloads.proto.
-	// ---------------------------------------------------------------------------
-	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
-	// Provides admin read-only visibility into agent workload.
+	RevokeAgentUse(context.Context, *connect.Request[v1.RevokeAgentUseRequest]) (*connect.Response[v1.RevokeAgentUseResponse], error)
+	// ListAgentGrants lists who may use an agent.
 	//
 	// Scope: `agent:read`
-	ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error)
-	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
-	// agent's cluster.
+	ListAgentGrants(context.Context, *connect.Request[v1.ListAgentGrantsRequest]) (*connect.Response[v1.ListAgentGrantsResponse], error)
+	// GetJob returns a job, with why it is waiting when it is.
 	//
 	// Scope: `agent:read`
-	ListWorkloads(context.Context, *connect.Request[v1.ListWorkloadsRequest]) (*connect.Response[v1.ListWorkloadsResponse], error)
-	// GetWorkload returns a single workload with its full detail: the rich snapshot
-	// (sync, per-resource inventory with field owners, conditions) that ListWorkloads
-	// omits.
+	GetJob(context.Context, *connect.Request[v1.GetJobRequest]) (*connect.Response[v1.GetJobResponse], error)
+	// ListJobs lists jobs for an agent or an environment, newest first.
 	//
 	// Scope: `agent:read`
-	GetWorkload(context.Context, *connect.Request[v1.GetWorkloadRequest]) (*connect.Response[v1.GetWorkloadResponse], error)
-	// ListWorkloadEvents returns a paginated list of Kubernetes events observed for
-	// a KUBERNETES agent's managed resources, deduplicated by event UID.
+	ListJobs(context.Context, *connect.Request[v1.ListJobsRequest]) (*connect.Response[v1.ListJobsResponse], error)
+	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
+	// running one learns it on its next lease renewal.
 	//
-	// Scope: `agent:read`
-	ListWorkloadEvents(context.Context, *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error)
+	// Scope: `agent:write`
+	CancelJob(context.Context, *connect.Request[v1.CancelJobRequest]) (*connect.Response[v1.CancelJobResponse], error)
 }
 
 // NewAgentAPIClient constructs a client for the admiral.api.agent.v1.AgentAPI service. By default,
@@ -198,6 +191,36 @@ func NewAgentAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 	baseURL = strings.TrimRight(baseURL, "/")
 	agentAPIMethods := v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("AgentAPI").Methods()
 	return &agentAPIClient{
+		createCluster: connect.NewClient[v1.CreateClusterRequest, v1.CreateClusterResponse](
+			httpClient,
+			baseURL+AgentAPICreateClusterProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("CreateCluster")),
+			connect.WithClientOptions(opts...),
+		),
+		getCluster: connect.NewClient[v1.GetClusterRequest, v1.GetClusterResponse](
+			httpClient,
+			baseURL+AgentAPIGetClusterProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("GetCluster")),
+			connect.WithClientOptions(opts...),
+		),
+		listClusters: connect.NewClient[v1.ListClustersRequest, v1.ListClustersResponse](
+			httpClient,
+			baseURL+AgentAPIListClustersProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("ListClusters")),
+			connect.WithClientOptions(opts...),
+		),
+		setClusterTrust: connect.NewClient[v1.SetClusterTrustRequest, v1.SetClusterTrustResponse](
+			httpClient,
+			baseURL+AgentAPISetClusterTrustProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("SetClusterTrust")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteCluster: connect.NewClient[v1.DeleteClusterRequest, v1.DeleteClusterResponse](
+			httpClient,
+			baseURL+AgentAPIDeleteClusterProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("DeleteCluster")),
+			connect.WithClientOptions(opts...),
+		),
 		createAgent: connect.NewClient[v1.CreateAgentRequest, v1.CreateAgentResponse](
 			httpClient,
 			baseURL+AgentAPICreateAgentProcedure,
@@ -228,64 +251,46 @@ func NewAgentAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(agentAPIMethods.ByName("DeleteAgent")),
 			connect.WithClientOptions(opts...),
 		),
-		getAgentStatus: connect.NewClient[v1.GetAgentStatusRequest, v1.GetAgentStatusResponse](
+		createEnrollmentKey: connect.NewClient[v1.CreateEnrollmentKeyRequest, v1.CreateEnrollmentKeyResponse](
 			httpClient,
-			baseURL+AgentAPIGetAgentStatusProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("GetAgentStatus")),
+			baseURL+AgentAPICreateEnrollmentKeyProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("CreateEnrollmentKey")),
 			connect.WithClientOptions(opts...),
 		),
-		clearAgentIdentityBinding: connect.NewClient[v1.ClearAgentIdentityBindingRequest, v1.ClearAgentIdentityBindingResponse](
+		grantAgentUse: connect.NewClient[v1.GrantAgentUseRequest, v1.GrantAgentUseResponse](
 			httpClient,
-			baseURL+AgentAPIClearAgentIdentityBindingProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ClearAgentIdentityBinding")),
+			baseURL+AgentAPIGrantAgentUseProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("GrantAgentUse")),
 			connect.WithClientOptions(opts...),
 		),
-		createApiKey: connect.NewClient[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse](
+		revokeAgentUse: connect.NewClient[v1.RevokeAgentUseRequest, v1.RevokeAgentUseResponse](
 			httpClient,
-			baseURL+AgentAPICreateApiKeyProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("CreateApiKey")),
+			baseURL+AgentAPIRevokeAgentUseProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("RevokeAgentUse")),
 			connect.WithClientOptions(opts...),
 		),
-		listApiKeys: connect.NewClient[v1.ListApiKeysRequest, v1.ListApiKeysResponse](
+		listAgentGrants: connect.NewClient[v1.ListAgentGrantsRequest, v1.ListAgentGrantsResponse](
 			httpClient,
-			baseURL+AgentAPIListApiKeysProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ListApiKeys")),
+			baseURL+AgentAPIListAgentGrantsProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("ListAgentGrants")),
 			connect.WithClientOptions(opts...),
 		),
-		getApiKey: connect.NewClient[v1.GetApiKeyRequest, v1.GetApiKeyResponse](
+		getJob: connect.NewClient[v1.GetJobRequest, v1.GetJobResponse](
 			httpClient,
-			baseURL+AgentAPIGetApiKeyProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("GetApiKey")),
+			baseURL+AgentAPIGetJobProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("GetJob")),
 			connect.WithClientOptions(opts...),
 		),
-		revokeApiKey: connect.NewClient[v1.RevokeApiKeyRequest, v1.RevokeApiKeyResponse](
+		listJobs: connect.NewClient[v1.ListJobsRequest, v1.ListJobsResponse](
 			httpClient,
-			baseURL+AgentAPIRevokeApiKeyProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("RevokeApiKey")),
+			baseURL+AgentAPIListJobsProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("ListJobs")),
 			connect.WithClientOptions(opts...),
 		),
-		listAgentJobs: connect.NewClient[v1.ListAgentJobsRequest, v1.ListAgentJobsResponse](
+		cancelJob: connect.NewClient[v1.CancelJobRequest, v1.CancelJobResponse](
 			httpClient,
-			baseURL+AgentAPIListAgentJobsProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ListAgentJobs")),
-			connect.WithClientOptions(opts...),
-		),
-		listWorkloads: connect.NewClient[v1.ListWorkloadsRequest, v1.ListWorkloadsResponse](
-			httpClient,
-			baseURL+AgentAPIListWorkloadsProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ListWorkloads")),
-			connect.WithClientOptions(opts...),
-		),
-		getWorkload: connect.NewClient[v1.GetWorkloadRequest, v1.GetWorkloadResponse](
-			httpClient,
-			baseURL+AgentAPIGetWorkloadProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("GetWorkload")),
-			connect.WithClientOptions(opts...),
-		),
-		listWorkloadEvents: connect.NewClient[v1.ListWorkloadEventsRequest, v1.ListWorkloadEventsResponse](
-			httpClient,
-			baseURL+AgentAPIListWorkloadEventsProcedure,
-			connect.WithSchema(agentAPIMethods.ByName("ListWorkloadEvents")),
+			baseURL+AgentAPICancelJobProcedure,
+			connect.WithSchema(agentAPIMethods.ByName("CancelJob")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -293,21 +298,48 @@ func NewAgentAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 
 // agentAPIClient implements AgentAPIClient.
 type agentAPIClient struct {
-	createAgent               *connect.Client[v1.CreateAgentRequest, v1.CreateAgentResponse]
-	getAgent                  *connect.Client[v1.GetAgentRequest, v1.GetAgentResponse]
-	listAgents                *connect.Client[v1.ListAgentsRequest, v1.ListAgentsResponse]
-	updateAgent               *connect.Client[v1.UpdateAgentRequest, v1.UpdateAgentResponse]
-	deleteAgent               *connect.Client[v1.DeleteAgentRequest, v1.DeleteAgentResponse]
-	getAgentStatus            *connect.Client[v1.GetAgentStatusRequest, v1.GetAgentStatusResponse]
-	clearAgentIdentityBinding *connect.Client[v1.ClearAgentIdentityBindingRequest, v1.ClearAgentIdentityBindingResponse]
-	createApiKey              *connect.Client[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse]
-	listApiKeys               *connect.Client[v1.ListApiKeysRequest, v1.ListApiKeysResponse]
-	getApiKey                 *connect.Client[v1.GetApiKeyRequest, v1.GetApiKeyResponse]
-	revokeApiKey              *connect.Client[v1.RevokeApiKeyRequest, v1.RevokeApiKeyResponse]
-	listAgentJobs             *connect.Client[v1.ListAgentJobsRequest, v1.ListAgentJobsResponse]
-	listWorkloads             *connect.Client[v1.ListWorkloadsRequest, v1.ListWorkloadsResponse]
-	getWorkload               *connect.Client[v1.GetWorkloadRequest, v1.GetWorkloadResponse]
-	listWorkloadEvents        *connect.Client[v1.ListWorkloadEventsRequest, v1.ListWorkloadEventsResponse]
+	createCluster       *connect.Client[v1.CreateClusterRequest, v1.CreateClusterResponse]
+	getCluster          *connect.Client[v1.GetClusterRequest, v1.GetClusterResponse]
+	listClusters        *connect.Client[v1.ListClustersRequest, v1.ListClustersResponse]
+	setClusterTrust     *connect.Client[v1.SetClusterTrustRequest, v1.SetClusterTrustResponse]
+	deleteCluster       *connect.Client[v1.DeleteClusterRequest, v1.DeleteClusterResponse]
+	createAgent         *connect.Client[v1.CreateAgentRequest, v1.CreateAgentResponse]
+	getAgent            *connect.Client[v1.GetAgentRequest, v1.GetAgentResponse]
+	listAgents          *connect.Client[v1.ListAgentsRequest, v1.ListAgentsResponse]
+	updateAgent         *connect.Client[v1.UpdateAgentRequest, v1.UpdateAgentResponse]
+	deleteAgent         *connect.Client[v1.DeleteAgentRequest, v1.DeleteAgentResponse]
+	createEnrollmentKey *connect.Client[v1.CreateEnrollmentKeyRequest, v1.CreateEnrollmentKeyResponse]
+	grantAgentUse       *connect.Client[v1.GrantAgentUseRequest, v1.GrantAgentUseResponse]
+	revokeAgentUse      *connect.Client[v1.RevokeAgentUseRequest, v1.RevokeAgentUseResponse]
+	listAgentGrants     *connect.Client[v1.ListAgentGrantsRequest, v1.ListAgentGrantsResponse]
+	getJob              *connect.Client[v1.GetJobRequest, v1.GetJobResponse]
+	listJobs            *connect.Client[v1.ListJobsRequest, v1.ListJobsResponse]
+	cancelJob           *connect.Client[v1.CancelJobRequest, v1.CancelJobResponse]
+}
+
+// CreateCluster calls admiral.api.agent.v1.AgentAPI.CreateCluster.
+func (c *agentAPIClient) CreateCluster(ctx context.Context, req *connect.Request[v1.CreateClusterRequest]) (*connect.Response[v1.CreateClusterResponse], error) {
+	return c.createCluster.CallUnary(ctx, req)
+}
+
+// GetCluster calls admiral.api.agent.v1.AgentAPI.GetCluster.
+func (c *agentAPIClient) GetCluster(ctx context.Context, req *connect.Request[v1.GetClusterRequest]) (*connect.Response[v1.GetClusterResponse], error) {
+	return c.getCluster.CallUnary(ctx, req)
+}
+
+// ListClusters calls admiral.api.agent.v1.AgentAPI.ListClusters.
+func (c *agentAPIClient) ListClusters(ctx context.Context, req *connect.Request[v1.ListClustersRequest]) (*connect.Response[v1.ListClustersResponse], error) {
+	return c.listClusters.CallUnary(ctx, req)
+}
+
+// SetClusterTrust calls admiral.api.agent.v1.AgentAPI.SetClusterTrust.
+func (c *agentAPIClient) SetClusterTrust(ctx context.Context, req *connect.Request[v1.SetClusterTrustRequest]) (*connect.Response[v1.SetClusterTrustResponse], error) {
+	return c.setClusterTrust.CallUnary(ctx, req)
+}
+
+// DeleteCluster calls admiral.api.agent.v1.AgentAPI.DeleteCluster.
+func (c *agentAPIClient) DeleteCluster(ctx context.Context, req *connect.Request[v1.DeleteClusterRequest]) (*connect.Response[v1.DeleteClusterResponse], error) {
+	return c.deleteCluster.CallUnary(ctx, req)
 }
 
 // CreateAgent calls admiral.api.agent.v1.AgentAPI.CreateAgent.
@@ -335,174 +367,125 @@ func (c *agentAPIClient) DeleteAgent(ctx context.Context, req *connect.Request[v
 	return c.deleteAgent.CallUnary(ctx, req)
 }
 
-// GetAgentStatus calls admiral.api.agent.v1.AgentAPI.GetAgentStatus.
-func (c *agentAPIClient) GetAgentStatus(ctx context.Context, req *connect.Request[v1.GetAgentStatusRequest]) (*connect.Response[v1.GetAgentStatusResponse], error) {
-	return c.getAgentStatus.CallUnary(ctx, req)
+// CreateEnrollmentKey calls admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey.
+func (c *agentAPIClient) CreateEnrollmentKey(ctx context.Context, req *connect.Request[v1.CreateEnrollmentKeyRequest]) (*connect.Response[v1.CreateEnrollmentKeyResponse], error) {
+	return c.createEnrollmentKey.CallUnary(ctx, req)
 }
 
-// ClearAgentIdentityBinding calls admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding.
-func (c *agentAPIClient) ClearAgentIdentityBinding(ctx context.Context, req *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error) {
-	return c.clearAgentIdentityBinding.CallUnary(ctx, req)
+// GrantAgentUse calls admiral.api.agent.v1.AgentAPI.GrantAgentUse.
+func (c *agentAPIClient) GrantAgentUse(ctx context.Context, req *connect.Request[v1.GrantAgentUseRequest]) (*connect.Response[v1.GrantAgentUseResponse], error) {
+	return c.grantAgentUse.CallUnary(ctx, req)
 }
 
-// CreateApiKey calls admiral.api.agent.v1.AgentAPI.CreateApiKey.
-func (c *agentAPIClient) CreateApiKey(ctx context.Context, req *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {
-	return c.createApiKey.CallUnary(ctx, req)
+// RevokeAgentUse calls admiral.api.agent.v1.AgentAPI.RevokeAgentUse.
+func (c *agentAPIClient) RevokeAgentUse(ctx context.Context, req *connect.Request[v1.RevokeAgentUseRequest]) (*connect.Response[v1.RevokeAgentUseResponse], error) {
+	return c.revokeAgentUse.CallUnary(ctx, req)
 }
 
-// ListApiKeys calls admiral.api.agent.v1.AgentAPI.ListApiKeys.
-func (c *agentAPIClient) ListApiKeys(ctx context.Context, req *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error) {
-	return c.listApiKeys.CallUnary(ctx, req)
+// ListAgentGrants calls admiral.api.agent.v1.AgentAPI.ListAgentGrants.
+func (c *agentAPIClient) ListAgentGrants(ctx context.Context, req *connect.Request[v1.ListAgentGrantsRequest]) (*connect.Response[v1.ListAgentGrantsResponse], error) {
+	return c.listAgentGrants.CallUnary(ctx, req)
 }
 
-// GetApiKey calls admiral.api.agent.v1.AgentAPI.GetApiKey.
-func (c *agentAPIClient) GetApiKey(ctx context.Context, req *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error) {
-	return c.getApiKey.CallUnary(ctx, req)
+// GetJob calls admiral.api.agent.v1.AgentAPI.GetJob.
+func (c *agentAPIClient) GetJob(ctx context.Context, req *connect.Request[v1.GetJobRequest]) (*connect.Response[v1.GetJobResponse], error) {
+	return c.getJob.CallUnary(ctx, req)
 }
 
-// RevokeApiKey calls admiral.api.agent.v1.AgentAPI.RevokeApiKey.
-func (c *agentAPIClient) RevokeApiKey(ctx context.Context, req *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error) {
-	return c.revokeApiKey.CallUnary(ctx, req)
+// ListJobs calls admiral.api.agent.v1.AgentAPI.ListJobs.
+func (c *agentAPIClient) ListJobs(ctx context.Context, req *connect.Request[v1.ListJobsRequest]) (*connect.Response[v1.ListJobsResponse], error) {
+	return c.listJobs.CallUnary(ctx, req)
 }
 
-// ListAgentJobs calls admiral.api.agent.v1.AgentAPI.ListAgentJobs.
-func (c *agentAPIClient) ListAgentJobs(ctx context.Context, req *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error) {
-	return c.listAgentJobs.CallUnary(ctx, req)
-}
-
-// ListWorkloads calls admiral.api.agent.v1.AgentAPI.ListWorkloads.
-func (c *agentAPIClient) ListWorkloads(ctx context.Context, req *connect.Request[v1.ListWorkloadsRequest]) (*connect.Response[v1.ListWorkloadsResponse], error) {
-	return c.listWorkloads.CallUnary(ctx, req)
-}
-
-// GetWorkload calls admiral.api.agent.v1.AgentAPI.GetWorkload.
-func (c *agentAPIClient) GetWorkload(ctx context.Context, req *connect.Request[v1.GetWorkloadRequest]) (*connect.Response[v1.GetWorkloadResponse], error) {
-	return c.getWorkload.CallUnary(ctx, req)
-}
-
-// ListWorkloadEvents calls admiral.api.agent.v1.AgentAPI.ListWorkloadEvents.
-func (c *agentAPIClient) ListWorkloadEvents(ctx context.Context, req *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error) {
-	return c.listWorkloadEvents.CallUnary(ctx, req)
+// CancelJob calls admiral.api.agent.v1.AgentAPI.CancelJob.
+func (c *agentAPIClient) CancelJob(ctx context.Context, req *connect.Request[v1.CancelJobRequest]) (*connect.Response[v1.CancelJobResponse], error) {
+	return c.cancelJob.CallUnary(ctx, req)
 }
 
 // AgentAPIHandler is an implementation of the admiral.api.agent.v1.AgentAPI service.
 type AgentAPIHandler interface {
-	// ---------------------------------------------------------------------------
-	// Admin CRUD
-	// ---------------------------------------------------------------------------
-	// CreateAgent creates a new agent record within the caller's tenant and
-	// generates an initial API key. The agent starts in PENDING
-	// health status until it begins reporting.
+	// CreateCluster records a cluster to trust. Give its issuer URL when the
+	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
+	// to leave it PENDING for an agent to enroll.
 	//
-	// The request's `kind` selects the agent's execution plane (TERRAFORM or KUBERNETES)
-	// and determines the key's auto-assigned scopes. The kind is immutable.
+	// Scope: `agent:write`
+	CreateCluster(context.Context, *connect.Request[v1.CreateClusterRequest]) (*connect.Response[v1.CreateClusterResponse], error)
+	// GetCluster returns a cluster and the key ids it trusts.
 	//
-	// The response includes a `plain_text_key`: the raw API key secret shown
-	// exactly once. Deploy this key to the agent binary for authentication.
+	// Scope: `agent:read`
+	GetCluster(context.Context, *connect.Request[v1.GetClusterRequest]) (*connect.Response[v1.GetClusterResponse], error)
+	// ListClusters lists the tenant's clusters.
+	//
+	// Scope: `agent:read`
+	ListClusters(context.Context, *connect.Request[v1.ListClustersRequest]) (*connect.Response[v1.ListClustersResponse], error)
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
+	// It is how a person rotates the keys of a cluster whose key was replaced
+	// outright.
+	//
+	// Scope: `agent:write`
+	SetClusterTrust(context.Context, *connect.Request[v1.SetClusterTrustRequest]) (*connect.Response[v1.SetClusterTrustResponse], error)
+	// DeleteCluster removes a cluster and its agents. Their leases end at once.
+	//
+	// Scope: `agent:write`
+	DeleteCluster(context.Context, *connect.Request[v1.DeleteClusterRequest]) (*connect.Response[v1.DeleteClusterResponse], error)
+	// CreateAgent records an agent: a namespace and service account in a
+	// cluster. With `enrollment_key` set, the response carries a single-use key
+	// the agent enrolls the cluster with.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *connect.Request[v1.CreateAgentRequest]) (*connect.Response[v1.CreateAgentResponse], error)
-	// GetAgent retrieves an agent by ID.
-	//
-	// Returns the Agent record with its server-derived health_status. For detailed
-	// telemetry (capacity, node/workload counts), use GetAgentStatus instead.
+	// GetAgent returns an agent, what it last reported, and its ceiling.
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *connect.Request[v1.GetAgentRequest]) (*connect.Response[v1.GetAgentResponse], error)
-	// ListAgents returns a paginated list of agents within the caller's tenant.
-	// Filter by `kind` to list only TERRAFORM or KUBERNETES agents.
+	// ListAgents lists agents, optionally in one cluster or usable by one
+	// application.
 	//
 	// Scope: `agent:read`
 	ListAgents(context.Context, *connect.Request[v1.ListAgentsRequest]) (*connect.Response[v1.ListAgentsResponse], error)
-	// UpdateAgent updates an agent's mutable fields.
-	// Use `update_mask` to specify which fields to update.
-	// The `kind` is immutable and cannot be updated.
+	// UpdateAgent changes an agent's name and ceiling. The ceiling is set here
+	// and only here; an agent never reports it.
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *connect.Request[v1.UpdateAgentRequest]) (*connect.Response[v1.UpdateAgentResponse], error)
-	// DeleteAgent permanently deletes an agent record and revokes all associated
-	// API keys. For TERRAFORM agents, any not-yet-completed jobs assigned
-	// to this agent will be failed. This action cannot be undone.
+	// DeleteAgent removes an agent. Its leases end in the same transaction, and
+	// environments that selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *connect.Request[v1.DeleteAgentRequest]) (*connect.Response[v1.DeleteAgentResponse], error)
-	// GetAgentStatus retrieves the current telemetry snapshot for an agent.
-	// Returns the server-derived health status plus the latest kind-specific
-	// status: capacity metrics for TERRAFORM agents, cluster telemetry for KUBERNETES
-	// agents.
-	//
-	// Returns NOT_FOUND if the agent does not exist. If the agent exists but has
-	// not reported yet, health_status will be PENDING and status will be absent.
-	//
-	// Scope: `agent:read`
-	GetAgentStatus(context.Context, *connect.Request[v1.GetAgentStatusRequest]) (*connect.Response[v1.GetAgentStatusResponse], error)
-	// ClearAgentIdentityBinding opens a bounded grace window during which the next
-	// KUBERNETES agent telemetry push that reports a different kube-system UID will
-	// re-pin the agent's identity. Use for DR, cluster rebuilds, or a mistaken
-	// initial binding. The existing pin is left intact, so if no agent reconnects
-	// before the window expires the original binding stands. Audit-logged.
-	//
-	// Only valid for KUBERNETES agents; TERRAFORM agents have no identity binding.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls its cluster
+	// with. It can do nothing else, expires within an hour, and is revoked the
+	// moment it is used.
 	//
 	// Scope: `agent:write`
-	ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error)
-	// ---------------------------------------------------------------------------
-	// API keys
-	// ---------------------------------------------------------------------------
-	// CreateApiKey creates a new API key bound to the specified agent's service
-	// account. Scopes are auto-assigned from the agent's kind and cannot be
-	// overridden. The response includes the raw secret, shown exactly once.
-	//
-	// Use this to create additional API keys for an existing agent (e.g., for
-	// zero-downtime key rotation). The initial key is created automatically by
-	// CreateAgent.
+	CreateEnrollmentKey(context.Context, *connect.Request[v1.CreateEnrollmentKeyRequest]) (*connect.Response[v1.CreateEnrollmentKeyResponse], error)
+	// GrantAgentUse lets the whole tenant, a team, or an application's
+	// environments select an agent. Only the agent's owner or a tenant admin may.
 	//
 	// Scope: `agent:write`
-	CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error)
-	// ListApiKeys returns a paginated list of API keys bound to the specified
-	// agent. Secrets are never included.
-	//
-	// Scope: `agent:read`
-	ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error)
-	// GetApiKey retrieves a single API key by ID. Returns metadata only; the key
-	// secret is never included. Key IDs are globally unique, so no agent scoping
-	// is required in the path; the server resolves the parent agent from the key
-	// ID. Authorization is enforced via the `agent:read` scope, not by path prefix.
-	//
-	// Scope: `agent:read`
-	GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error)
-	// RevokeApiKey permanently revokes an API key bound to this agent. The agent
-	// will receive a 401 on its next request. If this is the only active key for
-	// the agent, the agent will become disconnected. Key IDs are globally unique,
-	// so no agent scoping is required in the path; authorization is enforced via
-	// the `agent:write` scope, not by path prefix.
+	GrantAgentUse(context.Context, *connect.Request[v1.GrantAgentUseRequest]) (*connect.Response[v1.GrantAgentUseResponse], error)
+	// RevokeAgentUse withdraws a grant. Environments that selected the agent
+	// under it keep the selection until they change it, but claim nothing new.
 	//
 	// Scope: `agent:write`
-	RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error)
-	// ---------------------------------------------------------------------------
-	// Read-only observability. Messages: jobs.proto, workloads.proto.
-	// ---------------------------------------------------------------------------
-	// ListAgentJobs returns a paginated list of jobs assigned to a TERRAFORM agent.
-	// Provides admin read-only visibility into agent workload.
+	RevokeAgentUse(context.Context, *connect.Request[v1.RevokeAgentUseRequest]) (*connect.Response[v1.RevokeAgentUseResponse], error)
+	// ListAgentGrants lists who may use an agent.
 	//
 	// Scope: `agent:read`
-	ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error)
-	// ListWorkloads returns a paginated list of workloads running on a KUBERNETES
-	// agent's cluster.
+	ListAgentGrants(context.Context, *connect.Request[v1.ListAgentGrantsRequest]) (*connect.Response[v1.ListAgentGrantsResponse], error)
+	// GetJob returns a job, with why it is waiting when it is.
 	//
 	// Scope: `agent:read`
-	ListWorkloads(context.Context, *connect.Request[v1.ListWorkloadsRequest]) (*connect.Response[v1.ListWorkloadsResponse], error)
-	// GetWorkload returns a single workload with its full detail: the rich snapshot
-	// (sync, per-resource inventory with field owners, conditions) that ListWorkloads
-	// omits.
+	GetJob(context.Context, *connect.Request[v1.GetJobRequest]) (*connect.Response[v1.GetJobResponse], error)
+	// ListJobs lists jobs for an agent or an environment, newest first.
 	//
 	// Scope: `agent:read`
-	GetWorkload(context.Context, *connect.Request[v1.GetWorkloadRequest]) (*connect.Response[v1.GetWorkloadResponse], error)
-	// ListWorkloadEvents returns a paginated list of Kubernetes events observed for
-	// a KUBERNETES agent's managed resources, deduplicated by event UID.
+	ListJobs(context.Context, *connect.Request[v1.ListJobsRequest]) (*connect.Response[v1.ListJobsResponse], error)
+	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
+	// running one learns it on its next lease renewal.
 	//
-	// Scope: `agent:read`
-	ListWorkloadEvents(context.Context, *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error)
+	// Scope: `agent:write`
+	CancelJob(context.Context, *connect.Request[v1.CancelJobRequest]) (*connect.Response[v1.CancelJobResponse], error)
 }
 
 // NewAgentAPIHandler builds an HTTP handler from the service implementation. It returns the path on
@@ -512,6 +495,36 @@ type AgentAPIHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	agentAPIMethods := v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("AgentAPI").Methods()
+	agentAPICreateClusterHandler := connect.NewUnaryHandler(
+		AgentAPICreateClusterProcedure,
+		svc.CreateCluster,
+		connect.WithSchema(agentAPIMethods.ByName("CreateCluster")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentAPIGetClusterHandler := connect.NewUnaryHandler(
+		AgentAPIGetClusterProcedure,
+		svc.GetCluster,
+		connect.WithSchema(agentAPIMethods.ByName("GetCluster")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentAPIListClustersHandler := connect.NewUnaryHandler(
+		AgentAPIListClustersProcedure,
+		svc.ListClusters,
+		connect.WithSchema(agentAPIMethods.ByName("ListClusters")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentAPISetClusterTrustHandler := connect.NewUnaryHandler(
+		AgentAPISetClusterTrustProcedure,
+		svc.SetClusterTrust,
+		connect.WithSchema(agentAPIMethods.ByName("SetClusterTrust")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentAPIDeleteClusterHandler := connect.NewUnaryHandler(
+		AgentAPIDeleteClusterProcedure,
+		svc.DeleteCluster,
+		connect.WithSchema(agentAPIMethods.ByName("DeleteCluster")),
+		connect.WithHandlerOptions(opts...),
+	)
 	agentAPICreateAgentHandler := connect.NewUnaryHandler(
 		AgentAPICreateAgentProcedure,
 		svc.CreateAgent,
@@ -542,68 +555,60 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 		connect.WithSchema(agentAPIMethods.ByName("DeleteAgent")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIGetAgentStatusHandler := connect.NewUnaryHandler(
-		AgentAPIGetAgentStatusProcedure,
-		svc.GetAgentStatus,
-		connect.WithSchema(agentAPIMethods.ByName("GetAgentStatus")),
+	agentAPICreateEnrollmentKeyHandler := connect.NewUnaryHandler(
+		AgentAPICreateEnrollmentKeyProcedure,
+		svc.CreateEnrollmentKey,
+		connect.WithSchema(agentAPIMethods.ByName("CreateEnrollmentKey")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIClearAgentIdentityBindingHandler := connect.NewUnaryHandler(
-		AgentAPIClearAgentIdentityBindingProcedure,
-		svc.ClearAgentIdentityBinding,
-		connect.WithSchema(agentAPIMethods.ByName("ClearAgentIdentityBinding")),
+	agentAPIGrantAgentUseHandler := connect.NewUnaryHandler(
+		AgentAPIGrantAgentUseProcedure,
+		svc.GrantAgentUse,
+		connect.WithSchema(agentAPIMethods.ByName("GrantAgentUse")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPICreateApiKeyHandler := connect.NewUnaryHandler(
-		AgentAPICreateApiKeyProcedure,
-		svc.CreateApiKey,
-		connect.WithSchema(agentAPIMethods.ByName("CreateApiKey")),
+	agentAPIRevokeAgentUseHandler := connect.NewUnaryHandler(
+		AgentAPIRevokeAgentUseProcedure,
+		svc.RevokeAgentUse,
+		connect.WithSchema(agentAPIMethods.ByName("RevokeAgentUse")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIListApiKeysHandler := connect.NewUnaryHandler(
-		AgentAPIListApiKeysProcedure,
-		svc.ListApiKeys,
-		connect.WithSchema(agentAPIMethods.ByName("ListApiKeys")),
+	agentAPIListAgentGrantsHandler := connect.NewUnaryHandler(
+		AgentAPIListAgentGrantsProcedure,
+		svc.ListAgentGrants,
+		connect.WithSchema(agentAPIMethods.ByName("ListAgentGrants")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIGetApiKeyHandler := connect.NewUnaryHandler(
-		AgentAPIGetApiKeyProcedure,
-		svc.GetApiKey,
-		connect.WithSchema(agentAPIMethods.ByName("GetApiKey")),
+	agentAPIGetJobHandler := connect.NewUnaryHandler(
+		AgentAPIGetJobProcedure,
+		svc.GetJob,
+		connect.WithSchema(agentAPIMethods.ByName("GetJob")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIRevokeApiKeyHandler := connect.NewUnaryHandler(
-		AgentAPIRevokeApiKeyProcedure,
-		svc.RevokeApiKey,
-		connect.WithSchema(agentAPIMethods.ByName("RevokeApiKey")),
+	agentAPIListJobsHandler := connect.NewUnaryHandler(
+		AgentAPIListJobsProcedure,
+		svc.ListJobs,
+		connect.WithSchema(agentAPIMethods.ByName("ListJobs")),
 		connect.WithHandlerOptions(opts...),
 	)
-	agentAPIListAgentJobsHandler := connect.NewUnaryHandler(
-		AgentAPIListAgentJobsProcedure,
-		svc.ListAgentJobs,
-		connect.WithSchema(agentAPIMethods.ByName("ListAgentJobs")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIListWorkloadsHandler := connect.NewUnaryHandler(
-		AgentAPIListWorkloadsProcedure,
-		svc.ListWorkloads,
-		connect.WithSchema(agentAPIMethods.ByName("ListWorkloads")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIGetWorkloadHandler := connect.NewUnaryHandler(
-		AgentAPIGetWorkloadProcedure,
-		svc.GetWorkload,
-		connect.WithSchema(agentAPIMethods.ByName("GetWorkload")),
-		connect.WithHandlerOptions(opts...),
-	)
-	agentAPIListWorkloadEventsHandler := connect.NewUnaryHandler(
-		AgentAPIListWorkloadEventsProcedure,
-		svc.ListWorkloadEvents,
-		connect.WithSchema(agentAPIMethods.ByName("ListWorkloadEvents")),
+	agentAPICancelJobHandler := connect.NewUnaryHandler(
+		AgentAPICancelJobProcedure,
+		svc.CancelJob,
+		connect.WithSchema(agentAPIMethods.ByName("CancelJob")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/admiral.api.agent.v1.AgentAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case AgentAPICreateClusterProcedure:
+			agentAPICreateClusterHandler.ServeHTTP(w, r)
+		case AgentAPIGetClusterProcedure:
+			agentAPIGetClusterHandler.ServeHTTP(w, r)
+		case AgentAPIListClustersProcedure:
+			agentAPIListClustersHandler.ServeHTTP(w, r)
+		case AgentAPISetClusterTrustProcedure:
+			agentAPISetClusterTrustHandler.ServeHTTP(w, r)
+		case AgentAPIDeleteClusterProcedure:
+			agentAPIDeleteClusterHandler.ServeHTTP(w, r)
 		case AgentAPICreateAgentProcedure:
 			agentAPICreateAgentHandler.ServeHTTP(w, r)
 		case AgentAPIGetAgentProcedure:
@@ -614,26 +619,20 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 			agentAPIUpdateAgentHandler.ServeHTTP(w, r)
 		case AgentAPIDeleteAgentProcedure:
 			agentAPIDeleteAgentHandler.ServeHTTP(w, r)
-		case AgentAPIGetAgentStatusProcedure:
-			agentAPIGetAgentStatusHandler.ServeHTTP(w, r)
-		case AgentAPIClearAgentIdentityBindingProcedure:
-			agentAPIClearAgentIdentityBindingHandler.ServeHTTP(w, r)
-		case AgentAPICreateApiKeyProcedure:
-			agentAPICreateApiKeyHandler.ServeHTTP(w, r)
-		case AgentAPIListApiKeysProcedure:
-			agentAPIListApiKeysHandler.ServeHTTP(w, r)
-		case AgentAPIGetApiKeyProcedure:
-			agentAPIGetApiKeyHandler.ServeHTTP(w, r)
-		case AgentAPIRevokeApiKeyProcedure:
-			agentAPIRevokeApiKeyHandler.ServeHTTP(w, r)
-		case AgentAPIListAgentJobsProcedure:
-			agentAPIListAgentJobsHandler.ServeHTTP(w, r)
-		case AgentAPIListWorkloadsProcedure:
-			agentAPIListWorkloadsHandler.ServeHTTP(w, r)
-		case AgentAPIGetWorkloadProcedure:
-			agentAPIGetWorkloadHandler.ServeHTTP(w, r)
-		case AgentAPIListWorkloadEventsProcedure:
-			agentAPIListWorkloadEventsHandler.ServeHTTP(w, r)
+		case AgentAPICreateEnrollmentKeyProcedure:
+			agentAPICreateEnrollmentKeyHandler.ServeHTTP(w, r)
+		case AgentAPIGrantAgentUseProcedure:
+			agentAPIGrantAgentUseHandler.ServeHTTP(w, r)
+		case AgentAPIRevokeAgentUseProcedure:
+			agentAPIRevokeAgentUseHandler.ServeHTTP(w, r)
+		case AgentAPIListAgentGrantsProcedure:
+			agentAPIListAgentGrantsHandler.ServeHTTP(w, r)
+		case AgentAPIGetJobProcedure:
+			agentAPIGetJobHandler.ServeHTTP(w, r)
+		case AgentAPIListJobsProcedure:
+			agentAPIListJobsHandler.ServeHTTP(w, r)
+		case AgentAPICancelJobProcedure:
+			agentAPICancelJobHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -642,6 +641,26 @@ func NewAgentAPIHandler(svc AgentAPIHandler, opts ...connect.HandlerOption) (str
 
 // UnimplementedAgentAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedAgentAPIHandler struct{}
+
+func (UnimplementedAgentAPIHandler) CreateCluster(context.Context, *connect.Request[v1.CreateClusterRequest]) (*connect.Response[v1.CreateClusterResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CreateCluster is not implemented"))
+}
+
+func (UnimplementedAgentAPIHandler) GetCluster(context.Context, *connect.Request[v1.GetClusterRequest]) (*connect.Response[v1.GetClusterResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetCluster is not implemented"))
+}
+
+func (UnimplementedAgentAPIHandler) ListClusters(context.Context, *connect.Request[v1.ListClustersRequest]) (*connect.Response[v1.ListClustersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListClusters is not implemented"))
+}
+
+func (UnimplementedAgentAPIHandler) SetClusterTrust(context.Context, *connect.Request[v1.SetClusterTrustRequest]) (*connect.Response[v1.SetClusterTrustResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.SetClusterTrust is not implemented"))
+}
+
+func (UnimplementedAgentAPIHandler) DeleteCluster(context.Context, *connect.Request[v1.DeleteClusterRequest]) (*connect.Response[v1.DeleteClusterResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.DeleteCluster is not implemented"))
+}
 
 func (UnimplementedAgentAPIHandler) CreateAgent(context.Context, *connect.Request[v1.CreateAgentRequest]) (*connect.Response[v1.CreateAgentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CreateAgent is not implemented"))
@@ -663,42 +682,334 @@ func (UnimplementedAgentAPIHandler) DeleteAgent(context.Context, *connect.Reques
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.DeleteAgent is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) GetAgentStatus(context.Context, *connect.Request[v1.GetAgentStatusRequest]) (*connect.Response[v1.GetAgentStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetAgentStatus is not implemented"))
+func (UnimplementedAgentAPIHandler) CreateEnrollmentKey(context.Context, *connect.Request[v1.CreateEnrollmentKeyRequest]) (*connect.Response[v1.CreateEnrollmentKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) ClearAgentIdentityBinding(context.Context, *connect.Request[v1.ClearAgentIdentityBindingRequest]) (*connect.Response[v1.ClearAgentIdentityBindingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ClearAgentIdentityBinding is not implemented"))
+func (UnimplementedAgentAPIHandler) GrantAgentUse(context.Context, *connect.Request[v1.GrantAgentUseRequest]) (*connect.Response[v1.GrantAgentUseResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GrantAgentUse is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CreateApiKey is not implemented"))
+func (UnimplementedAgentAPIHandler) RevokeAgentUse(context.Context, *connect.Request[v1.RevokeAgentUseRequest]) (*connect.Response[v1.RevokeAgentUseResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.RevokeAgentUse is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListApiKeys is not implemented"))
+func (UnimplementedAgentAPIHandler) ListAgentGrants(context.Context, *connect.Request[v1.ListAgentGrantsRequest]) (*connect.Response[v1.ListAgentGrantsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListAgentGrants is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetApiKey is not implemented"))
+func (UnimplementedAgentAPIHandler) GetJob(context.Context, *connect.Request[v1.GetJobRequest]) (*connect.Response[v1.GetJobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetJob is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.RevokeApiKey is not implemented"))
+func (UnimplementedAgentAPIHandler) ListJobs(context.Context, *connect.Request[v1.ListJobsRequest]) (*connect.Response[v1.ListJobsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListJobs is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) ListAgentJobs(context.Context, *connect.Request[v1.ListAgentJobsRequest]) (*connect.Response[v1.ListAgentJobsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListAgentJobs is not implemented"))
+func (UnimplementedAgentAPIHandler) CancelJob(context.Context, *connect.Request[v1.CancelJobRequest]) (*connect.Response[v1.CancelJobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.CancelJob is not implemented"))
 }
 
-func (UnimplementedAgentAPIHandler) ListWorkloads(context.Context, *connect.Request[v1.ListWorkloadsRequest]) (*connect.Response[v1.ListWorkloadsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListWorkloads is not implemented"))
+// AgentRuntimeAPIClient is a client for the admiral.api.agent.v1.AgentRuntimeAPI service.
+type AgentRuntimeAPIClient interface {
+	// Enroll sets a PENDING cluster's keys from inside it: the keys the cluster
+	// serves at /openid/v1/jwks, and a service-account token they verify. The
+	// caller authenticates with an enrollment key, which this spends.
+	//
+	// Scope: `agent:enroll`
+	Enroll(context.Context, *connect.Request[v1.EnrollRequest]) (*connect.Response[v1.EnrollResponse], error)
+	// ReportStatus records what the agent runs and what its cluster is: version,
+	// Kubernetes version and API groups (which prepare renders against), what its
+	// RBAC allows, and the cluster's current keys. A changed key set is accepted
+	// only when it still holds the key this call was verified with.
+	//
+	// Scope: `agent:status`
+	ReportStatus(context.Context, *connect.Request[v1.ReportStatusRequest]) (*connect.Response[v1.ReportStatusResponse], error)
+	// ClaimJob waits up to `wait_seconds` for work and returns an offer, or none.
+	// A retry with the same `claim_request_id` returns the same offer, so a lost
+	// response costs nothing. An offer not started within its TTL goes back to
+	// the queue.
+	//
+	// Scope: `agent:exec`
+	ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error)
+	// StartJob turns an offer into a lease. Call it before touching the
+	// cluster: an attempt that expires after starting is treated as having
+	// changed it.
+	//
+	// FAILED_PRECONDITION when the offer lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	StartJob(context.Context, *connect.Request[v1.StartJobRequest]) (*connect.Response[v1.StartJobResponse], error)
+	// RenewLease extends a started attempt's lease and says whether to cancel.
+	// A refusal means the lease is gone: stop.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	RenewLease(context.Context, *connect.Request[v1.RenewLeaseRequest]) (*connect.Response[v1.RenewLeaseResponse], error)
+	// GetJobArtifact returns the job's run artifact, unmasked, to the attempt
+	// holding the lease.
+	//
+	// Scope: `agent:exec`
+	GetJobArtifact(context.Context, *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error)
+	// ReportJobResult ends an attempt. Repeating a report with the same
+	// `report_id` returns the first answer. A report from an attempt that lost
+	// its lease is kept as evidence and changes no state.
+	//
+	// Scope: `agent:exec`
+	ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error)
 }
 
-func (UnimplementedAgentAPIHandler) GetWorkload(context.Context, *connect.Request[v1.GetWorkloadRequest]) (*connect.Response[v1.GetWorkloadResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.GetWorkload is not implemented"))
+// NewAgentRuntimeAPIClient constructs a client for the admiral.api.agent.v1.AgentRuntimeAPI
+// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
+// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
+// the connect.WithGRPC() or connect.WithGRPCWeb() options.
+//
+// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
+// http://api.acme.com or https://acme.com/grpc).
+func NewAgentRuntimeAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) AgentRuntimeAPIClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	agentRuntimeAPIMethods := v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("AgentRuntimeAPI").Methods()
+	return &agentRuntimeAPIClient{
+		enroll: connect.NewClient[v1.EnrollRequest, v1.EnrollResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIEnrollProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("Enroll")),
+			connect.WithClientOptions(opts...),
+		),
+		reportStatus: connect.NewClient[v1.ReportStatusRequest, v1.ReportStatusResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIReportStatusProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("ReportStatus")),
+			connect.WithClientOptions(opts...),
+		),
+		claimJob: connect.NewClient[v1.ClaimJobRequest, v1.ClaimJobResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIClaimJobProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("ClaimJob")),
+			connect.WithClientOptions(opts...),
+		),
+		startJob: connect.NewClient[v1.StartJobRequest, v1.StartJobResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIStartJobProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("StartJob")),
+			connect.WithClientOptions(opts...),
+		),
+		renewLease: connect.NewClient[v1.RenewLeaseRequest, v1.RenewLeaseResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIRenewLeaseProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("RenewLease")),
+			connect.WithClientOptions(opts...),
+		),
+		getJobArtifact: connect.NewClient[v1.GetJobArtifactRequest, v1.GetJobArtifactResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIGetJobArtifactProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("GetJobArtifact")),
+			connect.WithClientOptions(opts...),
+		),
+		reportJobResult: connect.NewClient[v1.ReportJobResultRequest, v1.ReportJobResultResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIReportJobResultProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("ReportJobResult")),
+			connect.WithClientOptions(opts...),
+		),
+	}
 }
 
-func (UnimplementedAgentAPIHandler) ListWorkloadEvents(context.Context, *connect.Request[v1.ListWorkloadEventsRequest]) (*connect.Response[v1.ListWorkloadEventsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentAPI.ListWorkloadEvents is not implemented"))
+// agentRuntimeAPIClient implements AgentRuntimeAPIClient.
+type agentRuntimeAPIClient struct {
+	enroll          *connect.Client[v1.EnrollRequest, v1.EnrollResponse]
+	reportStatus    *connect.Client[v1.ReportStatusRequest, v1.ReportStatusResponse]
+	claimJob        *connect.Client[v1.ClaimJobRequest, v1.ClaimJobResponse]
+	startJob        *connect.Client[v1.StartJobRequest, v1.StartJobResponse]
+	renewLease      *connect.Client[v1.RenewLeaseRequest, v1.RenewLeaseResponse]
+	getJobArtifact  *connect.Client[v1.GetJobArtifactRequest, v1.GetJobArtifactResponse]
+	reportJobResult *connect.Client[v1.ReportJobResultRequest, v1.ReportJobResultResponse]
+}
+
+// Enroll calls admiral.api.agent.v1.AgentRuntimeAPI.Enroll.
+func (c *agentRuntimeAPIClient) Enroll(ctx context.Context, req *connect.Request[v1.EnrollRequest]) (*connect.Response[v1.EnrollResponse], error) {
+	return c.enroll.CallUnary(ctx, req)
+}
+
+// ReportStatus calls admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus.
+func (c *agentRuntimeAPIClient) ReportStatus(ctx context.Context, req *connect.Request[v1.ReportStatusRequest]) (*connect.Response[v1.ReportStatusResponse], error) {
+	return c.reportStatus.CallUnary(ctx, req)
+}
+
+// ClaimJob calls admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob.
+func (c *agentRuntimeAPIClient) ClaimJob(ctx context.Context, req *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error) {
+	return c.claimJob.CallUnary(ctx, req)
+}
+
+// StartJob calls admiral.api.agent.v1.AgentRuntimeAPI.StartJob.
+func (c *agentRuntimeAPIClient) StartJob(ctx context.Context, req *connect.Request[v1.StartJobRequest]) (*connect.Response[v1.StartJobResponse], error) {
+	return c.startJob.CallUnary(ctx, req)
+}
+
+// RenewLease calls admiral.api.agent.v1.AgentRuntimeAPI.RenewLease.
+func (c *agentRuntimeAPIClient) RenewLease(ctx context.Context, req *connect.Request[v1.RenewLeaseRequest]) (*connect.Response[v1.RenewLeaseResponse], error) {
+	return c.renewLease.CallUnary(ctx, req)
+}
+
+// GetJobArtifact calls admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact.
+func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, req *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error) {
+	return c.getJobArtifact.CallUnary(ctx, req)
+}
+
+// ReportJobResult calls admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult.
+func (c *agentRuntimeAPIClient) ReportJobResult(ctx context.Context, req *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error) {
+	return c.reportJobResult.CallUnary(ctx, req)
+}
+
+// AgentRuntimeAPIHandler is an implementation of the admiral.api.agent.v1.AgentRuntimeAPI service.
+type AgentRuntimeAPIHandler interface {
+	// Enroll sets a PENDING cluster's keys from inside it: the keys the cluster
+	// serves at /openid/v1/jwks, and a service-account token they verify. The
+	// caller authenticates with an enrollment key, which this spends.
+	//
+	// Scope: `agent:enroll`
+	Enroll(context.Context, *connect.Request[v1.EnrollRequest]) (*connect.Response[v1.EnrollResponse], error)
+	// ReportStatus records what the agent runs and what its cluster is: version,
+	// Kubernetes version and API groups (which prepare renders against), what its
+	// RBAC allows, and the cluster's current keys. A changed key set is accepted
+	// only when it still holds the key this call was verified with.
+	//
+	// Scope: `agent:status`
+	ReportStatus(context.Context, *connect.Request[v1.ReportStatusRequest]) (*connect.Response[v1.ReportStatusResponse], error)
+	// ClaimJob waits up to `wait_seconds` for work and returns an offer, or none.
+	// A retry with the same `claim_request_id` returns the same offer, so a lost
+	// response costs nothing. An offer not started within its TTL goes back to
+	// the queue.
+	//
+	// Scope: `agent:exec`
+	ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error)
+	// StartJob turns an offer into a lease. Call it before touching the
+	// cluster: an attempt that expires after starting is treated as having
+	// changed it.
+	//
+	// FAILED_PRECONDITION when the offer lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	StartJob(context.Context, *connect.Request[v1.StartJobRequest]) (*connect.Response[v1.StartJobResponse], error)
+	// RenewLease extends a started attempt's lease and says whether to cancel.
+	// A refusal means the lease is gone: stop.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's.
+	//
+	// Scope: `agent:exec`
+	RenewLease(context.Context, *connect.Request[v1.RenewLeaseRequest]) (*connect.Response[v1.RenewLeaseResponse], error)
+	// GetJobArtifact returns the job's run artifact, unmasked, to the attempt
+	// holding the lease.
+	//
+	// Scope: `agent:exec`
+	GetJobArtifact(context.Context, *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error)
+	// ReportJobResult ends an attempt. Repeating a report with the same
+	// `report_id` returns the first answer. A report from an attempt that lost
+	// its lease is kept as evidence and changes no state.
+	//
+	// Scope: `agent:exec`
+	ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error)
+}
+
+// NewAgentRuntimeAPIHandler builds an HTTP handler from the service implementation. It returns the
+// path on which to mount the handler and the handler itself.
+//
+// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
+// and JSON codecs. They also support gzip compression.
+func NewAgentRuntimeAPIHandler(svc AgentRuntimeAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	agentRuntimeAPIMethods := v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("AgentRuntimeAPI").Methods()
+	agentRuntimeAPIEnrollHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIEnrollProcedure,
+		svc.Enroll,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("Enroll")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentRuntimeAPIReportStatusHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIReportStatusProcedure,
+		svc.ReportStatus,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("ReportStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentRuntimeAPIClaimJobHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIClaimJobProcedure,
+		svc.ClaimJob,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("ClaimJob")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentRuntimeAPIStartJobHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIStartJobProcedure,
+		svc.StartJob,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("StartJob")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentRuntimeAPIRenewLeaseHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIRenewLeaseProcedure,
+		svc.RenewLease,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("RenewLease")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentRuntimeAPIGetJobArtifactHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIGetJobArtifactProcedure,
+		svc.GetJobArtifact,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("GetJobArtifact")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agentRuntimeAPIReportJobResultHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIReportJobResultProcedure,
+		svc.ReportJobResult,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("ReportJobResult")),
+		connect.WithHandlerOptions(opts...),
+	)
+	return "/admiral.api.agent.v1.AgentRuntimeAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case AgentRuntimeAPIEnrollProcedure:
+			agentRuntimeAPIEnrollHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIReportStatusProcedure:
+			agentRuntimeAPIReportStatusHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIClaimJobProcedure:
+			agentRuntimeAPIClaimJobHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIStartJobProcedure:
+			agentRuntimeAPIStartJobHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIRenewLeaseProcedure:
+			agentRuntimeAPIRenewLeaseHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIGetJobArtifactProcedure:
+			agentRuntimeAPIGetJobArtifactHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIReportJobResultProcedure:
+			agentRuntimeAPIReportJobResultHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+}
+
+// UnimplementedAgentRuntimeAPIHandler returns CodeUnimplemented from all methods.
+type UnimplementedAgentRuntimeAPIHandler struct{}
+
+func (UnimplementedAgentRuntimeAPIHandler) Enroll(context.Context, *connect.Request[v1.EnrollRequest]) (*connect.Response[v1.EnrollResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.Enroll is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) ReportStatus(context.Context, *connect.Request[v1.ReportStatusRequest]) (*connect.Response[v1.ReportStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) ClaimJob(context.Context, *connect.Request[v1.ClaimJobRequest]) (*connect.Response[v1.ClaimJobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) StartJob(context.Context, *connect.Request[v1.StartJobRequest]) (*connect.Response[v1.StartJobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.StartJob is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) RenewLease(context.Context, *connect.Request[v1.RenewLeaseRequest]) (*connect.Response[v1.RenewLeaseResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.RenewLease is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) GetJobArtifact(context.Context, *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult is not implemented"))
 }

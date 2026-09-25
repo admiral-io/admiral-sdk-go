@@ -60,6 +60,14 @@ const (
 	// ChangeSetAPIListRevisionsProcedure is the fully-qualified name of the ChangeSetAPI's
 	// ListRevisions RPC.
 	ChangeSetAPIListRevisionsProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ListRevisions"
+	// ChangeSetAPIPlanChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
+	// PlanChangeSet RPC.
+	ChangeSetAPIPlanChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/PlanChangeSet"
+	// ChangeSetAPIGetPrepareProcedure is the fully-qualified name of the ChangeSetAPI's GetPrepare RPC.
+	ChangeSetAPIGetPrepareProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPrepare"
+	// ChangeSetAPIGetArtifactProcedure is the fully-qualified name of the ChangeSetAPI's GetArtifact
+	// RPC.
+	ChangeSetAPIGetArtifactProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetArtifact"
 )
 
 // ChangeSetAPIClient is a client for the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -116,6 +124,32 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error)
+	// PlanChangeSet asks for a plan of the head revision. The revision is
+	// prepared first: every component it touches is rendered into one
+	// content-addressed run artifact. The call queues that work and returns
+	// at once; GetPrepare reports its progress. Asking again for a revision
+	// already asked for returns the same prepare, except that a prepare which
+	// failed for an infrastructure reason is queued again.
+	//
+	// FAILED_PRECONDITION when the change set is not a draft, has no revision,
+	// or `if_revision` is not the head (the message names the head).
+	//
+	// Scope: `changeset:write`
+	PlanChangeSet(context.Context, *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error)
+	// GetPrepare returns the prepare of one revision: its status, findings,
+	// error and artifact digest. NOT_FOUND when that revision was never
+	// prepared.
+	//
+	// Scope: `changeset:read`
+	GetPrepare(context.Context, *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error)
+	// GetArtifact returns a prepared revision's run artifact. Every value
+	// under a Secret's `data` and `stringData` is replaced by `sha256:` and
+	// the first twelve hex characters of its digest, so a change stays
+	// visible and the value does not. FAILED_PRECONDITION when the revision
+	// is not prepared.
+	//
+	// Scope: `changeset:read`
+	GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error)
 }
 
 // NewChangeSetAPIClient constructs a client for the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -183,6 +217,24 @@ func NewChangeSetAPIClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(changeSetAPIMethods.ByName("ListRevisions")),
 			connect.WithClientOptions(opts...),
 		),
+		planChangeSet: connect.NewClient[v1.PlanChangeSetRequest, v1.PlanChangeSetResponse](
+			httpClient,
+			baseURL+ChangeSetAPIPlanChangeSetProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("PlanChangeSet")),
+			connect.WithClientOptions(opts...),
+		),
+		getPrepare: connect.NewClient[v1.GetPrepareRequest, v1.GetPrepareResponse](
+			httpClient,
+			baseURL+ChangeSetAPIGetPrepareProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("GetPrepare")),
+			connect.WithClientOptions(opts...),
+		),
+		getArtifact: connect.NewClient[v1.GetArtifactRequest, v1.GetArtifactResponse](
+			httpClient,
+			baseURL+ChangeSetAPIGetArtifactProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("GetArtifact")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -197,6 +249,9 @@ type changeSetAPIClient struct {
 	diffChangeSet      *connect.Client[v1.DiffChangeSetRequest, v1.DiffChangeSetResponse]
 	getRevision        *connect.Client[v1.GetRevisionRequest, v1.GetRevisionResponse]
 	listRevisions      *connect.Client[v1.ListRevisionsRequest, v1.ListRevisionsResponse]
+	planChangeSet      *connect.Client[v1.PlanChangeSetRequest, v1.PlanChangeSetResponse]
+	getPrepare         *connect.Client[v1.GetPrepareRequest, v1.GetPrepareResponse]
+	getArtifact        *connect.Client[v1.GetArtifactRequest, v1.GetArtifactResponse]
 }
 
 // CreateChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet.
@@ -242,6 +297,21 @@ func (c *changeSetAPIClient) GetRevision(ctx context.Context, req *connect.Reque
 // ListRevisions calls admiral.api.changeset.v1.ChangeSetAPI.ListRevisions.
 func (c *changeSetAPIClient) ListRevisions(ctx context.Context, req *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error) {
 	return c.listRevisions.CallUnary(ctx, req)
+}
+
+// PlanChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet.
+func (c *changeSetAPIClient) PlanChangeSet(ctx context.Context, req *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error) {
+	return c.planChangeSet.CallUnary(ctx, req)
+}
+
+// GetPrepare calls admiral.api.changeset.v1.ChangeSetAPI.GetPrepare.
+func (c *changeSetAPIClient) GetPrepare(ctx context.Context, req *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error) {
+	return c.getPrepare.CallUnary(ctx, req)
+}
+
+// GetArtifact calls admiral.api.changeset.v1.ChangeSetAPI.GetArtifact.
+func (c *changeSetAPIClient) GetArtifact(ctx context.Context, req *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error) {
+	return c.getArtifact.CallUnary(ctx, req)
 }
 
 // ChangeSetAPIHandler is an implementation of the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -298,6 +368,32 @@ type ChangeSetAPIHandler interface {
 	//
 	// Scope: `changeset:read`
 	ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error)
+	// PlanChangeSet asks for a plan of the head revision. The revision is
+	// prepared first: every component it touches is rendered into one
+	// content-addressed run artifact. The call queues that work and returns
+	// at once; GetPrepare reports its progress. Asking again for a revision
+	// already asked for returns the same prepare, except that a prepare which
+	// failed for an infrastructure reason is queued again.
+	//
+	// FAILED_PRECONDITION when the change set is not a draft, has no revision,
+	// or `if_revision` is not the head (the message names the head).
+	//
+	// Scope: `changeset:write`
+	PlanChangeSet(context.Context, *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error)
+	// GetPrepare returns the prepare of one revision: its status, findings,
+	// error and artifact digest. NOT_FOUND when that revision was never
+	// prepared.
+	//
+	// Scope: `changeset:read`
+	GetPrepare(context.Context, *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error)
+	// GetArtifact returns a prepared revision's run artifact. Every value
+	// under a Secret's `data` and `stringData` is replaced by `sha256:` and
+	// the first twelve hex characters of its digest, so a change stays
+	// visible and the value does not. FAILED_PRECONDITION when the revision
+	// is not prepared.
+	//
+	// Scope: `changeset:read`
+	GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error)
 }
 
 // NewChangeSetAPIHandler builds an HTTP handler from the service implementation. It returns the
@@ -361,6 +457,24 @@ func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(changeSetAPIMethods.ByName("ListRevisions")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changeSetAPIPlanChangeSetHandler := connect.NewUnaryHandler(
+		ChangeSetAPIPlanChangeSetProcedure,
+		svc.PlanChangeSet,
+		connect.WithSchema(changeSetAPIMethods.ByName("PlanChangeSet")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIGetPrepareHandler := connect.NewUnaryHandler(
+		ChangeSetAPIGetPrepareProcedure,
+		svc.GetPrepare,
+		connect.WithSchema(changeSetAPIMethods.ByName("GetPrepare")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIGetArtifactHandler := connect.NewUnaryHandler(
+		ChangeSetAPIGetArtifactProcedure,
+		svc.GetArtifact,
+		connect.WithSchema(changeSetAPIMethods.ByName("GetArtifact")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.api.changeset.v1.ChangeSetAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChangeSetAPICreateChangeSetProcedure:
@@ -381,6 +495,12 @@ func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOpti
 			changeSetAPIGetRevisionHandler.ServeHTTP(w, r)
 		case ChangeSetAPIListRevisionsProcedure:
 			changeSetAPIListRevisionsHandler.ServeHTTP(w, r)
+		case ChangeSetAPIPlanChangeSetProcedure:
+			changeSetAPIPlanChangeSetHandler.ServeHTTP(w, r)
+		case ChangeSetAPIGetPrepareProcedure:
+			changeSetAPIGetPrepareHandler.ServeHTTP(w, r)
+		case ChangeSetAPIGetArtifactProcedure:
+			changeSetAPIGetArtifactHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -424,4 +544,16 @@ func (UnimplementedChangeSetAPIHandler) GetRevision(context.Context, *connect.Re
 
 func (UnimplementedChangeSetAPIHandler) ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ListRevisions is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) PlanChangeSet(context.Context, *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) GetPrepare(context.Context, *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPrepare is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetArtifact is not implemented"))
 }
