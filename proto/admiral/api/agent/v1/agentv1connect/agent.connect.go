@@ -110,9 +110,8 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	ListClusters(context.Context, *connect.Request[v1.ListClustersRequest]) (*connect.Response[v1.ListClustersResponse], error)
-	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
-	// It is how a person rotates the keys of a cluster whose key was replaced
-	// outright.
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, uploaded
+	// keys, or the keys an agent last reported.
 	//
 	// Scope: `agent:write`
 	SetClusterTrust(context.Context, *connect.Request[v1.SetClusterTrustRequest]) (*connect.Response[v1.SetClusterTrustResponse], error)
@@ -140,8 +139,8 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *connect.Request[v1.UpdateAgentRequest]) (*connect.Response[v1.UpdateAgentResponse], error)
-	// DeleteAgent removes an agent. Its leases end in the same transaction, and
-	// environments that selected it select none.
+	// DeleteAgent removes an agent. Its leases end at once, and environments that
+	// selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *connect.Request[v1.DeleteAgentRequest]) (*connect.Response[v1.DeleteAgentResponse], error)
@@ -151,13 +150,15 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *connect.Request[v1.CreateEnrollmentKeyRequest]) (*connect.Response[v1.CreateEnrollmentKeyResponse], error)
-	// GrantAgentUse lets the whole tenant, a team, or an application's
-	// environments select an agent. Only the agent's owner or a tenant admin may.
+	// GrantAgentUse lets the organization, a team, an application's
+	// environments, or one environment select an agent. Only the agent's owner
+	// or a tenant admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *connect.Request[v1.GrantAgentUseRequest]) (*connect.Response[v1.GrantAgentUseResponse], error)
 	// RevokeAgentUse withdraws a grant. Environments that selected the agent
-	// under it keep the selection until they change it, but claim nothing new.
+	// under it keep the selection until they change it, and their new jobs wait
+	// with AGENT_NOT_GRANTED.
 	//
 	// Scope: `agent:write`
 	RevokeAgentUse(context.Context, *connect.Request[v1.RevokeAgentUseRequest]) (*connect.Response[v1.RevokeAgentUseResponse], error)
@@ -418,9 +419,8 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:read`
 	ListClusters(context.Context, *connect.Request[v1.ListClustersRequest]) (*connect.Response[v1.ListClustersResponse], error)
-	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
-	// It is how a person rotates the keys of a cluster whose key was replaced
-	// outright.
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, uploaded
+	// keys, or the keys an agent last reported.
 	//
 	// Scope: `agent:write`
 	SetClusterTrust(context.Context, *connect.Request[v1.SetClusterTrustRequest]) (*connect.Response[v1.SetClusterTrustResponse], error)
@@ -448,8 +448,8 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *connect.Request[v1.UpdateAgentRequest]) (*connect.Response[v1.UpdateAgentResponse], error)
-	// DeleteAgent removes an agent. Its leases end in the same transaction, and
-	// environments that selected it select none.
+	// DeleteAgent removes an agent. Its leases end at once, and environments that
+	// selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *connect.Request[v1.DeleteAgentRequest]) (*connect.Response[v1.DeleteAgentResponse], error)
@@ -459,13 +459,15 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *connect.Request[v1.CreateEnrollmentKeyRequest]) (*connect.Response[v1.CreateEnrollmentKeyResponse], error)
-	// GrantAgentUse lets the whole tenant, a team, or an application's
-	// environments select an agent. Only the agent's owner or a tenant admin may.
+	// GrantAgentUse lets the organization, a team, an application's
+	// environments, or one environment select an agent. Only the agent's owner
+	// or a tenant admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *connect.Request[v1.GrantAgentUseRequest]) (*connect.Response[v1.GrantAgentUseResponse], error)
 	// RevokeAgentUse withdraws a grant. Environments that selected the agent
-	// under it keep the selection until they change it, but claim nothing new.
+	// under it keep the selection until they change it, and their new jobs wait
+	// with AGENT_NOT_GRANTED.
 	//
 	// Scope: `agent:write`
 	RevokeAgentUse(context.Context, *connect.Request[v1.RevokeAgentUseRequest]) (*connect.Response[v1.RevokeAgentUseResponse], error)
@@ -720,8 +722,8 @@ type AgentRuntimeAPIClient interface {
 	Enroll(context.Context, *connect.Request[v1.EnrollRequest]) (*connect.Response[v1.EnrollResponse], error)
 	// ReportStatus records what the agent runs and what its cluster is: version,
 	// Kubernetes version and API groups (which prepare renders against), what its
-	// RBAC allows, and the cluster's current keys. A changed key set is accepted
-	// only when it still holds the key this call was verified with.
+	// RBAC allows, and the cluster's current keys. Keys that differ from the
+	// trusted ones are recorded for an admin, never applied.
 	//
 	// Scope: `agent:status`
 	ReportStatus(context.Context, *connect.Request[v1.ReportStatusRequest]) (*connect.Response[v1.ReportStatusResponse], error)
@@ -872,8 +874,8 @@ type AgentRuntimeAPIHandler interface {
 	Enroll(context.Context, *connect.Request[v1.EnrollRequest]) (*connect.Response[v1.EnrollResponse], error)
 	// ReportStatus records what the agent runs and what its cluster is: version,
 	// Kubernetes version and API groups (which prepare renders against), what its
-	// RBAC allows, and the cluster's current keys. A changed key set is accepted
-	// only when it still holds the key this call was verified with.
+	// RBAC allows, and the cluster's current keys. Keys that differ from the
+	// trusted ones are recorded for an admin, never applied.
 	//
 	// Scope: `agent:status`
 	ReportStatus(context.Context, *connect.Request[v1.ReportStatusRequest]) (*connect.Response[v1.ReportStatusResponse], error)

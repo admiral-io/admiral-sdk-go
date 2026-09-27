@@ -1018,7 +1018,7 @@ func (m *AgentGrant) validate(all bool) error {
 	var errors []error
 
 	switch v := m.Target.(type) {
-	case *AgentGrant_Tenant:
+	case *AgentGrant_Organization:
 		if v == nil {
 			err := AgentGrantValidationError{
 				field:  "Target",
@@ -1029,7 +1029,7 @@ func (m *AgentGrant) validate(all bool) error {
 			}
 			errors = append(errors, err)
 		}
-		// no validation rules for Tenant
+		// no validation rules for Organization
 	case *AgentGrant_GroupId:
 		if v == nil {
 			err := AgentGrantValidationError{
@@ -1054,6 +1054,18 @@ func (m *AgentGrant) validate(all bool) error {
 			errors = append(errors, err)
 		}
 		// no validation rules for ApplicationId
+	case *AgentGrant_EnvironmentId:
+		if v == nil {
+			err := AgentGrantValidationError{
+				field:  "Target",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		// no validation rules for EnvironmentId
 	default:
 		_ = v // ensures v is used
 	}
@@ -6608,7 +6620,7 @@ func (m *ReportStatusResponse) validate(all bool) error {
 
 	// no validation rules for NextReportSeconds
 
-	// no validation rules for KeysAccepted
+	// no validation rules for KeysMatch
 
 	if len(errors) > 0 {
 		return ReportStatusResponseMultiError(errors)

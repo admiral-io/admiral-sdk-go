@@ -54,8 +54,8 @@ const (
 // agent enrolls it with a single-use enrollment key.
 //
 // An environment deploys through the agent it selects, and may select only an
-// agent whose owner granted use to the whole tenant, one of its teams, or its
-// application.
+// agent granted to the organization, a team, its application, or the
+// environment itself.
 type AgentAPIClient interface {
 	// CreateCluster records a cluster to trust. Give its issuer URL when the
 	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
@@ -71,9 +71,8 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	ListClusters(ctx context.Context, in *ListClustersRequest, opts ...grpc.CallOption) (*ListClustersResponse, error)
-	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
-	// It is how a person rotates the keys of a cluster whose key was replaced
-	// outright.
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, uploaded
+	// keys, or the keys an agent last reported.
 	//
 	// Scope: `agent:write`
 	SetClusterTrust(ctx context.Context, in *SetClusterTrustRequest, opts ...grpc.CallOption) (*SetClusterTrustResponse, error)
@@ -101,8 +100,8 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	UpdateAgent(ctx context.Context, in *UpdateAgentRequest, opts ...grpc.CallOption) (*UpdateAgentResponse, error)
-	// DeleteAgent removes an agent. Its leases end in the same transaction, and
-	// environments that selected it select none.
+	// DeleteAgent removes an agent. Its leases end at once, and environments that
+	// selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(ctx context.Context, in *DeleteAgentRequest, opts ...grpc.CallOption) (*DeleteAgentResponse, error)
@@ -112,13 +111,15 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(ctx context.Context, in *CreateEnrollmentKeyRequest, opts ...grpc.CallOption) (*CreateEnrollmentKeyResponse, error)
-	// GrantAgentUse lets the whole tenant, a team, or an application's
-	// environments select an agent. Only the agent's owner or a tenant admin may.
+	// GrantAgentUse lets the organization, a team, an application's
+	// environments, or one environment select an agent. Only the agent's owner
+	// or a tenant admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(ctx context.Context, in *GrantAgentUseRequest, opts ...grpc.CallOption) (*GrantAgentUseResponse, error)
 	// RevokeAgentUse withdraws a grant. Environments that selected the agent
-	// under it keep the selection until they change it, but claim nothing new.
+	// under it keep the selection until they change it, and their new jobs wait
+	// with AGENT_NOT_GRANTED.
 	//
 	// Scope: `agent:write`
 	RevokeAgentUse(ctx context.Context, in *RevokeAgentUseRequest, opts ...grpc.CallOption) (*RevokeAgentUseResponse, error)
@@ -335,8 +336,8 @@ func (c *agentAPIClient) CancelJob(ctx context.Context, in *CancelJobRequest, op
 // agent enrolls it with a single-use enrollment key.
 //
 // An environment deploys through the agent it selects, and may select only an
-// agent whose owner granted use to the whole tenant, one of its teams, or its
-// application.
+// agent granted to the organization, a team, its application, or the
+// environment itself.
 type AgentAPIServer interface {
 	// CreateCluster records a cluster to trust. Give its issuer URL when the
 	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
@@ -352,9 +353,8 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:read`
 	ListClusters(context.Context, *ListClustersRequest) (*ListClustersResponse, error)
-	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, or keys.
-	// It is how a person rotates the keys of a cluster whose key was replaced
-	// outright.
+	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, uploaded
+	// keys, or the keys an agent last reported.
 	//
 	// Scope: `agent:write`
 	SetClusterTrust(context.Context, *SetClusterTrustRequest) (*SetClusterTrustResponse, error)
@@ -382,8 +382,8 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *UpdateAgentRequest) (*UpdateAgentResponse, error)
-	// DeleteAgent removes an agent. Its leases end in the same transaction, and
-	// environments that selected it select none.
+	// DeleteAgent removes an agent. Its leases end at once, and environments that
+	// selected it select none.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *DeleteAgentRequest) (*DeleteAgentResponse, error)
@@ -393,13 +393,15 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *CreateEnrollmentKeyRequest) (*CreateEnrollmentKeyResponse, error)
-	// GrantAgentUse lets the whole tenant, a team, or an application's
-	// environments select an agent. Only the agent's owner or a tenant admin may.
+	// GrantAgentUse lets the organization, a team, an application's
+	// environments, or one environment select an agent. Only the agent's owner
+	// or a tenant admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *GrantAgentUseRequest) (*GrantAgentUseResponse, error)
 	// RevokeAgentUse withdraws a grant. Environments that selected the agent
-	// under it keep the selection until they change it, but claim nothing new.
+	// under it keep the selection until they change it, and their new jobs wait
+	// with AGENT_NOT_GRANTED.
 	//
 	// Scope: `agent:write`
 	RevokeAgentUse(context.Context, *RevokeAgentUseRequest) (*RevokeAgentUseResponse, error)
@@ -918,8 +920,8 @@ type AgentRuntimeAPIClient interface {
 	Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error)
 	// ReportStatus records what the agent runs and what its cluster is: version,
 	// Kubernetes version and API groups (which prepare renders against), what its
-	// RBAC allows, and the cluster's current keys. A changed key set is accepted
-	// only when it still holds the key this call was verified with.
+	// RBAC allows, and the cluster's current keys. Keys that differ from the
+	// trusted ones are recorded for an admin, never applied.
 	//
 	// Scope: `agent:status`
 	ReportStatus(ctx context.Context, in *ReportStatusRequest, opts ...grpc.CallOption) (*ReportStatusResponse, error)
@@ -1058,8 +1060,8 @@ type AgentRuntimeAPIServer interface {
 	Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error)
 	// ReportStatus records what the agent runs and what its cluster is: version,
 	// Kubernetes version and API groups (which prepare renders against), what its
-	// RBAC allows, and the cluster's current keys. A changed key set is accepted
-	// only when it still holds the key this call was verified with.
+	// RBAC allows, and the cluster's current keys. Keys that differ from the
+	// trusted ones are recorded for an admin, never applied.
 	//
 	// Scope: `agent:status`
 	ReportStatus(context.Context, *ReportStatusRequest) (*ReportStatusResponse, error)

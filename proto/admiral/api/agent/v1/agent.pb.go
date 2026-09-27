@@ -376,8 +376,7 @@ type Cluster struct {
 	Name   string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Status ClusterStatus          `protobuf:"varint,3,opt,name=status,proto3,enum=admiral.api.agent.v1.ClusterStatus" json:"status,omitempty"`
 	// Set when the cluster's issuer is public; keys are fetched from it.
-	IssuerUrl string `protobuf:"bytes,4,opt,name=issuer_url,json=issuerUrl,proto3" json:"issuer_url,omitempty"`
-	// The key ids trusted now.
+	IssuerUrl     string                 `protobuf:"bytes,4,opt,name=issuer_url,json=issuerUrl,proto3" json:"issuer_url,omitempty"`
 	KeyIds        []string               `protobuf:"bytes,5,rep,name=key_ids,json=keyIds,proto3" json:"key_ids,omitempty"`
 	KeysUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=keys_updated_at,json=keysUpdatedAt,proto3" json:"keys_updated_at,omitempty"`
 	CreatedBy     *v1.ActorRef           `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
@@ -582,7 +581,8 @@ type ClusterTrust_JwksJson struct {
 }
 
 type ClusterTrust_AcceptReported struct {
-	// Trust the key set an agent last reported. Only on SetClusterTrust.
+	// Trust the key set an agent last reported. Only on SetClusterTrust. Must
+	// be `true`.
 	AcceptReported bool `protobuf:"varint,3,opt,name=accept_reported,json=acceptReported,proto3,oneof"`
 }
 
@@ -716,9 +716,11 @@ type AgentCeiling struct {
 	AllowNamespaceCreation bool                   `protobuf:"varint,1,opt,name=allow_namespace_creation,json=allowNamespaceCreation,proto3" json:"allow_namespace_creation,omitempty"`
 	// Glob patterns; empty allows every namespace.
 	AllowedNamespaces []string `protobuf:"bytes,2,rep,name=allowed_namespaces,json=allowedNamespaces,proto3" json:"allowed_namespaces,omitempty"`
-	DeniedNamespaces  []string `protobuf:"bytes,3,rep,name=denied_namespaces,json=deniedNamespaces,proto3" json:"denied_namespaces,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// Glob patterns. A namespace that matches is refused even when
+	// `allowed_namespaces` matches it too.
+	DeniedNamespaces []string `protobuf:"bytes,3,rep,name=denied_namespaces,json=deniedNamespaces,proto3" json:"denied_namespaces,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *AgentCeiling) Reset() {
@@ -860,7 +862,7 @@ func (x *AgentReport) GetReportedAt() *timestamppb.Timestamp {
 type AgentCapabilities struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	CanCreateNamespaces bool                   `protobuf:"varint,1,opt,name=can_create_namespaces,json=canCreateNamespaces,proto3" json:"can_create_namespaces,omitempty"`
-	// Namespaces it may write; empty with `all_namespaces` means everywhere.
+	// Namespaces it may write. Empty when `all_namespaces` is set.
 	WritableNamespaces    []string `protobuf:"bytes,2,rep,name=writable_namespaces,json=writableNamespaces,proto3" json:"writable_namespaces,omitempty"`
 	AllNamespaces         bool     `protobuf:"varint,3,opt,name=all_namespaces,json=allNamespaces,proto3" json:"all_namespaces,omitempty"`
 	CanWriteClusterScoped bool     `protobuf:"varint,4,opt,name=can_write_cluster_scoped,json=canWriteClusterScoped,proto3" json:"can_write_cluster_scoped,omitempty"`
@@ -926,14 +928,16 @@ func (x *AgentCapabilities) GetCanWriteClusterScoped() bool {
 	return false
 }
 
-// AgentGrant is who may select an agent.
+// AgentGrant lets environments select an agent. Set exactly one target; an
+// agent can hold several grants.
 type AgentGrant struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Target:
 	//
-	//	*AgentGrant_Tenant
+	//	*AgentGrant_Organization
 	//	*AgentGrant_GroupId
 	//	*AgentGrant_ApplicationId
+	//	*AgentGrant_EnvironmentId
 	Target        isAgentGrant_Target `protobuf_oneof:"target"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -976,10 +980,10 @@ func (x *AgentGrant) GetTarget() isAgentGrant_Target {
 	return nil
 }
 
-func (x *AgentGrant) GetTenant() bool {
+func (x *AgentGrant) GetOrganization() bool {
 	if x != nil {
-		if x, ok := x.Target.(*AgentGrant_Tenant); ok {
-			return x.Tenant
+		if x, ok := x.Target.(*AgentGrant_Organization); ok {
+			return x.Organization
 		}
 	}
 	return false
@@ -1003,16 +1007,27 @@ func (x *AgentGrant) GetApplicationId() string {
 	return ""
 }
 
+func (x *AgentGrant) GetEnvironmentId() string {
+	if x != nil {
+		if x, ok := x.Target.(*AgentGrant_EnvironmentId); ok {
+			return x.EnvironmentId
+		}
+	}
+	return ""
+}
+
 type isAgentGrant_Target interface {
 	isAgentGrant_Target()
 }
 
-type AgentGrant_Tenant struct {
-	// Every environment in the tenant. Only `true` means anything.
-	Tenant bool `protobuf:"varint,1,opt,name=tenant,proto3,oneof"`
+type AgentGrant_Organization struct {
+	// Every environment in the organization. Must be `true`.
+	Organization bool `protobuf:"varint,1,opt,name=organization,proto3,oneof"`
 }
 
 type AgentGrant_GroupId struct {
+	// Any member of the group can select the agent for an environment they
+	// can edit.
 	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3,oneof"`
 }
 
@@ -1020,11 +1035,17 @@ type AgentGrant_ApplicationId struct {
 	ApplicationId string `protobuf:"bytes,3,opt,name=application_id,json=applicationId,proto3,oneof"`
 }
 
-func (*AgentGrant_Tenant) isAgentGrant_Target() {}
+type AgentGrant_EnvironmentId struct {
+	EnvironmentId string `protobuf:"bytes,4,opt,name=environment_id,json=environmentId,proto3,oneof"`
+}
+
+func (*AgentGrant_Organization) isAgentGrant_Target() {}
 
 func (*AgentGrant_GroupId) isAgentGrant_Target() {}
 
 func (*AgentGrant_ApplicationId) isAgentGrant_Target() {}
+
+func (*AgentGrant_EnvironmentId) isAgentGrant_Target() {}
 
 type Job struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1851,8 +1872,8 @@ type CreateAgentRequest struct {
 	Namespace      string        `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	ServiceAccount string        `protobuf:"bytes,4,opt,name=service_account,json=serviceAccount,proto3" json:"service_account,omitempty"`
 	Ceiling        *AgentCeiling `protobuf:"bytes,5,opt,name=ceiling,proto3" json:"ceiling,omitempty"`
-	// Who may use it. Absent grants the whole tenant when this is the tenant's
-	// first agent, and nobody otherwise.
+	// Who may use it. Absent grants the organization when this is its first
+	// agent, and nobody otherwise.
 	Grants []*AgentGrant `protobuf:"bytes,6,rep,name=grants,proto3" json:"grants,omitempty"`
 	// Issue a single-use enrollment key with the agent.
 	EnrollmentKey bool `protobuf:"varint,7,opt,name=enrollment_key,json=enrollmentKey,proto3" json:"enrollment_key,omitempty"`
@@ -3377,9 +3398,9 @@ func (x *ReportStatusRequest) GetClusterUid() string {
 type ReportStatusResponse struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	NextReportSeconds int32                  `protobuf:"varint,1,opt,name=next_report_seconds,json=nextReportSeconds,proto3" json:"next_report_seconds,omitempty"`
-	// False when the reported key set was not taken as the cluster's keys. The
-	// rest of the report is still stored.
-	KeysAccepted  bool `protobuf:"varint,2,opt,name=keys_accepted,json=keysAccepted,proto3" json:"keys_accepted,omitempty"`
+	// False when the reported keys differ from the trusted ones; the difference
+	// is recorded for an admin. The rest of the report is still stored.
+	KeysMatch     bool `protobuf:"varint,2,opt,name=keys_match,json=keysMatch,proto3" json:"keys_match,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3421,9 +3442,9 @@ func (x *ReportStatusResponse) GetNextReportSeconds() int32 {
 	return 0
 }
 
-func (x *ReportStatusResponse) GetKeysAccepted() bool {
+func (x *ReportStatusResponse) GetKeysMatch() bool {
 	if x != nil {
-		return x.KeysAccepted
+		return x.KeysMatch
 	}
 	return false
 }
@@ -4140,12 +4161,13 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x15can_create_namespaces\x18\x01 \x01(\bR\x13canCreateNamespaces\x12/\n" +
 	"\x13writable_namespaces\x18\x02 \x03(\tR\x12writableNamespaces\x12%\n" +
 	"\x0eall_namespaces\x18\x03 \x01(\bR\rallNamespaces\x127\n" +
-	"\x18can_write_cluster_scoped\x18\x04 \x01(\bR\x15canWriteClusterScoped\"\x9a\x01\n" +
+	"\x18can_write_cluster_scoped\x18\x04 \x01(\bR\x15canWriteClusterScoped\"\xd9\x01\n" +
 	"\n" +
-	"AgentGrant\x12!\n" +
-	"\x06tenant\x18\x01 \x01(\bB\a\xbaH\x04j\x02\b\x01H\x00R\x06tenant\x12%\n" +
+	"AgentGrant\x12-\n" +
+	"\forganization\x18\x01 \x01(\bB\a\xbaH\x04j\x02\b\x01H\x00R\forganization\x12%\n" +
 	"\bgroup_id\x18\x02 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\agroupId\x121\n" +
-	"\x0eapplication_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationIdB\x0f\n" +
+	"\x0eapplication_id\x18\x03 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\rapplicationId\x121\n" +
+	"\x0eenvironment_id\x18\x04 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01H\x00R\renvironmentIdB\x0f\n" +
 	"\x06target\x12\x05\xbaH\x02\b\x01\"\xf5\x04\n" +
 	"\x03Job\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x121\n" +
@@ -4312,10 +4334,11 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\fcapabilities\x18\x05 \x01(\v2'.admiral.api.agent.v1.AgentCapabilitiesR\fcapabilities\x12&\n" +
 	"\tjwks_json\x18\x06 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80\x04R\bjwksJson\x12(\n" +
 	"\vcluster_uid\x18\a \x01(\tB\a\xbaH\x04r\x02\x18@R\n" +
-	"clusterUid\"k\n" +
+	"clusterUid\"e\n" +
 	"\x14ReportStatusResponse\x12.\n" +
-	"\x13next_report_seconds\x18\x01 \x01(\x05R\x11nextReportSeconds\x12#\n" +
-	"\rkeys_accepted\x18\x02 \x01(\bR\fkeysAccepted\"\x8c\x01\n" +
+	"\x13next_report_seconds\x18\x01 \x01(\x05R\x11nextReportSeconds\x12\x1d\n" +
+	"\n" +
+	"keys_match\x18\x02 \x01(\bR\tkeysMatch\"\x8c\x01\n" +
 	"\x05Slots\x12=\n" +
 	"\x04kind\x18\x01 \x01(\x0e2\x1d.admiral.api.agent.v1.JobKindB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04kind\x12\x1d\n" +
@@ -4708,9 +4731,10 @@ func file_admiral_api_agent_v1_agent_proto_init() {
 		(*ClusterTrust_AcceptReported)(nil),
 	}
 	file_admiral_api_agent_v1_agent_proto_msgTypes[6].OneofWrappers = []any{
-		(*AgentGrant_Tenant)(nil),
+		(*AgentGrant_Organization)(nil),
 		(*AgentGrant_GroupId)(nil),
 		(*AgentGrant_ApplicationId)(nil),
+		(*AgentGrant_EnvironmentId)(nil),
 	}
 	file_admiral_api_agent_v1_agent_proto_msgTypes[26].OneofWrappers = []any{}
 	file_admiral_api_agent_v1_agent_proto_msgTypes[28].OneofWrappers = []any{}
