@@ -896,6 +896,7 @@ const (
 	AgentRuntimeAPI_RenewLease_FullMethodName      = "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease"
 	AgentRuntimeAPI_GetJobArtifact_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
 	AgentRuntimeAPI_UploadPlanDiff_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff"
+	AgentRuntimeAPI_CheckApplyPlan_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/CheckApplyPlan"
 	AgentRuntimeAPI_ReportJobResult_FullMethodName = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
 )
 
@@ -958,6 +959,12 @@ type AgentRuntimeAPIClient interface {
 	//
 	// Scope: `agent:exec`
 	UploadPlanDiff(ctx context.Context, in *UploadPlanDiffRequest, opts ...grpc.CallOption) (*UploadPlanDiffResponse, error)
+	// CheckApplyPlan compares an APPLY attempt's fresh plan with the plan it
+	// applies. `proceed` false means the cluster changed since that plan: stop
+	// before changing anything and report FAILED.
+	//
+	// Scope: `agent:exec`
+	CheckApplyPlan(ctx context.Context, in *CheckApplyPlanRequest, opts ...grpc.CallOption) (*CheckApplyPlanResponse, error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -1044,6 +1051,16 @@ func (c *agentRuntimeAPIClient) UploadPlanDiff(ctx context.Context, in *UploadPl
 	return out, nil
 }
 
+func (c *agentRuntimeAPIClient) CheckApplyPlan(ctx context.Context, in *CheckApplyPlanRequest, opts ...grpc.CallOption) (*CheckApplyPlanResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckApplyPlanResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_CheckApplyPlan_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentRuntimeAPIClient) ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReportJobResultResponse)
@@ -1113,6 +1130,12 @@ type AgentRuntimeAPIServer interface {
 	//
 	// Scope: `agent:exec`
 	UploadPlanDiff(context.Context, *UploadPlanDiffRequest) (*UploadPlanDiffResponse, error)
+	// CheckApplyPlan compares an APPLY attempt's fresh plan with the plan it
+	// applies. `proceed` false means the cluster changed since that plan: stop
+	// before changing anything and report FAILED.
+	//
+	// Scope: `agent:exec`
+	CheckApplyPlan(context.Context, *CheckApplyPlanRequest) (*CheckApplyPlanResponse, error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -1148,6 +1171,9 @@ func (UnimplementedAgentRuntimeAPIServer) GetJobArtifact(context.Context, *GetJo
 }
 func (UnimplementedAgentRuntimeAPIServer) UploadPlanDiff(context.Context, *UploadPlanDiffRequest) (*UploadPlanDiffResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UploadPlanDiff not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) CheckApplyPlan(context.Context, *CheckApplyPlanRequest) (*CheckApplyPlanResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckApplyPlan not implemented")
 }
 func (UnimplementedAgentRuntimeAPIServer) ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReportJobResult not implemented")
@@ -1298,6 +1324,24 @@ func _AgentRuntimeAPI_UploadPlanDiff_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentRuntimeAPI_CheckApplyPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckApplyPlanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).CheckApplyPlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_CheckApplyPlan_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).CheckApplyPlan(ctx, req.(*CheckApplyPlanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AgentRuntimeAPI_ReportJobResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReportJobResultRequest)
 	if err := dec(in); err != nil {
@@ -1350,6 +1394,10 @@ var AgentRuntimeAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UploadPlanDiff",
 			Handler:    _AgentRuntimeAPI_UploadPlanDiff_Handler,
+		},
+		{
+			MethodName: "CheckApplyPlan",
+			Handler:    _AgentRuntimeAPI_CheckApplyPlan_Handler,
 		},
 		{
 			MethodName: "ReportJobResult",

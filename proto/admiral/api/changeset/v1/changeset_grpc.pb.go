@@ -33,6 +33,11 @@ const (
 	ChangeSetAPI_GetArtifact_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetArtifact"
 	ChangeSetAPI_GetPlan_FullMethodName            = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlan"
 	ChangeSetAPI_GetPlanDiff_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff"
+	ChangeSetAPI_ApproveChangeSet_FullMethodName   = "/admiral.api.changeset.v1.ChangeSetAPI/ApproveChangeSet"
+	ChangeSetAPI_ApplyChangeSet_FullMethodName     = "/admiral.api.changeset.v1.ChangeSetAPI/ApplyChangeSet"
+	ChangeSetAPI_GetApply_FullMethodName           = "/admiral.api.changeset.v1.ChangeSetAPI/GetApply"
+	ChangeSetAPI_AcceptPartialApply_FullMethodName = "/admiral.api.changeset.v1.ChangeSetAPI/AcceptPartialApply"
+	ChangeSetAPI_RevertChangeSet_FullMethodName    = "/admiral.api.changeset.v1.ChangeSetAPI/RevertChangeSet"
 )
 
 // ChangeSetAPIClient is the client API for ChangeSetAPI service.
@@ -140,6 +145,41 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	GetPlanDiff(ctx context.Context, in *GetPlanDiffRequest, opts ...grpc.CallOption) (*GetPlanDiffResponse, error)
+	// ApproveChangeSet approves one plan of a revision. Only a person approves,
+	// and not one who revised the change set, unless they are the only person
+	// able to approve; that self-approval needs a reason and is recorded.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the revision's current plan.
+	//
+	// Scope: `changeset:write`
+	ApproveChangeSet(ctx context.Context, in *ApproveChangeSetRequest, opts ...grpc.CallOption) (*ApproveChangeSetResponse, error)
+	// ApplyChangeSet queues the apply of a revision's current plan. It takes the
+	// environment's lock. The agent re-plans first and stops if the cluster
+	// changed since the plan.
+	//
+	// FAILED_PRECONDITION when the plan is not current or did not succeed, an
+	// approval is required and missing, the change set was cut from an older
+	// generation of the environment (rebase needed), or another change set holds
+	// the environment.
+	//
+	// Scope: `changeset:write`
+	ApplyChangeSet(ctx context.Context, in *ApplyChangeSetRequest, opts ...grpc.CallOption) (*ApplyChangeSetResponse, error)
+	// GetApply returns a revision's apply. NOT_FOUND when it was never applied.
+	//
+	// Scope: `changeset:read`
+	GetApply(ctx context.Context, in *GetApplyRequest, opts ...grpc.CallOption) (*GetApplyResponse, error)
+	// AcceptPartialApply takes a partial apply as the environment's new state
+	// and releases the hold. It is recorded with its reason.
+	//
+	// Scope: `changeset:write`
+	AcceptPartialApply(ctx context.Context, in *AcceptPartialApplyRequest, opts ...grpc.CallOption) (*AcceptPartialApplyResponse, error)
+	// RevertChangeSet opens a new change set that returns every component the
+	// given change set's apply changed to its state before that apply. History
+	// moves forward: the revert is planned, approved and applied like any other
+	// change set, and may apply while the reverted apply holds the environment.
+	//
+	// Scope: `changeset:write`
+	RevertChangeSet(ctx context.Context, in *RevertChangeSetRequest, opts ...grpc.CallOption) (*RevertChangeSetResponse, error)
 }
 
 type changeSetAPIClient struct {
@@ -290,6 +330,56 @@ func (c *changeSetAPIClient) GetPlanDiff(ctx context.Context, in *GetPlanDiffReq
 	return out, nil
 }
 
+func (c *changeSetAPIClient) ApproveChangeSet(ctx context.Context, in *ApproveChangeSetRequest, opts ...grpc.CallOption) (*ApproveChangeSetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApproveChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_ApproveChangeSet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) ApplyChangeSet(ctx context.Context, in *ApplyChangeSetRequest, opts ...grpc.CallOption) (*ApplyChangeSetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApplyChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_ApplyChangeSet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) GetApply(ctx context.Context, in *GetApplyRequest, opts ...grpc.CallOption) (*GetApplyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetApplyResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetApply_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) AcceptPartialApply(ctx context.Context, in *AcceptPartialApplyRequest, opts ...grpc.CallOption) (*AcceptPartialApplyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AcceptPartialApplyResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_AcceptPartialApply_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) RevertChangeSet(ctx context.Context, in *RevertChangeSetRequest, opts ...grpc.CallOption) (*RevertChangeSetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevertChangeSetResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_RevertChangeSet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChangeSetAPIServer is the server API for ChangeSetAPI service.
 // All implementations should embed UnimplementedChangeSetAPIServer
 // for forward compatibility.
@@ -395,6 +485,41 @@ type ChangeSetAPIServer interface {
 	//
 	// Scope: `changeset:read`
 	GetPlanDiff(context.Context, *GetPlanDiffRequest) (*GetPlanDiffResponse, error)
+	// ApproveChangeSet approves one plan of a revision. Only a person approves,
+	// and not one who revised the change set, unless they are the only person
+	// able to approve; that self-approval needs a reason and is recorded.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the revision's current plan.
+	//
+	// Scope: `changeset:write`
+	ApproveChangeSet(context.Context, *ApproveChangeSetRequest) (*ApproveChangeSetResponse, error)
+	// ApplyChangeSet queues the apply of a revision's current plan. It takes the
+	// environment's lock. The agent re-plans first and stops if the cluster
+	// changed since the plan.
+	//
+	// FAILED_PRECONDITION when the plan is not current or did not succeed, an
+	// approval is required and missing, the change set was cut from an older
+	// generation of the environment (rebase needed), or another change set holds
+	// the environment.
+	//
+	// Scope: `changeset:write`
+	ApplyChangeSet(context.Context, *ApplyChangeSetRequest) (*ApplyChangeSetResponse, error)
+	// GetApply returns a revision's apply. NOT_FOUND when it was never applied.
+	//
+	// Scope: `changeset:read`
+	GetApply(context.Context, *GetApplyRequest) (*GetApplyResponse, error)
+	// AcceptPartialApply takes a partial apply as the environment's new state
+	// and releases the hold. It is recorded with its reason.
+	//
+	// Scope: `changeset:write`
+	AcceptPartialApply(context.Context, *AcceptPartialApplyRequest) (*AcceptPartialApplyResponse, error)
+	// RevertChangeSet opens a new change set that returns every component the
+	// given change set's apply changed to its state before that apply. History
+	// moves forward: the revert is planned, approved and applied like any other
+	// change set, and may apply while the reverted apply holds the environment.
+	//
+	// Scope: `changeset:write`
+	RevertChangeSet(context.Context, *RevertChangeSetRequest) (*RevertChangeSetResponse, error)
 }
 
 // UnimplementedChangeSetAPIServer should be embedded to have
@@ -445,6 +570,21 @@ func (UnimplementedChangeSetAPIServer) GetPlan(context.Context, *GetPlanRequest)
 }
 func (UnimplementedChangeSetAPIServer) GetPlanDiff(context.Context, *GetPlanDiffRequest) (*GetPlanDiffResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPlanDiff not implemented")
+}
+func (UnimplementedChangeSetAPIServer) ApproveChangeSet(context.Context, *ApproveChangeSetRequest) (*ApproveChangeSetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ApproveChangeSet not implemented")
+}
+func (UnimplementedChangeSetAPIServer) ApplyChangeSet(context.Context, *ApplyChangeSetRequest) (*ApplyChangeSetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ApplyChangeSet not implemented")
+}
+func (UnimplementedChangeSetAPIServer) GetApply(context.Context, *GetApplyRequest) (*GetApplyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetApply not implemented")
+}
+func (UnimplementedChangeSetAPIServer) AcceptPartialApply(context.Context, *AcceptPartialApplyRequest) (*AcceptPartialApplyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcceptPartialApply not implemented")
+}
+func (UnimplementedChangeSetAPIServer) RevertChangeSet(context.Context, *RevertChangeSetRequest) (*RevertChangeSetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevertChangeSet not implemented")
 }
 func (UnimplementedChangeSetAPIServer) testEmbeddedByValue() {}
 
@@ -718,6 +858,96 @@ func _ChangeSetAPI_GetPlanDiff_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChangeSetAPI_ApproveChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApproveChangeSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).ApproveChangeSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_ApproveChangeSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).ApproveChangeSet(ctx, req.(*ApproveChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_ApplyChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApplyChangeSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).ApplyChangeSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_ApplyChangeSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).ApplyChangeSet(ctx, req.(*ApplyChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_GetApply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApplyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).GetApply(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_GetApply_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).GetApply(ctx, req.(*GetApplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_AcceptPartialApply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptPartialApplyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).AcceptPartialApply(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_AcceptPartialApply_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).AcceptPartialApply(ctx, req.(*AcceptPartialApplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_RevertChangeSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevertChangeSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).RevertChangeSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_RevertChangeSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).RevertChangeSet(ctx, req.(*RevertChangeSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChangeSetAPI_ServiceDesc is the grpc.ServiceDesc for ChangeSetAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -780,6 +1010,26 @@ var ChangeSetAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPlanDiff",
 			Handler:    _ChangeSetAPI_GetPlanDiff_Handler,
+		},
+		{
+			MethodName: "ApproveChangeSet",
+			Handler:    _ChangeSetAPI_ApproveChangeSet_Handler,
+		},
+		{
+			MethodName: "ApplyChangeSet",
+			Handler:    _ChangeSetAPI_ApplyChangeSet_Handler,
+		},
+		{
+			MethodName: "GetApply",
+			Handler:    _ChangeSetAPI_GetApply_Handler,
+		},
+		{
+			MethodName: "AcceptPartialApply",
+			Handler:    _ChangeSetAPI_AcceptPartialApply_Handler,
+		},
+		{
+			MethodName: "RevertChangeSet",
+			Handler:    _ChangeSetAPI_RevertChangeSet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

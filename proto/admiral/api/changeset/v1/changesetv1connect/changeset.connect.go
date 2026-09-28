@@ -73,6 +73,20 @@ const (
 	// ChangeSetAPIGetPlanDiffProcedure is the fully-qualified name of the ChangeSetAPI's GetPlanDiff
 	// RPC.
 	ChangeSetAPIGetPlanDiffProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff"
+	// ChangeSetAPIApproveChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
+	// ApproveChangeSet RPC.
+	ChangeSetAPIApproveChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ApproveChangeSet"
+	// ChangeSetAPIApplyChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
+	// ApplyChangeSet RPC.
+	ChangeSetAPIApplyChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ApplyChangeSet"
+	// ChangeSetAPIGetApplyProcedure is the fully-qualified name of the ChangeSetAPI's GetApply RPC.
+	ChangeSetAPIGetApplyProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetApply"
+	// ChangeSetAPIAcceptPartialApplyProcedure is the fully-qualified name of the ChangeSetAPI's
+	// AcceptPartialApply RPC.
+	ChangeSetAPIAcceptPartialApplyProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/AcceptPartialApply"
+	// ChangeSetAPIRevertChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
+	// RevertChangeSet RPC.
+	ChangeSetAPIRevertChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/RevertChangeSet"
 )
 
 // ChangeSetAPIClient is a client for the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -166,6 +180,41 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error)
+	// ApproveChangeSet approves one plan of a revision. Only a person approves,
+	// and not one who revised the change set, unless they are the only person
+	// able to approve; that self-approval needs a reason and is recorded.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the revision's current plan.
+	//
+	// Scope: `changeset:write`
+	ApproveChangeSet(context.Context, *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error)
+	// ApplyChangeSet queues the apply of a revision's current plan. It takes the
+	// environment's lock. The agent re-plans first and stops if the cluster
+	// changed since the plan.
+	//
+	// FAILED_PRECONDITION when the plan is not current or did not succeed, an
+	// approval is required and missing, the change set was cut from an older
+	// generation of the environment (rebase needed), or another change set holds
+	// the environment.
+	//
+	// Scope: `changeset:write`
+	ApplyChangeSet(context.Context, *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error)
+	// GetApply returns a revision's apply. NOT_FOUND when it was never applied.
+	//
+	// Scope: `changeset:read`
+	GetApply(context.Context, *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error)
+	// AcceptPartialApply takes a partial apply as the environment's new state
+	// and releases the hold. It is recorded with its reason.
+	//
+	// Scope: `changeset:write`
+	AcceptPartialApply(context.Context, *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error)
+	// RevertChangeSet opens a new change set that returns every component the
+	// given change set's apply changed to its state before that apply. History
+	// moves forward: the revert is planned, approved and applied like any other
+	// change set, and may apply while the reverted apply holds the environment.
+	//
+	// Scope: `changeset:write`
+	RevertChangeSet(context.Context, *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error)
 }
 
 // NewChangeSetAPIClient constructs a client for the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -263,6 +312,36 @@ func NewChangeSetAPIClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(changeSetAPIMethods.ByName("GetPlanDiff")),
 			connect.WithClientOptions(opts...),
 		),
+		approveChangeSet: connect.NewClient[v1.ApproveChangeSetRequest, v1.ApproveChangeSetResponse](
+			httpClient,
+			baseURL+ChangeSetAPIApproveChangeSetProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("ApproveChangeSet")),
+			connect.WithClientOptions(opts...),
+		),
+		applyChangeSet: connect.NewClient[v1.ApplyChangeSetRequest, v1.ApplyChangeSetResponse](
+			httpClient,
+			baseURL+ChangeSetAPIApplyChangeSetProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("ApplyChangeSet")),
+			connect.WithClientOptions(opts...),
+		),
+		getApply: connect.NewClient[v1.GetApplyRequest, v1.GetApplyResponse](
+			httpClient,
+			baseURL+ChangeSetAPIGetApplyProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("GetApply")),
+			connect.WithClientOptions(opts...),
+		),
+		acceptPartialApply: connect.NewClient[v1.AcceptPartialApplyRequest, v1.AcceptPartialApplyResponse](
+			httpClient,
+			baseURL+ChangeSetAPIAcceptPartialApplyProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("AcceptPartialApply")),
+			connect.WithClientOptions(opts...),
+		),
+		revertChangeSet: connect.NewClient[v1.RevertChangeSetRequest, v1.RevertChangeSetResponse](
+			httpClient,
+			baseURL+ChangeSetAPIRevertChangeSetProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("RevertChangeSet")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -282,6 +361,11 @@ type changeSetAPIClient struct {
 	getArtifact        *connect.Client[v1.GetArtifactRequest, v1.GetArtifactResponse]
 	getPlan            *connect.Client[v1.GetPlanRequest, v1.GetPlanResponse]
 	getPlanDiff        *connect.Client[v1.GetPlanDiffRequest, v1.GetPlanDiffResponse]
+	approveChangeSet   *connect.Client[v1.ApproveChangeSetRequest, v1.ApproveChangeSetResponse]
+	applyChangeSet     *connect.Client[v1.ApplyChangeSetRequest, v1.ApplyChangeSetResponse]
+	getApply           *connect.Client[v1.GetApplyRequest, v1.GetApplyResponse]
+	acceptPartialApply *connect.Client[v1.AcceptPartialApplyRequest, v1.AcceptPartialApplyResponse]
+	revertChangeSet    *connect.Client[v1.RevertChangeSetRequest, v1.RevertChangeSetResponse]
 }
 
 // CreateChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet.
@@ -352,6 +436,31 @@ func (c *changeSetAPIClient) GetPlan(ctx context.Context, req *connect.Request[v
 // GetPlanDiff calls admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff.
 func (c *changeSetAPIClient) GetPlanDiff(ctx context.Context, req *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error) {
 	return c.getPlanDiff.CallUnary(ctx, req)
+}
+
+// ApproveChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.ApproveChangeSet.
+func (c *changeSetAPIClient) ApproveChangeSet(ctx context.Context, req *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error) {
+	return c.approveChangeSet.CallUnary(ctx, req)
+}
+
+// ApplyChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.ApplyChangeSet.
+func (c *changeSetAPIClient) ApplyChangeSet(ctx context.Context, req *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error) {
+	return c.applyChangeSet.CallUnary(ctx, req)
+}
+
+// GetApply calls admiral.api.changeset.v1.ChangeSetAPI.GetApply.
+func (c *changeSetAPIClient) GetApply(ctx context.Context, req *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error) {
+	return c.getApply.CallUnary(ctx, req)
+}
+
+// AcceptPartialApply calls admiral.api.changeset.v1.ChangeSetAPI.AcceptPartialApply.
+func (c *changeSetAPIClient) AcceptPartialApply(ctx context.Context, req *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error) {
+	return c.acceptPartialApply.CallUnary(ctx, req)
+}
+
+// RevertChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.RevertChangeSet.
+func (c *changeSetAPIClient) RevertChangeSet(ctx context.Context, req *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error) {
+	return c.revertChangeSet.CallUnary(ctx, req)
 }
 
 // ChangeSetAPIHandler is an implementation of the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -445,6 +554,41 @@ type ChangeSetAPIHandler interface {
 	//
 	// Scope: `changeset:read`
 	GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error)
+	// ApproveChangeSet approves one plan of a revision. Only a person approves,
+	// and not one who revised the change set, unless they are the only person
+	// able to approve; that self-approval needs a reason and is recorded.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the revision's current plan.
+	//
+	// Scope: `changeset:write`
+	ApproveChangeSet(context.Context, *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error)
+	// ApplyChangeSet queues the apply of a revision's current plan. It takes the
+	// environment's lock. The agent re-plans first and stops if the cluster
+	// changed since the plan.
+	//
+	// FAILED_PRECONDITION when the plan is not current or did not succeed, an
+	// approval is required and missing, the change set was cut from an older
+	// generation of the environment (rebase needed), or another change set holds
+	// the environment.
+	//
+	// Scope: `changeset:write`
+	ApplyChangeSet(context.Context, *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error)
+	// GetApply returns a revision's apply. NOT_FOUND when it was never applied.
+	//
+	// Scope: `changeset:read`
+	GetApply(context.Context, *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error)
+	// AcceptPartialApply takes a partial apply as the environment's new state
+	// and releases the hold. It is recorded with its reason.
+	//
+	// Scope: `changeset:write`
+	AcceptPartialApply(context.Context, *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error)
+	// RevertChangeSet opens a new change set that returns every component the
+	// given change set's apply changed to its state before that apply. History
+	// moves forward: the revert is planned, approved and applied like any other
+	// change set, and may apply while the reverted apply holds the environment.
+	//
+	// Scope: `changeset:write`
+	RevertChangeSet(context.Context, *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error)
 }
 
 // NewChangeSetAPIHandler builds an HTTP handler from the service implementation. It returns the
@@ -538,6 +682,36 @@ func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(changeSetAPIMethods.ByName("GetPlanDiff")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changeSetAPIApproveChangeSetHandler := connect.NewUnaryHandler(
+		ChangeSetAPIApproveChangeSetProcedure,
+		svc.ApproveChangeSet,
+		connect.WithSchema(changeSetAPIMethods.ByName("ApproveChangeSet")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIApplyChangeSetHandler := connect.NewUnaryHandler(
+		ChangeSetAPIApplyChangeSetProcedure,
+		svc.ApplyChangeSet,
+		connect.WithSchema(changeSetAPIMethods.ByName("ApplyChangeSet")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIGetApplyHandler := connect.NewUnaryHandler(
+		ChangeSetAPIGetApplyProcedure,
+		svc.GetApply,
+		connect.WithSchema(changeSetAPIMethods.ByName("GetApply")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIAcceptPartialApplyHandler := connect.NewUnaryHandler(
+		ChangeSetAPIAcceptPartialApplyProcedure,
+		svc.AcceptPartialApply,
+		connect.WithSchema(changeSetAPIMethods.ByName("AcceptPartialApply")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIRevertChangeSetHandler := connect.NewUnaryHandler(
+		ChangeSetAPIRevertChangeSetProcedure,
+		svc.RevertChangeSet,
+		connect.WithSchema(changeSetAPIMethods.ByName("RevertChangeSet")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.api.changeset.v1.ChangeSetAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChangeSetAPICreateChangeSetProcedure:
@@ -568,6 +742,16 @@ func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOpti
 			changeSetAPIGetPlanHandler.ServeHTTP(w, r)
 		case ChangeSetAPIGetPlanDiffProcedure:
 			changeSetAPIGetPlanDiffHandler.ServeHTTP(w, r)
+		case ChangeSetAPIApproveChangeSetProcedure:
+			changeSetAPIApproveChangeSetHandler.ServeHTTP(w, r)
+		case ChangeSetAPIApplyChangeSetProcedure:
+			changeSetAPIApplyChangeSetHandler.ServeHTTP(w, r)
+		case ChangeSetAPIGetApplyProcedure:
+			changeSetAPIGetApplyHandler.ServeHTTP(w, r)
+		case ChangeSetAPIAcceptPartialApplyProcedure:
+			changeSetAPIAcceptPartialApplyHandler.ServeHTTP(w, r)
+		case ChangeSetAPIRevertChangeSetProcedure:
+			changeSetAPIRevertChangeSetHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -631,4 +815,24 @@ func (UnimplementedChangeSetAPIHandler) GetPlan(context.Context, *connect.Reques
 
 func (UnimplementedChangeSetAPIHandler) GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) ApproveChangeSet(context.Context, *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ApproveChangeSet is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) ApplyChangeSet(context.Context, *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ApplyChangeSet is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) GetApply(context.Context, *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetApply is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) AcceptPartialApply(context.Context, *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.AcceptPartialApply is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) RevertChangeSet(context.Context, *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.RevertChangeSet is not implemented"))
 }

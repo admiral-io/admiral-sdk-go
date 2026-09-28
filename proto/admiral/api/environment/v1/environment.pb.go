@@ -67,7 +67,21 @@ type Environment struct {
 	// When the environment was last updated.
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Where workload components go. Omitted fields keep their defaults.
-	Kubernetes    *KubernetesTarget `protobuf:"bytes,13,opt,name=kubernetes,proto3" json:"kubernetes,omitempty"`
+	Kubernetes *KubernetesTarget `protobuf:"bytes,13,opt,name=kubernetes,proto3" json:"kubernetes,omitempty"`
+	// Whether applying a change set here needs an approval. Off by default.
+	ApprovalRequired bool `protobuf:"varint,14,opt,name=approval_required,json=approvalRequired,proto3" json:"approval_required,omitempty"`
+	// Moves each time an apply changes the environment. A change set records
+	// the generation it was cut from.
+	Generation int64 `protobuf:"varint,15,opt,name=generation,proto3" json:"generation,omitempty"`
+	// The change set whose partial apply holds the environment. Nothing else
+	// applies until it is resolved.
+	HeldByChangeSetId string `protobuf:"bytes,16,opt,name=held_by_change_set_id,json=heldByChangeSetId,proto3" json:"held_by_change_set_id,omitempty"`
+	// Whether an apply deletes objects a component no longer renders, and the
+	// objects of a component it removes. Off, they are orphaned: left in the
+	// cluster and no longer managed. An object annotated
+	// `admiral.io/prune: "false"` is orphaned either way. Defaults to true on
+	// create.
+	Prune         *bool `protobuf:"varint,17,opt,name=prune,proto3,oneof" json:"prune,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -177,6 +191,34 @@ func (x *Environment) GetKubernetes() *KubernetesTarget {
 		return x.Kubernetes
 	}
 	return nil
+}
+
+func (x *Environment) GetApprovalRequired() bool {
+	if x != nil {
+		return x.ApprovalRequired
+	}
+	return false
+}
+
+func (x *Environment) GetGeneration() int64 {
+	if x != nil {
+		return x.Generation
+	}
+	return 0
+}
+
+func (x *Environment) GetHeldByChangeSetId() string {
+	if x != nil {
+		return x.HeldByChangeSetId
+	}
+	return ""
+}
+
+func (x *Environment) GetPrune() bool {
+	if x != nil && x.Prune != nil {
+		return *x.Prune
+	}
+	return false
 }
 
 // KubernetesTarget is where an environment's workload components go.
@@ -680,7 +722,8 @@ type UpdateEnvironmentRequest struct {
 	// The set of fields to update. Optional; if omitted, all populated fields
 	// are updated. Pass `*` for full replacement. Supported fields: `name`,
 	// `description`, `labels`, `kubernetes.namespace`,
-	// `kubernetes.create_namespaces`, `kubernetes.agent_id`.
+	// `kubernetes.create_namespaces`, `kubernetes.agent_id`,
+	// `approval_required`, `prune`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1204,7 +1247,7 @@ var File_admiral_api_environment_v1_environment_proto protoreflect.FileDescripto
 
 const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a\x1cadmiral/api/run/v1/run.proto\x1a&admiral/api/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x82\x06\n" +
+	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a\x1cadmiral/api/run/v1/run.proto\x1a&admiral/api/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\a\n" +
 	"\vEnvironment\x12\x1e\n" +
 	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x125\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
@@ -1222,10 +1265,17 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x12L\n" +
 	"\n" +
 	"kubernetes\x18\r \x01(\v2,.admiral.api.environment.v1.KubernetesTargetR\n" +
-	"kubernetes\x1a9\n" +
+	"kubernetes\x12+\n" +
+	"\x11approval_required\x18\x0e \x01(\bR\x10approvalRequired\x12#\n" +
+	"\n" +
+	"generation\x18\x0f \x01(\x03B\x03\xe0A\x03R\n" +
+	"generation\x125\n" +
+	"\x15held_by_change_set_id\x18\x10 \x01(\tB\x03\xe0A\x03R\x11heldByChangeSetId\x12\x19\n" +
+	"\x05prune\x18\x11 \x01(\bH\x00R\x05prune\x88\x01\x01\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xaf\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\b\n" +
+	"\x06_prune\"\xaf\x02\n" +
 	"\x10KubernetesTarget\x12N\n" +
 	"\tnamespace\x18\x01 \x01(\tB0\xbaH-r+\x18?2'^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)?$R\tnamespace\x120\n" +
 	"\x11create_namespaces\x18\x02 \x01(\bH\x00R\x10createNamespaces\x88\x01\x01\x12[\n" +
@@ -1411,6 +1461,7 @@ func file_admiral_api_environment_v1_environment_proto_init() {
 	if File_admiral_api_environment_v1_environment_proto != nil {
 		return
 	}
+	file_admiral_api_environment_v1_environment_proto_msgTypes[0].OneofWrappers = []any{}
 	file_admiral_api_environment_v1_environment_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

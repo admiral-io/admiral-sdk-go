@@ -222,6 +222,16 @@ func (m *Environment) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for ApprovalRequired
+
+	// no validation rules for Generation
+
+	// no validation rules for HeldByChangeSetId
+
+	if m.Prune != nil {
+		// no validation rules for Prune
+	}
+
 	if len(errors) > 0 {
 		return EnvironmentMultiError(errors)
 	}

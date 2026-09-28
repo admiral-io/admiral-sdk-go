@@ -381,6 +381,9 @@ const (
 	// Deleted and created again: an immutable field changed.
 	ResourceAction_REPLACE ResourceAction = 4
 	ResourceAction_DESTROY ResourceAction = 5
+	// Left in the cluster and no longer managed: pruning is off for it, or it
+	// is a Namespace, which is never deleted.
+	ResourceAction_ORPHAN ResourceAction = 6
 )
 
 // Enum value maps for ResourceAction.
@@ -392,6 +395,7 @@ var (
 		3: "UPDATE",
 		4: "REPLACE",
 		5: "DESTROY",
+		6: "ORPHAN",
 	}
 	ResourceAction_value = map[string]int32{
 		"RESOURCE_ACTION_UNSPECIFIED": 0,
@@ -400,6 +404,7 @@ var (
 		"UPDATE":                      3,
 		"REPLACE":                     4,
 		"DESTROY":                     5,
+		"ORPHAN":                      6,
 	}
 )
 
@@ -1265,7 +1270,10 @@ type JobResult struct {
 	Message string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	Steps   []*Step   `protobuf:"bytes,3,rep,name=steps,proto3" json:"steps,omitempty"`
 	// Set by a PLAN.
-	Plan          *PlanResult `protobuf:"bytes,5,opt,name=plan,proto3" json:"plan,omitempty"`
+	Plan *PlanResult `protobuf:"bytes,5,opt,name=plan,proto3" json:"plan,omitempty"`
+	// Set by an APPLY: what each component it reached left in the cluster,
+	// including one that failed partway.
+	Inventory     []*ComponentInventory `protobuf:"bytes,6,rep,name=inventory,proto3" json:"inventory,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1324,6 +1332,13 @@ func (x *JobResult) GetSteps() []*Step {
 func (x *JobResult) GetPlan() *PlanResult {
 	if x != nil {
 		return x.Plan
+	}
+	return nil
+}
+
+func (x *JobResult) GetInventory() []*ComponentInventory {
+	if x != nil {
+		return x.Inventory
 	}
 	return nil
 }
@@ -4669,6 +4684,111 @@ func (x *ReportJobResultResponse) GetOutcome() ReportOutcome {
 	return ReportOutcome_REPORT_OUTCOME_UNSPECIFIED
 }
 
+type CheckApplyPlanRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attempt       *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	Plan          *PlanResult            `protobuf:"bytes,2,opt,name=plan,proto3" json:"plan,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckApplyPlanRequest) Reset() {
+	*x = CheckApplyPlanRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[72]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckApplyPlanRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckApplyPlanRequest) ProtoMessage() {}
+
+func (x *CheckApplyPlanRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[72]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckApplyPlanRequest.ProtoReflect.Descriptor instead.
+func (*CheckApplyPlanRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{72}
+}
+
+func (x *CheckApplyPlanRequest) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
+func (x *CheckApplyPlanRequest) GetPlan() *PlanResult {
+	if x != nil {
+		return x.Plan
+	}
+	return nil
+}
+
+type CheckApplyPlanResponse struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Proceed bool                   `protobuf:"varint,1,opt,name=proceed,proto3" json:"proceed,omitempty"`
+	// Why not, when `proceed` is false.
+	Message       string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckApplyPlanResponse) Reset() {
+	*x = CheckApplyPlanResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[73]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckApplyPlanResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckApplyPlanResponse) ProtoMessage() {}
+
+func (x *CheckApplyPlanResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[73]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckApplyPlanResponse.ProtoReflect.Descriptor instead.
+func (*CheckApplyPlanResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{73}
+}
+
+func (x *CheckApplyPlanResponse) GetProceed() bool {
+	if x != nil {
+		return x.Proceed
+	}
+	return false
+}
+
+func (x *CheckApplyPlanResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_admiral_api_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
@@ -4755,12 +4875,13 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
 	"started_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12;\n" +
 	"\vfinished_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"finishedAt\"\xe7\x01\n" +
+	"finishedAt\"\xaf\x02\n" +
 	"\tJobResult\x12E\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\f\xbaH\t\x82\x01\x06\x18\x04\x18\x05\x18\x06R\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x120\n" +
 	"\x05steps\x18\x03 \x03(\v2\x1a.admiral.api.agent.v1.StepR\x05steps\x124\n" +
-	"\x04plan\x18\x05 \x01(\v2 .admiral.api.agent.v1.PlanResultR\x04planJ\x04\b\x04\x10\x05R\voutput_json\"\x9a\x01\n" +
+	"\x04plan\x18\x05 \x01(\v2 .admiral.api.agent.v1.PlanResultR\x04plan\x12F\n" +
+	"\tinventory\x18\x06 \x03(\v2(.admiral.api.agent.v1.ComponentInventoryR\tinventoryJ\x04\b\x04\x10\x05R\voutput_json\"\x9a\x01\n" +
 	"\vResourceRef\x12)\n" +
 	"\vapi_version\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\xfd\x01R\n" +
 	"apiVersion\x12\x1b\n" +
@@ -4982,7 +5103,13 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\treport_id\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18@R\breportId\x12B\n" +
 	"\x06result\x18\x03 \x01(\v2\x1f.admiral.api.agent.v1.JobResultB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x06result\"X\n" +
 	"\x17ReportJobResultResponse\x12=\n" +
-	"\aoutcome\x18\x01 \x01(\x0e2#.admiral.api.agent.v1.ReportOutcomeR\aoutcome*I\n" +
+	"\aoutcome\x18\x01 \x01(\x0e2#.admiral.api.agent.v1.ReportOutcomeR\aoutcome\"\x9c\x01\n" +
+	"\x15CheckApplyPlanRequest\x12B\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\x12?\n" +
+	"\x04plan\x18\x02 \x01(\v2 .admiral.api.agent.v1.PlanResultB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x04plan\"L\n" +
+	"\x16CheckApplyPlanResponse\x12\x18\n" +
+	"\aproceed\x18\x01 \x01(\bR\aproceed\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage*I\n" +
 	"\rClusterStatus\x12\x1e\n" +
 	"\x1aCLUSTER_STATUS_UNSPECIFIED\x10\x00\x12\v\n" +
 	"\aPENDING\x10\x01\x12\v\n" +
@@ -5023,7 +5150,7 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x1aREPORT_OUTCOME_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bACCEPTED\x10\x01\x12\r\n" +
 	"\tDUPLICATE\x10\x02\x12\b\n" +
-	"\x04LATE\x10\x03*n\n" +
+	"\x04LATE\x10\x03*z\n" +
 	"\x0eResourceAction\x12\x1f\n" +
 	"\x1bRESOURCE_ACTION_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05NO_OP\x10\x01\x12\n" +
@@ -5032,7 +5159,9 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
 	"\x06UPDATE\x10\x03\x12\v\n" +
 	"\aREPLACE\x10\x04\x12\v\n" +
-	"\aDESTROY\x10\x052\xad\x18\n" +
+	"\aDESTROY\x10\x05\x12\n" +
+	"\n" +
+	"\x06ORPHAN\x10\x062\xad\x18\n" +
 	"\bAgentAPI\x12\xb2\x01\n" +
 	"\rCreateCluster\x12*.admiral.api.agent.v1.CreateClusterRequest\x1a+.admiral.api.agent.v1.CreateClusterResponse\"H\xbaG\x1d\n" +
 	"\bClusters\x12\x11Connect a cluster\xa2\x97$\r\n" +
@@ -5096,7 +5225,7 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x12\b/v1/jobs\x12\xa9\x01\n" +
 	"\tCancelJob\x12&.admiral.api.agent.v1.CancelJobRequest\x1a'.admiral.api.agent.v1.CancelJobResponse\"K\xbaG\x14\n" +
 	"\x04Jobs\x12\fCancel a job\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/jobs/{job_id}/cancel2\xe8\v\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/jobs/{job_id}/cancel2\xb5\r\n" +
 	"\x0fAgentRuntimeAPI\x12\xa6\x01\n" +
 	"\x06Enroll\x12#.admiral.api.agent.v1.EnrollRequest\x1a$.admiral.api.agent.v1.EnrollResponse\"Q\xbaG!\n" +
 	"\rAgent Runtime\x12\x10Enroll a cluster\xa2\x97$\x0e\n" +
@@ -5124,7 +5253,11 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x0eUploadPlanDiff\x12+.admiral.api.agent.v1.UploadPlanDiffRequest\x1a,.admiral.api.agent.v1.UploadPlanDiffResponse\"\\\xbaG&\n" +
 	"\rAgent Runtime\x12\x15Upload a plan's diffs\xa2\x97$\f\n" +
 	"\n" +
-	"agent:exec\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/agent/jobs/plan-diff\x12\xc7\x01\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/agent/jobs/plan-diff\x12\xca\x01\n" +
+	"\x0eCheckApplyPlan\x12+.admiral.api.agent.v1.CheckApplyPlanRequest\x1a,.admiral.api.agent.v1.CheckApplyPlanResponse\"]\xbaG&\n" +
+	"\rAgent Runtime\x12\x15Check an apply's plan\xa2\x97$\f\n" +
+	"\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/agent/jobs/check-plan\x12\xc7\x01\n" +
 	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"W\xbaG$\n" +
 	"\rAgent Runtime\x12\x13Report a job result\xa2\x97$\f\n" +
 	"\n" +
@@ -5145,7 +5278,7 @@ func file_admiral_api_agent_v1_agent_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 72)
+var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 74)
 var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(ClusterStatus)(0),                  // 0: admiral.api.agent.v1.ClusterStatus
 	(AgentHealth)(0),                    // 1: admiral.api.agent.v1.AgentHealth
@@ -5226,136 +5359,143 @@ var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(*UploadPlanDiffResponse)(nil),      // 76: admiral.api.agent.v1.UploadPlanDiffResponse
 	(*ReportJobResultRequest)(nil),      // 77: admiral.api.agent.v1.ReportJobResultRequest
 	(*ReportJobResultResponse)(nil),     // 78: admiral.api.agent.v1.ReportJobResultResponse
-	(*timestamppb.Timestamp)(nil),       // 79: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),                 // 80: admiral.common.v1.ActorRef
+	(*CheckApplyPlanRequest)(nil),       // 79: admiral.api.agent.v1.CheckApplyPlanRequest
+	(*CheckApplyPlanResponse)(nil),      // 80: admiral.api.agent.v1.CheckApplyPlanResponse
+	(*timestamppb.Timestamp)(nil),       // 81: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                 // 82: admiral.common.v1.ActorRef
 }
 var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
-	0,  // 0: admiral.api.agent.v1.Cluster.status:type_name -> admiral.api.agent.v1.ClusterStatus
-	79, // 1: admiral.api.agent.v1.Cluster.keys_updated_at:type_name -> google.protobuf.Timestamp
-	80, // 2: admiral.api.agent.v1.Cluster.created_by:type_name -> admiral.common.v1.ActorRef
-	79, // 3: admiral.api.agent.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
-	79, // 4: admiral.api.agent.v1.Cluster.keys_reported_at:type_name -> google.protobuf.Timestamp
-	10, // 5: admiral.api.agent.v1.Agent.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
-	1,  // 6: admiral.api.agent.v1.Agent.health:type_name -> admiral.api.agent.v1.AgentHealth
-	11, // 7: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
-	80, // 8: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
-	79, // 9: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
-	12, // 10: admiral.api.agent.v1.AgentReport.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
-	79, // 11: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
-	2,  // 12: admiral.api.agent.v1.Job.kind:type_name -> admiral.api.agent.v1.JobKind
-	3,  // 13: admiral.api.agent.v1.Job.status:type_name -> admiral.api.agent.v1.JobStatus
-	4,  // 14: admiral.api.agent.v1.Job.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
-	15, // 15: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
-	79, // 16: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	79, // 17: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	79, // 18: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
-	3,  // 19: admiral.api.agent.v1.JobResult.status:type_name -> admiral.api.agent.v1.JobStatus
-	23, // 20: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
-	18, // 21: admiral.api.agent.v1.JobResult.plan:type_name -> admiral.api.agent.v1.PlanResult
-	16, // 22: admiral.api.agent.v1.ComponentInventory.resources:type_name -> admiral.api.agent.v1.ResourceRef
-	19, // 23: admiral.api.agent.v1.PlanResult.components:type_name -> admiral.api.agent.v1.ComponentPlan
-	20, // 24: admiral.api.agent.v1.ComponentPlan.changes:type_name -> admiral.api.agent.v1.ResourceChange
-	16, // 25: admiral.api.agent.v1.ResourceChange.resource:type_name -> admiral.api.agent.v1.ResourceRef
-	6,  // 26: admiral.api.agent.v1.ResourceChange.action:type_name -> admiral.api.agent.v1.ResourceAction
-	22, // 27: admiral.api.agent.v1.PlanDiff.resources:type_name -> admiral.api.agent.v1.ResourceDiff
-	16, // 28: admiral.api.agent.v1.ResourceDiff.resource:type_name -> admiral.api.agent.v1.ResourceRef
-	3,  // 29: admiral.api.agent.v1.Step.status:type_name -> admiral.api.agent.v1.JobStatus
-	14, // 30: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
-	8,  // 31: admiral.api.agent.v1.CreateClusterRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
-	7,  // 32: admiral.api.agent.v1.CreateClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	7,  // 33: admiral.api.agent.v1.GetClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	7,  // 34: admiral.api.agent.v1.ListClustersResponse.clusters:type_name -> admiral.api.agent.v1.Cluster
-	8,  // 35: admiral.api.agent.v1.SetClusterTrustRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
-	7,  // 36: admiral.api.agent.v1.SetClusterTrustResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	10, // 37: admiral.api.agent.v1.CreateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
-	13, // 38: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	9,  // 39: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	13, // 40: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	37, // 41: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
-	79, // 42: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
-	9,  // 43: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	9,  // 44: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
-	10, // 45: admiral.api.agent.v1.UpdateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
-	9,  // 46: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	37, // 47: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
-	13, // 48: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
-	13, // 49: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
-	13, // 50: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	14, // 51: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
-	3,  // 52: admiral.api.agent.v1.ListJobsRequest.status:type_name -> admiral.api.agent.v1.JobStatus
-	14, // 53: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
-	14, // 54: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
-	7,  // 55: admiral.api.agent.v1.EnrollResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	9,  // 56: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	12, // 57: admiral.api.agent.v1.ReportStatusRequest.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
-	2,  // 58: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
-	65, // 59: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
-	24, // 60: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
-	60, // 61: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	60, // 62: admiral.api.agent.v1.RenewLeaseRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	70, // 63: admiral.api.agent.v1.RenewLeaseRequest.progress:type_name -> admiral.api.agent.v1.Progress
-	60, // 64: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	17, // 65: admiral.api.agent.v1.GetJobArtifactResponse.previous_inventory:type_name -> admiral.api.agent.v1.ComponentInventory
-	60, // 66: admiral.api.agent.v1.UploadPlanDiffRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	21, // 67: admiral.api.agent.v1.UploadPlanDiffRequest.diff:type_name -> admiral.api.agent.v1.PlanDiff
-	60, // 68: admiral.api.agent.v1.ReportJobResultRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	15, // 69: admiral.api.agent.v1.ReportJobResultRequest.result:type_name -> admiral.api.agent.v1.JobResult
-	5,  // 70: admiral.api.agent.v1.ReportJobResultResponse.outcome:type_name -> admiral.api.agent.v1.ReportOutcome
-	25, // 71: admiral.api.agent.v1.AgentAPI.CreateCluster:input_type -> admiral.api.agent.v1.CreateClusterRequest
-	27, // 72: admiral.api.agent.v1.AgentAPI.GetCluster:input_type -> admiral.api.agent.v1.GetClusterRequest
-	29, // 73: admiral.api.agent.v1.AgentAPI.ListClusters:input_type -> admiral.api.agent.v1.ListClustersRequest
-	31, // 74: admiral.api.agent.v1.AgentAPI.SetClusterTrust:input_type -> admiral.api.agent.v1.SetClusterTrustRequest
-	33, // 75: admiral.api.agent.v1.AgentAPI.DeleteCluster:input_type -> admiral.api.agent.v1.DeleteClusterRequest
-	35, // 76: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
-	38, // 77: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
-	40, // 78: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
-	42, // 79: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
-	44, // 80: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
-	46, // 81: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
-	48, // 82: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
-	50, // 83: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
-	52, // 84: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
-	54, // 85: admiral.api.agent.v1.AgentAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
-	56, // 86: admiral.api.agent.v1.AgentAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
-	58, // 87: admiral.api.agent.v1.AgentAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
-	61, // 88: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
-	63, // 89: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:input_type -> admiral.api.agent.v1.ReportStatusRequest
-	66, // 90: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
-	68, // 91: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
-	71, // 92: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:input_type -> admiral.api.agent.v1.RenewLeaseRequest
-	73, // 93: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
-	75, // 94: admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff:input_type -> admiral.api.agent.v1.UploadPlanDiffRequest
-	77, // 95: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:input_type -> admiral.api.agent.v1.ReportJobResultRequest
-	26, // 96: admiral.api.agent.v1.AgentAPI.CreateCluster:output_type -> admiral.api.agent.v1.CreateClusterResponse
-	28, // 97: admiral.api.agent.v1.AgentAPI.GetCluster:output_type -> admiral.api.agent.v1.GetClusterResponse
-	30, // 98: admiral.api.agent.v1.AgentAPI.ListClusters:output_type -> admiral.api.agent.v1.ListClustersResponse
-	32, // 99: admiral.api.agent.v1.AgentAPI.SetClusterTrust:output_type -> admiral.api.agent.v1.SetClusterTrustResponse
-	34, // 100: admiral.api.agent.v1.AgentAPI.DeleteCluster:output_type -> admiral.api.agent.v1.DeleteClusterResponse
-	36, // 101: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
-	39, // 102: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
-	41, // 103: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
-	43, // 104: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
-	45, // 105: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
-	47, // 106: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
-	49, // 107: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
-	51, // 108: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
-	53, // 109: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
-	55, // 110: admiral.api.agent.v1.AgentAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
-	57, // 111: admiral.api.agent.v1.AgentAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
-	59, // 112: admiral.api.agent.v1.AgentAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
-	62, // 113: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
-	64, // 114: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:output_type -> admiral.api.agent.v1.ReportStatusResponse
-	67, // 115: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
-	69, // 116: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
-	72, // 117: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:output_type -> admiral.api.agent.v1.RenewLeaseResponse
-	74, // 118: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
-	76, // 119: admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff:output_type -> admiral.api.agent.v1.UploadPlanDiffResponse
-	78, // 120: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:output_type -> admiral.api.agent.v1.ReportJobResultResponse
-	96, // [96:121] is the sub-list for method output_type
-	71, // [71:96] is the sub-list for method input_type
-	71, // [71:71] is the sub-list for extension type_name
-	71, // [71:71] is the sub-list for extension extendee
-	0,  // [0:71] is the sub-list for field type_name
+	0,   // 0: admiral.api.agent.v1.Cluster.status:type_name -> admiral.api.agent.v1.ClusterStatus
+	81,  // 1: admiral.api.agent.v1.Cluster.keys_updated_at:type_name -> google.protobuf.Timestamp
+	82,  // 2: admiral.api.agent.v1.Cluster.created_by:type_name -> admiral.common.v1.ActorRef
+	81,  // 3: admiral.api.agent.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
+	81,  // 4: admiral.api.agent.v1.Cluster.keys_reported_at:type_name -> google.protobuf.Timestamp
+	10,  // 5: admiral.api.agent.v1.Agent.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	1,   // 6: admiral.api.agent.v1.Agent.health:type_name -> admiral.api.agent.v1.AgentHealth
+	11,  // 7: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
+	82,  // 8: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
+	81,  // 9: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
+	12,  // 10: admiral.api.agent.v1.AgentReport.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
+	81,  // 11: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
+	2,   // 12: admiral.api.agent.v1.Job.kind:type_name -> admiral.api.agent.v1.JobKind
+	3,   // 13: admiral.api.agent.v1.Job.status:type_name -> admiral.api.agent.v1.JobStatus
+	4,   // 14: admiral.api.agent.v1.Job.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
+	15,  // 15: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
+	81,  // 16: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	81,  // 17: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	81,  // 18: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
+	3,   // 19: admiral.api.agent.v1.JobResult.status:type_name -> admiral.api.agent.v1.JobStatus
+	23,  // 20: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
+	18,  // 21: admiral.api.agent.v1.JobResult.plan:type_name -> admiral.api.agent.v1.PlanResult
+	17,  // 22: admiral.api.agent.v1.JobResult.inventory:type_name -> admiral.api.agent.v1.ComponentInventory
+	16,  // 23: admiral.api.agent.v1.ComponentInventory.resources:type_name -> admiral.api.agent.v1.ResourceRef
+	19,  // 24: admiral.api.agent.v1.PlanResult.components:type_name -> admiral.api.agent.v1.ComponentPlan
+	20,  // 25: admiral.api.agent.v1.ComponentPlan.changes:type_name -> admiral.api.agent.v1.ResourceChange
+	16,  // 26: admiral.api.agent.v1.ResourceChange.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	6,   // 27: admiral.api.agent.v1.ResourceChange.action:type_name -> admiral.api.agent.v1.ResourceAction
+	22,  // 28: admiral.api.agent.v1.PlanDiff.resources:type_name -> admiral.api.agent.v1.ResourceDiff
+	16,  // 29: admiral.api.agent.v1.ResourceDiff.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	3,   // 30: admiral.api.agent.v1.Step.status:type_name -> admiral.api.agent.v1.JobStatus
+	14,  // 31: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
+	8,   // 32: admiral.api.agent.v1.CreateClusterRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
+	7,   // 33: admiral.api.agent.v1.CreateClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	7,   // 34: admiral.api.agent.v1.GetClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	7,   // 35: admiral.api.agent.v1.ListClustersResponse.clusters:type_name -> admiral.api.agent.v1.Cluster
+	8,   // 36: admiral.api.agent.v1.SetClusterTrustRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
+	7,   // 37: admiral.api.agent.v1.SetClusterTrustResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	10,  // 38: admiral.api.agent.v1.CreateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	13,  // 39: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	9,   // 40: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	13,  // 41: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	37,  // 42: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	81,  // 43: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
+	9,   // 44: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	9,   // 45: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
+	10,  // 46: admiral.api.agent.v1.UpdateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	9,   // 47: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	37,  // 48: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	13,  // 49: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	13,  // 50: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	13,  // 51: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	14,  // 52: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	3,   // 53: admiral.api.agent.v1.ListJobsRequest.status:type_name -> admiral.api.agent.v1.JobStatus
+	14,  // 54: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
+	14,  // 55: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	7,   // 56: admiral.api.agent.v1.EnrollResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	9,   // 57: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	12,  // 58: admiral.api.agent.v1.ReportStatusRequest.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
+	2,   // 59: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
+	65,  // 60: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
+	24,  // 61: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
+	60,  // 62: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	60,  // 63: admiral.api.agent.v1.RenewLeaseRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	70,  // 64: admiral.api.agent.v1.RenewLeaseRequest.progress:type_name -> admiral.api.agent.v1.Progress
+	60,  // 65: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	17,  // 66: admiral.api.agent.v1.GetJobArtifactResponse.previous_inventory:type_name -> admiral.api.agent.v1.ComponentInventory
+	60,  // 67: admiral.api.agent.v1.UploadPlanDiffRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	21,  // 68: admiral.api.agent.v1.UploadPlanDiffRequest.diff:type_name -> admiral.api.agent.v1.PlanDiff
+	60,  // 69: admiral.api.agent.v1.ReportJobResultRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	15,  // 70: admiral.api.agent.v1.ReportJobResultRequest.result:type_name -> admiral.api.agent.v1.JobResult
+	5,   // 71: admiral.api.agent.v1.ReportJobResultResponse.outcome:type_name -> admiral.api.agent.v1.ReportOutcome
+	60,  // 72: admiral.api.agent.v1.CheckApplyPlanRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	18,  // 73: admiral.api.agent.v1.CheckApplyPlanRequest.plan:type_name -> admiral.api.agent.v1.PlanResult
+	25,  // 74: admiral.api.agent.v1.AgentAPI.CreateCluster:input_type -> admiral.api.agent.v1.CreateClusterRequest
+	27,  // 75: admiral.api.agent.v1.AgentAPI.GetCluster:input_type -> admiral.api.agent.v1.GetClusterRequest
+	29,  // 76: admiral.api.agent.v1.AgentAPI.ListClusters:input_type -> admiral.api.agent.v1.ListClustersRequest
+	31,  // 77: admiral.api.agent.v1.AgentAPI.SetClusterTrust:input_type -> admiral.api.agent.v1.SetClusterTrustRequest
+	33,  // 78: admiral.api.agent.v1.AgentAPI.DeleteCluster:input_type -> admiral.api.agent.v1.DeleteClusterRequest
+	35,  // 79: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
+	38,  // 80: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
+	40,  // 81: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
+	42,  // 82: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
+	44,  // 83: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
+	46,  // 84: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	48,  // 85: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
+	50,  // 86: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
+	52,  // 87: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
+	54,  // 88: admiral.api.agent.v1.AgentAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
+	56,  // 89: admiral.api.agent.v1.AgentAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
+	58,  // 90: admiral.api.agent.v1.AgentAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
+	61,  // 91: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
+	63,  // 92: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:input_type -> admiral.api.agent.v1.ReportStatusRequest
+	66,  // 93: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
+	68,  // 94: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
+	71,  // 95: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:input_type -> admiral.api.agent.v1.RenewLeaseRequest
+	73,  // 96: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
+	75,  // 97: admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff:input_type -> admiral.api.agent.v1.UploadPlanDiffRequest
+	79,  // 98: admiral.api.agent.v1.AgentRuntimeAPI.CheckApplyPlan:input_type -> admiral.api.agent.v1.CheckApplyPlanRequest
+	77,  // 99: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:input_type -> admiral.api.agent.v1.ReportJobResultRequest
+	26,  // 100: admiral.api.agent.v1.AgentAPI.CreateCluster:output_type -> admiral.api.agent.v1.CreateClusterResponse
+	28,  // 101: admiral.api.agent.v1.AgentAPI.GetCluster:output_type -> admiral.api.agent.v1.GetClusterResponse
+	30,  // 102: admiral.api.agent.v1.AgentAPI.ListClusters:output_type -> admiral.api.agent.v1.ListClustersResponse
+	32,  // 103: admiral.api.agent.v1.AgentAPI.SetClusterTrust:output_type -> admiral.api.agent.v1.SetClusterTrustResponse
+	34,  // 104: admiral.api.agent.v1.AgentAPI.DeleteCluster:output_type -> admiral.api.agent.v1.DeleteClusterResponse
+	36,  // 105: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
+	39,  // 106: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
+	41,  // 107: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
+	43,  // 108: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
+	45,  // 109: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
+	47,  // 110: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	49,  // 111: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
+	51,  // 112: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
+	53,  // 113: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
+	55,  // 114: admiral.api.agent.v1.AgentAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
+	57,  // 115: admiral.api.agent.v1.AgentAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
+	59,  // 116: admiral.api.agent.v1.AgentAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
+	62,  // 117: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
+	64,  // 118: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:output_type -> admiral.api.agent.v1.ReportStatusResponse
+	67,  // 119: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
+	69,  // 120: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
+	72,  // 121: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:output_type -> admiral.api.agent.v1.RenewLeaseResponse
+	74,  // 122: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
+	76,  // 123: admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff:output_type -> admiral.api.agent.v1.UploadPlanDiffResponse
+	80,  // 124: admiral.api.agent.v1.AgentRuntimeAPI.CheckApplyPlan:output_type -> admiral.api.agent.v1.CheckApplyPlanResponse
+	78,  // 125: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:output_type -> admiral.api.agent.v1.ReportJobResultResponse
+	100, // [100:126] is the sub-list for method output_type
+	74,  // [74:100] is the sub-list for method input_type
+	74,  // [74:74] is the sub-list for extension type_name
+	74,  // [74:74] is the sub-list for extension extendee
+	0,   // [0:74] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_agent_v1_agent_proto_init() }
@@ -5383,7 +5523,7 @@ func file_admiral_api_agent_v1_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_agent_v1_agent_proto_rawDesc), len(file_admiral_api_agent_v1_agent_proto_rawDesc)),
 			NumEnums:      7,
-			NumMessages:   72,
+			NumMessages:   74,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

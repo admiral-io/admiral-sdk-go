@@ -92,6 +92,9 @@ const (
 	// AgentRuntimeAPIUploadPlanDiffProcedure is the fully-qualified name of the AgentRuntimeAPI's
 	// UploadPlanDiff RPC.
 	AgentRuntimeAPIUploadPlanDiffProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff"
+	// AgentRuntimeAPICheckApplyPlanProcedure is the fully-qualified name of the AgentRuntimeAPI's
+	// CheckApplyPlan RPC.
+	AgentRuntimeAPICheckApplyPlanProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/CheckApplyPlan"
 	// AgentRuntimeAPIReportJobResultProcedure is the fully-qualified name of the AgentRuntimeAPI's
 	// ReportJobResult RPC.
 	AgentRuntimeAPIReportJobResultProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
@@ -762,6 +765,12 @@ type AgentRuntimeAPIClient interface {
 	//
 	// Scope: `agent:exec`
 	UploadPlanDiff(context.Context, *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error)
+	// CheckApplyPlan compares an APPLY attempt's fresh plan with the plan it
+	// applies. `proceed` false means the cluster changed since that plan: stop
+	// before changing anything and report FAILED.
+	//
+	// Scope: `agent:exec`
+	CheckApplyPlan(context.Context, *connect.Request[v1.CheckApplyPlanRequest]) (*connect.Response[v1.CheckApplyPlanResponse], error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -823,6 +832,12 @@ func NewAgentRuntimeAPIClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(agentRuntimeAPIMethods.ByName("UploadPlanDiff")),
 			connect.WithClientOptions(opts...),
 		),
+		checkApplyPlan: connect.NewClient[v1.CheckApplyPlanRequest, v1.CheckApplyPlanResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPICheckApplyPlanProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("CheckApplyPlan")),
+			connect.WithClientOptions(opts...),
+		),
 		reportJobResult: connect.NewClient[v1.ReportJobResultRequest, v1.ReportJobResultResponse](
 			httpClient,
 			baseURL+AgentRuntimeAPIReportJobResultProcedure,
@@ -841,6 +856,7 @@ type agentRuntimeAPIClient struct {
 	renewLease      *connect.Client[v1.RenewLeaseRequest, v1.RenewLeaseResponse]
 	getJobArtifact  *connect.Client[v1.GetJobArtifactRequest, v1.GetJobArtifactResponse]
 	uploadPlanDiff  *connect.Client[v1.UploadPlanDiffRequest, v1.UploadPlanDiffResponse]
+	checkApplyPlan  *connect.Client[v1.CheckApplyPlanRequest, v1.CheckApplyPlanResponse]
 	reportJobResult *connect.Client[v1.ReportJobResultRequest, v1.ReportJobResultResponse]
 }
 
@@ -877,6 +893,11 @@ func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, req *connect
 // UploadPlanDiff calls admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff.
 func (c *agentRuntimeAPIClient) UploadPlanDiff(ctx context.Context, req *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error) {
 	return c.uploadPlanDiff.CallUnary(ctx, req)
+}
+
+// CheckApplyPlan calls admiral.api.agent.v1.AgentRuntimeAPI.CheckApplyPlan.
+func (c *agentRuntimeAPIClient) CheckApplyPlan(ctx context.Context, req *connect.Request[v1.CheckApplyPlanRequest]) (*connect.Response[v1.CheckApplyPlanResponse], error) {
+	return c.checkApplyPlan.CallUnary(ctx, req)
 }
 
 // ReportJobResult calls admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult.
@@ -931,6 +952,12 @@ type AgentRuntimeAPIHandler interface {
 	//
 	// Scope: `agent:exec`
 	UploadPlanDiff(context.Context, *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error)
+	// CheckApplyPlan compares an APPLY attempt's fresh plan with the plan it
+	// applies. `proceed` false means the cluster changed since that plan: stop
+	// before changing anything and report FAILED.
+	//
+	// Scope: `agent:exec`
+	CheckApplyPlan(context.Context, *connect.Request[v1.CheckApplyPlanRequest]) (*connect.Response[v1.CheckApplyPlanResponse], error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -988,6 +1015,12 @@ func NewAgentRuntimeAPIHandler(svc AgentRuntimeAPIHandler, opts ...connect.Handl
 		connect.WithSchema(agentRuntimeAPIMethods.ByName("UploadPlanDiff")),
 		connect.WithHandlerOptions(opts...),
 	)
+	agentRuntimeAPICheckApplyPlanHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPICheckApplyPlanProcedure,
+		svc.CheckApplyPlan,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("CheckApplyPlan")),
+		connect.WithHandlerOptions(opts...),
+	)
 	agentRuntimeAPIReportJobResultHandler := connect.NewUnaryHandler(
 		AgentRuntimeAPIReportJobResultProcedure,
 		svc.ReportJobResult,
@@ -1010,6 +1043,8 @@ func NewAgentRuntimeAPIHandler(svc AgentRuntimeAPIHandler, opts ...connect.Handl
 			agentRuntimeAPIGetJobArtifactHandler.ServeHTTP(w, r)
 		case AgentRuntimeAPIUploadPlanDiffProcedure:
 			agentRuntimeAPIUploadPlanDiffHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPICheckApplyPlanProcedure:
+			agentRuntimeAPICheckApplyPlanHandler.ServeHTTP(w, r)
 		case AgentRuntimeAPIReportJobResultProcedure:
 			agentRuntimeAPIReportJobResultHandler.ServeHTTP(w, r)
 		default:
@@ -1047,6 +1082,10 @@ func (UnimplementedAgentRuntimeAPIHandler) GetJobArtifact(context.Context, *conn
 
 func (UnimplementedAgentRuntimeAPIHandler) UploadPlanDiff(context.Context, *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) CheckApplyPlan(context.Context, *connect.Request[v1.CheckApplyPlanRequest]) (*connect.Response[v1.CheckApplyPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.CheckApplyPlan is not implemented"))
 }
 
 func (UnimplementedAgentRuntimeAPIHandler) ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error) {
