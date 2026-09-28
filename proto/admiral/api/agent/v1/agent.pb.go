@@ -370,6 +370,66 @@ func (ReportOutcome) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{5}
 }
 
+// ResourceAction is what applying a plan does to one object.
+type ResourceAction int32
+
+const (
+	ResourceAction_RESOURCE_ACTION_UNSPECIFIED ResourceAction = 0
+	ResourceAction_NO_OP                       ResourceAction = 1
+	ResourceAction_CREATE                      ResourceAction = 2
+	ResourceAction_UPDATE                      ResourceAction = 3
+	// Deleted and created again: an immutable field changed.
+	ResourceAction_REPLACE ResourceAction = 4
+	ResourceAction_DESTROY ResourceAction = 5
+)
+
+// Enum value maps for ResourceAction.
+var (
+	ResourceAction_name = map[int32]string{
+		0: "RESOURCE_ACTION_UNSPECIFIED",
+		1: "NO_OP",
+		2: "CREATE",
+		3: "UPDATE",
+		4: "REPLACE",
+		5: "DESTROY",
+	}
+	ResourceAction_value = map[string]int32{
+		"RESOURCE_ACTION_UNSPECIFIED": 0,
+		"NO_OP":                       1,
+		"CREATE":                      2,
+		"UPDATE":                      3,
+		"REPLACE":                     4,
+		"DESTROY":                     5,
+	}
+)
+
+func (x ResourceAction) Enum() *ResourceAction {
+	p := new(ResourceAction)
+	*p = x
+	return p
+}
+
+func (x ResourceAction) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ResourceAction) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[6].Descriptor()
+}
+
+func (ResourceAction) Type() protoreflect.EnumType {
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[6]
+}
+
+func (x ResourceAction) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ResourceAction.Descriptor instead.
+func (ResourceAction) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{6}
+}
+
 type Cluster struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Id     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1204,8 +1264,8 @@ type JobResult struct {
 	Status  JobStatus `protobuf:"varint,1,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
 	Message string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	Steps   []*Step   `protobuf:"bytes,3,rep,name=steps,proto3" json:"steps,omitempty"`
-	// Kind-specific output as JSON text, e.g. a plan.
-	OutputJson    string `protobuf:"bytes,4,opt,name=output_json,json=outputJson,proto3" json:"output_json,omitempty"`
+	// Set by a PLAN.
+	Plan          *PlanResult `protobuf:"bytes,5,opt,name=plan,proto3" json:"plan,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1261,9 +1321,409 @@ func (x *JobResult) GetSteps() []*Step {
 	return nil
 }
 
-func (x *JobResult) GetOutputJson() string {
+func (x *JobResult) GetPlan() *PlanResult {
 	if x != nil {
-		return x.OutputJson
+		return x.Plan
+	}
+	return nil
+}
+
+// ResourceRef names one Kubernetes object.
+type ResourceRef struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	ApiVersion string                 `protobuf:"bytes,1,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	Kind       string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	// Empty for a cluster-scoped object.
+	Namespace     string `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Name          string `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResourceRef) Reset() {
+	*x = ResourceRef{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResourceRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceRef) ProtoMessage() {}
+
+func (x *ResourceRef) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceRef.ProtoReflect.Descriptor instead.
+func (*ResourceRef) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ResourceRef) GetApiVersion() string {
+	if x != nil {
+		return x.ApiVersion
+	}
+	return ""
+}
+
+func (x *ResourceRef) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *ResourceRef) GetNamespace() string {
+	if x != nil {
+		return x.Namespace
+	}
+	return ""
+}
+
+func (x *ResourceRef) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+// ComponentInventory is what the last apply of a component left in the
+// cluster.
+type ComponentInventory struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	Resources     []*ResourceRef         `protobuf:"bytes,2,rep,name=resources,proto3" json:"resources,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentInventory) Reset() {
+	*x = ComponentInventory{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentInventory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentInventory) ProtoMessage() {}
+
+func (x *ComponentInventory) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentInventory.ProtoReflect.Descriptor instead.
+func (*ComponentInventory) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ComponentInventory) GetComponent() string {
+	if x != nil {
+		return x.Component
+	}
+	return ""
+}
+
+func (x *ComponentInventory) GetResources() []*ResourceRef {
+	if x != nil {
+		return x.Resources
+	}
+	return nil
+}
+
+// PlanResult is a PLAN job's typed outcome. Its digest is the plan's
+// identity: two plans with the same changes have the same digest.
+type PlanResult struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Components []*ComponentPlan       `protobuf:"bytes,1,rep,name=components,proto3" json:"components,omitempty"`
+	// `sha256:<hex>` of the PlanDiff uploaded for this attempt.
+	DiffDigest    string `protobuf:"bytes,2,opt,name=diff_digest,json=diffDigest,proto3" json:"diff_digest,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanResult) Reset() {
+	*x = PlanResult{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanResult) ProtoMessage() {}
+
+func (x *PlanResult) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanResult.ProtoReflect.Descriptor instead.
+func (*PlanResult) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *PlanResult) GetComponents() []*ComponentPlan {
+	if x != nil {
+		return x.Components
+	}
+	return nil
+}
+
+func (x *PlanResult) GetDiffDigest() string {
+	if x != nil {
+		return x.DiffDigest
+	}
+	return ""
+}
+
+type ComponentPlan struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	Changes       []*ResourceChange      `protobuf:"bytes,2,rep,name=changes,proto3" json:"changes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ComponentPlan) Reset() {
+	*x = ComponentPlan{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ComponentPlan) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ComponentPlan) ProtoMessage() {}
+
+func (x *ComponentPlan) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ComponentPlan.ProtoReflect.Descriptor instead.
+func (*ComponentPlan) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ComponentPlan) GetComponent() string {
+	if x != nil {
+		return x.Component
+	}
+	return ""
+}
+
+func (x *ComponentPlan) GetChanges() []*ResourceChange {
+	if x != nil {
+		return x.Changes
+	}
+	return nil
+}
+
+type ResourceChange struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Resource *ResourceRef           `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
+	Action   ResourceAction         `protobuf:"varint,2,opt,name=action,proto3,enum=admiral.api.agent.v1.ResourceAction" json:"action,omitempty"`
+	// `sha256:<hex>` of this resource's diff in the PlanDiff. Empty for NO_OP.
+	DiffDigest    string `protobuf:"bytes,3,opt,name=diff_digest,json=diffDigest,proto3" json:"diff_digest,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResourceChange) Reset() {
+	*x = ResourceChange{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResourceChange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceChange) ProtoMessage() {}
+
+func (x *ResourceChange) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceChange.ProtoReflect.Descriptor instead.
+func (*ResourceChange) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ResourceChange) GetResource() *ResourceRef {
+	if x != nil {
+		return x.Resource
+	}
+	return nil
+}
+
+func (x *ResourceChange) GetAction() ResourceAction {
+	if x != nil {
+		return x.Action
+	}
+	return ResourceAction_RESOURCE_ACTION_UNSPECIFIED
+}
+
+func (x *ResourceChange) GetDiffDigest() string {
+	if x != nil {
+		return x.DiffDigest
+	}
+	return ""
+}
+
+// PlanDiff is a plan's full diffs, stored apart from the job.
+type PlanDiff struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Resources     []*ResourceDiff        `protobuf:"bytes,1,rep,name=resources,proto3" json:"resources,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanDiff) Reset() {
+	*x = PlanDiff{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanDiff) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanDiff) ProtoMessage() {}
+
+func (x *PlanDiff) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanDiff.ProtoReflect.Descriptor instead.
+func (*PlanDiff) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *PlanDiff) GetResources() []*ResourceDiff {
+	if x != nil {
+		return x.Resources
+	}
+	return nil
+}
+
+type ResourceDiff struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Component string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	Resource  *ResourceRef           `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
+	// Unified diff from the live object to the desired one, both normalized.
+	// A Secret's data shows each key as added, changed or removed, never a
+	// value.
+	Diff          string `protobuf:"bytes,3,opt,name=diff,proto3" json:"diff,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResourceDiff) Reset() {
+	*x = ResourceDiff{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResourceDiff) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceDiff) ProtoMessage() {}
+
+func (x *ResourceDiff) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceDiff.ProtoReflect.Descriptor instead.
+func (*ResourceDiff) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ResourceDiff) GetComponent() string {
+	if x != nil {
+		return x.Component
+	}
+	return ""
+}
+
+func (x *ResourceDiff) GetResource() *ResourceRef {
+	if x != nil {
+		return x.Resource
+	}
+	return nil
+}
+
+func (x *ResourceDiff) GetDiff() string {
+	if x != nil {
+		return x.Diff
 	}
 	return ""
 }
@@ -1280,7 +1740,7 @@ type Step struct {
 
 func (x *Step) Reset() {
 	*x = Step{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1292,7 +1752,7 @@ func (x *Step) String() string {
 func (*Step) ProtoMessage() {}
 
 func (x *Step) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[9]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1305,7 +1765,7 @@ func (x *Step) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Step.ProtoReflect.Descriptor instead.
 func (*Step) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Step) GetComponent() string {
@@ -1343,7 +1803,7 @@ type Offer struct {
 
 func (x *Offer) Reset() {
 	*x = Offer{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1355,7 +1815,7 @@ func (x *Offer) String() string {
 func (*Offer) ProtoMessage() {}
 
 func (x *Offer) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[10]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1368,7 +1828,7 @@ func (x *Offer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Offer.ProtoReflect.Descriptor instead.
 func (*Offer) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *Offer) GetJob() *Job {
@@ -1410,7 +1870,7 @@ type CreateClusterRequest struct {
 
 func (x *CreateClusterRequest) Reset() {
 	*x = CreateClusterRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1422,7 +1882,7 @@ func (x *CreateClusterRequest) String() string {
 func (*CreateClusterRequest) ProtoMessage() {}
 
 func (x *CreateClusterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[11]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1435,7 +1895,7 @@ func (x *CreateClusterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateClusterRequest.ProtoReflect.Descriptor instead.
 func (*CreateClusterRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CreateClusterRequest) GetName() string {
@@ -1461,7 +1921,7 @@ type CreateClusterResponse struct {
 
 func (x *CreateClusterResponse) Reset() {
 	*x = CreateClusterResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1473,7 +1933,7 @@ func (x *CreateClusterResponse) String() string {
 func (*CreateClusterResponse) ProtoMessage() {}
 
 func (x *CreateClusterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[12]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1486,7 +1946,7 @@ func (x *CreateClusterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateClusterResponse.ProtoReflect.Descriptor instead.
 func (*CreateClusterResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CreateClusterResponse) GetCluster() *Cluster {
@@ -1505,7 +1965,7 @@ type GetClusterRequest struct {
 
 func (x *GetClusterRequest) Reset() {
 	*x = GetClusterRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1517,7 +1977,7 @@ func (x *GetClusterRequest) String() string {
 func (*GetClusterRequest) ProtoMessage() {}
 
 func (x *GetClusterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[13]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1530,7 +1990,7 @@ func (x *GetClusterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClusterRequest.ProtoReflect.Descriptor instead.
 func (*GetClusterRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{13}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetClusterRequest) GetClusterId() string {
@@ -1549,7 +2009,7 @@ type GetClusterResponse struct {
 
 func (x *GetClusterResponse) Reset() {
 	*x = GetClusterResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1561,7 +2021,7 @@ func (x *GetClusterResponse) String() string {
 func (*GetClusterResponse) ProtoMessage() {}
 
 func (x *GetClusterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[14]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1574,7 +2034,7 @@ func (x *GetClusterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClusterResponse.ProtoReflect.Descriptor instead.
 func (*GetClusterResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{14}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetClusterResponse) GetCluster() *Cluster {
@@ -1594,7 +2054,7 @@ type ListClustersRequest struct {
 
 func (x *ListClustersRequest) Reset() {
 	*x = ListClustersRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1606,7 +2066,7 @@ func (x *ListClustersRequest) String() string {
 func (*ListClustersRequest) ProtoMessage() {}
 
 func (x *ListClustersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[15]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1619,7 +2079,7 @@ func (x *ListClustersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListClustersRequest.ProtoReflect.Descriptor instead.
 func (*ListClustersRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{15}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListClustersRequest) GetPageSize() int32 {
@@ -1646,7 +2106,7 @@ type ListClustersResponse struct {
 
 func (x *ListClustersResponse) Reset() {
 	*x = ListClustersResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1658,7 +2118,7 @@ func (x *ListClustersResponse) String() string {
 func (*ListClustersResponse) ProtoMessage() {}
 
 func (x *ListClustersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[16]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1671,7 +2131,7 @@ func (x *ListClustersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListClustersResponse.ProtoReflect.Descriptor instead.
 func (*ListClustersResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{16}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListClustersResponse) GetClusters() []*Cluster {
@@ -1698,7 +2158,7 @@ type SetClusterTrustRequest struct {
 
 func (x *SetClusterTrustRequest) Reset() {
 	*x = SetClusterTrustRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1710,7 +2170,7 @@ func (x *SetClusterTrustRequest) String() string {
 func (*SetClusterTrustRequest) ProtoMessage() {}
 
 func (x *SetClusterTrustRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[17]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1723,7 +2183,7 @@ func (x *SetClusterTrustRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetClusterTrustRequest.ProtoReflect.Descriptor instead.
 func (*SetClusterTrustRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{17}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SetClusterTrustRequest) GetClusterId() string {
@@ -1749,7 +2209,7 @@ type SetClusterTrustResponse struct {
 
 func (x *SetClusterTrustResponse) Reset() {
 	*x = SetClusterTrustResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1761,7 +2221,7 @@ func (x *SetClusterTrustResponse) String() string {
 func (*SetClusterTrustResponse) ProtoMessage() {}
 
 func (x *SetClusterTrustResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[18]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1774,7 +2234,7 @@ func (x *SetClusterTrustResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetClusterTrustResponse.ProtoReflect.Descriptor instead.
 func (*SetClusterTrustResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{18}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *SetClusterTrustResponse) GetCluster() *Cluster {
@@ -1793,7 +2253,7 @@ type DeleteClusterRequest struct {
 
 func (x *DeleteClusterRequest) Reset() {
 	*x = DeleteClusterRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1805,7 +2265,7 @@ func (x *DeleteClusterRequest) String() string {
 func (*DeleteClusterRequest) ProtoMessage() {}
 
 func (x *DeleteClusterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[19]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1818,7 +2278,7 @@ func (x *DeleteClusterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteClusterRequest.ProtoReflect.Descriptor instead.
 func (*DeleteClusterRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{19}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DeleteClusterRequest) GetClusterId() string {
@@ -1836,7 +2296,7 @@ type DeleteClusterResponse struct {
 
 func (x *DeleteClusterResponse) Reset() {
 	*x = DeleteClusterResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1848,7 +2308,7 @@ func (x *DeleteClusterResponse) String() string {
 func (*DeleteClusterResponse) ProtoMessage() {}
 
 func (x *DeleteClusterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[20]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1861,7 +2321,7 @@ func (x *DeleteClusterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteClusterResponse.ProtoReflect.Descriptor instead.
 func (*DeleteClusterResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{20}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{27}
 }
 
 type CreateAgentRequest struct {
@@ -1883,7 +2343,7 @@ type CreateAgentRequest struct {
 
 func (x *CreateAgentRequest) Reset() {
 	*x = CreateAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1895,7 +2355,7 @@ func (x *CreateAgentRequest) String() string {
 func (*CreateAgentRequest) ProtoMessage() {}
 
 func (x *CreateAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[21]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1908,7 +2368,7 @@ func (x *CreateAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAgentRequest.ProtoReflect.Descriptor instead.
 func (*CreateAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{21}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *CreateAgentRequest) GetClusterId() string {
@@ -1972,7 +2432,7 @@ type CreateAgentResponse struct {
 
 func (x *CreateAgentResponse) Reset() {
 	*x = CreateAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1984,7 +2444,7 @@ func (x *CreateAgentResponse) String() string {
 func (*CreateAgentResponse) ProtoMessage() {}
 
 func (x *CreateAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[22]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1997,7 +2457,7 @@ func (x *CreateAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAgentResponse.ProtoReflect.Descriptor instead.
 func (*CreateAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{22}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *CreateAgentResponse) GetAgent() *Agent {
@@ -2031,7 +2491,7 @@ type EnrollmentKey struct {
 
 func (x *EnrollmentKey) Reset() {
 	*x = EnrollmentKey{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[23]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2043,7 +2503,7 @@ func (x *EnrollmentKey) String() string {
 func (*EnrollmentKey) ProtoMessage() {}
 
 func (x *EnrollmentKey) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[23]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2056,7 +2516,7 @@ func (x *EnrollmentKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnrollmentKey.ProtoReflect.Descriptor instead.
 func (*EnrollmentKey) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{23}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *EnrollmentKey) GetKey() string {
@@ -2082,7 +2542,7 @@ type GetAgentRequest struct {
 
 func (x *GetAgentRequest) Reset() {
 	*x = GetAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[24]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2094,7 +2554,7 @@ func (x *GetAgentRequest) String() string {
 func (*GetAgentRequest) ProtoMessage() {}
 
 func (x *GetAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[24]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2107,7 +2567,7 @@ func (x *GetAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentRequest.ProtoReflect.Descriptor instead.
 func (*GetAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{24}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetAgentRequest) GetAgentId() string {
@@ -2126,7 +2586,7 @@ type GetAgentResponse struct {
 
 func (x *GetAgentResponse) Reset() {
 	*x = GetAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[25]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2138,7 +2598,7 @@ func (x *GetAgentResponse) String() string {
 func (*GetAgentResponse) ProtoMessage() {}
 
 func (x *GetAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[25]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2151,7 +2611,7 @@ func (x *GetAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAgentResponse.ProtoReflect.Descriptor instead.
 func (*GetAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{25}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *GetAgentResponse) GetAgent() *Agent {
@@ -2174,7 +2634,7 @@ type ListAgentsRequest struct {
 
 func (x *ListAgentsRequest) Reset() {
 	*x = ListAgentsRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[26]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2186,7 +2646,7 @@ func (x *ListAgentsRequest) String() string {
 func (*ListAgentsRequest) ProtoMessage() {}
 
 func (x *ListAgentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[26]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2199,7 +2659,7 @@ func (x *ListAgentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentsRequest.ProtoReflect.Descriptor instead.
 func (*ListAgentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{26}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListAgentsRequest) GetClusterId() string {
@@ -2240,7 +2700,7 @@ type ListAgentsResponse struct {
 
 func (x *ListAgentsResponse) Reset() {
 	*x = ListAgentsResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[27]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2252,7 +2712,7 @@ func (x *ListAgentsResponse) String() string {
 func (*ListAgentsResponse) ProtoMessage() {}
 
 func (x *ListAgentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[27]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2265,7 +2725,7 @@ func (x *ListAgentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentsResponse.ProtoReflect.Descriptor instead.
 func (*ListAgentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{27}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ListAgentsResponse) GetAgents() []*Agent {
@@ -2294,7 +2754,7 @@ type UpdateAgentRequest struct {
 
 func (x *UpdateAgentRequest) Reset() {
 	*x = UpdateAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[28]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2306,7 +2766,7 @@ func (x *UpdateAgentRequest) String() string {
 func (*UpdateAgentRequest) ProtoMessage() {}
 
 func (x *UpdateAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[28]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2319,7 +2779,7 @@ func (x *UpdateAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAgentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{28}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *UpdateAgentRequest) GetAgentId() string {
@@ -2352,7 +2812,7 @@ type UpdateAgentResponse struct {
 
 func (x *UpdateAgentResponse) Reset() {
 	*x = UpdateAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[29]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2364,7 +2824,7 @@ func (x *UpdateAgentResponse) String() string {
 func (*UpdateAgentResponse) ProtoMessage() {}
 
 func (x *UpdateAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[29]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2377,7 +2837,7 @@ func (x *UpdateAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAgentResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{29}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *UpdateAgentResponse) GetAgent() *Agent {
@@ -2396,7 +2856,7 @@ type DeleteAgentRequest struct {
 
 func (x *DeleteAgentRequest) Reset() {
 	*x = DeleteAgentRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[30]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2408,7 +2868,7 @@ func (x *DeleteAgentRequest) String() string {
 func (*DeleteAgentRequest) ProtoMessage() {}
 
 func (x *DeleteAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[30]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2421,7 +2881,7 @@ func (x *DeleteAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAgentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAgentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{30}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *DeleteAgentRequest) GetAgentId() string {
@@ -2439,7 +2899,7 @@ type DeleteAgentResponse struct {
 
 func (x *DeleteAgentResponse) Reset() {
 	*x = DeleteAgentResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[31]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2451,7 +2911,7 @@ func (x *DeleteAgentResponse) String() string {
 func (*DeleteAgentResponse) ProtoMessage() {}
 
 func (x *DeleteAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[31]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2464,7 +2924,7 @@ func (x *DeleteAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAgentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteAgentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{31}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{38}
 }
 
 type CreateEnrollmentKeyRequest struct {
@@ -2476,7 +2936,7 @@ type CreateEnrollmentKeyRequest struct {
 
 func (x *CreateEnrollmentKeyRequest) Reset() {
 	*x = CreateEnrollmentKeyRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[32]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2488,7 +2948,7 @@ func (x *CreateEnrollmentKeyRequest) String() string {
 func (*CreateEnrollmentKeyRequest) ProtoMessage() {}
 
 func (x *CreateEnrollmentKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[32]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2501,7 +2961,7 @@ func (x *CreateEnrollmentKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateEnrollmentKeyRequest.ProtoReflect.Descriptor instead.
 func (*CreateEnrollmentKeyRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{32}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *CreateEnrollmentKeyRequest) GetAgentId() string {
@@ -2520,7 +2980,7 @@ type CreateEnrollmentKeyResponse struct {
 
 func (x *CreateEnrollmentKeyResponse) Reset() {
 	*x = CreateEnrollmentKeyResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[33]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2532,7 +2992,7 @@ func (x *CreateEnrollmentKeyResponse) String() string {
 func (*CreateEnrollmentKeyResponse) ProtoMessage() {}
 
 func (x *CreateEnrollmentKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[33]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2545,7 +3005,7 @@ func (x *CreateEnrollmentKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateEnrollmentKeyResponse.ProtoReflect.Descriptor instead.
 func (*CreateEnrollmentKeyResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{33}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *CreateEnrollmentKeyResponse) GetEnrollmentKey() *EnrollmentKey {
@@ -2565,7 +3025,7 @@ type GrantAgentUseRequest struct {
 
 func (x *GrantAgentUseRequest) Reset() {
 	*x = GrantAgentUseRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[34]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2577,7 +3037,7 @@ func (x *GrantAgentUseRequest) String() string {
 func (*GrantAgentUseRequest) ProtoMessage() {}
 
 func (x *GrantAgentUseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[34]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2590,7 +3050,7 @@ func (x *GrantAgentUseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GrantAgentUseRequest.ProtoReflect.Descriptor instead.
 func (*GrantAgentUseRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{34}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *GrantAgentUseRequest) GetAgentId() string {
@@ -2615,7 +3075,7 @@ type GrantAgentUseResponse struct {
 
 func (x *GrantAgentUseResponse) Reset() {
 	*x = GrantAgentUseResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[35]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2627,7 +3087,7 @@ func (x *GrantAgentUseResponse) String() string {
 func (*GrantAgentUseResponse) ProtoMessage() {}
 
 func (x *GrantAgentUseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[35]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2640,7 +3100,7 @@ func (x *GrantAgentUseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GrantAgentUseResponse.ProtoReflect.Descriptor instead.
 func (*GrantAgentUseResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{35}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{42}
 }
 
 type RevokeAgentUseRequest struct {
@@ -2653,7 +3113,7 @@ type RevokeAgentUseRequest struct {
 
 func (x *RevokeAgentUseRequest) Reset() {
 	*x = RevokeAgentUseRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[36]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2665,7 +3125,7 @@ func (x *RevokeAgentUseRequest) String() string {
 func (*RevokeAgentUseRequest) ProtoMessage() {}
 
 func (x *RevokeAgentUseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[36]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2678,7 +3138,7 @@ func (x *RevokeAgentUseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAgentUseRequest.ProtoReflect.Descriptor instead.
 func (*RevokeAgentUseRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{36}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *RevokeAgentUseRequest) GetAgentId() string {
@@ -2703,7 +3163,7 @@ type RevokeAgentUseResponse struct {
 
 func (x *RevokeAgentUseResponse) Reset() {
 	*x = RevokeAgentUseResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[37]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2715,7 +3175,7 @@ func (x *RevokeAgentUseResponse) String() string {
 func (*RevokeAgentUseResponse) ProtoMessage() {}
 
 func (x *RevokeAgentUseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[37]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2728,7 +3188,7 @@ func (x *RevokeAgentUseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAgentUseResponse.ProtoReflect.Descriptor instead.
 func (*RevokeAgentUseResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{37}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{44}
 }
 
 type ListAgentGrantsRequest struct {
@@ -2740,7 +3200,7 @@ type ListAgentGrantsRequest struct {
 
 func (x *ListAgentGrantsRequest) Reset() {
 	*x = ListAgentGrantsRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[38]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2752,7 +3212,7 @@ func (x *ListAgentGrantsRequest) String() string {
 func (*ListAgentGrantsRequest) ProtoMessage() {}
 
 func (x *ListAgentGrantsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[38]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2765,7 +3225,7 @@ func (x *ListAgentGrantsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentGrantsRequest.ProtoReflect.Descriptor instead.
 func (*ListAgentGrantsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{38}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *ListAgentGrantsRequest) GetAgentId() string {
@@ -2784,7 +3244,7 @@ type ListAgentGrantsResponse struct {
 
 func (x *ListAgentGrantsResponse) Reset() {
 	*x = ListAgentGrantsResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[39]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2796,7 +3256,7 @@ func (x *ListAgentGrantsResponse) String() string {
 func (*ListAgentGrantsResponse) ProtoMessage() {}
 
 func (x *ListAgentGrantsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[39]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2809,7 +3269,7 @@ func (x *ListAgentGrantsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentGrantsResponse.ProtoReflect.Descriptor instead.
 func (*ListAgentGrantsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{39}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ListAgentGrantsResponse) GetGrants() []*AgentGrant {
@@ -2828,7 +3288,7 @@ type GetJobRequest struct {
 
 func (x *GetJobRequest) Reset() {
 	*x = GetJobRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[40]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2840,7 +3300,7 @@ func (x *GetJobRequest) String() string {
 func (*GetJobRequest) ProtoMessage() {}
 
 func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[40]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2853,7 +3313,7 @@ func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
 func (*GetJobRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{40}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *GetJobRequest) GetJobId() string {
@@ -2872,7 +3332,7 @@ type GetJobResponse struct {
 
 func (x *GetJobResponse) Reset() {
 	*x = GetJobResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[41]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2884,7 +3344,7 @@ func (x *GetJobResponse) String() string {
 func (*GetJobResponse) ProtoMessage() {}
 
 func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[41]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2897,7 +3357,7 @@ func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobResponse.ProtoReflect.Descriptor instead.
 func (*GetJobResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{41}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *GetJobResponse) GetJob() *Job {
@@ -2921,7 +3381,7 @@ type ListJobsRequest struct {
 
 func (x *ListJobsRequest) Reset() {
 	*x = ListJobsRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[42]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2933,7 +3393,7 @@ func (x *ListJobsRequest) String() string {
 func (*ListJobsRequest) ProtoMessage() {}
 
 func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[42]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2946,7 +3406,7 @@ func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListJobsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{42}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ListJobsRequest) GetAgentId() string {
@@ -2994,7 +3454,7 @@ type ListJobsResponse struct {
 
 func (x *ListJobsResponse) Reset() {
 	*x = ListJobsResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[43]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3006,7 +3466,7 @@ func (x *ListJobsResponse) String() string {
 func (*ListJobsResponse) ProtoMessage() {}
 
 func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[43]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3019,7 +3479,7 @@ func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListJobsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{43}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *ListJobsResponse) GetJobs() []*Job {
@@ -3045,7 +3505,7 @@ type CancelJobRequest struct {
 
 func (x *CancelJobRequest) Reset() {
 	*x = CancelJobRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[44]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3057,7 +3517,7 @@ func (x *CancelJobRequest) String() string {
 func (*CancelJobRequest) ProtoMessage() {}
 
 func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[44]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3070,7 +3530,7 @@ func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelJobRequest.ProtoReflect.Descriptor instead.
 func (*CancelJobRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{44}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *CancelJobRequest) GetJobId() string {
@@ -3089,7 +3549,7 @@ type CancelJobResponse struct {
 
 func (x *CancelJobResponse) Reset() {
 	*x = CancelJobResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[45]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3101,7 +3561,7 @@ func (x *CancelJobResponse) String() string {
 func (*CancelJobResponse) ProtoMessage() {}
 
 func (x *CancelJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[45]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3114,7 +3574,7 @@ func (x *CancelJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelJobResponse.ProtoReflect.Descriptor instead.
 func (*CancelJobResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{45}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *CancelJobResponse) GetJob() *Job {
@@ -3136,7 +3596,7 @@ type Attempt struct {
 
 func (x *Attempt) Reset() {
 	*x = Attempt{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[46]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3148,7 +3608,7 @@ func (x *Attempt) String() string {
 func (*Attempt) ProtoMessage() {}
 
 func (x *Attempt) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[46]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3161,7 +3621,7 @@ func (x *Attempt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Attempt.ProtoReflect.Descriptor instead.
 func (*Attempt) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{46}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *Attempt) GetJobId() string {
@@ -3200,7 +3660,7 @@ type EnrollRequest struct {
 
 func (x *EnrollRequest) Reset() {
 	*x = EnrollRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[47]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3212,7 +3672,7 @@ func (x *EnrollRequest) String() string {
 func (*EnrollRequest) ProtoMessage() {}
 
 func (x *EnrollRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[47]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3225,7 +3685,7 @@ func (x *EnrollRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnrollRequest.ProtoReflect.Descriptor instead.
 func (*EnrollRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{47}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *EnrollRequest) GetJwksJson() string {
@@ -3259,7 +3719,7 @@ type EnrollResponse struct {
 
 func (x *EnrollResponse) Reset() {
 	*x = EnrollResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[48]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3271,7 +3731,7 @@ func (x *EnrollResponse) String() string {
 func (*EnrollResponse) ProtoMessage() {}
 
 func (x *EnrollResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[48]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3284,7 +3744,7 @@ func (x *EnrollResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnrollResponse.ProtoReflect.Descriptor instead.
 func (*EnrollResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{48}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *EnrollResponse) GetCluster() *Cluster {
@@ -3318,7 +3778,7 @@ type ReportStatusRequest struct {
 
 func (x *ReportStatusRequest) Reset() {
 	*x = ReportStatusRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[49]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3330,7 +3790,7 @@ func (x *ReportStatusRequest) String() string {
 func (*ReportStatusRequest) ProtoMessage() {}
 
 func (x *ReportStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[49]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3343,7 +3803,7 @@ func (x *ReportStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportStatusRequest.ProtoReflect.Descriptor instead.
 func (*ReportStatusRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{49}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *ReportStatusRequest) GetAgentVersion() string {
@@ -3407,7 +3867,7 @@ type ReportStatusResponse struct {
 
 func (x *ReportStatusResponse) Reset() {
 	*x = ReportStatusResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[50]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3419,7 +3879,7 @@ func (x *ReportStatusResponse) String() string {
 func (*ReportStatusResponse) ProtoMessage() {}
 
 func (x *ReportStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[50]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3432,7 +3892,7 @@ func (x *ReportStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportStatusResponse.ProtoReflect.Descriptor instead.
 func (*ReportStatusResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{50}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *ReportStatusResponse) GetNextReportSeconds() int32 {
@@ -3463,7 +3923,7 @@ type Slots struct {
 
 func (x *Slots) Reset() {
 	*x = Slots{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[51]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3475,7 +3935,7 @@ func (x *Slots) String() string {
 func (*Slots) ProtoMessage() {}
 
 func (x *Slots) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[51]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3488,7 +3948,7 @@ func (x *Slots) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Slots.ProtoReflect.Descriptor instead.
 func (*Slots) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{51}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *Slots) GetKind() JobKind {
@@ -3530,7 +3990,7 @@ type ClaimJobRequest struct {
 
 func (x *ClaimJobRequest) Reset() {
 	*x = ClaimJobRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[52]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3542,7 +4002,7 @@ func (x *ClaimJobRequest) String() string {
 func (*ClaimJobRequest) ProtoMessage() {}
 
 func (x *ClaimJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[52]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3555,7 +4015,7 @@ func (x *ClaimJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimJobRequest.ProtoReflect.Descriptor instead.
 func (*ClaimJobRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{52}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ClaimJobRequest) GetClaimRequestId() string {
@@ -3603,7 +4063,7 @@ type ClaimJobResponse struct {
 
 func (x *ClaimJobResponse) Reset() {
 	*x = ClaimJobResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[53]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3615,7 +4075,7 @@ func (x *ClaimJobResponse) String() string {
 func (*ClaimJobResponse) ProtoMessage() {}
 
 func (x *ClaimJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[53]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3628,7 +4088,7 @@ func (x *ClaimJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClaimJobResponse.ProtoReflect.Descriptor instead.
 func (*ClaimJobResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{53}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *ClaimJobResponse) GetOffer() *Offer {
@@ -3647,7 +4107,7 @@ type StartJobRequest struct {
 
 func (x *StartJobRequest) Reset() {
 	*x = StartJobRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[54]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3659,7 +4119,7 @@ func (x *StartJobRequest) String() string {
 func (*StartJobRequest) ProtoMessage() {}
 
 func (x *StartJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[54]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3672,7 +4132,7 @@ func (x *StartJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartJobRequest.ProtoReflect.Descriptor instead.
 func (*StartJobRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{54}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *StartJobRequest) GetAttempt() *Attempt {
@@ -3694,7 +4154,7 @@ type StartJobResponse struct {
 
 func (x *StartJobResponse) Reset() {
 	*x = StartJobResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[55]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3706,7 +4166,7 @@ func (x *StartJobResponse) String() string {
 func (*StartJobResponse) ProtoMessage() {}
 
 func (x *StartJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[55]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3719,7 +4179,7 @@ func (x *StartJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartJobResponse.ProtoReflect.Descriptor instead.
 func (*StartJobResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{55}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *StartJobResponse) GetLeaseTtlSeconds() int32 {
@@ -3747,7 +4207,7 @@ type Progress struct {
 
 func (x *Progress) Reset() {
 	*x = Progress{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[56]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3759,7 +4219,7 @@ func (x *Progress) String() string {
 func (*Progress) ProtoMessage() {}
 
 func (x *Progress) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[56]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3772,7 +4232,7 @@ func (x *Progress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Progress.ProtoReflect.Descriptor instead.
 func (*Progress) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{56}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *Progress) GetCompletedSteps() int32 {
@@ -3806,7 +4266,7 @@ type RenewLeaseRequest struct {
 
 func (x *RenewLeaseRequest) Reset() {
 	*x = RenewLeaseRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[57]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3818,7 +4278,7 @@ func (x *RenewLeaseRequest) String() string {
 func (*RenewLeaseRequest) ProtoMessage() {}
 
 func (x *RenewLeaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[57]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3831,7 +4291,7 @@ func (x *RenewLeaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenewLeaseRequest.ProtoReflect.Descriptor instead.
 func (*RenewLeaseRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{57}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *RenewLeaseRequest) GetAttempt() *Attempt {
@@ -3859,7 +4319,7 @@ type RenewLeaseResponse struct {
 
 func (x *RenewLeaseResponse) Reset() {
 	*x = RenewLeaseResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[58]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3871,7 +4331,7 @@ func (x *RenewLeaseResponse) String() string {
 func (*RenewLeaseResponse) ProtoMessage() {}
 
 func (x *RenewLeaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[58]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3884,7 +4344,7 @@ func (x *RenewLeaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenewLeaseResponse.ProtoReflect.Descriptor instead.
 func (*RenewLeaseResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{58}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *RenewLeaseResponse) GetLeaseTtlSeconds() int32 {
@@ -3910,7 +4370,7 @@ type GetJobArtifactRequest struct {
 
 func (x *GetJobArtifactRequest) Reset() {
 	*x = GetJobArtifactRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[59]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3922,7 +4382,7 @@ func (x *GetJobArtifactRequest) String() string {
 func (*GetJobArtifactRequest) ProtoMessage() {}
 
 func (x *GetJobArtifactRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[59]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3935,7 +4395,7 @@ func (x *GetJobArtifactRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobArtifactRequest.ProtoReflect.Descriptor instead.
 func (*GetJobArtifactRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{59}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *GetJobArtifactRequest) GetAttempt() *Attempt {
@@ -3949,13 +4409,16 @@ type GetJobArtifactResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ArtifactDigest string                 `protobuf:"bytes,1,opt,name=artifact_digest,json=artifactDigest,proto3" json:"artifact_digest,omitempty"`
 	Artifact       []byte                 `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// What the environment's last apply of each component left: a PLAN finds
+	// destroys in it, an APPLY prunes from it.
+	PreviousInventory []*ComponentInventory `protobuf:"bytes,3,rep,name=previous_inventory,json=previousInventory,proto3" json:"previous_inventory,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *GetJobArtifactResponse) Reset() {
 	*x = GetJobArtifactResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[60]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3967,7 +4430,7 @@ func (x *GetJobArtifactResponse) String() string {
 func (*GetJobArtifactResponse) ProtoMessage() {}
 
 func (x *GetJobArtifactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[60]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3980,7 +4443,7 @@ func (x *GetJobArtifactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetJobArtifactResponse.ProtoReflect.Descriptor instead.
 func (*GetJobArtifactResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{60}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *GetJobArtifactResponse) GetArtifactDigest() string {
@@ -3997,6 +4460,110 @@ func (x *GetJobArtifactResponse) GetArtifact() []byte {
 	return nil
 }
 
+func (x *GetJobArtifactResponse) GetPreviousInventory() []*ComponentInventory {
+	if x != nil {
+		return x.PreviousInventory
+	}
+	return nil
+}
+
+type UploadPlanDiffRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attempt       *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	Diff          *PlanDiff              `protobuf:"bytes,2,opt,name=diff,proto3" json:"diff,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadPlanDiffRequest) Reset() {
+	*x = UploadPlanDiffRequest{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[68]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadPlanDiffRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadPlanDiffRequest) ProtoMessage() {}
+
+func (x *UploadPlanDiffRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[68]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadPlanDiffRequest.ProtoReflect.Descriptor instead.
+func (*UploadPlanDiffRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{68}
+}
+
+func (x *UploadPlanDiffRequest) GetAttempt() *Attempt {
+	if x != nil {
+		return x.Attempt
+	}
+	return nil
+}
+
+func (x *UploadPlanDiffRequest) GetDiff() *PlanDiff {
+	if x != nil {
+		return x.Diff
+	}
+	return nil
+}
+
+type UploadPlanDiffResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// `sha256:<hex>` of the diff as stored.
+	DiffDigest    string `protobuf:"bytes,1,opt,name=diff_digest,json=diffDigest,proto3" json:"diff_digest,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UploadPlanDiffResponse) Reset() {
+	*x = UploadPlanDiffResponse{}
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[69]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UploadPlanDiffResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UploadPlanDiffResponse) ProtoMessage() {}
+
+func (x *UploadPlanDiffResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[69]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UploadPlanDiffResponse.ProtoReflect.Descriptor instead.
+func (*UploadPlanDiffResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{69}
+}
+
+func (x *UploadPlanDiffResponse) GetDiffDigest() string {
+	if x != nil {
+		return x.DiffDigest
+	}
+	return ""
+}
+
 type ReportJobResultRequest struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	Attempt *Attempt               `protobuf:"bytes,1,opt,name=attempt,proto3" json:"attempt,omitempty"`
@@ -4009,7 +4576,7 @@ type ReportJobResultRequest struct {
 
 func (x *ReportJobResultRequest) Reset() {
 	*x = ReportJobResultRequest{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[61]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4021,7 +4588,7 @@ func (x *ReportJobResultRequest) String() string {
 func (*ReportJobResultRequest) ProtoMessage() {}
 
 func (x *ReportJobResultRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[61]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4034,7 +4601,7 @@ func (x *ReportJobResultRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportJobResultRequest.ProtoReflect.Descriptor instead.
 func (*ReportJobResultRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{61}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *ReportJobResultRequest) GetAttempt() *Attempt {
@@ -4067,7 +4634,7 @@ type ReportJobResultResponse struct {
 
 func (x *ReportJobResultResponse) Reset() {
 	*x = ReportJobResultResponse{}
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[62]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4079,7 +4646,7 @@ func (x *ReportJobResultResponse) String() string {
 func (*ReportJobResultResponse) ProtoMessage() {}
 
 func (x *ReportJobResultResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[62]
+	mi := &file_admiral_api_agent_v1_agent_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4092,7 +4659,7 @@ func (x *ReportJobResultResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportJobResultResponse.ProtoReflect.Descriptor instead.
 func (*ReportJobResultResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{62}
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *ReportJobResultResponse) GetOutcome() ReportOutcome {
@@ -4188,14 +4755,43 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
 	"started_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12;\n" +
 	"\vfinished_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"finishedAt\"\xcb\x01\n" +
+	"finishedAt\"\xe7\x01\n" +
 	"\tJobResult\x12E\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\f\xbaH\t\x82\x01\x06\x18\x04\x18\x05\x18\x06R\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x120\n" +
-	"\x05steps\x18\x03 \x03(\v2\x1a.admiral.api.agent.v1.StepR\x05steps\x12+\n" +
-	"\voutput_json\x18\x04 \x01(\tB\n" +
-	"\xbaH\ar\x05\x18\x80\x80\x80\bR\n" +
-	"outputJson\"\x81\x01\n" +
+	"\x05steps\x18\x03 \x03(\v2\x1a.admiral.api.agent.v1.StepR\x05steps\x124\n" +
+	"\x04plan\x18\x05 \x01(\v2 .admiral.api.agent.v1.PlanResultR\x04planJ\x04\b\x04\x10\x05R\voutput_json\"\x9a\x01\n" +
+	"\vResourceRef\x12)\n" +
+	"\vapi_version\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\xfd\x01R\n" +
+	"apiVersion\x12\x1b\n" +
+	"\x04kind\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18?R\x04kind\x12%\n" +
+	"\tnamespace\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18?R\tnamespace\x12\x1c\n" +
+	"\x04name\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\xfd\x01R\x04name\"s\n" +
+	"\x12ComponentInventory\x12\x1c\n" +
+	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12?\n" +
+	"\tresources\x18\x02 \x03(\v2!.admiral.api.agent.v1.ResourceRefR\tresources\"\x86\x01\n" +
+	"\n" +
+	"PlanResult\x12N\n" +
+	"\n" +
+	"components\x18\x01 \x03(\v2#.admiral.api.agent.v1.ComponentPlanB\t\xbaH\x06\x92\x01\x03\x10\x80\x02R\n" +
+	"components\x12(\n" +
+	"\vdiff_digest\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18GR\n" +
+	"diffDigest\"\x81\x01\n" +
+	"\rComponentPlan\x12%\n" +
+	"\tcomponent\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x18?R\tcomponent\x12I\n" +
+	"\achanges\x18\x02 \x03(\v2$.admiral.api.agent.v1.ResourceChangeB\t\xbaH\x06\x92\x01\x03\x10\x88'R\achanges\"\xc3\x01\n" +
+	"\x0eResourceChange\x12=\n" +
+	"\bresource\x18\x01 \x01(\v2!.admiral.api.agent.v1.ResourceRefR\bresource\x12H\n" +
+	"\x06action\x18\x02 \x01(\x0e2$.admiral.api.agent.v1.ResourceActionB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x06action\x12(\n" +
+	"\vdiff_digest\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18GR\n" +
+	"diffDigest\"W\n" +
+	"\bPlanDiff\x12K\n" +
+	"\tresources\x18\x01 \x03(\v2\".admiral.api.agent.v1.ResourceDiffB\t\xbaH\x06\x92\x01\x03\x10\x88'R\tresources\"\x93\x01\n" +
+	"\fResourceDiff\x12%\n" +
+	"\tcomponent\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x18?R\tcomponent\x12=\n" +
+	"\bresource\x18\x02 \x01(\v2!.admiral.api.agent.v1.ResourceRefR\bresource\x12\x1d\n" +
+	"\x04diff\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80@R\x04diff\"\x81\x01\n" +
 	"\x04Step\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12A\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06status\x12\x18\n" +
@@ -4370,10 +4966,17 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x11lease_ttl_seconds\x18\x01 \x01(\x05R\x0fleaseTtlSeconds\x12)\n" +
 	"\x10cancel_requested\x18\x02 \x01(\bR\x0fcancelRequested\"[\n" +
 	"\x15GetJobArtifactRequest\x12B\n" +
-	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\"]\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\"\xb6\x01\n" +
 	"\x16GetJobArtifactResponse\x12'\n" +
 	"\x0fartifact_digest\x18\x01 \x01(\tR\x0eartifactDigest\x12\x1a\n" +
-	"\bartifact\x18\x02 \x01(\fR\bartifact\"\xc8\x01\n" +
+	"\bartifact\x18\x02 \x01(\fR\bartifact\x12W\n" +
+	"\x12previous_inventory\x18\x03 \x03(\v2(.admiral.api.agent.v1.ComponentInventoryR\x11previousInventory\"\x9a\x01\n" +
+	"\x15UploadPlanDiffRequest\x12B\n" +
+	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\x12=\n" +
+	"\x04diff\x18\x02 \x01(\v2\x1e.admiral.api.agent.v1.PlanDiffB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x04diff\"9\n" +
+	"\x16UploadPlanDiffResponse\x12\x1f\n" +
+	"\vdiff_digest\x18\x01 \x01(\tR\n" +
+	"diffDigest\"\xc8\x01\n" +
 	"\x16ReportJobResultRequest\x12B\n" +
 	"\aattempt\x18\x01 \x01(\v2\x1d.admiral.api.agent.v1.AttemptB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\aattempt\x12&\n" +
 	"\treport_id\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18@R\breportId\x12B\n" +
@@ -4420,7 +5023,16 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x1aREPORT_OUTCOME_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bACCEPTED\x10\x01\x12\r\n" +
 	"\tDUPLICATE\x10\x02\x12\b\n" +
-	"\x04LATE\x10\x032\xad\x18\n" +
+	"\x04LATE\x10\x03*n\n" +
+	"\x0eResourceAction\x12\x1f\n" +
+	"\x1bRESOURCE_ACTION_UNSPECIFIED\x10\x00\x12\t\n" +
+	"\x05NO_OP\x10\x01\x12\n" +
+	"\n" +
+	"\x06CREATE\x10\x02\x12\n" +
+	"\n" +
+	"\x06UPDATE\x10\x03\x12\v\n" +
+	"\aREPLACE\x10\x04\x12\v\n" +
+	"\aDESTROY\x10\x052\xad\x18\n" +
 	"\bAgentAPI\x12\xb2\x01\n" +
 	"\rCreateCluster\x12*.admiral.api.agent.v1.CreateClusterRequest\x1a+.admiral.api.agent.v1.CreateClusterResponse\"H\xbaG\x1d\n" +
 	"\bClusters\x12\x11Connect a cluster\xa2\x97$\r\n" +
@@ -4484,8 +5096,7 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x12\b/v1/jobs\x12\xa9\x01\n" +
 	"\tCancelJob\x12&.admiral.api.agent.v1.CancelJobRequest\x1a'.admiral.api.agent.v1.CancelJobResponse\"K\xbaG\x14\n" +
 	"\x04Jobs\x12\fCancel a job\xa2\x97$\r\n" +
-	"\vagent:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/jobs/{job_id}/cancel2\x9c\n" +
-	"\n" +
+	"\vagent:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/jobs/{job_id}/cancel2\xe8\v\n" +
 	"\x0fAgentRuntimeAPI\x12\xa6\x01\n" +
 	"\x06Enroll\x12#.admiral.api.agent.v1.EnrollRequest\x1a$.admiral.api.agent.v1.EnrollResponse\"Q\xbaG!\n" +
 	"\rAgent Runtime\x12\x10Enroll a cluster\xa2\x97$\x0e\n" +
@@ -4509,7 +5120,11 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x0eGetJobArtifact\x12+.admiral.api.agent.v1.GetJobArtifactRequest\x1a,.admiral.api.agent.v1.GetJobArtifactResponse\"Z\xbaG%\n" +
 	"\rAgent Runtime\x12\x14Fetch a job artifact\xa2\x97$\f\n" +
 	"\n" +
-	"agent:exec\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/agent/jobs/artifact\x12\xc7\x01\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/agent/jobs/artifact\x12\xc9\x01\n" +
+	"\x0eUploadPlanDiff\x12+.admiral.api.agent.v1.UploadPlanDiffRequest\x1a,.admiral.api.agent.v1.UploadPlanDiffResponse\"\\\xbaG&\n" +
+	"\rAgent Runtime\x12\x15Upload a plan's diffs\xa2\x97$\f\n" +
+	"\n" +
+	"agent:exec\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/agent/jobs/plan-diff\x12\xc7\x01\n" +
 	"\x0fReportJobResult\x12,.admiral.api.agent.v1.ReportJobResultRequest\x1a-.admiral.api.agent.v1.ReportJobResultResponse\"W\xbaG$\n" +
 	"\rAgent Runtime\x12\x13Report a job result\xa2\x97$\f\n" +
 	"\n" +
@@ -4529,8 +5144,8 @@ func file_admiral_api_agent_v1_agent_proto_rawDescGZIP() []byte {
 	return file_admiral_api_agent_v1_agent_proto_rawDescData
 }
 
-var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 63)
+var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 72)
 var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(ClusterStatus)(0),                  // 0: admiral.api.agent.v1.ClusterStatus
 	(AgentHealth)(0),                    // 1: admiral.api.agent.v1.AgentHealth
@@ -4538,186 +5153,209 @@ var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(JobStatus)(0),                      // 3: admiral.api.agent.v1.JobStatus
 	(WaitReason)(0),                     // 4: admiral.api.agent.v1.WaitReason
 	(ReportOutcome)(0),                  // 5: admiral.api.agent.v1.ReportOutcome
-	(*Cluster)(nil),                     // 6: admiral.api.agent.v1.Cluster
-	(*ClusterTrust)(nil),                // 7: admiral.api.agent.v1.ClusterTrust
-	(*Agent)(nil),                       // 8: admiral.api.agent.v1.Agent
-	(*AgentCeiling)(nil),                // 9: admiral.api.agent.v1.AgentCeiling
-	(*AgentReport)(nil),                 // 10: admiral.api.agent.v1.AgentReport
-	(*AgentCapabilities)(nil),           // 11: admiral.api.agent.v1.AgentCapabilities
-	(*AgentGrant)(nil),                  // 12: admiral.api.agent.v1.AgentGrant
-	(*Job)(nil),                         // 13: admiral.api.agent.v1.Job
-	(*JobResult)(nil),                   // 14: admiral.api.agent.v1.JobResult
-	(*Step)(nil),                        // 15: admiral.api.agent.v1.Step
-	(*Offer)(nil),                       // 16: admiral.api.agent.v1.Offer
-	(*CreateClusterRequest)(nil),        // 17: admiral.api.agent.v1.CreateClusterRequest
-	(*CreateClusterResponse)(nil),       // 18: admiral.api.agent.v1.CreateClusterResponse
-	(*GetClusterRequest)(nil),           // 19: admiral.api.agent.v1.GetClusterRequest
-	(*GetClusterResponse)(nil),          // 20: admiral.api.agent.v1.GetClusterResponse
-	(*ListClustersRequest)(nil),         // 21: admiral.api.agent.v1.ListClustersRequest
-	(*ListClustersResponse)(nil),        // 22: admiral.api.agent.v1.ListClustersResponse
-	(*SetClusterTrustRequest)(nil),      // 23: admiral.api.agent.v1.SetClusterTrustRequest
-	(*SetClusterTrustResponse)(nil),     // 24: admiral.api.agent.v1.SetClusterTrustResponse
-	(*DeleteClusterRequest)(nil),        // 25: admiral.api.agent.v1.DeleteClusterRequest
-	(*DeleteClusterResponse)(nil),       // 26: admiral.api.agent.v1.DeleteClusterResponse
-	(*CreateAgentRequest)(nil),          // 27: admiral.api.agent.v1.CreateAgentRequest
-	(*CreateAgentResponse)(nil),         // 28: admiral.api.agent.v1.CreateAgentResponse
-	(*EnrollmentKey)(nil),               // 29: admiral.api.agent.v1.EnrollmentKey
-	(*GetAgentRequest)(nil),             // 30: admiral.api.agent.v1.GetAgentRequest
-	(*GetAgentResponse)(nil),            // 31: admiral.api.agent.v1.GetAgentResponse
-	(*ListAgentsRequest)(nil),           // 32: admiral.api.agent.v1.ListAgentsRequest
-	(*ListAgentsResponse)(nil),          // 33: admiral.api.agent.v1.ListAgentsResponse
-	(*UpdateAgentRequest)(nil),          // 34: admiral.api.agent.v1.UpdateAgentRequest
-	(*UpdateAgentResponse)(nil),         // 35: admiral.api.agent.v1.UpdateAgentResponse
-	(*DeleteAgentRequest)(nil),          // 36: admiral.api.agent.v1.DeleteAgentRequest
-	(*DeleteAgentResponse)(nil),         // 37: admiral.api.agent.v1.DeleteAgentResponse
-	(*CreateEnrollmentKeyRequest)(nil),  // 38: admiral.api.agent.v1.CreateEnrollmentKeyRequest
-	(*CreateEnrollmentKeyResponse)(nil), // 39: admiral.api.agent.v1.CreateEnrollmentKeyResponse
-	(*GrantAgentUseRequest)(nil),        // 40: admiral.api.agent.v1.GrantAgentUseRequest
-	(*GrantAgentUseResponse)(nil),       // 41: admiral.api.agent.v1.GrantAgentUseResponse
-	(*RevokeAgentUseRequest)(nil),       // 42: admiral.api.agent.v1.RevokeAgentUseRequest
-	(*RevokeAgentUseResponse)(nil),      // 43: admiral.api.agent.v1.RevokeAgentUseResponse
-	(*ListAgentGrantsRequest)(nil),      // 44: admiral.api.agent.v1.ListAgentGrantsRequest
-	(*ListAgentGrantsResponse)(nil),     // 45: admiral.api.agent.v1.ListAgentGrantsResponse
-	(*GetJobRequest)(nil),               // 46: admiral.api.agent.v1.GetJobRequest
-	(*GetJobResponse)(nil),              // 47: admiral.api.agent.v1.GetJobResponse
-	(*ListJobsRequest)(nil),             // 48: admiral.api.agent.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),            // 49: admiral.api.agent.v1.ListJobsResponse
-	(*CancelJobRequest)(nil),            // 50: admiral.api.agent.v1.CancelJobRequest
-	(*CancelJobResponse)(nil),           // 51: admiral.api.agent.v1.CancelJobResponse
-	(*Attempt)(nil),                     // 52: admiral.api.agent.v1.Attempt
-	(*EnrollRequest)(nil),               // 53: admiral.api.agent.v1.EnrollRequest
-	(*EnrollResponse)(nil),              // 54: admiral.api.agent.v1.EnrollResponse
-	(*ReportStatusRequest)(nil),         // 55: admiral.api.agent.v1.ReportStatusRequest
-	(*ReportStatusResponse)(nil),        // 56: admiral.api.agent.v1.ReportStatusResponse
-	(*Slots)(nil),                       // 57: admiral.api.agent.v1.Slots
-	(*ClaimJobRequest)(nil),             // 58: admiral.api.agent.v1.ClaimJobRequest
-	(*ClaimJobResponse)(nil),            // 59: admiral.api.agent.v1.ClaimJobResponse
-	(*StartJobRequest)(nil),             // 60: admiral.api.agent.v1.StartJobRequest
-	(*StartJobResponse)(nil),            // 61: admiral.api.agent.v1.StartJobResponse
-	(*Progress)(nil),                    // 62: admiral.api.agent.v1.Progress
-	(*RenewLeaseRequest)(nil),           // 63: admiral.api.agent.v1.RenewLeaseRequest
-	(*RenewLeaseResponse)(nil),          // 64: admiral.api.agent.v1.RenewLeaseResponse
-	(*GetJobArtifactRequest)(nil),       // 65: admiral.api.agent.v1.GetJobArtifactRequest
-	(*GetJobArtifactResponse)(nil),      // 66: admiral.api.agent.v1.GetJobArtifactResponse
-	(*ReportJobResultRequest)(nil),      // 67: admiral.api.agent.v1.ReportJobResultRequest
-	(*ReportJobResultResponse)(nil),     // 68: admiral.api.agent.v1.ReportJobResultResponse
-	(*timestamppb.Timestamp)(nil),       // 69: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),                 // 70: admiral.common.v1.ActorRef
+	(ResourceAction)(0),                 // 6: admiral.api.agent.v1.ResourceAction
+	(*Cluster)(nil),                     // 7: admiral.api.agent.v1.Cluster
+	(*ClusterTrust)(nil),                // 8: admiral.api.agent.v1.ClusterTrust
+	(*Agent)(nil),                       // 9: admiral.api.agent.v1.Agent
+	(*AgentCeiling)(nil),                // 10: admiral.api.agent.v1.AgentCeiling
+	(*AgentReport)(nil),                 // 11: admiral.api.agent.v1.AgentReport
+	(*AgentCapabilities)(nil),           // 12: admiral.api.agent.v1.AgentCapabilities
+	(*AgentGrant)(nil),                  // 13: admiral.api.agent.v1.AgentGrant
+	(*Job)(nil),                         // 14: admiral.api.agent.v1.Job
+	(*JobResult)(nil),                   // 15: admiral.api.agent.v1.JobResult
+	(*ResourceRef)(nil),                 // 16: admiral.api.agent.v1.ResourceRef
+	(*ComponentInventory)(nil),          // 17: admiral.api.agent.v1.ComponentInventory
+	(*PlanResult)(nil),                  // 18: admiral.api.agent.v1.PlanResult
+	(*ComponentPlan)(nil),               // 19: admiral.api.agent.v1.ComponentPlan
+	(*ResourceChange)(nil),              // 20: admiral.api.agent.v1.ResourceChange
+	(*PlanDiff)(nil),                    // 21: admiral.api.agent.v1.PlanDiff
+	(*ResourceDiff)(nil),                // 22: admiral.api.agent.v1.ResourceDiff
+	(*Step)(nil),                        // 23: admiral.api.agent.v1.Step
+	(*Offer)(nil),                       // 24: admiral.api.agent.v1.Offer
+	(*CreateClusterRequest)(nil),        // 25: admiral.api.agent.v1.CreateClusterRequest
+	(*CreateClusterResponse)(nil),       // 26: admiral.api.agent.v1.CreateClusterResponse
+	(*GetClusterRequest)(nil),           // 27: admiral.api.agent.v1.GetClusterRequest
+	(*GetClusterResponse)(nil),          // 28: admiral.api.agent.v1.GetClusterResponse
+	(*ListClustersRequest)(nil),         // 29: admiral.api.agent.v1.ListClustersRequest
+	(*ListClustersResponse)(nil),        // 30: admiral.api.agent.v1.ListClustersResponse
+	(*SetClusterTrustRequest)(nil),      // 31: admiral.api.agent.v1.SetClusterTrustRequest
+	(*SetClusterTrustResponse)(nil),     // 32: admiral.api.agent.v1.SetClusterTrustResponse
+	(*DeleteClusterRequest)(nil),        // 33: admiral.api.agent.v1.DeleteClusterRequest
+	(*DeleteClusterResponse)(nil),       // 34: admiral.api.agent.v1.DeleteClusterResponse
+	(*CreateAgentRequest)(nil),          // 35: admiral.api.agent.v1.CreateAgentRequest
+	(*CreateAgentResponse)(nil),         // 36: admiral.api.agent.v1.CreateAgentResponse
+	(*EnrollmentKey)(nil),               // 37: admiral.api.agent.v1.EnrollmentKey
+	(*GetAgentRequest)(nil),             // 38: admiral.api.agent.v1.GetAgentRequest
+	(*GetAgentResponse)(nil),            // 39: admiral.api.agent.v1.GetAgentResponse
+	(*ListAgentsRequest)(nil),           // 40: admiral.api.agent.v1.ListAgentsRequest
+	(*ListAgentsResponse)(nil),          // 41: admiral.api.agent.v1.ListAgentsResponse
+	(*UpdateAgentRequest)(nil),          // 42: admiral.api.agent.v1.UpdateAgentRequest
+	(*UpdateAgentResponse)(nil),         // 43: admiral.api.agent.v1.UpdateAgentResponse
+	(*DeleteAgentRequest)(nil),          // 44: admiral.api.agent.v1.DeleteAgentRequest
+	(*DeleteAgentResponse)(nil),         // 45: admiral.api.agent.v1.DeleteAgentResponse
+	(*CreateEnrollmentKeyRequest)(nil),  // 46: admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	(*CreateEnrollmentKeyResponse)(nil), // 47: admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	(*GrantAgentUseRequest)(nil),        // 48: admiral.api.agent.v1.GrantAgentUseRequest
+	(*GrantAgentUseResponse)(nil),       // 49: admiral.api.agent.v1.GrantAgentUseResponse
+	(*RevokeAgentUseRequest)(nil),       // 50: admiral.api.agent.v1.RevokeAgentUseRequest
+	(*RevokeAgentUseResponse)(nil),      // 51: admiral.api.agent.v1.RevokeAgentUseResponse
+	(*ListAgentGrantsRequest)(nil),      // 52: admiral.api.agent.v1.ListAgentGrantsRequest
+	(*ListAgentGrantsResponse)(nil),     // 53: admiral.api.agent.v1.ListAgentGrantsResponse
+	(*GetJobRequest)(nil),               // 54: admiral.api.agent.v1.GetJobRequest
+	(*GetJobResponse)(nil),              // 55: admiral.api.agent.v1.GetJobResponse
+	(*ListJobsRequest)(nil),             // 56: admiral.api.agent.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),            // 57: admiral.api.agent.v1.ListJobsResponse
+	(*CancelJobRequest)(nil),            // 58: admiral.api.agent.v1.CancelJobRequest
+	(*CancelJobResponse)(nil),           // 59: admiral.api.agent.v1.CancelJobResponse
+	(*Attempt)(nil),                     // 60: admiral.api.agent.v1.Attempt
+	(*EnrollRequest)(nil),               // 61: admiral.api.agent.v1.EnrollRequest
+	(*EnrollResponse)(nil),              // 62: admiral.api.agent.v1.EnrollResponse
+	(*ReportStatusRequest)(nil),         // 63: admiral.api.agent.v1.ReportStatusRequest
+	(*ReportStatusResponse)(nil),        // 64: admiral.api.agent.v1.ReportStatusResponse
+	(*Slots)(nil),                       // 65: admiral.api.agent.v1.Slots
+	(*ClaimJobRequest)(nil),             // 66: admiral.api.agent.v1.ClaimJobRequest
+	(*ClaimJobResponse)(nil),            // 67: admiral.api.agent.v1.ClaimJobResponse
+	(*StartJobRequest)(nil),             // 68: admiral.api.agent.v1.StartJobRequest
+	(*StartJobResponse)(nil),            // 69: admiral.api.agent.v1.StartJobResponse
+	(*Progress)(nil),                    // 70: admiral.api.agent.v1.Progress
+	(*RenewLeaseRequest)(nil),           // 71: admiral.api.agent.v1.RenewLeaseRequest
+	(*RenewLeaseResponse)(nil),          // 72: admiral.api.agent.v1.RenewLeaseResponse
+	(*GetJobArtifactRequest)(nil),       // 73: admiral.api.agent.v1.GetJobArtifactRequest
+	(*GetJobArtifactResponse)(nil),      // 74: admiral.api.agent.v1.GetJobArtifactResponse
+	(*UploadPlanDiffRequest)(nil),       // 75: admiral.api.agent.v1.UploadPlanDiffRequest
+	(*UploadPlanDiffResponse)(nil),      // 76: admiral.api.agent.v1.UploadPlanDiffResponse
+	(*ReportJobResultRequest)(nil),      // 77: admiral.api.agent.v1.ReportJobResultRequest
+	(*ReportJobResultResponse)(nil),     // 78: admiral.api.agent.v1.ReportJobResultResponse
+	(*timestamppb.Timestamp)(nil),       // 79: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                 // 80: admiral.common.v1.ActorRef
 }
 var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	0,  // 0: admiral.api.agent.v1.Cluster.status:type_name -> admiral.api.agent.v1.ClusterStatus
-	69, // 1: admiral.api.agent.v1.Cluster.keys_updated_at:type_name -> google.protobuf.Timestamp
-	70, // 2: admiral.api.agent.v1.Cluster.created_by:type_name -> admiral.common.v1.ActorRef
-	69, // 3: admiral.api.agent.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
-	69, // 4: admiral.api.agent.v1.Cluster.keys_reported_at:type_name -> google.protobuf.Timestamp
-	9,  // 5: admiral.api.agent.v1.Agent.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	79, // 1: admiral.api.agent.v1.Cluster.keys_updated_at:type_name -> google.protobuf.Timestamp
+	80, // 2: admiral.api.agent.v1.Cluster.created_by:type_name -> admiral.common.v1.ActorRef
+	79, // 3: admiral.api.agent.v1.Cluster.created_at:type_name -> google.protobuf.Timestamp
+	79, // 4: admiral.api.agent.v1.Cluster.keys_reported_at:type_name -> google.protobuf.Timestamp
+	10, // 5: admiral.api.agent.v1.Agent.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
 	1,  // 6: admiral.api.agent.v1.Agent.health:type_name -> admiral.api.agent.v1.AgentHealth
-	10, // 7: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
-	70, // 8: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
-	69, // 9: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
-	11, // 10: admiral.api.agent.v1.AgentReport.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
-	69, // 11: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
+	11, // 7: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
+	80, // 8: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
+	79, // 9: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
+	12, // 10: admiral.api.agent.v1.AgentReport.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
+	79, // 11: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
 	2,  // 12: admiral.api.agent.v1.Job.kind:type_name -> admiral.api.agent.v1.JobKind
 	3,  // 13: admiral.api.agent.v1.Job.status:type_name -> admiral.api.agent.v1.JobStatus
 	4,  // 14: admiral.api.agent.v1.Job.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
-	14, // 15: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
-	69, // 16: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	69, // 17: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	69, // 18: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
+	15, // 15: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
+	79, // 16: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	79, // 17: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	79, // 18: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
 	3,  // 19: admiral.api.agent.v1.JobResult.status:type_name -> admiral.api.agent.v1.JobStatus
-	15, // 20: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
-	3,  // 21: admiral.api.agent.v1.Step.status:type_name -> admiral.api.agent.v1.JobStatus
-	13, // 22: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
-	7,  // 23: admiral.api.agent.v1.CreateClusterRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
-	6,  // 24: admiral.api.agent.v1.CreateClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	6,  // 25: admiral.api.agent.v1.GetClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	6,  // 26: admiral.api.agent.v1.ListClustersResponse.clusters:type_name -> admiral.api.agent.v1.Cluster
-	7,  // 27: admiral.api.agent.v1.SetClusterTrustRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
-	6,  // 28: admiral.api.agent.v1.SetClusterTrustResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	9,  // 29: admiral.api.agent.v1.CreateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
-	12, // 30: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	8,  // 31: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	12, // 32: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	29, // 33: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
-	69, // 34: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
-	8,  // 35: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	8,  // 36: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
-	9,  // 37: admiral.api.agent.v1.UpdateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
-	8,  // 38: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	29, // 39: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
-	12, // 40: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
-	12, // 41: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
-	12, // 42: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	13, // 43: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
-	3,  // 44: admiral.api.agent.v1.ListJobsRequest.status:type_name -> admiral.api.agent.v1.JobStatus
-	13, // 45: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
-	13, // 46: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
-	6,  // 47: admiral.api.agent.v1.EnrollResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
-	8,  // 48: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	11, // 49: admiral.api.agent.v1.ReportStatusRequest.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
-	2,  // 50: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
-	57, // 51: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
-	16, // 52: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
-	52, // 53: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	52, // 54: admiral.api.agent.v1.RenewLeaseRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	62, // 55: admiral.api.agent.v1.RenewLeaseRequest.progress:type_name -> admiral.api.agent.v1.Progress
-	52, // 56: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	52, // 57: admiral.api.agent.v1.ReportJobResultRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	14, // 58: admiral.api.agent.v1.ReportJobResultRequest.result:type_name -> admiral.api.agent.v1.JobResult
-	5,  // 59: admiral.api.agent.v1.ReportJobResultResponse.outcome:type_name -> admiral.api.agent.v1.ReportOutcome
-	17, // 60: admiral.api.agent.v1.AgentAPI.CreateCluster:input_type -> admiral.api.agent.v1.CreateClusterRequest
-	19, // 61: admiral.api.agent.v1.AgentAPI.GetCluster:input_type -> admiral.api.agent.v1.GetClusterRequest
-	21, // 62: admiral.api.agent.v1.AgentAPI.ListClusters:input_type -> admiral.api.agent.v1.ListClustersRequest
-	23, // 63: admiral.api.agent.v1.AgentAPI.SetClusterTrust:input_type -> admiral.api.agent.v1.SetClusterTrustRequest
-	25, // 64: admiral.api.agent.v1.AgentAPI.DeleteCluster:input_type -> admiral.api.agent.v1.DeleteClusterRequest
-	27, // 65: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
-	30, // 66: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
-	32, // 67: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
-	34, // 68: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
-	36, // 69: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
-	38, // 70: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
-	40, // 71: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
-	42, // 72: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
-	44, // 73: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
-	46, // 74: admiral.api.agent.v1.AgentAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
-	48, // 75: admiral.api.agent.v1.AgentAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
-	50, // 76: admiral.api.agent.v1.AgentAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
-	53, // 77: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
-	55, // 78: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:input_type -> admiral.api.agent.v1.ReportStatusRequest
-	58, // 79: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
-	60, // 80: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
-	63, // 81: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:input_type -> admiral.api.agent.v1.RenewLeaseRequest
-	65, // 82: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
-	67, // 83: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:input_type -> admiral.api.agent.v1.ReportJobResultRequest
-	18, // 84: admiral.api.agent.v1.AgentAPI.CreateCluster:output_type -> admiral.api.agent.v1.CreateClusterResponse
-	20, // 85: admiral.api.agent.v1.AgentAPI.GetCluster:output_type -> admiral.api.agent.v1.GetClusterResponse
-	22, // 86: admiral.api.agent.v1.AgentAPI.ListClusters:output_type -> admiral.api.agent.v1.ListClustersResponse
-	24, // 87: admiral.api.agent.v1.AgentAPI.SetClusterTrust:output_type -> admiral.api.agent.v1.SetClusterTrustResponse
-	26, // 88: admiral.api.agent.v1.AgentAPI.DeleteCluster:output_type -> admiral.api.agent.v1.DeleteClusterResponse
-	28, // 89: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
-	31, // 90: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
-	33, // 91: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
-	35, // 92: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
-	37, // 93: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
-	39, // 94: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
-	41, // 95: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
-	43, // 96: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
-	45, // 97: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
-	47, // 98: admiral.api.agent.v1.AgentAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
-	49, // 99: admiral.api.agent.v1.AgentAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
-	51, // 100: admiral.api.agent.v1.AgentAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
-	54, // 101: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
-	56, // 102: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:output_type -> admiral.api.agent.v1.ReportStatusResponse
-	59, // 103: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
-	61, // 104: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
-	64, // 105: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:output_type -> admiral.api.agent.v1.RenewLeaseResponse
-	66, // 106: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
-	68, // 107: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:output_type -> admiral.api.agent.v1.ReportJobResultResponse
-	84, // [84:108] is the sub-list for method output_type
-	60, // [60:84] is the sub-list for method input_type
-	60, // [60:60] is the sub-list for extension type_name
-	60, // [60:60] is the sub-list for extension extendee
-	0,  // [0:60] is the sub-list for field type_name
+	23, // 20: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
+	18, // 21: admiral.api.agent.v1.JobResult.plan:type_name -> admiral.api.agent.v1.PlanResult
+	16, // 22: admiral.api.agent.v1.ComponentInventory.resources:type_name -> admiral.api.agent.v1.ResourceRef
+	19, // 23: admiral.api.agent.v1.PlanResult.components:type_name -> admiral.api.agent.v1.ComponentPlan
+	20, // 24: admiral.api.agent.v1.ComponentPlan.changes:type_name -> admiral.api.agent.v1.ResourceChange
+	16, // 25: admiral.api.agent.v1.ResourceChange.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	6,  // 26: admiral.api.agent.v1.ResourceChange.action:type_name -> admiral.api.agent.v1.ResourceAction
+	22, // 27: admiral.api.agent.v1.PlanDiff.resources:type_name -> admiral.api.agent.v1.ResourceDiff
+	16, // 28: admiral.api.agent.v1.ResourceDiff.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	3,  // 29: admiral.api.agent.v1.Step.status:type_name -> admiral.api.agent.v1.JobStatus
+	14, // 30: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
+	8,  // 31: admiral.api.agent.v1.CreateClusterRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
+	7,  // 32: admiral.api.agent.v1.CreateClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	7,  // 33: admiral.api.agent.v1.GetClusterResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	7,  // 34: admiral.api.agent.v1.ListClustersResponse.clusters:type_name -> admiral.api.agent.v1.Cluster
+	8,  // 35: admiral.api.agent.v1.SetClusterTrustRequest.trust:type_name -> admiral.api.agent.v1.ClusterTrust
+	7,  // 36: admiral.api.agent.v1.SetClusterTrustResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	10, // 37: admiral.api.agent.v1.CreateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	13, // 38: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	9,  // 39: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	13, // 40: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	37, // 41: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	79, // 42: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
+	9,  // 43: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	9,  // 44: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
+	10, // 45: admiral.api.agent.v1.UpdateAgentRequest.ceiling:type_name -> admiral.api.agent.v1.AgentCeiling
+	9,  // 46: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	37, // 47: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	13, // 48: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	13, // 49: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	13, // 50: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	14, // 51: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	3,  // 52: admiral.api.agent.v1.ListJobsRequest.status:type_name -> admiral.api.agent.v1.JobStatus
+	14, // 53: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
+	14, // 54: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	7,  // 55: admiral.api.agent.v1.EnrollResponse.cluster:type_name -> admiral.api.agent.v1.Cluster
+	9,  // 56: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	12, // 57: admiral.api.agent.v1.ReportStatusRequest.capabilities:type_name -> admiral.api.agent.v1.AgentCapabilities
+	2,  // 58: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
+	65, // 59: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
+	24, // 60: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
+	60, // 61: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	60, // 62: admiral.api.agent.v1.RenewLeaseRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	70, // 63: admiral.api.agent.v1.RenewLeaseRequest.progress:type_name -> admiral.api.agent.v1.Progress
+	60, // 64: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	17, // 65: admiral.api.agent.v1.GetJobArtifactResponse.previous_inventory:type_name -> admiral.api.agent.v1.ComponentInventory
+	60, // 66: admiral.api.agent.v1.UploadPlanDiffRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	21, // 67: admiral.api.agent.v1.UploadPlanDiffRequest.diff:type_name -> admiral.api.agent.v1.PlanDiff
+	60, // 68: admiral.api.agent.v1.ReportJobResultRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	15, // 69: admiral.api.agent.v1.ReportJobResultRequest.result:type_name -> admiral.api.agent.v1.JobResult
+	5,  // 70: admiral.api.agent.v1.ReportJobResultResponse.outcome:type_name -> admiral.api.agent.v1.ReportOutcome
+	25, // 71: admiral.api.agent.v1.AgentAPI.CreateCluster:input_type -> admiral.api.agent.v1.CreateClusterRequest
+	27, // 72: admiral.api.agent.v1.AgentAPI.GetCluster:input_type -> admiral.api.agent.v1.GetClusterRequest
+	29, // 73: admiral.api.agent.v1.AgentAPI.ListClusters:input_type -> admiral.api.agent.v1.ListClustersRequest
+	31, // 74: admiral.api.agent.v1.AgentAPI.SetClusterTrust:input_type -> admiral.api.agent.v1.SetClusterTrustRequest
+	33, // 75: admiral.api.agent.v1.AgentAPI.DeleteCluster:input_type -> admiral.api.agent.v1.DeleteClusterRequest
+	35, // 76: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
+	38, // 77: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
+	40, // 78: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
+	42, // 79: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
+	44, // 80: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
+	46, // 81: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	48, // 82: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
+	50, // 83: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
+	52, // 84: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
+	54, // 85: admiral.api.agent.v1.AgentAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
+	56, // 86: admiral.api.agent.v1.AgentAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
+	58, // 87: admiral.api.agent.v1.AgentAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
+	61, // 88: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
+	63, // 89: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:input_type -> admiral.api.agent.v1.ReportStatusRequest
+	66, // 90: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
+	68, // 91: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
+	71, // 92: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:input_type -> admiral.api.agent.v1.RenewLeaseRequest
+	73, // 93: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
+	75, // 94: admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff:input_type -> admiral.api.agent.v1.UploadPlanDiffRequest
+	77, // 95: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:input_type -> admiral.api.agent.v1.ReportJobResultRequest
+	26, // 96: admiral.api.agent.v1.AgentAPI.CreateCluster:output_type -> admiral.api.agent.v1.CreateClusterResponse
+	28, // 97: admiral.api.agent.v1.AgentAPI.GetCluster:output_type -> admiral.api.agent.v1.GetClusterResponse
+	30, // 98: admiral.api.agent.v1.AgentAPI.ListClusters:output_type -> admiral.api.agent.v1.ListClustersResponse
+	32, // 99: admiral.api.agent.v1.AgentAPI.SetClusterTrust:output_type -> admiral.api.agent.v1.SetClusterTrustResponse
+	34, // 100: admiral.api.agent.v1.AgentAPI.DeleteCluster:output_type -> admiral.api.agent.v1.DeleteClusterResponse
+	36, // 101: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
+	39, // 102: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
+	41, // 103: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
+	43, // 104: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
+	45, // 105: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
+	47, // 106: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	49, // 107: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
+	51, // 108: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
+	53, // 109: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
+	55, // 110: admiral.api.agent.v1.AgentAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
+	57, // 111: admiral.api.agent.v1.AgentAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
+	59, // 112: admiral.api.agent.v1.AgentAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
+	62, // 113: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
+	64, // 114: admiral.api.agent.v1.AgentRuntimeAPI.ReportStatus:output_type -> admiral.api.agent.v1.ReportStatusResponse
+	67, // 115: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
+	69, // 116: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
+	72, // 117: admiral.api.agent.v1.AgentRuntimeAPI.RenewLease:output_type -> admiral.api.agent.v1.RenewLeaseResponse
+	74, // 118: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
+	76, // 119: admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff:output_type -> admiral.api.agent.v1.UploadPlanDiffResponse
+	78, // 120: admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult:output_type -> admiral.api.agent.v1.ReportJobResultResponse
+	96, // [96:121] is the sub-list for method output_type
+	71, // [71:96] is the sub-list for method input_type
+	71, // [71:71] is the sub-list for extension type_name
+	71, // [71:71] is the sub-list for extension extendee
+	0,  // [0:71] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_agent_v1_agent_proto_init() }
@@ -4736,16 +5374,16 @@ func file_admiral_api_agent_v1_agent_proto_init() {
 		(*AgentGrant_ApplicationId)(nil),
 		(*AgentGrant_EnvironmentId)(nil),
 	}
-	file_admiral_api_agent_v1_agent_proto_msgTypes[26].OneofWrappers = []any{}
-	file_admiral_api_agent_v1_agent_proto_msgTypes[28].OneofWrappers = []any{}
-	file_admiral_api_agent_v1_agent_proto_msgTypes[42].OneofWrappers = []any{}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[33].OneofWrappers = []any{}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[35].OneofWrappers = []any{}
+	file_admiral_api_agent_v1_agent_proto_msgTypes[49].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_agent_v1_agent_proto_rawDesc), len(file_admiral_api_agent_v1_agent_proto_rawDesc)),
-			NumEnums:      6,
-			NumMessages:   63,
+			NumEnums:      7,
+			NumMessages:   72,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

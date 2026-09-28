@@ -68,6 +68,11 @@ const (
 	// ChangeSetAPIGetArtifactProcedure is the fully-qualified name of the ChangeSetAPI's GetArtifact
 	// RPC.
 	ChangeSetAPIGetArtifactProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetArtifact"
+	// ChangeSetAPIGetPlanProcedure is the fully-qualified name of the ChangeSetAPI's GetPlan RPC.
+	ChangeSetAPIGetPlanProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlan"
+	// ChangeSetAPIGetPlanDiffProcedure is the fully-qualified name of the ChangeSetAPI's GetPlanDiff
+	// RPC.
+	ChangeSetAPIGetPlanDiffProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff"
 )
 
 // ChangeSetAPIClient is a client for the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -150,6 +155,17 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error)
+	// GetPlan returns the plan of one prepared revision: the PLAN job's status
+	// and why it waits, the agent and cluster it runs against, and once done
+	// each component's changes. NOT_FOUND when the revision was not planned.
+	//
+	// Scope: `changeset:read`
+	GetPlan(context.Context, *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error)
+	// GetPlanDiff returns a finished plan's full diffs, Secret values masked.
+	// FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `changeset:read`
+	GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error)
 }
 
 // NewChangeSetAPIClient constructs a client for the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -235,6 +251,18 @@ func NewChangeSetAPIClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(changeSetAPIMethods.ByName("GetArtifact")),
 			connect.WithClientOptions(opts...),
 		),
+		getPlan: connect.NewClient[v1.GetPlanRequest, v1.GetPlanResponse](
+			httpClient,
+			baseURL+ChangeSetAPIGetPlanProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("GetPlan")),
+			connect.WithClientOptions(opts...),
+		),
+		getPlanDiff: connect.NewClient[v1.GetPlanDiffRequest, v1.GetPlanDiffResponse](
+			httpClient,
+			baseURL+ChangeSetAPIGetPlanDiffProcedure,
+			connect.WithSchema(changeSetAPIMethods.ByName("GetPlanDiff")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -252,6 +280,8 @@ type changeSetAPIClient struct {
 	planChangeSet      *connect.Client[v1.PlanChangeSetRequest, v1.PlanChangeSetResponse]
 	getPrepare         *connect.Client[v1.GetPrepareRequest, v1.GetPrepareResponse]
 	getArtifact        *connect.Client[v1.GetArtifactRequest, v1.GetArtifactResponse]
+	getPlan            *connect.Client[v1.GetPlanRequest, v1.GetPlanResponse]
+	getPlanDiff        *connect.Client[v1.GetPlanDiffRequest, v1.GetPlanDiffResponse]
 }
 
 // CreateChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet.
@@ -312,6 +342,16 @@ func (c *changeSetAPIClient) GetPrepare(ctx context.Context, req *connect.Reques
 // GetArtifact calls admiral.api.changeset.v1.ChangeSetAPI.GetArtifact.
 func (c *changeSetAPIClient) GetArtifact(ctx context.Context, req *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error) {
 	return c.getArtifact.CallUnary(ctx, req)
+}
+
+// GetPlan calls admiral.api.changeset.v1.ChangeSetAPI.GetPlan.
+func (c *changeSetAPIClient) GetPlan(ctx context.Context, req *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error) {
+	return c.getPlan.CallUnary(ctx, req)
+}
+
+// GetPlanDiff calls admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff.
+func (c *changeSetAPIClient) GetPlanDiff(ctx context.Context, req *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error) {
+	return c.getPlanDiff.CallUnary(ctx, req)
 }
 
 // ChangeSetAPIHandler is an implementation of the admiral.api.changeset.v1.ChangeSetAPI service.
@@ -394,6 +434,17 @@ type ChangeSetAPIHandler interface {
 	//
 	// Scope: `changeset:read`
 	GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error)
+	// GetPlan returns the plan of one prepared revision: the PLAN job's status
+	// and why it waits, the agent and cluster it runs against, and once done
+	// each component's changes. NOT_FOUND when the revision was not planned.
+	//
+	// Scope: `changeset:read`
+	GetPlan(context.Context, *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error)
+	// GetPlanDiff returns a finished plan's full diffs, Secret values masked.
+	// FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `changeset:read`
+	GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error)
 }
 
 // NewChangeSetAPIHandler builds an HTTP handler from the service implementation. It returns the
@@ -475,6 +526,18 @@ func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(changeSetAPIMethods.ByName("GetArtifact")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changeSetAPIGetPlanHandler := connect.NewUnaryHandler(
+		ChangeSetAPIGetPlanProcedure,
+		svc.GetPlan,
+		connect.WithSchema(changeSetAPIMethods.ByName("GetPlan")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changeSetAPIGetPlanDiffHandler := connect.NewUnaryHandler(
+		ChangeSetAPIGetPlanDiffProcedure,
+		svc.GetPlanDiff,
+		connect.WithSchema(changeSetAPIMethods.ByName("GetPlanDiff")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/admiral.api.changeset.v1.ChangeSetAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChangeSetAPICreateChangeSetProcedure:
@@ -501,6 +564,10 @@ func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOpti
 			changeSetAPIGetPrepareHandler.ServeHTTP(w, r)
 		case ChangeSetAPIGetArtifactProcedure:
 			changeSetAPIGetArtifactHandler.ServeHTTP(w, r)
+		case ChangeSetAPIGetPlanProcedure:
+			changeSetAPIGetPlanHandler.ServeHTTP(w, r)
+		case ChangeSetAPIGetPlanDiffProcedure:
+			changeSetAPIGetPlanDiffHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -556,4 +623,12 @@ func (UnimplementedChangeSetAPIHandler) GetPrepare(context.Context, *connect.Req
 
 func (UnimplementedChangeSetAPIHandler) GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetArtifact is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) GetPlan(context.Context, *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPlan is not implemented"))
+}
+
+func (UnimplementedChangeSetAPIHandler) GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff is not implemented"))
 }

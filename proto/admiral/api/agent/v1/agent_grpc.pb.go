@@ -895,6 +895,7 @@ const (
 	AgentRuntimeAPI_StartJob_FullMethodName        = "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob"
 	AgentRuntimeAPI_RenewLease_FullMethodName      = "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease"
 	AgentRuntimeAPI_GetJobArtifact_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
+	AgentRuntimeAPI_UploadPlanDiff_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff"
 	AgentRuntimeAPI_ReportJobResult_FullMethodName = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
 )
 
@@ -952,6 +953,11 @@ type AgentRuntimeAPIClient interface {
 	//
 	// Scope: `agent:exec`
 	GetJobArtifact(ctx context.Context, in *GetJobArtifactRequest, opts ...grpc.CallOption) (*GetJobArtifactResponse, error)
+	// UploadPlanDiff stores a PLAN attempt's full diffs, to the attempt
+	// holding the lease, and returns their digest for the report to name.
+	//
+	// Scope: `agent:exec`
+	UploadPlanDiff(ctx context.Context, in *UploadPlanDiffRequest, opts ...grpc.CallOption) (*UploadPlanDiffResponse, error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -1028,6 +1034,16 @@ func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, in *GetJobAr
 	return out, nil
 }
 
+func (c *agentRuntimeAPIClient) UploadPlanDiff(ctx context.Context, in *UploadPlanDiffRequest, opts ...grpc.CallOption) (*UploadPlanDiffResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UploadPlanDiffResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_UploadPlanDiff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentRuntimeAPIClient) ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReportJobResultResponse)
@@ -1092,6 +1108,11 @@ type AgentRuntimeAPIServer interface {
 	//
 	// Scope: `agent:exec`
 	GetJobArtifact(context.Context, *GetJobArtifactRequest) (*GetJobArtifactResponse, error)
+	// UploadPlanDiff stores a PLAN attempt's full diffs, to the attempt
+	// holding the lease, and returns their digest for the report to name.
+	//
+	// Scope: `agent:exec`
+	UploadPlanDiff(context.Context, *UploadPlanDiffRequest) (*UploadPlanDiffResponse, error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -1124,6 +1145,9 @@ func (UnimplementedAgentRuntimeAPIServer) RenewLease(context.Context, *RenewLeas
 }
 func (UnimplementedAgentRuntimeAPIServer) GetJobArtifact(context.Context, *GetJobArtifactRequest) (*GetJobArtifactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetJobArtifact not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) UploadPlanDiff(context.Context, *UploadPlanDiffRequest) (*UploadPlanDiffResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UploadPlanDiff not implemented")
 }
 func (UnimplementedAgentRuntimeAPIServer) ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReportJobResult not implemented")
@@ -1256,6 +1280,24 @@ func _AgentRuntimeAPI_GetJobArtifact_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentRuntimeAPI_UploadPlanDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadPlanDiffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).UploadPlanDiff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_UploadPlanDiff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).UploadPlanDiff(ctx, req.(*UploadPlanDiffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AgentRuntimeAPI_ReportJobResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReportJobResultRequest)
 	if err := dec(in); err != nil {
@@ -1304,6 +1346,10 @@ var AgentRuntimeAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetJobArtifact",
 			Handler:    _AgentRuntimeAPI_GetJobArtifact_Handler,
+		},
+		{
+			MethodName: "UploadPlanDiff",
+			Handler:    _AgentRuntimeAPI_UploadPlanDiff_Handler,
 		},
 		{
 			MethodName: "ReportJobResult",

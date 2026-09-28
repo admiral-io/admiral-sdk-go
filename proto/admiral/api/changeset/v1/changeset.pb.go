@@ -10,6 +10,7 @@ import (
 	v1 "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
+	v11 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -1306,6 +1307,151 @@ func (x *Prepare) GetAttempts() int32 {
 	return 0
 }
 
+// Plan is a prepared revision planned against its environment's cluster.
+type Plan struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Revision int32                  `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
+	JobId    string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Status   v11.JobStatus          `protobuf:"varint,3,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
+	// Set while QUEUED.
+	WaitReason v11.WaitReason `protobuf:"varint,4,opt,name=wait_reason,json=waitReason,proto3,enum=admiral.api.agent.v1.WaitReason" json:"wait_reason,omitempty"`
+	// What the plan runs against.
+	AgentId     string `protobuf:"bytes,5,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	AgentName   string `protobuf:"bytes,6,opt,name=agent_name,json=agentName,proto3" json:"agent_name,omitempty"`
+	ClusterId   string `protobuf:"bytes,7,opt,name=cluster_id,json=clusterId,proto3" json:"cluster_id,omitempty"`
+	ClusterName string `protobuf:"bytes,8,opt,name=cluster_name,json=clusterName,proto3" json:"cluster_name,omitempty"`
+	// `sha256:<hex>` of the changes: identical plans have identical digests.
+	PlanDigest string               `protobuf:"bytes,9,opt,name=plan_digest,json=planDigest,proto3" json:"plan_digest,omitempty"`
+	Components []*v11.ComponentPlan `protobuf:"bytes,10,rep,name=components,proto3" json:"components,omitempty"`
+	// Why the plan failed, when it did.
+	Message       string                 `protobuf:"bytes,11,opt,name=message,proto3" json:"message,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	FinishedAt    *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=finished_at,json=finishedAt,proto3" json:"finished_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Plan) Reset() {
+	*x = Plan{}
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Plan) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Plan) ProtoMessage() {}
+
+func (x *Plan) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Plan.ProtoReflect.Descriptor instead.
+func (*Plan) Descriptor() ([]byte, []int) {
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Plan) GetRevision() int32 {
+	if x != nil {
+		return x.Revision
+	}
+	return 0
+}
+
+func (x *Plan) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *Plan) GetStatus() v11.JobStatus {
+	if x != nil {
+		return x.Status
+	}
+	return v11.JobStatus(0)
+}
+
+func (x *Plan) GetWaitReason() v11.WaitReason {
+	if x != nil {
+		return x.WaitReason
+	}
+	return v11.WaitReason(0)
+}
+
+func (x *Plan) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+func (x *Plan) GetAgentName() string {
+	if x != nil {
+		return x.AgentName
+	}
+	return ""
+}
+
+func (x *Plan) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *Plan) GetClusterName() string {
+	if x != nil {
+		return x.ClusterName
+	}
+	return ""
+}
+
+func (x *Plan) GetPlanDigest() string {
+	if x != nil {
+		return x.PlanDigest
+	}
+	return ""
+}
+
+func (x *Plan) GetComponents() []*v11.ComponentPlan {
+	if x != nil {
+		return x.Components
+	}
+	return nil
+}
+
+func (x *Plan) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *Plan) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Plan) GetFinishedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.FinishedAt
+	}
+	return nil
+}
+
 // Finding is something a prepare noticed about one component.
 type Finding struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
@@ -1320,7 +1466,7 @@ type Finding struct {
 
 func (x *Finding) Reset() {
 	*x = Finding{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[10]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1332,7 +1478,7 @@ func (x *Finding) String() string {
 func (*Finding) ProtoMessage() {}
 
 func (x *Finding) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[10]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1345,7 +1491,7 @@ func (x *Finding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Finding.ProtoReflect.Descriptor instead.
 func (*Finding) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Finding) GetComponent() string {
@@ -1389,7 +1535,7 @@ type PrepareError struct {
 
 func (x *PrepareError) Reset() {
 	*x = PrepareError{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[11]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1401,7 +1547,7 @@ func (x *PrepareError) String() string {
 func (*PrepareError) ProtoMessage() {}
 
 func (x *PrepareError) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[11]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1414,7 +1560,7 @@ func (x *PrepareError) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrepareError.ProtoReflect.Descriptor instead.
 func (*PrepareError) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PrepareError) GetClass() PrepareErrorClass {
@@ -1459,7 +1605,7 @@ type Edit struct {
 
 func (x *Edit) Reset() {
 	*x = Edit{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[12]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1471,7 +1617,7 @@ func (x *Edit) String() string {
 func (*Edit) ProtoMessage() {}
 
 func (x *Edit) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[12]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1484,7 +1630,7 @@ func (x *Edit) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Edit.ProtoReflect.Descriptor instead.
 func (*Edit) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Edit) GetEdit() isEdit_Edit {
@@ -1633,7 +1779,7 @@ type AddComponent struct {
 
 func (x *AddComponent) Reset() {
 	*x = AddComponent{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[13]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1645,7 +1791,7 @@ func (x *AddComponent) String() string {
 func (*AddComponent) ProtoMessage() {}
 
 func (x *AddComponent) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[13]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1658,7 +1804,7 @@ func (x *AddComponent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddComponent.ProtoReflect.Descriptor instead.
 func (*AddComponent) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{13}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AddComponent) GetName() string {
@@ -1697,7 +1843,7 @@ type RegistryRef struct {
 
 func (x *RegistryRef) Reset() {
 	*x = RegistryRef{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[14]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1709,7 +1855,7 @@ func (x *RegistryRef) String() string {
 func (*RegistryRef) ProtoMessage() {}
 
 func (x *RegistryRef) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[14]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1722,7 +1868,7 @@ func (x *RegistryRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegistryRef.ProtoReflect.Descriptor instead.
 func (*RegistryRef) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{14}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RegistryRef) GetNamespace() string {
@@ -1760,7 +1906,7 @@ type SetValue struct {
 
 func (x *SetValue) Reset() {
 	*x = SetValue{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[15]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1772,7 +1918,7 @@ func (x *SetValue) String() string {
 func (*SetValue) ProtoMessage() {}
 
 func (x *SetValue) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[15]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1785,7 +1931,7 @@ func (x *SetValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetValue.ProtoReflect.Descriptor instead.
 func (*SetValue) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{15}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SetValue) GetComponent() string {
@@ -1820,7 +1966,7 @@ type SetNull struct {
 
 func (x *SetNull) Reset() {
 	*x = SetNull{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[16]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1832,7 +1978,7 @@ func (x *SetNull) String() string {
 func (*SetNull) ProtoMessage() {}
 
 func (x *SetNull) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[16]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1845,7 +1991,7 @@ func (x *SetNull) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetNull.ProtoReflect.Descriptor instead.
 func (*SetNull) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{16}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *SetNull) GetComponent() string {
@@ -1873,7 +2019,7 @@ type UnsetValue struct {
 
 func (x *UnsetValue) Reset() {
 	*x = UnsetValue{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[17]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1885,7 +2031,7 @@ func (x *UnsetValue) String() string {
 func (*UnsetValue) ProtoMessage() {}
 
 func (x *UnsetValue) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[17]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1898,7 +2044,7 @@ func (x *UnsetValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsetValue.ProtoReflect.Descriptor instead.
 func (*UnsetValue) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{17}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *UnsetValue) GetComponent() string {
@@ -1928,7 +2074,7 @@ type SetPin struct {
 
 func (x *SetPin) Reset() {
 	*x = SetPin{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[18]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1940,7 +2086,7 @@ func (x *SetPin) String() string {
 func (*SetPin) ProtoMessage() {}
 
 func (x *SetPin) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[18]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1953,7 +2099,7 @@ func (x *SetPin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetPin.ProtoReflect.Descriptor instead.
 func (*SetPin) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{18}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SetPin) GetComponent() string {
@@ -1985,7 +2131,7 @@ type ReplaceValues struct {
 
 func (x *ReplaceValues) Reset() {
 	*x = ReplaceValues{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[19]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1997,7 +2143,7 @@ func (x *ReplaceValues) String() string {
 func (*ReplaceValues) ProtoMessage() {}
 
 func (x *ReplaceValues) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[19]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2010,7 +2156,7 @@ func (x *ReplaceValues) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReplaceValues.ProtoReflect.Descriptor instead.
 func (*ReplaceValues) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{19}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ReplaceValues) GetComponent() string {
@@ -2045,7 +2191,7 @@ type RemoveComponent struct {
 
 func (x *RemoveComponent) Reset() {
 	*x = RemoveComponent{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[20]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2057,7 +2203,7 @@ func (x *RemoveComponent) String() string {
 func (*RemoveComponent) ProtoMessage() {}
 
 func (x *RemoveComponent) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[20]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2070,7 +2216,7 @@ func (x *RemoveComponent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveComponent.ProtoReflect.Descriptor instead.
 func (*RemoveComponent) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{20}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *RemoveComponent) GetComponent() string {
@@ -2091,7 +2237,7 @@ type SetPlacement struct {
 
 func (x *SetPlacement) Reset() {
 	*x = SetPlacement{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[21]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2103,7 +2249,7 @@ func (x *SetPlacement) String() string {
 func (*SetPlacement) ProtoMessage() {}
 
 func (x *SetPlacement) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[21]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2116,7 +2262,7 @@ func (x *SetPlacement) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetPlacement.ProtoReflect.Descriptor instead.
 func (*SetPlacement) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{21}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SetPlacement) GetComponent() string {
@@ -2147,7 +2293,7 @@ type CreateChangeSetRequest struct {
 
 func (x *CreateChangeSetRequest) Reset() {
 	*x = CreateChangeSetRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[22]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2159,7 +2305,7 @@ func (x *CreateChangeSetRequest) String() string {
 func (*CreateChangeSetRequest) ProtoMessage() {}
 
 func (x *CreateChangeSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[22]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2172,7 +2318,7 @@ func (x *CreateChangeSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateChangeSetRequest.ProtoReflect.Descriptor instead.
 func (*CreateChangeSetRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{22}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateChangeSetRequest) GetEnvironmentId() string {
@@ -2226,7 +2372,7 @@ type CreateChangeSetResponse struct {
 
 func (x *CreateChangeSetResponse) Reset() {
 	*x = CreateChangeSetResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[23]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2238,7 +2384,7 @@ func (x *CreateChangeSetResponse) String() string {
 func (*CreateChangeSetResponse) ProtoMessage() {}
 
 func (x *CreateChangeSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[23]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2251,7 +2397,7 @@ func (x *CreateChangeSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateChangeSetResponse.ProtoReflect.Descriptor instead.
 func (*CreateChangeSetResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{23}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreateChangeSetResponse) GetChangeSet() *ChangeSet {
@@ -2296,7 +2442,7 @@ type EditChangeSetRequest struct {
 
 func (x *EditChangeSetRequest) Reset() {
 	*x = EditChangeSetRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[24]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2308,7 +2454,7 @@ func (x *EditChangeSetRequest) String() string {
 func (*EditChangeSetRequest) ProtoMessage() {}
 
 func (x *EditChangeSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[24]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2321,7 +2467,7 @@ func (x *EditChangeSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EditChangeSetRequest.ProtoReflect.Descriptor instead.
 func (*EditChangeSetRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{24}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *EditChangeSetRequest) GetChangeSetId() string {
@@ -2365,7 +2511,7 @@ type EditChangeSetResponse struct {
 
 func (x *EditChangeSetResponse) Reset() {
 	*x = EditChangeSetResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[25]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2377,7 +2523,7 @@ func (x *EditChangeSetResponse) String() string {
 func (*EditChangeSetResponse) ProtoMessage() {}
 
 func (x *EditChangeSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[25]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2390,7 +2536,7 @@ func (x *EditChangeSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EditChangeSetResponse.ProtoReflect.Descriptor instead.
 func (*EditChangeSetResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{25}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *EditChangeSetResponse) GetChangeSet() *ChangeSet {
@@ -2430,7 +2576,7 @@ type GetChangeSetRequest struct {
 
 func (x *GetChangeSetRequest) Reset() {
 	*x = GetChangeSetRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[26]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2442,7 +2588,7 @@ func (x *GetChangeSetRequest) String() string {
 func (*GetChangeSetRequest) ProtoMessage() {}
 
 func (x *GetChangeSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[26]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2455,7 +2601,7 @@ func (x *GetChangeSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeSetRequest.ProtoReflect.Descriptor instead.
 func (*GetChangeSetRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{26}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *GetChangeSetRequest) GetChangeSetId() string {
@@ -2480,7 +2626,7 @@ type GetChangeSetResponse struct {
 
 func (x *GetChangeSetResponse) Reset() {
 	*x = GetChangeSetResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[27]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2492,7 +2638,7 @@ func (x *GetChangeSetResponse) String() string {
 func (*GetChangeSetResponse) ProtoMessage() {}
 
 func (x *GetChangeSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[27]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2505,7 +2651,7 @@ func (x *GetChangeSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeSetResponse.ProtoReflect.Descriptor instead.
 func (*GetChangeSetResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{27}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetChangeSetResponse) GetChangeSet() *ChangeSet {
@@ -2549,7 +2695,7 @@ type ListChangeSetsRequest struct {
 
 func (x *ListChangeSetsRequest) Reset() {
 	*x = ListChangeSetsRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[28]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2561,7 +2707,7 @@ func (x *ListChangeSetsRequest) String() string {
 func (*ListChangeSetsRequest) ProtoMessage() {}
 
 func (x *ListChangeSetsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[28]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2574,7 +2720,7 @@ func (x *ListChangeSetsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangeSetsRequest.ProtoReflect.Descriptor instead.
 func (*ListChangeSetsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{28}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ListChangeSetsRequest) GetEnvironmentId() string {
@@ -2615,7 +2761,7 @@ type ListChangeSetsResponse struct {
 
 func (x *ListChangeSetsResponse) Reset() {
 	*x = ListChangeSetsResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[29]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2627,7 +2773,7 @@ func (x *ListChangeSetsResponse) String() string {
 func (*ListChangeSetsResponse) ProtoMessage() {}
 
 func (x *ListChangeSetsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[29]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2640,7 +2786,7 @@ func (x *ListChangeSetsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangeSetsResponse.ProtoReflect.Descriptor instead.
 func (*ListChangeSetsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{29}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ListChangeSetsResponse) GetChangeSets() []*ChangeSet {
@@ -2666,7 +2812,7 @@ type DiscardChangeSetRequest struct {
 
 func (x *DiscardChangeSetRequest) Reset() {
 	*x = DiscardChangeSetRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[30]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2678,7 +2824,7 @@ func (x *DiscardChangeSetRequest) String() string {
 func (*DiscardChangeSetRequest) ProtoMessage() {}
 
 func (x *DiscardChangeSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[30]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2691,7 +2837,7 @@ func (x *DiscardChangeSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardChangeSetRequest.ProtoReflect.Descriptor instead.
 func (*DiscardChangeSetRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{30}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *DiscardChangeSetRequest) GetChangeSetId() string {
@@ -2710,7 +2856,7 @@ type DiscardChangeSetResponse struct {
 
 func (x *DiscardChangeSetResponse) Reset() {
 	*x = DiscardChangeSetResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[31]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2722,7 +2868,7 @@ func (x *DiscardChangeSetResponse) String() string {
 func (*DiscardChangeSetResponse) ProtoMessage() {}
 
 func (x *DiscardChangeSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[31]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2735,7 +2881,7 @@ func (x *DiscardChangeSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardChangeSetResponse.ProtoReflect.Descriptor instead.
 func (*DiscardChangeSetResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{31}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *DiscardChangeSetResponse) GetChangeSet() *ChangeSet {
@@ -2755,7 +2901,7 @@ type GetComponentValuesRequest struct {
 
 func (x *GetComponentValuesRequest) Reset() {
 	*x = GetComponentValuesRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[32]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2767,7 +2913,7 @@ func (x *GetComponentValuesRequest) String() string {
 func (*GetComponentValuesRequest) ProtoMessage() {}
 
 func (x *GetComponentValuesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[32]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2780,7 +2926,7 @@ func (x *GetComponentValuesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetComponentValuesRequest.ProtoReflect.Descriptor instead.
 func (*GetComponentValuesRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{32}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetComponentValuesRequest) GetChangeSetId() string {
@@ -2811,7 +2957,7 @@ type GetComponentValuesResponse struct {
 
 func (x *GetComponentValuesResponse) Reset() {
 	*x = GetComponentValuesResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[33]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2823,7 +2969,7 @@ func (x *GetComponentValuesResponse) String() string {
 func (*GetComponentValuesResponse) ProtoMessage() {}
 
 func (x *GetComponentValuesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[33]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2836,7 +2982,7 @@ func (x *GetComponentValuesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetComponentValuesResponse.ProtoReflect.Descriptor instead.
 func (*GetComponentValuesResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{33}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *GetComponentValuesResponse) GetTreeJson() string {
@@ -2876,7 +3022,7 @@ type DiffChangeSetRequest struct {
 
 func (x *DiffChangeSetRequest) Reset() {
 	*x = DiffChangeSetRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[34]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2888,7 +3034,7 @@ func (x *DiffChangeSetRequest) String() string {
 func (*DiffChangeSetRequest) ProtoMessage() {}
 
 func (x *DiffChangeSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[34]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2901,7 +3047,7 @@ func (x *DiffChangeSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiffChangeSetRequest.ProtoReflect.Descriptor instead.
 func (*DiffChangeSetRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{34}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *DiffChangeSetRequest) GetChangeSetId() string {
@@ -2922,7 +3068,7 @@ type DiffChangeSetResponse struct {
 
 func (x *DiffChangeSetResponse) Reset() {
 	*x = DiffChangeSetResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[35]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2934,7 +3080,7 @@ func (x *DiffChangeSetResponse) String() string {
 func (*DiffChangeSetResponse) ProtoMessage() {}
 
 func (x *DiffChangeSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[35]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2947,7 +3093,7 @@ func (x *DiffChangeSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiffChangeSetResponse.ProtoReflect.Descriptor instead.
 func (*DiffChangeSetResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{35}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *DiffChangeSetResponse) GetRevision() int32 {
@@ -2980,7 +3126,7 @@ type ComponentDiff struct {
 
 func (x *ComponentDiff) Reset() {
 	*x = ComponentDiff{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[36]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2992,7 +3138,7 @@ func (x *ComponentDiff) String() string {
 func (*ComponentDiff) ProtoMessage() {}
 
 func (x *ComponentDiff) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[36]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3005,7 +3151,7 @@ func (x *ComponentDiff) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComponentDiff.ProtoReflect.Descriptor instead.
 func (*ComponentDiff) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{36}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ComponentDiff) GetComponent() string {
@@ -3065,7 +3211,7 @@ type PathDiff struct {
 
 func (x *PathDiff) Reset() {
 	*x = PathDiff{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[37]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3077,7 +3223,7 @@ func (x *PathDiff) String() string {
 func (*PathDiff) ProtoMessage() {}
 
 func (x *PathDiff) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[37]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3090,7 +3236,7 @@ func (x *PathDiff) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PathDiff.ProtoReflect.Descriptor instead.
 func (*PathDiff) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{37}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *PathDiff) GetPath() []*PathSegment {
@@ -3145,7 +3291,7 @@ type GetRevisionRequest struct {
 
 func (x *GetRevisionRequest) Reset() {
 	*x = GetRevisionRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[38]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3157,7 +3303,7 @@ func (x *GetRevisionRequest) String() string {
 func (*GetRevisionRequest) ProtoMessage() {}
 
 func (x *GetRevisionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[38]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3170,7 +3316,7 @@ func (x *GetRevisionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRevisionRequest.ProtoReflect.Descriptor instead.
 func (*GetRevisionRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{38}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *GetRevisionRequest) GetChangeSetId() string {
@@ -3196,7 +3342,7 @@ type GetRevisionResponse struct {
 
 func (x *GetRevisionResponse) Reset() {
 	*x = GetRevisionResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[39]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3208,7 +3354,7 @@ func (x *GetRevisionResponse) String() string {
 func (*GetRevisionResponse) ProtoMessage() {}
 
 func (x *GetRevisionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[39]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3221,7 +3367,7 @@ func (x *GetRevisionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRevisionResponse.ProtoReflect.Descriptor instead.
 func (*GetRevisionResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{39}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *GetRevisionResponse) GetRevision() *Revision {
@@ -3242,7 +3388,7 @@ type ListRevisionsRequest struct {
 
 func (x *ListRevisionsRequest) Reset() {
 	*x = ListRevisionsRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[40]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3254,7 +3400,7 @@ func (x *ListRevisionsRequest) String() string {
 func (*ListRevisionsRequest) ProtoMessage() {}
 
 func (x *ListRevisionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[40]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3267,7 +3413,7 @@ func (x *ListRevisionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRevisionsRequest.ProtoReflect.Descriptor instead.
 func (*ListRevisionsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{40}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ListRevisionsRequest) GetChangeSetId() string {
@@ -3301,7 +3447,7 @@ type ListRevisionsResponse struct {
 
 func (x *ListRevisionsResponse) Reset() {
 	*x = ListRevisionsResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[41]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3313,7 +3459,7 @@ func (x *ListRevisionsResponse) String() string {
 func (*ListRevisionsResponse) ProtoMessage() {}
 
 func (x *ListRevisionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[41]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3326,7 +3472,7 @@ func (x *ListRevisionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRevisionsResponse.ProtoReflect.Descriptor instead.
 func (*ListRevisionsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{41}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ListRevisionsResponse) GetRevisions() []*Revision {
@@ -3354,7 +3500,7 @@ type PlanChangeSetRequest struct {
 
 func (x *PlanChangeSetRequest) Reset() {
 	*x = PlanChangeSetRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[42]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3366,7 +3512,7 @@ func (x *PlanChangeSetRequest) String() string {
 func (*PlanChangeSetRequest) ProtoMessage() {}
 
 func (x *PlanChangeSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[42]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3379,7 +3525,7 @@ func (x *PlanChangeSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanChangeSetRequest.ProtoReflect.Descriptor instead.
 func (*PlanChangeSetRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{42}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *PlanChangeSetRequest) GetChangeSetId() string {
@@ -3405,7 +3551,7 @@ type PlanChangeSetResponse struct {
 
 func (x *PlanChangeSetResponse) Reset() {
 	*x = PlanChangeSetResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[43]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3417,7 +3563,7 @@ func (x *PlanChangeSetResponse) String() string {
 func (*PlanChangeSetResponse) ProtoMessage() {}
 
 func (x *PlanChangeSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[43]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3430,7 +3576,7 @@ func (x *PlanChangeSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanChangeSetResponse.ProtoReflect.Descriptor instead.
 func (*PlanChangeSetResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{43}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *PlanChangeSetResponse) GetPrepare() *Prepare {
@@ -3450,7 +3596,7 @@ type GetPrepareRequest struct {
 
 func (x *GetPrepareRequest) Reset() {
 	*x = GetPrepareRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[44]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3462,7 +3608,7 @@ func (x *GetPrepareRequest) String() string {
 func (*GetPrepareRequest) ProtoMessage() {}
 
 func (x *GetPrepareRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[44]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3475,7 +3621,7 @@ func (x *GetPrepareRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPrepareRequest.ProtoReflect.Descriptor instead.
 func (*GetPrepareRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{44}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *GetPrepareRequest) GetChangeSetId() string {
@@ -3501,7 +3647,7 @@ type GetPrepareResponse struct {
 
 func (x *GetPrepareResponse) Reset() {
 	*x = GetPrepareResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[45]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3513,7 +3659,7 @@ func (x *GetPrepareResponse) String() string {
 func (*GetPrepareResponse) ProtoMessage() {}
 
 func (x *GetPrepareResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[45]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3526,7 +3672,7 @@ func (x *GetPrepareResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPrepareResponse.ProtoReflect.Descriptor instead.
 func (*GetPrepareResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{45}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *GetPrepareResponse) GetPrepare() *Prepare {
@@ -3546,7 +3692,7 @@ type GetArtifactRequest struct {
 
 func (x *GetArtifactRequest) Reset() {
 	*x = GetArtifactRequest{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[46]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3558,7 +3704,7 @@ func (x *GetArtifactRequest) String() string {
 func (*GetArtifactRequest) ProtoMessage() {}
 
 func (x *GetArtifactRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[46]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3571,7 +3717,7 @@ func (x *GetArtifactRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetArtifactRequest.ProtoReflect.Descriptor instead.
 func (*GetArtifactRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{46}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *GetArtifactRequest) GetChangeSetId() string {
@@ -3600,7 +3746,7 @@ type GetArtifactResponse struct {
 
 func (x *GetArtifactResponse) Reset() {
 	*x = GetArtifactResponse{}
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[47]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3612,7 +3758,7 @@ func (x *GetArtifactResponse) String() string {
 func (*GetArtifactResponse) ProtoMessage() {}
 
 func (x *GetArtifactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[47]
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3625,7 +3771,7 @@ func (x *GetArtifactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetArtifactResponse.ProtoReflect.Descriptor instead.
 func (*GetArtifactResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{47}
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *GetArtifactResponse) GetArtifactDigest() string {
@@ -3642,11 +3788,203 @@ func (x *GetArtifactResponse) GetArtifact() []byte {
 	return nil
 }
 
+type GetPlanRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChangeSetId   string                 `protobuf:"bytes,1,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
+	Revision      int32                  `protobuf:"varint,2,opt,name=revision,proto3" json:"revision,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPlanRequest) Reset() {
+	*x = GetPlanRequest{}
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPlanRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPlanRequest) ProtoMessage() {}
+
+func (x *GetPlanRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPlanRequest.ProtoReflect.Descriptor instead.
+func (*GetPlanRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *GetPlanRequest) GetChangeSetId() string {
+	if x != nil {
+		return x.ChangeSetId
+	}
+	return ""
+}
+
+func (x *GetPlanRequest) GetRevision() int32 {
+	if x != nil {
+		return x.Revision
+	}
+	return 0
+}
+
+type GetPlanResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Plan          *Plan                  `protobuf:"bytes,1,opt,name=plan,proto3" json:"plan,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPlanResponse) Reset() {
+	*x = GetPlanResponse{}
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPlanResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPlanResponse) ProtoMessage() {}
+
+func (x *GetPlanResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPlanResponse.ProtoReflect.Descriptor instead.
+func (*GetPlanResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *GetPlanResponse) GetPlan() *Plan {
+	if x != nil {
+		return x.Plan
+	}
+	return nil
+}
+
+type GetPlanDiffRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChangeSetId   string                 `protobuf:"bytes,1,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
+	Revision      int32                  `protobuf:"varint,2,opt,name=revision,proto3" json:"revision,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPlanDiffRequest) Reset() {
+	*x = GetPlanDiffRequest{}
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPlanDiffRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPlanDiffRequest) ProtoMessage() {}
+
+func (x *GetPlanDiffRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPlanDiffRequest.ProtoReflect.Descriptor instead.
+func (*GetPlanDiffRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *GetPlanDiffRequest) GetChangeSetId() string {
+	if x != nil {
+		return x.ChangeSetId
+	}
+	return ""
+}
+
+func (x *GetPlanDiffRequest) GetRevision() int32 {
+	if x != nil {
+		return x.Revision
+	}
+	return 0
+}
+
+type GetPlanDiffResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Diff          *v11.PlanDiff          `protobuf:"bytes,1,opt,name=diff,proto3" json:"diff,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetPlanDiffResponse) Reset() {
+	*x = GetPlanDiffResponse{}
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetPlanDiffResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPlanDiffResponse) ProtoMessage() {}
+
+func (x *GetPlanDiffResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_changeset_v1_changeset_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPlanDiffResponse.ProtoReflect.Descriptor instead.
+func (*GetPlanDiffResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *GetPlanDiffResponse) GetDiff() *v11.PlanDiff {
+	if x != nil {
+		return x.Diff
+	}
+	return nil
+}
+
 var File_admiral_api_changeset_v1_changeset_proto protoreflect.FileDescriptor
 
 const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\n" +
-	"(admiral/api/changeset/v1/changeset.proto\x12\x18admiral.api.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbf\x04\n" +
+	"(admiral/api/changeset/v1/changeset.proto\x12\x18admiral.api.changeset.v1\x1a admiral/api/agent/v1/agent.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbf\x04\n" +
 	"\tChangeSet\x12\x13\n" +
 	"\x02id\x18\x01 \x01(\tB\x03\xe0A\x03R\x02id\x12*\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\x03\xe0A\x03R\rapplicationId\x12*\n" +
@@ -3727,7 +4065,30 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\vfinished_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"finishedAt\x12\x1a\n" +
 	"\battempts\x18\n" +
-	" \x01(\x05R\battempts\"\x96\x01\n" +
+	" \x01(\x05R\battempts\"\xa9\x04\n" +
+	"\x04Plan\x12\x1a\n" +
+	"\brevision\x18\x01 \x01(\x05R\brevision\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\x127\n" +
+	"\x06status\x18\x03 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusR\x06status\x12A\n" +
+	"\vwait_reason\x18\x04 \x01(\x0e2 .admiral.api.agent.v1.WaitReasonR\n" +
+	"waitReason\x12\x19\n" +
+	"\bagent_id\x18\x05 \x01(\tR\aagentId\x12\x1d\n" +
+	"\n" +
+	"agent_name\x18\x06 \x01(\tR\tagentName\x12\x1d\n" +
+	"\n" +
+	"cluster_id\x18\a \x01(\tR\tclusterId\x12!\n" +
+	"\fcluster_name\x18\b \x01(\tR\vclusterName\x12\x1f\n" +
+	"\vplan_digest\x18\t \x01(\tR\n" +
+	"planDigest\x12C\n" +
+	"\n" +
+	"components\x18\n" +
+	" \x03(\v2#.admiral.api.agent.v1.ComponentPlanR\n" +
+	"components\x12\x18\n" +
+	"\amessage\x18\v \x01(\tR\amessage\x129\n" +
+	"\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12;\n" +
+	"\vfinished_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"finishedAt\"\x96\x01\n" +
 	"\aFinding\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x129\n" +
 	"\x04code\x18\x02 \x01(\x0e2%.admiral.api.changeset.v1.FindingCodeR\x04code\x12\x18\n" +
@@ -3901,7 +4262,19 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\xe0A\x02\xbaH\x04\x1a\x02(\x01R\brevision\"Z\n" +
 	"\x13GetArtifactResponse\x12'\n" +
 	"\x0fartifact_digest\x18\x01 \x01(\tR\x0eartifactDigest\x12\x1a\n" +
-	"\bartifact\x18\x02 \x01(\fR\bartifact*N\n" +
+	"\bartifact\x18\x02 \x01(\fR\bartifact\"y\n" +
+	"\x0eGetPlanRequest\x12?\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\x1b\xe0A\x02\xbaH\x15r\x132\x11^cs-[0-9a-z]{12}$R\vchangeSetId\x12&\n" +
+	"\brevision\x18\x02 \x01(\x05B\n" +
+	"\xe0A\x02\xbaH\x04\x1a\x02(\x01R\brevision\"E\n" +
+	"\x0fGetPlanResponse\x122\n" +
+	"\x04plan\x18\x01 \x01(\v2\x1e.admiral.api.changeset.v1.PlanR\x04plan\"}\n" +
+	"\x12GetPlanDiffRequest\x12?\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\x1b\xe0A\x02\xbaH\x15r\x132\x11^cs-[0-9a-z]{12}$R\vchangeSetId\x12&\n" +
+	"\brevision\x18\x02 \x01(\x05B\n" +
+	"\xe0A\x02\xbaH\x04\x1a\x02(\x01R\brevision\"I\n" +
+	"\x13GetPlanDiffResponse\x122\n" +
+	"\x04diff\x18\x01 \x01(\v2\x1e.admiral.api.agent.v1.PlanDiffR\x04diff*N\n" +
 	"\x0fChangeSetStatus\x12!\n" +
 	"\x1dCHANGE_SET_STATUS_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05DRAFT\x10\x01\x12\r\n" +
@@ -3950,7 +4323,7 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\x03SET\x10\x01\x12\f\n" +
 	"\bSET_NULL\x10\x02\x12\n" +
 	"\n" +
-	"\x06REMOVE\x10\x032\xb2\x15\n" +
+	"\x06REMOVE\x10\x032\x85\x19\n" +
 	"\fChangeSetAPI\x12\xca\x01\n" +
 	"\x0fCreateChangeSet\x120.admiral.api.changeset.v1.CreateChangeSetRequest\x1a1.admiral.api.changeset.v1.CreateChangeSetResponse\"R\xbaG!\n" +
 	"\n" +
@@ -4000,7 +4373,15 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\vGetArtifact\x12,.admiral.api.changeset.v1.GetArtifactRequest\x1a-.admiral.api.changeset.v1.GetArtifactResponse\"\x90\x01\xbaG5\n" +
 	"\n" +
 	"ChangeSets\x12'Retrieve a revision's rendered artifact\xa2\x97$\x10\n" +
-	"\x0echangeset:read\x82\xd3\xe4\x93\x02>\x12</v1/changesets/{change_set_id}/revisions/{revision}/artifactB\xef\x01\n" +
+	"\x0echangeset:read\x82\xd3\xe4\x93\x02>\x12</v1/changesets/{change_set_id}/revisions/{revision}/artifact\x12\xdf\x01\n" +
+	"\aGetPlan\x12(.admiral.api.changeset.v1.GetPlanRequest\x1a).admiral.api.changeset.v1.GetPlanResponse\"\x7f\xbaG(\n" +
+	"\n" +
+	"ChangeSets\x12\x1aRetrieve a revision's plan\xa2\x97$\x10\n" +
+	"\x0echangeset:read\x82\xd3\xe4\x93\x02:\x128/v1/changesets/{change_set_id}/revisions/{revision}/plan\x12\xee\x01\n" +
+	"\vGetPlanDiff\x12,.admiral.api.changeset.v1.GetPlanDiffRequest\x1a-.admiral.api.changeset.v1.GetPlanDiffResponse\"\x81\x01\xbaG%\n" +
+	"\n" +
+	"ChangeSets\x12\x17Retrieve a plan's diffs\xa2\x97$\x10\n" +
+	"\x0echangeset:read\x82\xd3\xe4\x93\x02?\x12=/v1/changesets/{change_set_id}/revisions/{revision}/plan/diffB\xef\x01\n" +
 	"\x1ccom.admiral.api.changeset.v1B\x0eChangesetProtoP\x01Z<go.admiral.io/sdk/proto/admiral/api/changeset/v1;changesetv1\xa2\x02\x03AAC\xaa\x02\x18Admiral.Api.Changeset.V1\xca\x02\x18Admiral\\Api\\Changeset\\V1\xe2\x02$Admiral\\Api\\Changeset\\V1\\GPBMetadata\xea\x02\x1bAdmiral::Api::Changeset::V1b\x06proto3"
 
 var (
@@ -4016,7 +4397,7 @@ func file_admiral_api_changeset_v1_changeset_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_api_changeset_v1_changeset_proto_enumTypes = make([]protoimpl.EnumInfo, 8)
-var file_admiral_api_changeset_v1_changeset_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
+var file_admiral_api_changeset_v1_changeset_proto_msgTypes = make([]protoimpl.MessageInfo, 53)
 var file_admiral_api_changeset_v1_changeset_proto_goTypes = []any{
 	(ChangeSetStatus)(0),               // 0: admiral.api.changeset.v1.ChangeSetStatus
 	(EntryAction)(0),                   // 1: admiral.api.changeset.v1.EntryAction
@@ -4036,58 +4417,67 @@ var file_admiral_api_changeset_v1_changeset_proto_goTypes = []any{
 	(*Placement)(nil),                  // 15: admiral.api.changeset.v1.Placement
 	(*KubernetesPlacement)(nil),        // 16: admiral.api.changeset.v1.KubernetesPlacement
 	(*Prepare)(nil),                    // 17: admiral.api.changeset.v1.Prepare
-	(*Finding)(nil),                    // 18: admiral.api.changeset.v1.Finding
-	(*PrepareError)(nil),               // 19: admiral.api.changeset.v1.PrepareError
-	(*Edit)(nil),                       // 20: admiral.api.changeset.v1.Edit
-	(*AddComponent)(nil),               // 21: admiral.api.changeset.v1.AddComponent
-	(*RegistryRef)(nil),                // 22: admiral.api.changeset.v1.RegistryRef
-	(*SetValue)(nil),                   // 23: admiral.api.changeset.v1.SetValue
-	(*SetNull)(nil),                    // 24: admiral.api.changeset.v1.SetNull
-	(*UnsetValue)(nil),                 // 25: admiral.api.changeset.v1.UnsetValue
-	(*SetPin)(nil),                     // 26: admiral.api.changeset.v1.SetPin
-	(*ReplaceValues)(nil),              // 27: admiral.api.changeset.v1.ReplaceValues
-	(*RemoveComponent)(nil),            // 28: admiral.api.changeset.v1.RemoveComponent
-	(*SetPlacement)(nil),               // 29: admiral.api.changeset.v1.SetPlacement
-	(*CreateChangeSetRequest)(nil),     // 30: admiral.api.changeset.v1.CreateChangeSetRequest
-	(*CreateChangeSetResponse)(nil),    // 31: admiral.api.changeset.v1.CreateChangeSetResponse
-	(*EditChangeSetRequest)(nil),       // 32: admiral.api.changeset.v1.EditChangeSetRequest
-	(*EditChangeSetResponse)(nil),      // 33: admiral.api.changeset.v1.EditChangeSetResponse
-	(*GetChangeSetRequest)(nil),        // 34: admiral.api.changeset.v1.GetChangeSetRequest
-	(*GetChangeSetResponse)(nil),       // 35: admiral.api.changeset.v1.GetChangeSetResponse
-	(*ListChangeSetsRequest)(nil),      // 36: admiral.api.changeset.v1.ListChangeSetsRequest
-	(*ListChangeSetsResponse)(nil),     // 37: admiral.api.changeset.v1.ListChangeSetsResponse
-	(*DiscardChangeSetRequest)(nil),    // 38: admiral.api.changeset.v1.DiscardChangeSetRequest
-	(*DiscardChangeSetResponse)(nil),   // 39: admiral.api.changeset.v1.DiscardChangeSetResponse
-	(*GetComponentValuesRequest)(nil),  // 40: admiral.api.changeset.v1.GetComponentValuesRequest
-	(*GetComponentValuesResponse)(nil), // 41: admiral.api.changeset.v1.GetComponentValuesResponse
-	(*DiffChangeSetRequest)(nil),       // 42: admiral.api.changeset.v1.DiffChangeSetRequest
-	(*DiffChangeSetResponse)(nil),      // 43: admiral.api.changeset.v1.DiffChangeSetResponse
-	(*ComponentDiff)(nil),              // 44: admiral.api.changeset.v1.ComponentDiff
-	(*PathDiff)(nil),                   // 45: admiral.api.changeset.v1.PathDiff
-	(*GetRevisionRequest)(nil),         // 46: admiral.api.changeset.v1.GetRevisionRequest
-	(*GetRevisionResponse)(nil),        // 47: admiral.api.changeset.v1.GetRevisionResponse
-	(*ListRevisionsRequest)(nil),       // 48: admiral.api.changeset.v1.ListRevisionsRequest
-	(*ListRevisionsResponse)(nil),      // 49: admiral.api.changeset.v1.ListRevisionsResponse
-	(*PlanChangeSetRequest)(nil),       // 50: admiral.api.changeset.v1.PlanChangeSetRequest
-	(*PlanChangeSetResponse)(nil),      // 51: admiral.api.changeset.v1.PlanChangeSetResponse
-	(*GetPrepareRequest)(nil),          // 52: admiral.api.changeset.v1.GetPrepareRequest
-	(*GetPrepareResponse)(nil),         // 53: admiral.api.changeset.v1.GetPrepareResponse
-	(*GetArtifactRequest)(nil),         // 54: admiral.api.changeset.v1.GetArtifactRequest
-	(*GetArtifactResponse)(nil),        // 55: admiral.api.changeset.v1.GetArtifactResponse
-	(*v1.ActorRef)(nil),                // 56: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),      // 57: google.protobuf.Timestamp
+	(*Plan)(nil),                       // 18: admiral.api.changeset.v1.Plan
+	(*Finding)(nil),                    // 19: admiral.api.changeset.v1.Finding
+	(*PrepareError)(nil),               // 20: admiral.api.changeset.v1.PrepareError
+	(*Edit)(nil),                       // 21: admiral.api.changeset.v1.Edit
+	(*AddComponent)(nil),               // 22: admiral.api.changeset.v1.AddComponent
+	(*RegistryRef)(nil),                // 23: admiral.api.changeset.v1.RegistryRef
+	(*SetValue)(nil),                   // 24: admiral.api.changeset.v1.SetValue
+	(*SetNull)(nil),                    // 25: admiral.api.changeset.v1.SetNull
+	(*UnsetValue)(nil),                 // 26: admiral.api.changeset.v1.UnsetValue
+	(*SetPin)(nil),                     // 27: admiral.api.changeset.v1.SetPin
+	(*ReplaceValues)(nil),              // 28: admiral.api.changeset.v1.ReplaceValues
+	(*RemoveComponent)(nil),            // 29: admiral.api.changeset.v1.RemoveComponent
+	(*SetPlacement)(nil),               // 30: admiral.api.changeset.v1.SetPlacement
+	(*CreateChangeSetRequest)(nil),     // 31: admiral.api.changeset.v1.CreateChangeSetRequest
+	(*CreateChangeSetResponse)(nil),    // 32: admiral.api.changeset.v1.CreateChangeSetResponse
+	(*EditChangeSetRequest)(nil),       // 33: admiral.api.changeset.v1.EditChangeSetRequest
+	(*EditChangeSetResponse)(nil),      // 34: admiral.api.changeset.v1.EditChangeSetResponse
+	(*GetChangeSetRequest)(nil),        // 35: admiral.api.changeset.v1.GetChangeSetRequest
+	(*GetChangeSetResponse)(nil),       // 36: admiral.api.changeset.v1.GetChangeSetResponse
+	(*ListChangeSetsRequest)(nil),      // 37: admiral.api.changeset.v1.ListChangeSetsRequest
+	(*ListChangeSetsResponse)(nil),     // 38: admiral.api.changeset.v1.ListChangeSetsResponse
+	(*DiscardChangeSetRequest)(nil),    // 39: admiral.api.changeset.v1.DiscardChangeSetRequest
+	(*DiscardChangeSetResponse)(nil),   // 40: admiral.api.changeset.v1.DiscardChangeSetResponse
+	(*GetComponentValuesRequest)(nil),  // 41: admiral.api.changeset.v1.GetComponentValuesRequest
+	(*GetComponentValuesResponse)(nil), // 42: admiral.api.changeset.v1.GetComponentValuesResponse
+	(*DiffChangeSetRequest)(nil),       // 43: admiral.api.changeset.v1.DiffChangeSetRequest
+	(*DiffChangeSetResponse)(nil),      // 44: admiral.api.changeset.v1.DiffChangeSetResponse
+	(*ComponentDiff)(nil),              // 45: admiral.api.changeset.v1.ComponentDiff
+	(*PathDiff)(nil),                   // 46: admiral.api.changeset.v1.PathDiff
+	(*GetRevisionRequest)(nil),         // 47: admiral.api.changeset.v1.GetRevisionRequest
+	(*GetRevisionResponse)(nil),        // 48: admiral.api.changeset.v1.GetRevisionResponse
+	(*ListRevisionsRequest)(nil),       // 49: admiral.api.changeset.v1.ListRevisionsRequest
+	(*ListRevisionsResponse)(nil),      // 50: admiral.api.changeset.v1.ListRevisionsResponse
+	(*PlanChangeSetRequest)(nil),       // 51: admiral.api.changeset.v1.PlanChangeSetRequest
+	(*PlanChangeSetResponse)(nil),      // 52: admiral.api.changeset.v1.PlanChangeSetResponse
+	(*GetPrepareRequest)(nil),          // 53: admiral.api.changeset.v1.GetPrepareRequest
+	(*GetPrepareResponse)(nil),         // 54: admiral.api.changeset.v1.GetPrepareResponse
+	(*GetArtifactRequest)(nil),         // 55: admiral.api.changeset.v1.GetArtifactRequest
+	(*GetArtifactResponse)(nil),        // 56: admiral.api.changeset.v1.GetArtifactResponse
+	(*GetPlanRequest)(nil),             // 57: admiral.api.changeset.v1.GetPlanRequest
+	(*GetPlanResponse)(nil),            // 58: admiral.api.changeset.v1.GetPlanResponse
+	(*GetPlanDiffRequest)(nil),         // 59: admiral.api.changeset.v1.GetPlanDiffRequest
+	(*GetPlanDiffResponse)(nil),        // 60: admiral.api.changeset.v1.GetPlanDiffResponse
+	(*v1.ActorRef)(nil),                // 61: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),      // 62: google.protobuf.Timestamp
+	(v11.JobStatus)(0),                 // 63: admiral.api.agent.v1.JobStatus
+	(v11.WaitReason)(0),                // 64: admiral.api.agent.v1.WaitReason
+	(*v11.ComponentPlan)(nil),          // 65: admiral.api.agent.v1.ComponentPlan
+	(*v11.PlanDiff)(nil),               // 66: admiral.api.agent.v1.PlanDiff
 }
 var file_admiral_api_changeset_v1_changeset_proto_depIdxs = []int32{
 	0,  // 0: admiral.api.changeset.v1.ChangeSet.status:type_name -> admiral.api.changeset.v1.ChangeSetStatus
-	56, // 1: admiral.api.changeset.v1.ChangeSet.created_by:type_name -> admiral.common.v1.ActorRef
+	61, // 1: admiral.api.changeset.v1.ChangeSet.created_by:type_name -> admiral.common.v1.ActorRef
 	3,  // 2: admiral.api.changeset.v1.ChangeSet.created_by_kind:type_name -> admiral.api.changeset.v1.ActorKind
-	57, // 3: admiral.api.changeset.v1.ChangeSet.created_at:type_name -> google.protobuf.Timestamp
-	57, // 4: admiral.api.changeset.v1.ChangeSet.updated_at:type_name -> google.protobuf.Timestamp
+	62, // 3: admiral.api.changeset.v1.ChangeSet.created_at:type_name -> google.protobuf.Timestamp
+	62, // 4: admiral.api.changeset.v1.ChangeSet.updated_at:type_name -> google.protobuf.Timestamp
 	2,  // 5: admiral.api.changeset.v1.Revision.cause:type_name -> admiral.api.changeset.v1.RevisionCause
 	14, // 6: admiral.api.changeset.v1.Revision.violations:type_name -> admiral.api.changeset.v1.Violation
-	56, // 7: admiral.api.changeset.v1.Revision.created_by:type_name -> admiral.common.v1.ActorRef
+	61, // 7: admiral.api.changeset.v1.Revision.created_by:type_name -> admiral.common.v1.ActorRef
 	3,  // 8: admiral.api.changeset.v1.Revision.created_by_kind:type_name -> admiral.api.changeset.v1.ActorKind
-	57, // 9: admiral.api.changeset.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
+	62, // 9: admiral.api.changeset.v1.Revision.created_at:type_name -> google.protobuf.Timestamp
 	10, // 10: admiral.api.changeset.v1.Revision.entries:type_name -> admiral.api.changeset.v1.Entry
 	1,  // 11: admiral.api.changeset.v1.Entry.action:type_name -> admiral.api.changeset.v1.EntryAction
 	11, // 12: admiral.api.changeset.v1.Entry.pin:type_name -> admiral.api.changeset.v1.Pin
@@ -4097,81 +4487,92 @@ var file_admiral_api_changeset_v1_changeset_proto_depIdxs = []int32{
 	7,  // 16: admiral.api.changeset.v1.ValueOp.op:type_name -> admiral.api.changeset.v1.ValueOpKind
 	16, // 17: admiral.api.changeset.v1.Placement.kubernetes:type_name -> admiral.api.changeset.v1.KubernetesPlacement
 	4,  // 18: admiral.api.changeset.v1.Prepare.status:type_name -> admiral.api.changeset.v1.PrepareStatus
-	18, // 19: admiral.api.changeset.v1.Prepare.findings:type_name -> admiral.api.changeset.v1.Finding
-	19, // 20: admiral.api.changeset.v1.Prepare.error:type_name -> admiral.api.changeset.v1.PrepareError
-	56, // 21: admiral.api.changeset.v1.Prepare.requested_by:type_name -> admiral.common.v1.ActorRef
+	19, // 19: admiral.api.changeset.v1.Prepare.findings:type_name -> admiral.api.changeset.v1.Finding
+	20, // 20: admiral.api.changeset.v1.Prepare.error:type_name -> admiral.api.changeset.v1.PrepareError
+	61, // 21: admiral.api.changeset.v1.Prepare.requested_by:type_name -> admiral.common.v1.ActorRef
 	3,  // 22: admiral.api.changeset.v1.Prepare.requested_by_kind:type_name -> admiral.api.changeset.v1.ActorKind
-	57, // 23: admiral.api.changeset.v1.Prepare.requested_at:type_name -> google.protobuf.Timestamp
-	57, // 24: admiral.api.changeset.v1.Prepare.finished_at:type_name -> google.protobuf.Timestamp
-	6,  // 25: admiral.api.changeset.v1.Finding.code:type_name -> admiral.api.changeset.v1.FindingCode
-	5,  // 26: admiral.api.changeset.v1.PrepareError.class:type_name -> admiral.api.changeset.v1.PrepareErrorClass
-	21, // 27: admiral.api.changeset.v1.Edit.add_component:type_name -> admiral.api.changeset.v1.AddComponent
-	23, // 28: admiral.api.changeset.v1.Edit.set_value:type_name -> admiral.api.changeset.v1.SetValue
-	24, // 29: admiral.api.changeset.v1.Edit.set_null:type_name -> admiral.api.changeset.v1.SetNull
-	25, // 30: admiral.api.changeset.v1.Edit.unset_value:type_name -> admiral.api.changeset.v1.UnsetValue
-	26, // 31: admiral.api.changeset.v1.Edit.set_pin:type_name -> admiral.api.changeset.v1.SetPin
-	27, // 32: admiral.api.changeset.v1.Edit.replace_values:type_name -> admiral.api.changeset.v1.ReplaceValues
-	28, // 33: admiral.api.changeset.v1.Edit.remove_component:type_name -> admiral.api.changeset.v1.RemoveComponent
-	29, // 34: admiral.api.changeset.v1.Edit.set_placement:type_name -> admiral.api.changeset.v1.SetPlacement
-	22, // 35: admiral.api.changeset.v1.AddComponent.source:type_name -> admiral.api.changeset.v1.RegistryRef
-	13, // 36: admiral.api.changeset.v1.SetValue.path:type_name -> admiral.api.changeset.v1.PathSegment
-	13, // 37: admiral.api.changeset.v1.SetNull.path:type_name -> admiral.api.changeset.v1.PathSegment
-	13, // 38: admiral.api.changeset.v1.UnsetValue.path:type_name -> admiral.api.changeset.v1.PathSegment
-	15, // 39: admiral.api.changeset.v1.SetPlacement.placement:type_name -> admiral.api.changeset.v1.Placement
-	20, // 40: admiral.api.changeset.v1.CreateChangeSetRequest.edits:type_name -> admiral.api.changeset.v1.Edit
-	8,  // 41: admiral.api.changeset.v1.CreateChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
-	9,  // 42: admiral.api.changeset.v1.CreateChangeSetResponse.revision:type_name -> admiral.api.changeset.v1.Revision
-	17, // 43: admiral.api.changeset.v1.CreateChangeSetResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
-	20, // 44: admiral.api.changeset.v1.EditChangeSetRequest.edits:type_name -> admiral.api.changeset.v1.Edit
-	8,  // 45: admiral.api.changeset.v1.EditChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
-	9,  // 46: admiral.api.changeset.v1.EditChangeSetResponse.revision:type_name -> admiral.api.changeset.v1.Revision
-	17, // 47: admiral.api.changeset.v1.EditChangeSetResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
-	8,  // 48: admiral.api.changeset.v1.GetChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
-	9,  // 49: admiral.api.changeset.v1.GetChangeSetResponse.head:type_name -> admiral.api.changeset.v1.Revision
-	17, // 50: admiral.api.changeset.v1.GetChangeSetResponse.latest_prepare:type_name -> admiral.api.changeset.v1.Prepare
-	0,  // 51: admiral.api.changeset.v1.ListChangeSetsRequest.status:type_name -> admiral.api.changeset.v1.ChangeSetStatus
-	8,  // 52: admiral.api.changeset.v1.ListChangeSetsResponse.change_sets:type_name -> admiral.api.changeset.v1.ChangeSet
-	8,  // 53: admiral.api.changeset.v1.DiscardChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
-	44, // 54: admiral.api.changeset.v1.DiffChangeSetResponse.components:type_name -> admiral.api.changeset.v1.ComponentDiff
-	1,  // 55: admiral.api.changeset.v1.ComponentDiff.action:type_name -> admiral.api.changeset.v1.EntryAction
-	11, // 56: admiral.api.changeset.v1.ComponentDiff.old_pin:type_name -> admiral.api.changeset.v1.Pin
-	11, // 57: admiral.api.changeset.v1.ComponentDiff.new_pin:type_name -> admiral.api.changeset.v1.Pin
-	45, // 58: admiral.api.changeset.v1.ComponentDiff.paths:type_name -> admiral.api.changeset.v1.PathDiff
-	14, // 59: admiral.api.changeset.v1.ComponentDiff.violations:type_name -> admiral.api.changeset.v1.Violation
-	13, // 60: admiral.api.changeset.v1.PathDiff.path:type_name -> admiral.api.changeset.v1.PathSegment
-	9,  // 61: admiral.api.changeset.v1.GetRevisionResponse.revision:type_name -> admiral.api.changeset.v1.Revision
-	9,  // 62: admiral.api.changeset.v1.ListRevisionsResponse.revisions:type_name -> admiral.api.changeset.v1.Revision
-	17, // 63: admiral.api.changeset.v1.PlanChangeSetResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
-	17, // 64: admiral.api.changeset.v1.GetPrepareResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
-	30, // 65: admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet:input_type -> admiral.api.changeset.v1.CreateChangeSetRequest
-	32, // 66: admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet:input_type -> admiral.api.changeset.v1.EditChangeSetRequest
-	34, // 67: admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet:input_type -> admiral.api.changeset.v1.GetChangeSetRequest
-	36, // 68: admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets:input_type -> admiral.api.changeset.v1.ListChangeSetsRequest
-	38, // 69: admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet:input_type -> admiral.api.changeset.v1.DiscardChangeSetRequest
-	40, // 70: admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues:input_type -> admiral.api.changeset.v1.GetComponentValuesRequest
-	42, // 71: admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet:input_type -> admiral.api.changeset.v1.DiffChangeSetRequest
-	46, // 72: admiral.api.changeset.v1.ChangeSetAPI.GetRevision:input_type -> admiral.api.changeset.v1.GetRevisionRequest
-	48, // 73: admiral.api.changeset.v1.ChangeSetAPI.ListRevisions:input_type -> admiral.api.changeset.v1.ListRevisionsRequest
-	50, // 74: admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet:input_type -> admiral.api.changeset.v1.PlanChangeSetRequest
-	52, // 75: admiral.api.changeset.v1.ChangeSetAPI.GetPrepare:input_type -> admiral.api.changeset.v1.GetPrepareRequest
-	54, // 76: admiral.api.changeset.v1.ChangeSetAPI.GetArtifact:input_type -> admiral.api.changeset.v1.GetArtifactRequest
-	31, // 77: admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet:output_type -> admiral.api.changeset.v1.CreateChangeSetResponse
-	33, // 78: admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet:output_type -> admiral.api.changeset.v1.EditChangeSetResponse
-	35, // 79: admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet:output_type -> admiral.api.changeset.v1.GetChangeSetResponse
-	37, // 80: admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets:output_type -> admiral.api.changeset.v1.ListChangeSetsResponse
-	39, // 81: admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet:output_type -> admiral.api.changeset.v1.DiscardChangeSetResponse
-	41, // 82: admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues:output_type -> admiral.api.changeset.v1.GetComponentValuesResponse
-	43, // 83: admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet:output_type -> admiral.api.changeset.v1.DiffChangeSetResponse
-	47, // 84: admiral.api.changeset.v1.ChangeSetAPI.GetRevision:output_type -> admiral.api.changeset.v1.GetRevisionResponse
-	49, // 85: admiral.api.changeset.v1.ChangeSetAPI.ListRevisions:output_type -> admiral.api.changeset.v1.ListRevisionsResponse
-	51, // 86: admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet:output_type -> admiral.api.changeset.v1.PlanChangeSetResponse
-	53, // 87: admiral.api.changeset.v1.ChangeSetAPI.GetPrepare:output_type -> admiral.api.changeset.v1.GetPrepareResponse
-	55, // 88: admiral.api.changeset.v1.ChangeSetAPI.GetArtifact:output_type -> admiral.api.changeset.v1.GetArtifactResponse
-	77, // [77:89] is the sub-list for method output_type
-	65, // [65:77] is the sub-list for method input_type
-	65, // [65:65] is the sub-list for extension type_name
-	65, // [65:65] is the sub-list for extension extendee
-	0,  // [0:65] is the sub-list for field type_name
+	62, // 23: admiral.api.changeset.v1.Prepare.requested_at:type_name -> google.protobuf.Timestamp
+	62, // 24: admiral.api.changeset.v1.Prepare.finished_at:type_name -> google.protobuf.Timestamp
+	63, // 25: admiral.api.changeset.v1.Plan.status:type_name -> admiral.api.agent.v1.JobStatus
+	64, // 26: admiral.api.changeset.v1.Plan.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
+	65, // 27: admiral.api.changeset.v1.Plan.components:type_name -> admiral.api.agent.v1.ComponentPlan
+	62, // 28: admiral.api.changeset.v1.Plan.created_at:type_name -> google.protobuf.Timestamp
+	62, // 29: admiral.api.changeset.v1.Plan.finished_at:type_name -> google.protobuf.Timestamp
+	6,  // 30: admiral.api.changeset.v1.Finding.code:type_name -> admiral.api.changeset.v1.FindingCode
+	5,  // 31: admiral.api.changeset.v1.PrepareError.class:type_name -> admiral.api.changeset.v1.PrepareErrorClass
+	22, // 32: admiral.api.changeset.v1.Edit.add_component:type_name -> admiral.api.changeset.v1.AddComponent
+	24, // 33: admiral.api.changeset.v1.Edit.set_value:type_name -> admiral.api.changeset.v1.SetValue
+	25, // 34: admiral.api.changeset.v1.Edit.set_null:type_name -> admiral.api.changeset.v1.SetNull
+	26, // 35: admiral.api.changeset.v1.Edit.unset_value:type_name -> admiral.api.changeset.v1.UnsetValue
+	27, // 36: admiral.api.changeset.v1.Edit.set_pin:type_name -> admiral.api.changeset.v1.SetPin
+	28, // 37: admiral.api.changeset.v1.Edit.replace_values:type_name -> admiral.api.changeset.v1.ReplaceValues
+	29, // 38: admiral.api.changeset.v1.Edit.remove_component:type_name -> admiral.api.changeset.v1.RemoveComponent
+	30, // 39: admiral.api.changeset.v1.Edit.set_placement:type_name -> admiral.api.changeset.v1.SetPlacement
+	23, // 40: admiral.api.changeset.v1.AddComponent.source:type_name -> admiral.api.changeset.v1.RegistryRef
+	13, // 41: admiral.api.changeset.v1.SetValue.path:type_name -> admiral.api.changeset.v1.PathSegment
+	13, // 42: admiral.api.changeset.v1.SetNull.path:type_name -> admiral.api.changeset.v1.PathSegment
+	13, // 43: admiral.api.changeset.v1.UnsetValue.path:type_name -> admiral.api.changeset.v1.PathSegment
+	15, // 44: admiral.api.changeset.v1.SetPlacement.placement:type_name -> admiral.api.changeset.v1.Placement
+	21, // 45: admiral.api.changeset.v1.CreateChangeSetRequest.edits:type_name -> admiral.api.changeset.v1.Edit
+	8,  // 46: admiral.api.changeset.v1.CreateChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
+	9,  // 47: admiral.api.changeset.v1.CreateChangeSetResponse.revision:type_name -> admiral.api.changeset.v1.Revision
+	17, // 48: admiral.api.changeset.v1.CreateChangeSetResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
+	21, // 49: admiral.api.changeset.v1.EditChangeSetRequest.edits:type_name -> admiral.api.changeset.v1.Edit
+	8,  // 50: admiral.api.changeset.v1.EditChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
+	9,  // 51: admiral.api.changeset.v1.EditChangeSetResponse.revision:type_name -> admiral.api.changeset.v1.Revision
+	17, // 52: admiral.api.changeset.v1.EditChangeSetResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
+	8,  // 53: admiral.api.changeset.v1.GetChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
+	9,  // 54: admiral.api.changeset.v1.GetChangeSetResponse.head:type_name -> admiral.api.changeset.v1.Revision
+	17, // 55: admiral.api.changeset.v1.GetChangeSetResponse.latest_prepare:type_name -> admiral.api.changeset.v1.Prepare
+	0,  // 56: admiral.api.changeset.v1.ListChangeSetsRequest.status:type_name -> admiral.api.changeset.v1.ChangeSetStatus
+	8,  // 57: admiral.api.changeset.v1.ListChangeSetsResponse.change_sets:type_name -> admiral.api.changeset.v1.ChangeSet
+	8,  // 58: admiral.api.changeset.v1.DiscardChangeSetResponse.change_set:type_name -> admiral.api.changeset.v1.ChangeSet
+	45, // 59: admiral.api.changeset.v1.DiffChangeSetResponse.components:type_name -> admiral.api.changeset.v1.ComponentDiff
+	1,  // 60: admiral.api.changeset.v1.ComponentDiff.action:type_name -> admiral.api.changeset.v1.EntryAction
+	11, // 61: admiral.api.changeset.v1.ComponentDiff.old_pin:type_name -> admiral.api.changeset.v1.Pin
+	11, // 62: admiral.api.changeset.v1.ComponentDiff.new_pin:type_name -> admiral.api.changeset.v1.Pin
+	46, // 63: admiral.api.changeset.v1.ComponentDiff.paths:type_name -> admiral.api.changeset.v1.PathDiff
+	14, // 64: admiral.api.changeset.v1.ComponentDiff.violations:type_name -> admiral.api.changeset.v1.Violation
+	13, // 65: admiral.api.changeset.v1.PathDiff.path:type_name -> admiral.api.changeset.v1.PathSegment
+	9,  // 66: admiral.api.changeset.v1.GetRevisionResponse.revision:type_name -> admiral.api.changeset.v1.Revision
+	9,  // 67: admiral.api.changeset.v1.ListRevisionsResponse.revisions:type_name -> admiral.api.changeset.v1.Revision
+	17, // 68: admiral.api.changeset.v1.PlanChangeSetResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
+	17, // 69: admiral.api.changeset.v1.GetPrepareResponse.prepare:type_name -> admiral.api.changeset.v1.Prepare
+	18, // 70: admiral.api.changeset.v1.GetPlanResponse.plan:type_name -> admiral.api.changeset.v1.Plan
+	66, // 71: admiral.api.changeset.v1.GetPlanDiffResponse.diff:type_name -> admiral.api.agent.v1.PlanDiff
+	31, // 72: admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet:input_type -> admiral.api.changeset.v1.CreateChangeSetRequest
+	33, // 73: admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet:input_type -> admiral.api.changeset.v1.EditChangeSetRequest
+	35, // 74: admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet:input_type -> admiral.api.changeset.v1.GetChangeSetRequest
+	37, // 75: admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets:input_type -> admiral.api.changeset.v1.ListChangeSetsRequest
+	39, // 76: admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet:input_type -> admiral.api.changeset.v1.DiscardChangeSetRequest
+	41, // 77: admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues:input_type -> admiral.api.changeset.v1.GetComponentValuesRequest
+	43, // 78: admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet:input_type -> admiral.api.changeset.v1.DiffChangeSetRequest
+	47, // 79: admiral.api.changeset.v1.ChangeSetAPI.GetRevision:input_type -> admiral.api.changeset.v1.GetRevisionRequest
+	49, // 80: admiral.api.changeset.v1.ChangeSetAPI.ListRevisions:input_type -> admiral.api.changeset.v1.ListRevisionsRequest
+	51, // 81: admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet:input_type -> admiral.api.changeset.v1.PlanChangeSetRequest
+	53, // 82: admiral.api.changeset.v1.ChangeSetAPI.GetPrepare:input_type -> admiral.api.changeset.v1.GetPrepareRequest
+	55, // 83: admiral.api.changeset.v1.ChangeSetAPI.GetArtifact:input_type -> admiral.api.changeset.v1.GetArtifactRequest
+	57, // 84: admiral.api.changeset.v1.ChangeSetAPI.GetPlan:input_type -> admiral.api.changeset.v1.GetPlanRequest
+	59, // 85: admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff:input_type -> admiral.api.changeset.v1.GetPlanDiffRequest
+	32, // 86: admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet:output_type -> admiral.api.changeset.v1.CreateChangeSetResponse
+	34, // 87: admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet:output_type -> admiral.api.changeset.v1.EditChangeSetResponse
+	36, // 88: admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet:output_type -> admiral.api.changeset.v1.GetChangeSetResponse
+	38, // 89: admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets:output_type -> admiral.api.changeset.v1.ListChangeSetsResponse
+	40, // 90: admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet:output_type -> admiral.api.changeset.v1.DiscardChangeSetResponse
+	42, // 91: admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues:output_type -> admiral.api.changeset.v1.GetComponentValuesResponse
+	44, // 92: admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet:output_type -> admiral.api.changeset.v1.DiffChangeSetResponse
+	48, // 93: admiral.api.changeset.v1.ChangeSetAPI.GetRevision:output_type -> admiral.api.changeset.v1.GetRevisionResponse
+	50, // 94: admiral.api.changeset.v1.ChangeSetAPI.ListRevisions:output_type -> admiral.api.changeset.v1.ListRevisionsResponse
+	52, // 95: admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet:output_type -> admiral.api.changeset.v1.PlanChangeSetResponse
+	54, // 96: admiral.api.changeset.v1.ChangeSetAPI.GetPrepare:output_type -> admiral.api.changeset.v1.GetPrepareResponse
+	56, // 97: admiral.api.changeset.v1.ChangeSetAPI.GetArtifact:output_type -> admiral.api.changeset.v1.GetArtifactResponse
+	58, // 98: admiral.api.changeset.v1.ChangeSetAPI.GetPlan:output_type -> admiral.api.changeset.v1.GetPlanResponse
+	60, // 99: admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff:output_type -> admiral.api.changeset.v1.GetPlanDiffResponse
+	86, // [86:100] is the sub-list for method output_type
+	72, // [72:86] is the sub-list for method input_type
+	72, // [72:72] is the sub-list for extension type_name
+	72, // [72:72] is the sub-list for extension extendee
+	0,  // [0:72] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_changeset_v1_changeset_proto_init() }
@@ -4182,7 +4583,7 @@ func file_admiral_api_changeset_v1_changeset_proto_init() {
 	file_admiral_api_changeset_v1_changeset_proto_msgTypes[5].OneofWrappers = []any{
 		(*PathSegment_Key)(nil),
 	}
-	file_admiral_api_changeset_v1_changeset_proto_msgTypes[12].OneofWrappers = []any{
+	file_admiral_api_changeset_v1_changeset_proto_msgTypes[13].OneofWrappers = []any{
 		(*Edit_AddComponent)(nil),
 		(*Edit_SetValue)(nil),
 		(*Edit_SetNull)(nil),
@@ -4192,15 +4593,15 @@ func file_admiral_api_changeset_v1_changeset_proto_init() {
 		(*Edit_RemoveComponent)(nil),
 		(*Edit_SetPlacement)(nil),
 	}
-	file_admiral_api_changeset_v1_changeset_proto_msgTypes[24].OneofWrappers = []any{}
-	file_admiral_api_changeset_v1_changeset_proto_msgTypes[42].OneofWrappers = []any{}
+	file_admiral_api_changeset_v1_changeset_proto_msgTypes[25].OneofWrappers = []any{}
+	file_admiral_api_changeset_v1_changeset_proto_msgTypes[43].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_changeset_v1_changeset_proto_rawDesc), len(file_admiral_api_changeset_v1_changeset_proto_rawDesc)),
 			NumEnums:      8,
-			NumMessages:   48,
+			NumMessages:   53,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

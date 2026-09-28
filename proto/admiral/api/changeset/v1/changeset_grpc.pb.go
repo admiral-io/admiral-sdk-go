@@ -31,6 +31,8 @@ const (
 	ChangeSetAPI_PlanChangeSet_FullMethodName      = "/admiral.api.changeset.v1.ChangeSetAPI/PlanChangeSet"
 	ChangeSetAPI_GetPrepare_FullMethodName         = "/admiral.api.changeset.v1.ChangeSetAPI/GetPrepare"
 	ChangeSetAPI_GetArtifact_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetArtifact"
+	ChangeSetAPI_GetPlan_FullMethodName            = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlan"
+	ChangeSetAPI_GetPlanDiff_FullMethodName        = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff"
 )
 
 // ChangeSetAPIClient is the client API for ChangeSetAPI service.
@@ -127,6 +129,17 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	GetArtifact(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
+	// GetPlan returns the plan of one prepared revision: the PLAN job's status
+	// and why it waits, the agent and cluster it runs against, and once done
+	// each component's changes. NOT_FOUND when the revision was not planned.
+	//
+	// Scope: `changeset:read`
+	GetPlan(ctx context.Context, in *GetPlanRequest, opts ...grpc.CallOption) (*GetPlanResponse, error)
+	// GetPlanDiff returns a finished plan's full diffs, Secret values masked.
+	// FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `changeset:read`
+	GetPlanDiff(ctx context.Context, in *GetPlanDiffRequest, opts ...grpc.CallOption) (*GetPlanDiffResponse, error)
 }
 
 type changeSetAPIClient struct {
@@ -257,6 +270,26 @@ func (c *changeSetAPIClient) GetArtifact(ctx context.Context, in *GetArtifactReq
 	return out, nil
 }
 
+func (c *changeSetAPIClient) GetPlan(ctx context.Context, in *GetPlanRequest, opts ...grpc.CallOption) (*GetPlanResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPlanResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetPlan_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *changeSetAPIClient) GetPlanDiff(ctx context.Context, in *GetPlanDiffRequest, opts ...grpc.CallOption) (*GetPlanDiffResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPlanDiffResponse)
+	err := c.cc.Invoke(ctx, ChangeSetAPI_GetPlanDiff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChangeSetAPIServer is the server API for ChangeSetAPI service.
 // All implementations should embed UnimplementedChangeSetAPIServer
 // for forward compatibility.
@@ -351,6 +384,17 @@ type ChangeSetAPIServer interface {
 	//
 	// Scope: `changeset:read`
 	GetArtifact(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
+	// GetPlan returns the plan of one prepared revision: the PLAN job's status
+	// and why it waits, the agent and cluster it runs against, and once done
+	// each component's changes. NOT_FOUND when the revision was not planned.
+	//
+	// Scope: `changeset:read`
+	GetPlan(context.Context, *GetPlanRequest) (*GetPlanResponse, error)
+	// GetPlanDiff returns a finished plan's full diffs, Secret values masked.
+	// FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `changeset:read`
+	GetPlanDiff(context.Context, *GetPlanDiffRequest) (*GetPlanDiffResponse, error)
 }
 
 // UnimplementedChangeSetAPIServer should be embedded to have
@@ -395,6 +439,12 @@ func (UnimplementedChangeSetAPIServer) GetPrepare(context.Context, *GetPrepareRe
 }
 func (UnimplementedChangeSetAPIServer) GetArtifact(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetArtifact not implemented")
+}
+func (UnimplementedChangeSetAPIServer) GetPlan(context.Context, *GetPlanRequest) (*GetPlanResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPlan not implemented")
+}
+func (UnimplementedChangeSetAPIServer) GetPlanDiff(context.Context, *GetPlanDiffRequest) (*GetPlanDiffResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPlanDiff not implemented")
 }
 func (UnimplementedChangeSetAPIServer) testEmbeddedByValue() {}
 
@@ -632,6 +682,42 @@ func _ChangeSetAPI_GetArtifact_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChangeSetAPI_GetPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPlanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).GetPlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_GetPlan_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).GetPlan(ctx, req.(*GetPlanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ChangeSetAPI_GetPlanDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPlanDiffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChangeSetAPIServer).GetPlanDiff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChangeSetAPI_GetPlanDiff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChangeSetAPIServer).GetPlanDiff(ctx, req.(*GetPlanDiffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChangeSetAPI_ServiceDesc is the grpc.ServiceDesc for ChangeSetAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -686,6 +772,14 @@ var ChangeSetAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetArtifact",
 			Handler:    _ChangeSetAPI_GetArtifact_Handler,
+		},
+		{
+			MethodName: "GetPlan",
+			Handler:    _ChangeSetAPI_GetPlan_Handler,
+		},
+		{
+			MethodName: "GetPlanDiff",
+			Handler:    _ChangeSetAPI_GetPlanDiff_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

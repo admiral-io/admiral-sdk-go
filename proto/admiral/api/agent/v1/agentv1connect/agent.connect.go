@@ -89,6 +89,9 @@ const (
 	// AgentRuntimeAPIGetJobArtifactProcedure is the fully-qualified name of the AgentRuntimeAPI's
 	// GetJobArtifact RPC.
 	AgentRuntimeAPIGetJobArtifactProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
+	// AgentRuntimeAPIUploadPlanDiffProcedure is the fully-qualified name of the AgentRuntimeAPI's
+	// UploadPlanDiff RPC.
+	AgentRuntimeAPIUploadPlanDiffProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff"
 	// AgentRuntimeAPIReportJobResultProcedure is the fully-qualified name of the AgentRuntimeAPI's
 	// ReportJobResult RPC.
 	AgentRuntimeAPIReportJobResultProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
@@ -754,6 +757,11 @@ type AgentRuntimeAPIClient interface {
 	//
 	// Scope: `agent:exec`
 	GetJobArtifact(context.Context, *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error)
+	// UploadPlanDiff stores a PLAN attempt's full diffs, to the attempt
+	// holding the lease, and returns their digest for the report to name.
+	//
+	// Scope: `agent:exec`
+	UploadPlanDiff(context.Context, *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -809,6 +817,12 @@ func NewAgentRuntimeAPIClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(agentRuntimeAPIMethods.ByName("GetJobArtifact")),
 			connect.WithClientOptions(opts...),
 		),
+		uploadPlanDiff: connect.NewClient[v1.UploadPlanDiffRequest, v1.UploadPlanDiffResponse](
+			httpClient,
+			baseURL+AgentRuntimeAPIUploadPlanDiffProcedure,
+			connect.WithSchema(agentRuntimeAPIMethods.ByName("UploadPlanDiff")),
+			connect.WithClientOptions(opts...),
+		),
 		reportJobResult: connect.NewClient[v1.ReportJobResultRequest, v1.ReportJobResultResponse](
 			httpClient,
 			baseURL+AgentRuntimeAPIReportJobResultProcedure,
@@ -826,6 +840,7 @@ type agentRuntimeAPIClient struct {
 	startJob        *connect.Client[v1.StartJobRequest, v1.StartJobResponse]
 	renewLease      *connect.Client[v1.RenewLeaseRequest, v1.RenewLeaseResponse]
 	getJobArtifact  *connect.Client[v1.GetJobArtifactRequest, v1.GetJobArtifactResponse]
+	uploadPlanDiff  *connect.Client[v1.UploadPlanDiffRequest, v1.UploadPlanDiffResponse]
 	reportJobResult *connect.Client[v1.ReportJobResultRequest, v1.ReportJobResultResponse]
 }
 
@@ -857,6 +872,11 @@ func (c *agentRuntimeAPIClient) RenewLease(ctx context.Context, req *connect.Req
 // GetJobArtifact calls admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact.
 func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, req *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error) {
 	return c.getJobArtifact.CallUnary(ctx, req)
+}
+
+// UploadPlanDiff calls admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff.
+func (c *agentRuntimeAPIClient) UploadPlanDiff(ctx context.Context, req *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error) {
+	return c.uploadPlanDiff.CallUnary(ctx, req)
 }
 
 // ReportJobResult calls admiral.api.agent.v1.AgentRuntimeAPI.ReportJobResult.
@@ -906,6 +926,11 @@ type AgentRuntimeAPIHandler interface {
 	//
 	// Scope: `agent:exec`
 	GetJobArtifact(context.Context, *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error)
+	// UploadPlanDiff stores a PLAN attempt's full diffs, to the attempt
+	// holding the lease, and returns their digest for the report to name.
+	//
+	// Scope: `agent:exec`
+	UploadPlanDiff(context.Context, *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error)
 	// ReportJobResult ends an attempt. Repeating a report with the same
 	// `report_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
@@ -957,6 +982,12 @@ func NewAgentRuntimeAPIHandler(svc AgentRuntimeAPIHandler, opts ...connect.Handl
 		connect.WithSchema(agentRuntimeAPIMethods.ByName("GetJobArtifact")),
 		connect.WithHandlerOptions(opts...),
 	)
+	agentRuntimeAPIUploadPlanDiffHandler := connect.NewUnaryHandler(
+		AgentRuntimeAPIUploadPlanDiffProcedure,
+		svc.UploadPlanDiff,
+		connect.WithSchema(agentRuntimeAPIMethods.ByName("UploadPlanDiff")),
+		connect.WithHandlerOptions(opts...),
+	)
 	agentRuntimeAPIReportJobResultHandler := connect.NewUnaryHandler(
 		AgentRuntimeAPIReportJobResultProcedure,
 		svc.ReportJobResult,
@@ -977,6 +1008,8 @@ func NewAgentRuntimeAPIHandler(svc AgentRuntimeAPIHandler, opts ...connect.Handl
 			agentRuntimeAPIRenewLeaseHandler.ServeHTTP(w, r)
 		case AgentRuntimeAPIGetJobArtifactProcedure:
 			agentRuntimeAPIGetJobArtifactHandler.ServeHTTP(w, r)
+		case AgentRuntimeAPIUploadPlanDiffProcedure:
+			agentRuntimeAPIUploadPlanDiffHandler.ServeHTTP(w, r)
 		case AgentRuntimeAPIReportJobResultProcedure:
 			agentRuntimeAPIReportJobResultHandler.ServeHTTP(w, r)
 		default:
@@ -1010,6 +1043,10 @@ func (UnimplementedAgentRuntimeAPIHandler) RenewLease(context.Context, *connect.
 
 func (UnimplementedAgentRuntimeAPIHandler) GetJobArtifact(context.Context, *connect.Request[v1.GetJobArtifactRequest]) (*connect.Response[v1.GetJobArtifactResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact is not implemented"))
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) UploadPlanDiff(context.Context, *connect.Request[v1.UploadPlanDiffRequest]) (*connect.Response[v1.UploadPlanDiffResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.agent.v1.AgentRuntimeAPI.UploadPlanDiff is not implemented"))
 }
 
 func (UnimplementedAgentRuntimeAPIHandler) ReportJobResult(context.Context, *connect.Request[v1.ReportJobResultRequest]) (*connect.Response[v1.ReportJobResultResponse], error) {
