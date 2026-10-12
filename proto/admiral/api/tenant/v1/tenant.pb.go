@@ -27,62 +27,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// TenantStatus is the account's lifecycle state. A caller sees it but cannot
+// Status is the account's lifecycle state. A caller sees it but cannot
 // set it: suspension and reactivation are imposed, not requested.
-type TenantStatus int32
+type Tenant_Status int32
 
 const (
 	// Default value. Must not be used.
-	TenantStatus_TENANT_STATUS_UNSPECIFIED TenantStatus = 0
-	// Provisioning has not finished; the tenant is not yet serving.
-	TenantStatus_TENANT_STATUS_PENDING TenantStatus = 1
+	Tenant_STATUS_UNSPECIFIED Tenant_Status = 0
 	// Normal operation.
-	TenantStatus_TENANT_STATUS_ACTIVE TenantStatus = 2
+	Tenant_STATUS_ACTIVE Tenant_Status = 2
 	// Access is withheld, typically for billing or abuse. Data is retained.
-	TenantStatus_TENANT_STATUS_SUSPENDED TenantStatus = 3
+	Tenant_STATUS_SUSPENDED Tenant_Status = 3
 )
 
-// Enum value maps for TenantStatus.
+// Enum value maps for Tenant_Status.
 var (
-	TenantStatus_name = map[int32]string{
-		0: "TENANT_STATUS_UNSPECIFIED",
-		1: "TENANT_STATUS_PENDING",
-		2: "TENANT_STATUS_ACTIVE",
-		3: "TENANT_STATUS_SUSPENDED",
+	Tenant_Status_name = map[int32]string{
+		0: "STATUS_UNSPECIFIED",
+		2: "STATUS_ACTIVE",
+		3: "STATUS_SUSPENDED",
 	}
-	TenantStatus_value = map[string]int32{
-		"TENANT_STATUS_UNSPECIFIED": 0,
-		"TENANT_STATUS_PENDING":     1,
-		"TENANT_STATUS_ACTIVE":      2,
-		"TENANT_STATUS_SUSPENDED":   3,
+	Tenant_Status_value = map[string]int32{
+		"STATUS_UNSPECIFIED": 0,
+		"STATUS_ACTIVE":      2,
+		"STATUS_SUSPENDED":   3,
 	}
 )
 
-func (x TenantStatus) Enum() *TenantStatus {
-	p := new(TenantStatus)
+func (x Tenant_Status) Enum() *Tenant_Status {
+	p := new(Tenant_Status)
 	*p = x
 	return p
 }
 
-func (x TenantStatus) String() string {
+func (x Tenant_Status) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (TenantStatus) Descriptor() protoreflect.EnumDescriptor {
+func (Tenant_Status) Descriptor() protoreflect.EnumDescriptor {
 	return file_admiral_api_tenant_v1_tenant_proto_enumTypes[0].Descriptor()
 }
 
-func (TenantStatus) Type() protoreflect.EnumType {
+func (Tenant_Status) Type() protoreflect.EnumType {
 	return &file_admiral_api_tenant_v1_tenant_proto_enumTypes[0]
 }
 
-func (x TenantStatus) Number() protoreflect.EnumNumber {
+func (x Tenant_Status) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use TenantStatus.Descriptor instead.
-func (TenantStatus) EnumDescriptor() ([]byte, []int) {
-	return file_admiral_api_tenant_v1_tenant_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use Tenant_Status.Descriptor instead.
+func (Tenant_Status) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_tenant_v1_tenant_proto_rawDescGZIP(), []int{0, 0}
 }
 
 // Tenant is the account as its own members see it: its identity, its lifecycle
@@ -90,16 +86,17 @@ func (TenantStatus) EnumDescriptor() ([]byte, []int) {
 // account is run is not part of this view.
 type Tenant struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier (UUID).
+	// Unique identifier.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// URL-safe identifier, unique across Admiral. Fixed at creation.
 	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
 	// Human-readable name.
 	DisplayName string `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
 	// Lifecycle state.
-	Status TenantStatus `protobuf:"varint,4,opt,name=status,proto3,enum=admiral.api.tenant.v1.TenantStatus" json:"status,omitempty"`
-	// Free-form labels for the customer's own use.
-	Labels        map[string]string      `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Status Tenant_Status `protobuf:"varint,4,opt,name=status,proto3,enum=admiral.api.tenant.v1.Tenant_Status" json:"status,omitempty"`
+	// The organization's logo, shown on its sign-in page and in the console.
+	// Absent when none is set.
+	AvatarUrl     *string                `protobuf:"bytes,8,opt,name=avatar_url,json=avatarUrl,proto3,oneof" json:"avatar_url,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -157,18 +154,18 @@ func (x *Tenant) GetDisplayName() string {
 	return ""
 }
 
-func (x *Tenant) GetStatus() TenantStatus {
+func (x *Tenant) GetStatus() Tenant_Status {
 	if x != nil {
 		return x.Status
 	}
-	return TenantStatus_TENANT_STATUS_UNSPECIFIED
+	return Tenant_STATUS_UNSPECIFIED
 }
 
-func (x *Tenant) GetLabels() map[string]string {
-	if x != nil {
-		return x.Labels
+func (x *Tenant) GetAvatarUrl() string {
+	if x != nil && x.AvatarUrl != nil {
+		return *x.AvatarUrl
 	}
-	return nil
+	return ""
 }
 
 func (x *Tenant) GetCreatedAt() *timestamppb.Timestamp {
@@ -266,16 +263,14 @@ func (x *GetTenantResponse) GetTenant() *Tenant {
 	return nil
 }
 
-// UpdateTenantRequest carries only the mutable fields. The tenant is the
-// caller's own, so there is no id here.
+// UpdateTenantRequest updates the caller's own tenant, so it names no id.
 type UpdateTenantRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// New display name. Omit to leave unchanged.
-	DisplayName *string `protobuf:"bytes,1,opt,name=display_name,json=displayName,proto3,oneof" json:"display_name,omitempty"`
-	// Replaces all labels when present. Omit to leave unchanged.
-	Labels map[string]string `protobuf:"bytes,2,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Which fields to apply. Present for forward compatibility as the mutable
-	// surface grows.
+	// The tenant with updated fields. Only fields named in `update_mask` are
+	// applied.
+	Tenant *Tenant `protobuf:"bytes,4,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	// The set of fields to update. Optional; if omitted, all populated fields
+	// are updated. Supported fields: `display_name`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,3,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -311,16 +306,9 @@ func (*UpdateTenantRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_tenant_v1_tenant_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *UpdateTenantRequest) GetDisplayName() string {
-	if x != nil && x.DisplayName != nil {
-		return *x.DisplayName
-	}
-	return ""
-}
-
-func (x *UpdateTenantRequest) GetLabels() map[string]string {
+func (x *UpdateTenantRequest) GetTenant() *Tenant {
 	if x != nil {
-		return x.Labels
+		return x.Tenant
 	}
 	return nil
 }
@@ -380,39 +368,32 @@ var File_admiral_api_tenant_v1_tenant_proto protoreflect.FileDescriptor
 
 const file_admiral_api_tenant_v1_tenant_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/api/tenant/v1/tenant.proto\x12\x15admiral.api.tenant.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa3\x03\n" +
-	"\x06Tenant\x12\x13\n" +
-	"\x02id\x18\x01 \x01(\tB\x03\xe0A\x03R\x02id\x12\x17\n" +
+	"\"admiral/api/tenant/v1/tenant.proto\x12\x15admiral.api.tenant.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe6\x03\n" +
+	"\x06Tenant\x12,\n" +
+	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^ten-[0-9a-z]+$R\x02id\x12\x17\n" +
 	"\x04slug\x18\x02 \x01(\tB\x03\xe0A\x03R\x04slug\x12+\n" +
-	"\fdisplay_name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\vdisplayName\x12@\n" +
-	"\x06status\x18\x04 \x01(\x0e2#.admiral.api.tenant.v1.TenantStatusB\x03\xe0A\x03R\x06status\x12A\n" +
-	"\x06labels\x18\x05 \x03(\v2).admiral.api.tenant.v1.Tenant.LabelsEntryR\x06labels\x12>\n" +
+	"\fdisplay_name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\vdisplayName\x12A\n" +
+	"\x06status\x18\x04 \x01(\x0e2$.admiral.api.tenant.v1.Tenant.StatusB\x03\xe0A\x03R\x06status\x12'\n" +
+	"\n" +
+	"avatar_url\x18\b \x01(\tB\x03\xe0A\x03H\x00R\tavatarUrl\x88\x01\x01\x12>\n" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x12\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\"_\n" +
+	"\x06Status\x12\x16\n" +
+	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rSTATUS_ACTIVE\x10\x02\x12\x14\n" +
+	"\x10STATUS_SUSPENDED\x10\x03\"\x04\b\x01\x10\x01*\x0eSTATUS_PENDINGB\r\n" +
+	"\v_avatar_urlJ\x04\b\x05\x10\x06R\x06labels\"\x12\n" +
 	"\x10GetTenantRequest\"J\n" +
 	"\x11GetTenantResponse\x125\n" +
-	"\x06tenant\x18\x01 \x01(\v2\x1d.admiral.api.tenant.v1.TenantR\x06tenant\"\xa0\x02\n" +
-	"\x13UpdateTenantRequest\x120\n" +
-	"\fdisplay_name\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02H\x00R\vdisplayName\x88\x01\x01\x12N\n" +
-	"\x06labels\x18\x02 \x03(\v26.admiral.api.tenant.v1.UpdateTenantRequest.LabelsEntryR\x06labels\x12;\n" +
+	"\x06tenant\x18\x01 \x01(\v2\x1d.admiral.api.tenant.v1.TenantR\x06tenant\"\xb6\x01\n" +
+	"\x13UpdateTenantRequest\x12@\n" +
+	"\x06tenant\x18\x04 \x01(\v2\x1d.admiral.api.tenant.v1.TenantB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x06tenant\x12;\n" +
 	"\vupdate_mask\x18\x03 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
-	"updateMask\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x0f\n" +
-	"\r_display_name\"M\n" +
+	"updateMaskJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\fdisplay_nameR\x06labels\"M\n" +
 	"\x14UpdateTenantResponse\x125\n" +
-	"\x06tenant\x18\x01 \x01(\v2\x1d.admiral.api.tenant.v1.TenantR\x06tenant*\x7f\n" +
-	"\fTenantStatus\x12\x1d\n" +
-	"\x19TENANT_STATUS_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15TENANT_STATUS_PENDING\x10\x01\x12\x18\n" +
-	"\x14TENANT_STATUS_ACTIVE\x10\x02\x12\x1b\n" +
-	"\x17TENANT_STATUS_SUSPENDED\x10\x032\xed\x02\n" +
+	"\x06tenant\x18\x01 \x01(\v2\x1d.admiral.api.tenant.v1.TenantR\x06tenant2\xed\x02\n" +
 	"\tTenantAPI\x12\xa6\x01\n" +
 	"\tGetTenant\x12'.admiral.api.tenant.v1.GetTenantRequest\x1a(.admiral.api.tenant.v1.GetTenantResponse\"F\xbaG \n" +
 	"\x06Tenant\x12\x16Get the current tenant\xa2\x97$\r\n" +
@@ -437,37 +418,34 @@ func file_admiral_api_tenant_v1_tenant_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_api_tenant_v1_tenant_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_admiral_api_tenant_v1_tenant_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_admiral_api_tenant_v1_tenant_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_admiral_api_tenant_v1_tenant_proto_goTypes = []any{
-	(TenantStatus)(0),             // 0: admiral.api.tenant.v1.TenantStatus
+	(Tenant_Status)(0),            // 0: admiral.api.tenant.v1.Tenant.Status
 	(*Tenant)(nil),                // 1: admiral.api.tenant.v1.Tenant
 	(*GetTenantRequest)(nil),      // 2: admiral.api.tenant.v1.GetTenantRequest
 	(*GetTenantResponse)(nil),     // 3: admiral.api.tenant.v1.GetTenantResponse
 	(*UpdateTenantRequest)(nil),   // 4: admiral.api.tenant.v1.UpdateTenantRequest
 	(*UpdateTenantResponse)(nil),  // 5: admiral.api.tenant.v1.UpdateTenantResponse
-	nil,                           // 6: admiral.api.tenant.v1.Tenant.LabelsEntry
-	nil,                           // 7: admiral.api.tenant.v1.UpdateTenantRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil), // 9: google.protobuf.FieldMask
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil), // 7: google.protobuf.FieldMask
 }
 var file_admiral_api_tenant_v1_tenant_proto_depIdxs = []int32{
-	0,  // 0: admiral.api.tenant.v1.Tenant.status:type_name -> admiral.api.tenant.v1.TenantStatus
-	6,  // 1: admiral.api.tenant.v1.Tenant.labels:type_name -> admiral.api.tenant.v1.Tenant.LabelsEntry
-	8,  // 2: admiral.api.tenant.v1.Tenant.created_at:type_name -> google.protobuf.Timestamp
-	8,  // 3: admiral.api.tenant.v1.Tenant.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 4: admiral.api.tenant.v1.GetTenantResponse.tenant:type_name -> admiral.api.tenant.v1.Tenant
-	7,  // 5: admiral.api.tenant.v1.UpdateTenantRequest.labels:type_name -> admiral.api.tenant.v1.UpdateTenantRequest.LabelsEntry
-	9,  // 6: admiral.api.tenant.v1.UpdateTenantRequest.update_mask:type_name -> google.protobuf.FieldMask
-	1,  // 7: admiral.api.tenant.v1.UpdateTenantResponse.tenant:type_name -> admiral.api.tenant.v1.Tenant
-	2,  // 8: admiral.api.tenant.v1.TenantAPI.GetTenant:input_type -> admiral.api.tenant.v1.GetTenantRequest
-	4,  // 9: admiral.api.tenant.v1.TenantAPI.UpdateTenant:input_type -> admiral.api.tenant.v1.UpdateTenantRequest
-	3,  // 10: admiral.api.tenant.v1.TenantAPI.GetTenant:output_type -> admiral.api.tenant.v1.GetTenantResponse
-	5,  // 11: admiral.api.tenant.v1.TenantAPI.UpdateTenant:output_type -> admiral.api.tenant.v1.UpdateTenantResponse
-	10, // [10:12] is the sub-list for method output_type
-	8,  // [8:10] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	0, // 0: admiral.api.tenant.v1.Tenant.status:type_name -> admiral.api.tenant.v1.Tenant.Status
+	6, // 1: admiral.api.tenant.v1.Tenant.created_at:type_name -> google.protobuf.Timestamp
+	6, // 2: admiral.api.tenant.v1.Tenant.updated_at:type_name -> google.protobuf.Timestamp
+	1, // 3: admiral.api.tenant.v1.GetTenantResponse.tenant:type_name -> admiral.api.tenant.v1.Tenant
+	1, // 4: admiral.api.tenant.v1.UpdateTenantRequest.tenant:type_name -> admiral.api.tenant.v1.Tenant
+	7, // 5: admiral.api.tenant.v1.UpdateTenantRequest.update_mask:type_name -> google.protobuf.FieldMask
+	1, // 6: admiral.api.tenant.v1.UpdateTenantResponse.tenant:type_name -> admiral.api.tenant.v1.Tenant
+	2, // 7: admiral.api.tenant.v1.TenantAPI.GetTenant:input_type -> admiral.api.tenant.v1.GetTenantRequest
+	4, // 8: admiral.api.tenant.v1.TenantAPI.UpdateTenant:input_type -> admiral.api.tenant.v1.UpdateTenantRequest
+	3, // 9: admiral.api.tenant.v1.TenantAPI.GetTenant:output_type -> admiral.api.tenant.v1.GetTenantResponse
+	5, // 10: admiral.api.tenant.v1.TenantAPI.UpdateTenant:output_type -> admiral.api.tenant.v1.UpdateTenantResponse
+	9, // [9:11] is the sub-list for method output_type
+	7, // [7:9] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_tenant_v1_tenant_proto_init() }
@@ -475,14 +453,14 @@ func file_admiral_api_tenant_v1_tenant_proto_init() {
 	if File_admiral_api_tenant_v1_tenant_proto != nil {
 		return
 	}
-	file_admiral_api_tenant_v1_tenant_proto_msgTypes[3].OneofWrappers = []any{}
+	file_admiral_api_tenant_v1_tenant_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_tenant_v1_tenant_proto_rawDesc), len(file_admiral_api_tenant_v1_tenant_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   7,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

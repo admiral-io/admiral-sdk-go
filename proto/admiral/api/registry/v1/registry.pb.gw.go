@@ -130,13 +130,13 @@ func request_RegistryAPI_GetComponent_0(ctx context.Context, marshaler runtime.M
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["name"]
+	val, ok := pathParams["component"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component")
 	}
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Component, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -151,13 +151,13 @@ func local_request_RegistryAPI_GetComponent_0(ctx context.Context, marshaler run
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["name"]
+	val, ok := pathParams["component"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component")
 	}
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Component, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component", err)
 	}
 	msg, err := server.GetComponent(ctx, &protoReq)
 	return msg, metadata, err
@@ -172,13 +172,13 @@ func request_RegistryAPI_UpdateComponent_0(ctx context.Context, marshaler runtim
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["component_id"]
+	val, ok := pathParams["component.id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component.id")
 	}
-	protoReq.ComponentId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "component.id", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component.id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -196,6 +196,27 @@ func local_request_RegistryAPI_UpdateComponent_0(ctx context.Context, marshaler 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
+	val, ok := pathParams["component.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component.id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "component.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component.id", err)
+	}
+	msg, err := server.UpdateComponent(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_RegistryAPI_SetComponentStatus_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq SetComponentStatusRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 	val, ok := pathParams["component_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component_id")
@@ -204,7 +225,31 @@ func local_request_RegistryAPI_UpdateComponent_0(ctx context.Context, marshaler 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component_id", err)
 	}
-	msg, err := server.UpdateComponent(ctx, &protoReq)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.SetComponentStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_RegistryAPI_SetComponentStatus_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq SetComponentStatusRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["component_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component_id")
+	}
+	protoReq.ComponentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component_id", err)
+	}
+	msg, err := server.SetComponentStatus(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -247,11 +292,11 @@ func local_request_RegistryAPI_DeleteComponent_0(ctx context.Context, marshaler 
 	return msg, metadata, err
 }
 
-var filter_RegistryAPI_ListRevisions_0 = &utilities.DoubleArray{Encoding: map[string]int{"component_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+var filter_RegistryAPI_ListVersions_0 = &utilities.DoubleArray{Encoding: map[string]int{"component_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
-func request_RegistryAPI_ListRevisions_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_RegistryAPI_ListVersions_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ListRevisionsRequest
+		protoReq ListVersionsRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -266,19 +311,19 @@ func request_RegistryAPI_ListRevisions_0(ctx context.Context, marshaler runtime.
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_RegistryAPI_ListRevisions_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_RegistryAPI_ListVersions_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.ListRevisions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListVersions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_RegistryAPI_ListRevisions_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_RegistryAPI_ListVersions_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ListRevisionsRequest
+		protoReq ListVersionsRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -293,16 +338,16 @@ func local_request_RegistryAPI_ListRevisions_0(ctx context.Context, marshaler ru
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_RegistryAPI_ListRevisions_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_RegistryAPI_ListVersions_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.ListRevisions(ctx, &protoReq)
+	msg, err := server.ListVersions(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_RegistryAPI_GetRevision_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_RegistryAPI_GetVersion_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetRevisionRequest
+		protoReq GetVersionRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -325,13 +370,13 @@ func request_RegistryAPI_GetRevision_0(ctx context.Context, marshaler runtime.Ma
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.GetRevision(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetVersion(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_RegistryAPI_GetRevision_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_RegistryAPI_GetVersion_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetRevisionRequest
+		protoReq GetVersionRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -351,13 +396,13 @@ func local_request_RegistryAPI_GetRevision_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reference", err)
 	}
-	msg, err := server.GetRevision(ctx, &protoReq)
+	msg, err := server.GetVersion(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_RegistryAPI_SetRevisionStatus_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_RegistryAPI_SetVersionStatus_0(ctx context.Context, marshaler runtime.Marshaler, client RegistryAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq SetRevisionStatusRequest
+		protoReq SetVersionStatusRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -383,13 +428,13 @@ func request_RegistryAPI_SetRevisionStatus_0(ctx context.Context, marshaler runt
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.SetRevisionStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.SetVersionStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_RegistryAPI_SetRevisionStatus_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_RegistryAPI_SetVersionStatus_0(ctx context.Context, marshaler runtime.Marshaler, server RegistryAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq SetRevisionStatusRequest
+		protoReq SetVersionStatusRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -412,7 +457,7 @@ func local_request_RegistryAPI_SetRevisionStatus_0(ctx context.Context, marshale
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "digest", err)
 	}
-	msg, err := server.SetRevisionStatus(ctx, &protoReq)
+	msg, err := server.SetVersionStatus(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -604,7 +649,7 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetComponent", runtime.WithHTTPPathPattern("/v1/components/{name=**}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetComponent", runtime.WithHTTPPathPattern("/v1/components/{component=**}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -624,7 +669,7 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/UpdateComponent", runtime.WithHTTPPathPattern("/v1/components/{component_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/UpdateComponent", runtime.WithHTTPPathPattern("/v1/components/{component.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -637,6 +682,26 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_RegistryAPI_UpdateComponent_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_RegistryAPI_SetComponentStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetComponentStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/set-status"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_RegistryAPI_SetComponentStatus_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_RegistryAPI_SetComponentStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodDelete, pattern_RegistryAPI_DeleteComponent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -658,65 +723,65 @@ func RegisterRegistryAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_RegistryAPI_DeleteComponent_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_RegistryAPI_ListRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_RegistryAPI_ListVersions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/ListRevisions", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/ListVersions", runtime.WithHTTPPathPattern("/v1/components/{component_id}/versions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_RegistryAPI_ListRevisions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_RegistryAPI_ListVersions_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_RegistryAPI_ListRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RegistryAPI_ListVersions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_RegistryAPI_GetRevision_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_RegistryAPI_GetVersion_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{reference}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetVersion", runtime.WithHTTPPathPattern("/v1/components/{component_id}/versions/{reference}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_RegistryAPI_GetRevision_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_RegistryAPI_GetVersion_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_RegistryAPI_GetRevision_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RegistryAPI_GetVersion_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_RegistryAPI_SetRevisionStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_RegistryAPI_SetVersionStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{digest}/set-status"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetVersionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/versions/{digest}/set-status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_RegistryAPI_SetRevisionStatus_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_RegistryAPI_SetVersionStatus_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_RegistryAPI_SetRevisionStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RegistryAPI_SetVersionStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPut, pattern_RegistryAPI_SetTag_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -853,7 +918,7 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetComponent", runtime.WithHTTPPathPattern("/v1/components/{name=**}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetComponent", runtime.WithHTTPPathPattern("/v1/components/{component=**}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -870,7 +935,7 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/UpdateComponent", runtime.WithHTTPPathPattern("/v1/components/{component_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/UpdateComponent", runtime.WithHTTPPathPattern("/v1/components/{component.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -882,6 +947,23 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_RegistryAPI_UpdateComponent_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_RegistryAPI_SetComponentStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetComponentStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/set-status"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_RegistryAPI_SetComponentStatus_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_RegistryAPI_SetComponentStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodDelete, pattern_RegistryAPI_DeleteComponent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -900,56 +982,56 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_RegistryAPI_DeleteComponent_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_RegistryAPI_ListRevisions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_RegistryAPI_ListVersions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/ListRevisions", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/ListVersions", runtime.WithHTTPPathPattern("/v1/components/{component_id}/versions"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_RegistryAPI_ListRevisions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_RegistryAPI_ListVersions_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_RegistryAPI_ListRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RegistryAPI_ListVersions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_RegistryAPI_GetRevision_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_RegistryAPI_GetVersion_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{reference}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/GetVersion", runtime.WithHTTPPathPattern("/v1/components/{component_id}/versions/{reference}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_RegistryAPI_GetRevision_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_RegistryAPI_GetVersion_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_RegistryAPI_GetRevision_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RegistryAPI_GetVersion_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_RegistryAPI_SetRevisionStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_RegistryAPI_SetVersionStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/revisions/{digest}/set-status"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.registry.v1.RegistryAPI/SetVersionStatus", runtime.WithHTTPPathPattern("/v1/components/{component_id}/versions/{digest}/set-status"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_RegistryAPI_SetRevisionStatus_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_RegistryAPI_SetVersionStatus_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_RegistryAPI_SetRevisionStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_RegistryAPI_SetVersionStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPut, pattern_RegistryAPI_SetTag_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -989,29 +1071,31 @@ func RegisterRegistryAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_RegistryAPI_PublishComponent_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "components", "publish"}, ""))
-	pattern_RegistryAPI_PullComponent_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "components", "pull"}, ""))
-	pattern_RegistryAPI_ListComponents_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "components"}, ""))
-	pattern_RegistryAPI_GetComponent_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 3, 0, 4, 1, 5, 2}, []string{"v1", "components", "name"}, ""))
-	pattern_RegistryAPI_UpdateComponent_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "components", "component_id"}, ""))
-	pattern_RegistryAPI_DeleteComponent_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "components", "component_id"}, ""))
-	pattern_RegistryAPI_ListRevisions_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "components", "component_id", "revisions"}, ""))
-	pattern_RegistryAPI_GetRevision_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "revisions", "reference"}, ""))
-	pattern_RegistryAPI_SetRevisionStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "components", "component_id", "revisions", "digest", "set-status"}, ""))
-	pattern_RegistryAPI_SetTag_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "tags", "name"}, ""))
-	pattern_RegistryAPI_DeleteTag_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "tags", "name"}, ""))
+	pattern_RegistryAPI_PublishComponent_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "components", "publish"}, ""))
+	pattern_RegistryAPI_PullComponent_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "components", "pull"}, ""))
+	pattern_RegistryAPI_ListComponents_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "components"}, ""))
+	pattern_RegistryAPI_GetComponent_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 3, 0, 4, 1, 5, 2}, []string{"v1", "components", "component"}, ""))
+	pattern_RegistryAPI_UpdateComponent_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "components", "component.id"}, ""))
+	pattern_RegistryAPI_SetComponentStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "components", "component_id", "set-status"}, ""))
+	pattern_RegistryAPI_DeleteComponent_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "components", "component_id"}, ""))
+	pattern_RegistryAPI_ListVersions_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "components", "component_id", "versions"}, ""))
+	pattern_RegistryAPI_GetVersion_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "versions", "reference"}, ""))
+	pattern_RegistryAPI_SetVersionStatus_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "components", "component_id", "versions", "digest", "set-status"}, ""))
+	pattern_RegistryAPI_SetTag_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "tags", "name"}, ""))
+	pattern_RegistryAPI_DeleteTag_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "components", "component_id", "tags", "name"}, ""))
 )
 
 var (
-	forward_RegistryAPI_PublishComponent_0  = runtime.ForwardResponseMessage
-	forward_RegistryAPI_PullComponent_0     = runtime.ForwardResponseMessage
-	forward_RegistryAPI_ListComponents_0    = runtime.ForwardResponseMessage
-	forward_RegistryAPI_GetComponent_0      = runtime.ForwardResponseMessage
-	forward_RegistryAPI_UpdateComponent_0   = runtime.ForwardResponseMessage
-	forward_RegistryAPI_DeleteComponent_0   = runtime.ForwardResponseMessage
-	forward_RegistryAPI_ListRevisions_0     = runtime.ForwardResponseMessage
-	forward_RegistryAPI_GetRevision_0       = runtime.ForwardResponseMessage
-	forward_RegistryAPI_SetRevisionStatus_0 = runtime.ForwardResponseMessage
-	forward_RegistryAPI_SetTag_0            = runtime.ForwardResponseMessage
-	forward_RegistryAPI_DeleteTag_0         = runtime.ForwardResponseMessage
+	forward_RegistryAPI_PublishComponent_0   = runtime.ForwardResponseMessage
+	forward_RegistryAPI_PullComponent_0      = runtime.ForwardResponseMessage
+	forward_RegistryAPI_ListComponents_0     = runtime.ForwardResponseMessage
+	forward_RegistryAPI_GetComponent_0       = runtime.ForwardResponseMessage
+	forward_RegistryAPI_UpdateComponent_0    = runtime.ForwardResponseMessage
+	forward_RegistryAPI_SetComponentStatus_0 = runtime.ForwardResponseMessage
+	forward_RegistryAPI_DeleteComponent_0    = runtime.ForwardResponseMessage
+	forward_RegistryAPI_ListVersions_0       = runtime.ForwardResponseMessage
+	forward_RegistryAPI_GetVersion_0         = runtime.ForwardResponseMessage
+	forward_RegistryAPI_SetVersionStatus_0   = runtime.ForwardResponseMessage
+	forward_RegistryAPI_SetTag_0             = runtime.ForwardResponseMessage
+	forward_RegistryAPI_DeleteTag_0          = runtime.ForwardResponseMessage
 )

@@ -10,9 +10,8 @@ import (
 	v1 "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
-	v12 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
-	v13 "go.admiral.io/sdk/proto/admiral/api/run/v1"
-	v11 "go.admiral.io/sdk/proto/admiral/api/variable/v1"
+	v12 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
+	v11 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -30,14 +29,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Environment represents a named deployment target for an application
-// (e.g., dev, staging, prod). Each environment carries its own configuration
-// and variables; promotion between environments is explicit.
+// Environment is a named place an application deploys to (dev, staging,
+// prod).
 type Environment struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier for the environment (UUID).
+	// Unique identifier for the environment.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The application this environment belongs to (UUID).
+	// The application this environment belongs to.
 	ApplicationId string `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
 	// URL-safe, human-readable identifier (e.g., "prod", "staging-us-east").
 	// Unique within the application. Lowercase alphanumeric and hyphens only,
@@ -50,38 +48,30 @@ type Environment struct {
 	// Arbitrary key-value labels for organizing and filtering environments
 	// (e.g., `{"region": "us-east-1", "tier": "production"}`).
 	Labels map[string]string `protobuf:"bytes,7,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Whether the environment has configuration changes that have not yet been
-	// deployed. Server-derived by comparing current resolved config (variables,
-	// component settings, overrides, source versions) against the last
-	// successful run's snapshot. False if no successful run exists yet (a
-	// fresh environment with no runs returns false; use `last_deployed_at`
-	// to distinguish "clean" from "never deployed").
-	HasPendingChanges bool `protobuf:"varint,8,opt,name=has_pending_changes,json=hasPendingChanges,proto3" json:"has_pending_changes,omitempty"`
-	// When the last successful run for this environment completed. Absent if
-	// no successful run has occurred yet.
-	LastDeployedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=last_deployed_at,json=lastDeployedAt,proto3" json:"last_deployed_at,omitempty"`
 	// The user or agent who created this environment (server-populated from token).
 	CreatedBy *v1.ActorRef `protobuf:"bytes,10,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	// When the environment was created.
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the environment was last updated.
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// Where workload components go. Omitted fields keep their defaults.
-	Kubernetes *KubernetesTarget `protobuf:"bytes,13,opt,name=kubernetes,proto3" json:"kubernetes,omitempty"`
-	// Whether applying a change set here needs an approval. Off by default.
-	ApprovalRequired bool `protobuf:"varint,14,opt,name=approval_required,json=approvalRequired,proto3" json:"approval_required,omitempty"`
+	// The agents this environment deploys through, each with how this
+	// environment uses it. Several of one kind are allowed: an IAM agent beside
+	// an ordinary one, say. A component runs on the assignment its settings
+	// name, or on the only one of its kind. Two environments can share an agent
+	// and differ in settings, such as dev and staging in one cluster under
+	// different namespaces.
+	Agents []*AgentAssignment `protobuf:"bytes,18,rep,name=agents,proto3" json:"agents,omitempty"`
+	// What an apply here needs before it runs. Unset needs nothing.
+	Approval *ApprovalRule `protobuf:"bytes,19,opt,name=approval,proto3" json:"approval,omitempty"`
 	// Moves each time an apply changes the environment. A change set records
 	// the generation it was cut from.
 	Generation int64 `protobuf:"varint,15,opt,name=generation,proto3" json:"generation,omitempty"`
-	// The change set whose partial apply holds the environment. Nothing else
-	// applies until it is resolved.
-	HeldByChangeSetId string `protobuf:"bytes,16,opt,name=held_by_change_set_id,json=heldByChangeSetId,proto3" json:"held_by_change_set_id,omitempty"`
-	// Whether an apply deletes objects a component no longer renders, and the
-	// objects of a component it removes. Off, they are orphaned: left in the
-	// cluster and no longer managed. An object annotated
-	// `admiral.io/prune: "false"` is orphaned either way. Defaults to true on
-	// create.
-	Prune         *bool `protobuf:"varint,17,opt,name=prune,proto3,oneof" json:"prune,omitempty"`
+	// Set while a partial apply holds the environment. Nothing else applies
+	// until the holding change set is reverted or accepted.
+	Hold *Hold `protobuf:"bytes,20,opt,name=hold,proto3" json:"hold,omitempty"`
+	// The apply that produced the current generation. Absent until the first
+	// apply changes the environment.
+	LastApply     *LastApply `protobuf:"bytes,21,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -151,20 +141,6 @@ func (x *Environment) GetLabels() map[string]string {
 	return nil
 }
 
-func (x *Environment) GetHasPendingChanges() bool {
-	if x != nil {
-		return x.HasPendingChanges
-	}
-	return false
-}
-
-func (x *Environment) GetLastDeployedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastDeployedAt
-	}
-	return nil
-}
-
 func (x *Environment) GetCreatedBy() *v1.ActorRef {
 	if x != nil {
 		return x.CreatedBy
@@ -186,18 +162,18 @@ func (x *Environment) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Environment) GetKubernetes() *KubernetesTarget {
+func (x *Environment) GetAgents() []*AgentAssignment {
 	if x != nil {
-		return x.Kubernetes
+		return x.Agents
 	}
 	return nil
 }
 
-func (x *Environment) GetApprovalRequired() bool {
+func (x *Environment) GetApproval() *ApprovalRule {
 	if x != nil {
-		return x.ApprovalRequired
+		return x.Approval
 	}
-	return false
+	return nil
 }
 
 func (x *Environment) GetGeneration() int64 {
@@ -207,55 +183,64 @@ func (x *Environment) GetGeneration() int64 {
 	return 0
 }
 
-func (x *Environment) GetHeldByChangeSetId() string {
+func (x *Environment) GetHold() *Hold {
 	if x != nil {
-		return x.HeldByChangeSetId
+		return x.Hold
 	}
-	return ""
+	return nil
 }
 
-func (x *Environment) GetPrune() bool {
-	if x != nil && x.Prune != nil {
-		return *x.Prune
+func (x *Environment) GetLastApply() *LastApply {
+	if x != nil {
+		return x.LastApply
 	}
-	return false
+	return nil
 }
 
-// KubernetesTarget is where an environment's workload components go.
-type KubernetesTarget struct {
+// AgentAssignment binds an agent to an environment, with the settings for
+// how this environment uses it.
+type AgentAssignment struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The namespace a component renders into unless it names its own. Set to
-	// `<application>-<environment>` when the environment is created if left
-	// empty; at most 63 characters.
-	Namespace string `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	// Whether a missing namespace is created at apply. The agent's own
-	// setting and its RBAC can still refuse. Defaults to true on create.
-	CreateNamespaces *bool `protobuf:"varint,2,opt,name=create_namespaces,json=createNamespaces,proto3,oneof" json:"create_namespaces,omitempty"`
-	// What the cluster reported, rendered against at prepare. Absent until an
-	// agent reports.
-	Capabilities *KubernetesCapabilities `protobuf:"bytes,3,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
-	// The agent this environment deploys through. It must be one the agent's
-	// owner granted to the tenant, a team, or this application. Empty selects
-	// none; capabilities then come from no cluster.
-	AgentId       string `protobuf:"bytes,4,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	// The agent. Its owner must have granted it to the organization, a team,
+	// this application or this environment.
+	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	// `asg-` and twelve base36 characters, what a component's settings name to
+	// run on this assignment. Empty on an assignment being added, which gets
+	// one; send it back unchanged when updating the list, or the assignment is
+	// treated as new and components placed on the old one are refused.
+	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	// The agent profiles a plan and an apply get: named sets of environment
+	// variables, with an optional identity to assume, that the agent's owner
+	// defines in the agent's own config, such as a read-only and an edit
+	// Cloudflare token. Admiral holds the names, never the values. Empty means
+	// the agent's `default` profile. A profile must be one the agent reports
+	// and its grants cover for this environment.
+	PlanProfile  string `protobuf:"bytes,6,opt,name=plan_profile,json=planProfile,proto3" json:"plan_profile,omitempty"`
+	ApplyProfile string `protobuf:"bytes,7,opt,name=apply_profile,json=applyProfile,proto3" json:"apply_profile,omitempty"`
+	// Settings for the agent's kind.
+	//
+	// Types that are valid to be assigned to Settings:
+	//
+	//	*AgentAssignment_Kubernetes
+	Settings      isAgentAssignment_Settings `protobuf_oneof:"settings"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *KubernetesTarget) Reset() {
-	*x = KubernetesTarget{}
+func (x *AgentAssignment) Reset() {
+	*x = AgentAssignment{}
 	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *KubernetesTarget) String() string {
+func (x *AgentAssignment) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KubernetesTarget) ProtoMessage() {}
+func (*AgentAssignment) ProtoMessage() {}
 
-func (x *KubernetesTarget) ProtoReflect() protoreflect.Message {
+func (x *AgentAssignment) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -267,65 +252,99 @@ func (x *KubernetesTarget) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KubernetesTarget.ProtoReflect.Descriptor instead.
-func (*KubernetesTarget) Descriptor() ([]byte, []int) {
+// Deprecated: Use AgentAssignment.ProtoReflect.Descriptor instead.
+func (*AgentAssignment) Descriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *KubernetesTarget) GetNamespace() string {
-	if x != nil {
-		return x.Namespace
-	}
-	return ""
-}
-
-func (x *KubernetesTarget) GetCreateNamespaces() bool {
-	if x != nil && x.CreateNamespaces != nil {
-		return *x.CreateNamespaces
-	}
-	return false
-}
-
-func (x *KubernetesTarget) GetCapabilities() *KubernetesCapabilities {
-	if x != nil {
-		return x.Capabilities
-	}
-	return nil
-}
-
-func (x *KubernetesTarget) GetAgentId() string {
+func (x *AgentAssignment) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-// KubernetesCapabilities is a cluster's version and installed API groups.
-type KubernetesCapabilities struct {
+func (x *AgentAssignment) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AgentAssignment) GetPlanProfile() string {
+	if x != nil {
+		return x.PlanProfile
+	}
+	return ""
+}
+
+func (x *AgentAssignment) GetApplyProfile() string {
+	if x != nil {
+		return x.ApplyProfile
+	}
+	return ""
+}
+
+func (x *AgentAssignment) GetSettings() isAgentAssignment_Settings {
+	if x != nil {
+		return x.Settings
+	}
+	return nil
+}
+
+func (x *AgentAssignment) GetKubernetes() *KubernetesSettings {
+	if x != nil {
+		if x, ok := x.Settings.(*AgentAssignment_Kubernetes); ok {
+			return x.Kubernetes
+		}
+	}
+	return nil
+}
+
+type isAgentAssignment_Settings interface {
+	isAgentAssignment_Settings()
+}
+
+type AgentAssignment_Kubernetes struct {
+	Kubernetes *KubernetesSettings `protobuf:"bytes,2,opt,name=kubernetes,proto3,oneof"`
+}
+
+func (*AgentAssignment_Kubernetes) isAgentAssignment_Settings() {}
+
+// KubernetesSettings is how an environment uses a Kubernetes agent.
+type KubernetesSettings struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// e.g. `v1.31.2`.
-	KubeVersion string `protobuf:"bytes,1,opt,name=kube_version,json=kubeVersion,proto3" json:"kube_version,omitempty"`
-	// Group/version strings, e.g. `monitoring.coreos.com/v1`.
-	ApiVersions   []string               `protobuf:"bytes,2,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
-	ReportedAt    *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=reported_at,json=reportedAt,proto3" json:"reported_at,omitempty"`
+	// The namespace a component renders into unless it names its own. Set to
+	// `<application>-<environment>` when the environment is created if left
+	// empty; at most 63 characters.
+	DefaultNamespace string `protobuf:"bytes,1,opt,name=default_namespace,json=defaultNamespace,proto3" json:"default_namespace,omitempty"`
+	// Whether a missing namespace is created at apply. The agent's own
+	// setting and its RBAC can still refuse. Defaults to true on create.
+	CreateNamespaces *bool `protobuf:"varint,2,opt,name=create_namespaces,json=createNamespaces,proto3,oneof" json:"create_namespaces,omitempty"`
+	// Whether an apply deletes objects a component no longer renders, and the
+	// objects of a component it removes. Off, they are orphaned: left in the
+	// cluster and no longer managed. An object annotated
+	// `admiral.io/prune: "false"` is orphaned either way. Defaults to true on
+	// create.
+	Prune         *bool `protobuf:"varint,3,opt,name=prune,proto3,oneof" json:"prune,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *KubernetesCapabilities) Reset() {
-	*x = KubernetesCapabilities{}
+func (x *KubernetesSettings) Reset() {
+	*x = KubernetesSettings{}
 	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *KubernetesCapabilities) String() string {
+func (x *KubernetesSettings) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KubernetesCapabilities) ProtoMessage() {}
+func (*KubernetesSettings) ProtoMessage() {}
 
-func (x *KubernetesCapabilities) ProtoReflect() protoreflect.Message {
+func (x *KubernetesSettings) ProtoReflect() protoreflect.Message {
 	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -337,54 +356,228 @@ func (x *KubernetesCapabilities) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KubernetesCapabilities.ProtoReflect.Descriptor instead.
-func (*KubernetesCapabilities) Descriptor() ([]byte, []int) {
+// Deprecated: Use KubernetesSettings.ProtoReflect.Descriptor instead.
+func (*KubernetesSettings) Descriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *KubernetesCapabilities) GetKubeVersion() string {
+func (x *KubernetesSettings) GetDefaultNamespace() string {
 	if x != nil {
-		return x.KubeVersion
+		return x.DefaultNamespace
 	}
 	return ""
 }
 
-func (x *KubernetesCapabilities) GetApiVersions() []string {
+func (x *KubernetesSettings) GetCreateNamespaces() bool {
+	if x != nil && x.CreateNamespaces != nil {
+		return *x.CreateNamespaces
+	}
+	return false
+}
+
+func (x *KubernetesSettings) GetPrune() bool {
+	if x != nil && x.Prune != nil {
+		return *x.Prune
+	}
+	return false
+}
+
+// ApprovalRule is what an apply needs from people before it runs. A plan
+// that changes dismisses its approvals, and the author never counts. When an
+// environment's and its agents' rules all apply, their groups add up (the
+// higher count for a group named twice) and the largest required_approvals
+// wins.
+type ApprovalRule struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Distinct people who must approve the planned revision, from anyone
+	// allowed to. 0 needs none.
+	RequiredApprovals int32 `protobuf:"varint,1,opt,name=required_approvals,json=requiredApprovals,proto3" json:"required_approvals,omitempty"`
+	// Groups that must each approve, all of them. One person's approval counts
+	// for every group they belong to; to need two people, also set
+	// required_approvals to 2.
+	Groups        []*ApprovalRule_GroupApproval `protobuf:"bytes,2,rep,name=groups,proto3" json:"groups,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApprovalRule) Reset() {
+	*x = ApprovalRule{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApprovalRule) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApprovalRule) ProtoMessage() {}
+
+func (x *ApprovalRule) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[3]
 	if x != nil {
-		return x.ApiVersions
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApprovalRule.ProtoReflect.Descriptor instead.
+func (*ApprovalRule) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ApprovalRule) GetRequiredApprovals() int32 {
+	if x != nil {
+		return x.RequiredApprovals
+	}
+	return 0
+}
+
+func (x *ApprovalRule) GetGroups() []*ApprovalRule_GroupApproval {
+	if x != nil {
+		return x.Groups
 	}
 	return nil
 }
 
-func (x *KubernetesCapabilities) GetReportedAt() *timestamppb.Timestamp {
+// Hold is the state a partial apply leaves an environment in.
+type Hold struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The change set whose partial apply holds the environment.
+	ChangeSetId string `protobuf:"bytes,1,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
+	// When the partial apply finished.
+	HeldAt        *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=held_at,json=heldAt,proto3" json:"held_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Hold) Reset() {
+	*x = Hold{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Hold) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Hold) ProtoMessage() {}
+
+func (x *Hold) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[4]
 	if x != nil {
-		return x.ReportedAt
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Hold.ProtoReflect.Descriptor instead.
+func (*Hold) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Hold) GetChangeSetId() string {
+	if x != nil {
+		return x.ChangeSetId
+	}
+	return ""
+}
+
+func (x *Hold) GetHeldAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.HeldAt
 	}
 	return nil
 }
 
-// CreateEnvironmentRequest contains the parameters for creating a new environment.
+// LastApply points at the apply that produced an environment's current
+// generation.
+type LastApply struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The change set that was applied.
+	ChangeSetId string `protobuf:"bytes,1,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
+	// The change set revision that was applied.
+	RevisionId string `protobuf:"bytes,2,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
+	// When the apply finished.
+	AppliedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=applied_at,json=appliedAt,proto3" json:"applied_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LastApply) Reset() {
+	*x = LastApply{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LastApply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LastApply) ProtoMessage() {}
+
+func (x *LastApply) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LastApply.ProtoReflect.Descriptor instead.
+func (*LastApply) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LastApply) GetChangeSetId() string {
+	if x != nil {
+		return x.ChangeSetId
+	}
+	return ""
+}
+
+func (x *LastApply) GetRevisionId() string {
+	if x != nil {
+		return x.RevisionId
+	}
+	return ""
+}
+
+func (x *LastApply) GetAppliedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AppliedAt
+	}
+	return nil
+}
+
+// CreateEnvironmentRequest creates an environment under an application.
 type CreateEnvironmentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The application to create this environment for (UUID).
+	// The application the environment belongs to.
 	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// URL-safe, human-readable identifier (e.g., "prod", "staging-us-east").
-	// Unique within the application. Lowercase alphanumeric and hyphens only,
-	// must start with a letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional longer-form description of the environment's purpose.
-	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// Arbitrary key-value labels for organizing and filtering environments.
-	Labels map[string]string `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Where workload components go.
-	Kubernetes    *KubernetesTarget `protobuf:"bytes,7,opt,name=kubernetes,proto3" json:"kubernetes,omitempty"`
+	// The environment to create. Server-populated fields are ignored.
+	Environment   *Environment `protobuf:"bytes,2,opt,name=environment,proto3" json:"environment,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateEnvironmentRequest) Reset() {
 	*x = CreateEnvironmentRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[3]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -396,7 +589,7 @@ func (x *CreateEnvironmentRequest) String() string {
 func (*CreateEnvironmentRequest) ProtoMessage() {}
 
 func (x *CreateEnvironmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[3]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -409,7 +602,7 @@ func (x *CreateEnvironmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateEnvironmentRequest.ProtoReflect.Descriptor instead.
 func (*CreateEnvironmentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{3}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateEnvironmentRequest) GetApplicationId() string {
@@ -419,30 +612,9 @@ func (x *CreateEnvironmentRequest) GetApplicationId() string {
 	return ""
 }
 
-func (x *CreateEnvironmentRequest) GetName() string {
+func (x *CreateEnvironmentRequest) GetEnvironment() *Environment {
 	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *CreateEnvironmentRequest) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *CreateEnvironmentRequest) GetLabels() map[string]string {
-	if x != nil {
-		return x.Labels
-	}
-	return nil
-}
-
-func (x *CreateEnvironmentRequest) GetKubernetes() *KubernetesTarget {
-	if x != nil {
-		return x.Kubernetes
+		return x.Environment
 	}
 	return nil
 }
@@ -458,7 +630,7 @@ type CreateEnvironmentResponse struct {
 
 func (x *CreateEnvironmentResponse) Reset() {
 	*x = CreateEnvironmentResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[4]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -470,7 +642,7 @@ func (x *CreateEnvironmentResponse) String() string {
 func (*CreateEnvironmentResponse) ProtoMessage() {}
 
 func (x *CreateEnvironmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[4]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -483,7 +655,7 @@ func (x *CreateEnvironmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateEnvironmentResponse.ProtoReflect.Descriptor instead.
 func (*CreateEnvironmentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{4}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateEnvironmentResponse) GetEnvironment() *Environment {
@@ -496,7 +668,7 @@ func (x *CreateEnvironmentResponse) GetEnvironment() *Environment {
 // GetEnvironmentRequest identifies an environment to retrieve.
 type GetEnvironmentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the environment (UUID).
+	// The unique identifier of the environment.
 	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -504,7 +676,7 @@ type GetEnvironmentRequest struct {
 
 func (x *GetEnvironmentRequest) Reset() {
 	*x = GetEnvironmentRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[5]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -516,7 +688,7 @@ func (x *GetEnvironmentRequest) String() string {
 func (*GetEnvironmentRequest) ProtoMessage() {}
 
 func (x *GetEnvironmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[5]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -529,7 +701,7 @@ func (x *GetEnvironmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEnvironmentRequest.ProtoReflect.Descriptor instead.
 func (*GetEnvironmentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{5}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetEnvironmentRequest) GetEnvironmentId() string {
@@ -550,7 +722,7 @@ type GetEnvironmentResponse struct {
 
 func (x *GetEnvironmentResponse) Reset() {
 	*x = GetEnvironmentResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[6]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +734,7 @@ func (x *GetEnvironmentResponse) String() string {
 func (*GetEnvironmentResponse) ProtoMessage() {}
 
 func (x *GetEnvironmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[6]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +747,7 @@ func (x *GetEnvironmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEnvironmentResponse.ProtoReflect.Descriptor instead.
 func (*GetEnvironmentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{6}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetEnvironmentResponse) GetEnvironment() *Environment {
@@ -588,15 +760,17 @@ func (x *GetEnvironmentResponse) GetEnvironment() *Environment {
 // ListEnvironmentsRequest contains pagination and filter parameters.
 type ListEnvironmentsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
+	// The application to list environments of. Omitted lists every
+	// environment the caller can see, across applications.
+	ApplicationId *string `protobuf:"bytes,4,opt,name=application_id,json=applicationId,proto3,oneof" json:"application_id,omitempty"`
 	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
 	// API documentation for the full operator and predicate reference).
 	//
 	// Filterable fields:
-	//   - `application_id`: filter by parent application (UUID).
 	//   - `name`: filter by environment name.
 	//   - `labels.key`: filter by label key.
 	//
-	// Example: `field['application_id'] = '<uuid>' AND field['name'] = 'prod'`
+	// Example: `field['name'] = 'prod' AND field['labels.region'] = 'us-east-1'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of environments to return per page. Defaults to 50 when
 	// omitted or 0; must not exceed 100.
@@ -609,7 +783,7 @@ type ListEnvironmentsRequest struct {
 
 func (x *ListEnvironmentsRequest) Reset() {
 	*x = ListEnvironmentsRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[7]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -621,7 +795,7 @@ func (x *ListEnvironmentsRequest) String() string {
 func (*ListEnvironmentsRequest) ProtoMessage() {}
 
 func (x *ListEnvironmentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[7]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -634,7 +808,14 @@ func (x *ListEnvironmentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEnvironmentsRequest.ProtoReflect.Descriptor instead.
 func (*ListEnvironmentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{7}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListEnvironmentsRequest) GetApplicationId() string {
+	if x != nil && x.ApplicationId != nil {
+		return *x.ApplicationId
+	}
+	return ""
 }
 
 func (x *ListEnvironmentsRequest) GetFilter() string {
@@ -671,7 +852,7 @@ type ListEnvironmentsResponse struct {
 
 func (x *ListEnvironmentsResponse) Reset() {
 	*x = ListEnvironmentsResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[8]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -683,7 +864,7 @@ func (x *ListEnvironmentsResponse) String() string {
 func (*ListEnvironmentsResponse) ProtoMessage() {}
 
 func (x *ListEnvironmentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[8]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -696,7 +877,7 @@ func (x *ListEnvironmentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEnvironmentsResponse.ProtoReflect.Descriptor instead.
 func (*ListEnvironmentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{8}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListEnvironmentsResponse) GetEnvironments() []*Environment {
@@ -721,9 +902,7 @@ type UpdateEnvironmentRequest struct {
 	Environment *Environment `protobuf:"bytes,1,opt,name=environment,proto3" json:"environment,omitempty"`
 	// The set of fields to update. Optional; if omitted, all populated fields
 	// are updated. Pass `*` for full replacement. Supported fields: `name`,
-	// `description`, `labels`, `kubernetes.namespace`,
-	// `kubernetes.create_namespaces`, `kubernetes.agent_id`,
-	// `approval_required`, `prune`.
+	// `description`, `labels`, `agents`, `approval`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -731,7 +910,7 @@ type UpdateEnvironmentRequest struct {
 
 func (x *UpdateEnvironmentRequest) Reset() {
 	*x = UpdateEnvironmentRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[9]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -743,7 +922,7 @@ func (x *UpdateEnvironmentRequest) String() string {
 func (*UpdateEnvironmentRequest) ProtoMessage() {}
 
 func (x *UpdateEnvironmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[9]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -756,7 +935,7 @@ func (x *UpdateEnvironmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateEnvironmentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateEnvironmentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *UpdateEnvironmentRequest) GetEnvironment() *Environment {
@@ -784,7 +963,7 @@ type UpdateEnvironmentResponse struct {
 
 func (x *UpdateEnvironmentResponse) Reset() {
 	*x = UpdateEnvironmentResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[10]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -796,7 +975,7 @@ func (x *UpdateEnvironmentResponse) String() string {
 func (*UpdateEnvironmentResponse) ProtoMessage() {}
 
 func (x *UpdateEnvironmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[10]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -809,7 +988,7 @@ func (x *UpdateEnvironmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateEnvironmentResponse.ProtoReflect.Descriptor instead.
 func (*UpdateEnvironmentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateEnvironmentResponse) GetEnvironment() *Environment {
@@ -822,18 +1001,15 @@ func (x *UpdateEnvironmentResponse) GetEnvironment() *Environment {
 // DeleteEnvironmentRequest identifies an environment to delete.
 type DeleteEnvironmentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the environment to delete (UUID).
+	// The unique identifier of the environment to delete.
 	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
-	// When true, bypass the children-exist check and cascade-delete all
-	// run records (metadata only).
-	Force         bool `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DeleteEnvironmentRequest) Reset() {
 	*x = DeleteEnvironmentRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[11]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -845,7 +1021,7 @@ func (x *DeleteEnvironmentRequest) String() string {
 func (*DeleteEnvironmentRequest) ProtoMessage() {}
 
 func (x *DeleteEnvironmentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[11]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -858,7 +1034,7 @@ func (x *DeleteEnvironmentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEnvironmentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteEnvironmentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *DeleteEnvironmentRequest) GetEnvironmentId() string {
@@ -866,13 +1042,6 @@ func (x *DeleteEnvironmentRequest) GetEnvironmentId() string {
 		return x.EnvironmentId
 	}
 	return ""
-}
-
-func (x *DeleteEnvironmentRequest) GetForce() bool {
-	if x != nil {
-		return x.Force
-	}
-	return false
 }
 
 // DeleteEnvironmentResponse is empty on success.
@@ -884,7 +1053,7 @@ type DeleteEnvironmentResponse struct {
 
 func (x *DeleteEnvironmentResponse) Reset() {
 	*x = DeleteEnvironmentResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[12]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -896,7 +1065,7 @@ func (x *DeleteEnvironmentResponse) String() string {
 func (*DeleteEnvironmentResponse) ProtoMessage() {}
 
 func (x *DeleteEnvironmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[12]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -909,176 +1078,30 @@ func (x *DeleteEnvironmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEnvironmentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteEnvironmentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{15}
 }
 
-// ListEnvironmentVariablesRequest contains the environment ID, filters, and
-// pagination parameters.
-type ListEnvironmentVariablesRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The environment whose variables should be listed (UUID).
-	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
-	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
-	// API documentation for the full operator and predicate reference).
-	//
-	// Filterable fields:
-	//   - `key`: filter by variable key (supports prefix matching via ~=).
-	//   - `sensitive`: filter by sensitivity flag.
-	//   - `type`: filter by variable type (STRING, NUMBER, BOOLEAN, COMPLEX).
-	//   - `source`: filter by source (USER, INFRASTRUCTURE).
-	//
-	// Example: `field['source'] = 'USER' AND field['sensitive'] = false`
-	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
-	// Maximum number of variables to return per page. Defaults to 50 when
-	// omitted or 0; must not exceed 100.
-	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	// Opaque pagination token from a previous response.
-	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListEnvironmentVariablesRequest) Reset() {
-	*x = ListEnvironmentVariablesRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListEnvironmentVariablesRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListEnvironmentVariablesRequest) ProtoMessage() {}
-
-func (x *ListEnvironmentVariablesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListEnvironmentVariablesRequest.ProtoReflect.Descriptor instead.
-func (*ListEnvironmentVariablesRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *ListEnvironmentVariablesRequest) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
-	}
-	return ""
-}
-
-func (x *ListEnvironmentVariablesRequest) GetFilter() string {
-	if x != nil {
-		return x.Filter
-	}
-	return ""
-}
-
-func (x *ListEnvironmentVariablesRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-func (x *ListEnvironmentVariablesRequest) GetPageToken() string {
-	if x != nil {
-		return x.PageToken
-	}
-	return ""
-}
-
-// ListEnvironmentVariablesResponse contains a page of variables.
-type ListEnvironmentVariablesResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The variables scoped to this environment. Sensitive values are masked.
-	Variables []*v11.Variable `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
-	// Pagination token for the next page. Empty when there are no more results.
-	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListEnvironmentVariablesResponse) Reset() {
-	*x = ListEnvironmentVariablesResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListEnvironmentVariablesResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListEnvironmentVariablesResponse) ProtoMessage() {}
-
-func (x *ListEnvironmentVariablesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListEnvironmentVariablesResponse.ProtoReflect.Descriptor instead.
-func (*ListEnvironmentVariablesResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *ListEnvironmentVariablesResponse) GetVariables() []*v11.Variable {
-	if x != nil {
-		return x.Variables
-	}
-	return nil
-}
-
-func (x *ListEnvironmentVariablesResponse) GetNextPageToken() string {
-	if x != nil {
-		return x.NextPageToken
-	}
-	return ""
-}
-
-// EnvironmentComponent is a denormalized view of a deployed component for
-// `ListEnvironmentComponents`. It joins the component's HEAD with the
-// component's last-succeeded revision so the CLI can render an at-a-glance
-// status row without follow-up calls.
+// EnvironmentComponent is one component live in an environment: the version
+// it runs and the apply that last changed it.
 type EnvironmentComponent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Component name (stable identifier set at creation).
+	// Component name, unique within the environment.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// What the component's pinned revision is (TERRAFORM, HELM, MANIFESTS),
-	// denormalized from the registry.
-	Kind v12.ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.api.registry.v1.ComponentKind" json:"kind,omitempty"`
-	// The git ref / version selector the component deploys.
-	Ref string `protobuf:"bytes,6,opt,name=ref,proto3" json:"ref,omitempty"`
-	// ID of the last-succeeded revision for this component in this env, if
-	// any (UUID). Empty when the component has never reached SUCCEEDED.
-	LastRevisionId string `protobuf:"bytes,7,opt,name=last_revision_id,json=lastRevisionId,proto3" json:"last_revision_id,omitempty"`
-	// Status of the last revision (SUCCEEDED when populated). UNSPECIFIED
-	// means the component has no last-succeeded revision yet.
-	LastRevisionStatus v13.RevisionStatus `protobuf:"varint,8,opt,name=last_revision_status,json=lastRevisionStatus,proto3,enum=admiral.api.run.v1.RevisionStatus" json:"last_revision_status,omitempty"`
-	// When the last-succeeded revision completed.
-	LastDeployedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=last_deployed_at,json=lastDeployedAt,proto3" json:"last_deployed_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// The environment it is live in.
+	EnvironmentId string `protobuf:"bytes,12,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	// What its version is: Terraform, Helm or manifests.
+	Kind v11.ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.api.registry.v1.ComponentKind" json:"kind,omitempty"`
+	// The registry version it runs.
+	Version *v12.VersionRef `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
+	// The apply that last changed this component.
+	LastApply     *LastApply `protobuf:"bytes,11,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *EnvironmentComponent) Reset() {
 	*x = EnvironmentComponent{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[15]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1090,7 +1113,7 @@ func (x *EnvironmentComponent) String() string {
 func (*EnvironmentComponent) ProtoMessage() {}
 
 func (x *EnvironmentComponent) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[15]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1103,7 +1126,7 @@ func (x *EnvironmentComponent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnvironmentComponent.ProtoReflect.Descriptor instead.
 func (*EnvironmentComponent) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{15}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *EnvironmentComponent) GetName() string {
@@ -1113,54 +1136,62 @@ func (x *EnvironmentComponent) GetName() string {
 	return ""
 }
 
-func (x *EnvironmentComponent) GetKind() v12.ComponentKind {
+func (x *EnvironmentComponent) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *EnvironmentComponent) GetKind() v11.ComponentKind {
 	if x != nil {
 		return x.Kind
 	}
-	return v12.ComponentKind(0)
+	return v11.ComponentKind(0)
 }
 
-func (x *EnvironmentComponent) GetRef() string {
+func (x *EnvironmentComponent) GetVersion() *v12.VersionRef {
 	if x != nil {
-		return x.Ref
-	}
-	return ""
-}
-
-func (x *EnvironmentComponent) GetLastRevisionId() string {
-	if x != nil {
-		return x.LastRevisionId
-	}
-	return ""
-}
-
-func (x *EnvironmentComponent) GetLastRevisionStatus() v13.RevisionStatus {
-	if x != nil {
-		return x.LastRevisionStatus
-	}
-	return v13.RevisionStatus(0)
-}
-
-func (x *EnvironmentComponent) GetLastDeployedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastDeployedAt
+		return x.Version
 	}
 	return nil
 }
 
-// ListEnvironmentComponentsRequest identifies the environment whose
-// components should be listed.
+func (x *EnvironmentComponent) GetLastApply() *LastApply {
+	if x != nil {
+		return x.LastApply
+	}
+	return nil
+}
+
+// ListEnvironmentComponentsRequest lists live components in one environment
+// or across all of them.
 type ListEnvironmentComponentsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The environment whose components should be listed (UUID).
-	EnvironmentId string `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	// The environment to list. Omitted lists across every environment.
+	EnvironmentId *string `protobuf:"bytes,5,opt,name=environment_id,json=environmentId,proto3,oneof" json:"environment_id,omitempty"`
+	// Filter expression to narrow results. Uses the Admiral filter DSL.
+	//
+	// Filterable fields:
+	//   - `name`: filter by component name.
+	//   - `kind`: filter by component kind.
+	//   - `component_id`: the registry component (`cmp-`) it runs.
+	//   - `version_id`: the registry version (`ver-`) it runs.
+	//
+	// Example: `field['component_id'] = 'cmp-7q2k9m4x8p1c' AND field['version_id'] = 'ver-3k9x2m7qpl0a'`
+	Filter string `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
+	// Maximum number of components to return per page. Defaults to 50 when
+	// omitted or 0; must not exceed 100.
+	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Opaque pagination token from a previous response.
+	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListEnvironmentComponentsRequest) Reset() {
 	*x = ListEnvironmentComponentsRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1172,7 +1203,7 @@ func (x *ListEnvironmentComponentsRequest) String() string {
 func (*ListEnvironmentComponentsRequest) ProtoMessage() {}
 
 func (x *ListEnvironmentComponentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1185,30 +1216,54 @@ func (x *ListEnvironmentComponentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEnvironmentComponentsRequest.ProtoReflect.Descriptor instead.
 func (*ListEnvironmentComponentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{16}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListEnvironmentComponentsRequest) GetEnvironmentId() string {
-	if x != nil {
-		return x.EnvironmentId
+	if x != nil && x.EnvironmentId != nil {
+		return *x.EnvironmentId
 	}
 	return ""
 }
 
-// ListEnvironmentComponentsResponse returns every active component for the
-// environment, ordered by name.
+func (x *ListEnvironmentComponentsRequest) GetFilter() string {
+	if x != nil {
+		return x.Filter
+	}
+	return ""
+}
+
+func (x *ListEnvironmentComponentsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListEnvironmentComponentsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+// ListEnvironmentComponentsResponse is a page of live components.
 type ListEnvironmentComponentsResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Active (not soft-deleted) components attached to the environment, sorted
-	// by name.
-	Components    []*EnvironmentComponent `protobuf:"bytes,1,rep,name=components,proto3" json:"components,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Live components, sorted by environment and then name.
+	Components []*EnvironmentComponent `protobuf:"bytes,1,rep,name=components,proto3" json:"components,omitempty"`
+	// Pagination token for the next page. Empty when there are no more results.
+	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	// Across environments only: how many more environments match that the
+	// caller cannot read.
+	UnreadableEnvironments int32 `protobuf:"varint,3,opt,name=unreadable_environments,json=unreadableEnvironments,proto3" json:"unreadable_environments,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *ListEnvironmentComponentsResponse) Reset() {
 	*x = ListEnvironmentComponentsResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1220,7 +1275,7 @@ func (x *ListEnvironmentComponentsResponse) String() string {
 func (*ListEnvironmentComponentsResponse) ProtoMessage() {}
 
 func (x *ListEnvironmentComponentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1233,7 +1288,7 @@ func (x *ListEnvironmentComponentsResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ListEnvironmentComponentsResponse.ProtoReflect.Descriptor instead.
 func (*ListEnvironmentComponentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{17}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListEnvironmentComponentsResponse) GetComponents() []*EnvironmentComponent {
@@ -1243,72 +1298,278 @@ func (x *ListEnvironmentComponentsResponse) GetComponents() []*EnvironmentCompon
 	return nil
 }
 
+func (x *ListEnvironmentComponentsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
+func (x *ListEnvironmentComponentsResponse) GetUnreadableEnvironments() int32 {
+	if x != nil {
+		return x.UnreadableEnvironments
+	}
+	return 0
+}
+
+// GetEnvironmentComponentValuesRequest names one live component.
+type GetEnvironmentComponentValuesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EnvironmentId string                 `protobuf:"bytes,1,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
+	Component     string                 `protobuf:"bytes,2,opt,name=component,proto3" json:"component,omitempty"`
+	// Return the whole tree it receives, not only the values set on it.
+	Effective     bool `protobuf:"varint,3,opt,name=effective,proto3" json:"effective,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEnvironmentComponentValuesRequest) Reset() {
+	*x = GetEnvironmentComponentValuesRequest{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEnvironmentComponentValuesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEnvironmentComponentValuesRequest) ProtoMessage() {}
+
+func (x *GetEnvironmentComponentValuesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEnvironmentComponentValuesRequest.ProtoReflect.Descriptor instead.
+func (*GetEnvironmentComponentValuesRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GetEnvironmentComponentValuesRequest) GetEnvironmentId() string {
+	if x != nil {
+		return x.EnvironmentId
+	}
+	return ""
+}
+
+func (x *GetEnvironmentComponentValuesRequest) GetComponent() string {
+	if x != nil {
+		return x.Component
+	}
+	return ""
+}
+
+func (x *GetEnvironmentComponentValuesRequest) GetEffective() bool {
+	if x != nil {
+		return x.Effective
+	}
+	return false
+}
+
+// GetEnvironmentComponentValuesResponse is the component's values tree.
+type GetEnvironmentComponentValuesResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// A JSON object.
+	TreeJson string `protobuf:"bytes,1,opt,name=tree_json,json=treeJson,proto3" json:"tree_json,omitempty"`
+	// With `effective`, where each leaf came from; empty otherwise.
+	Sources []*v12.ValueSource `protobuf:"bytes,2,rep,name=sources,proto3" json:"sources,omitempty"`
+	// The apply that last changed it.
+	LastApply     *LastApply `protobuf:"bytes,3,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEnvironmentComponentValuesResponse) Reset() {
+	*x = GetEnvironmentComponentValuesResponse{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEnvironmentComponentValuesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEnvironmentComponentValuesResponse) ProtoMessage() {}
+
+func (x *GetEnvironmentComponentValuesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEnvironmentComponentValuesResponse.ProtoReflect.Descriptor instead.
+func (*GetEnvironmentComponentValuesResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetEnvironmentComponentValuesResponse) GetTreeJson() string {
+	if x != nil {
+		return x.TreeJson
+	}
+	return ""
+}
+
+func (x *GetEnvironmentComponentValuesResponse) GetSources() []*v12.ValueSource {
+	if x != nil {
+		return x.Sources
+	}
+	return nil
+}
+
+func (x *GetEnvironmentComponentValuesResponse) GetLastApply() *LastApply {
+	if x != nil {
+		return x.LastApply
+	}
+	return nil
+}
+
+// GroupApproval is how many members of one group must approve.
+type ApprovalRule_GroupApproval struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Approvals     int32                  `protobuf:"varint,2,opt,name=approvals,proto3" json:"approvals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApprovalRule_GroupApproval) Reset() {
+	*x = ApprovalRule_GroupApproval{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApprovalRule_GroupApproval) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApprovalRule_GroupApproval) ProtoMessage() {}
+
+func (x *ApprovalRule_GroupApproval) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApprovalRule_GroupApproval.ProtoReflect.Descriptor instead.
+func (*ApprovalRule_GroupApproval) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{3, 0}
+}
+
+func (x *ApprovalRule_GroupApproval) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *ApprovalRule_GroupApproval) GetApprovals() int32 {
+	if x != nil {
+		return x.Approvals
+	}
+	return 0
+}
+
 var File_admiral_api_environment_v1_environment_proto protoreflect.FileDescriptor
 
 const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a\x1cadmiral/api/run/v1/run.proto\x1a&admiral/api/variable/v1/variable.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\a\n" +
-	"\vEnvironment\x12\x1e\n" +
-	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x125\n" +
-	"\x0eapplication_id\x18\x02 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\rapplicationId\x12@\n" +
+	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a(admiral/api/changeset/v1/changeset.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8e\b\n" +
+	"\vEnvironment\x12,\n" +
+	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\x02id\x12C\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^app-[0-9a-z]+$R\rapplicationId\x12@\n" +
 	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12d\n" +
-	"\x06labels\x18\a \x03(\v23.admiral.api.environment.v1.Environment.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x123\n" +
-	"\x13has_pending_changes\x18\b \x01(\bB\x03\xe0A\x03R\x11hasPendingChanges\x12I\n" +
-	"\x10last_deployed_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\x0elastDeployedAt\x12?\n" +
+	"\x06labels\x18\a \x03(\v23.admiral.api.environment.v1.Environment.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12?\n" +
 	"\n" +
 	"created_by\x18\n" +
 	" \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
 	"created_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
-	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x12L\n" +
-	"\n" +
-	"kubernetes\x18\r \x01(\v2,.admiral.api.environment.v1.KubernetesTargetR\n" +
-	"kubernetes\x12+\n" +
-	"\x11approval_required\x18\x0e \x01(\bR\x10approvalRequired\x12#\n" +
+	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x12C\n" +
+	"\x06agents\x18\x12 \x03(\v2+.admiral.api.environment.v1.AgentAssignmentR\x06agents\x12D\n" +
+	"\bapproval\x18\x13 \x01(\v2(.admiral.api.environment.v1.ApprovalRuleR\bapproval\x12#\n" +
 	"\n" +
 	"generation\x18\x0f \x01(\x03B\x03\xe0A\x03R\n" +
-	"generation\x125\n" +
-	"\x15held_by_change_set_id\x18\x10 \x01(\tB\x03\xe0A\x03R\x11heldByChangeSetId\x12\x19\n" +
-	"\x05prune\x18\x11 \x01(\bH\x00R\x05prune\x88\x01\x01\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\b\n" +
-	"\x06_prune\"\xaf\x02\n" +
-	"\x10KubernetesTarget\x12N\n" +
-	"\tnamespace\x18\x01 \x01(\tB0\xbaH-r+\x18?2'^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)?$R\tnamespace\x120\n" +
-	"\x11create_namespaces\x18\x02 \x01(\bH\x00R\x10createNamespaces\x88\x01\x01\x12[\n" +
-	"\fcapabilities\x18\x03 \x01(\v22.admiral.api.environment.v1.KubernetesCapabilitiesB\x03\xe0A\x03R\fcapabilities\x12&\n" +
-	"\bagent_id\x18\x04 \x01(\tB\v\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\aagentIdB\x14\n" +
-	"\x12_create_namespaces\"\x9b\x01\n" +
-	"\x16KubernetesCapabilities\x12!\n" +
-	"\fkube_version\x18\x01 \x01(\tR\vkubeVersion\x12!\n" +
-	"\fapi_versions\x18\x02 \x03(\tR\vapiVersions\x12;\n" +
-	"\vreported_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"reportedAt\"\xbb\x03\n" +
-	"\x18CreateEnvironmentRequest\x122\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12C\n" +
-	"\x04name\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12q\n" +
-	"\x06labels\x18\x06 \x03(\v2@.admiral.api.environment.v1.CreateEnvironmentRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12L\n" +
+	"generation\x129\n" +
+	"\x04hold\x18\x14 \x01(\v2 .admiral.api.environment.v1.HoldB\x03\xe0A\x03R\x04hold\x12I\n" +
 	"\n" +
-	"kubernetes\x18\a \x01(\v2,.admiral.api.environment.v1.KubernetesTargetR\n" +
-	"kubernetes\x1a9\n" +
+	"last_apply\x18\x15 \x01(\v2%.admiral.api.environment.v1.LastApplyB\x03\xe0A\x03R\tlastApply\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"f\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\b\x10\tJ\x04\b\t\x10\n" +
+	"J\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x13has_pending_changesR\x10last_deployed_atR\n" +
+	"kubernetesR\x11approval_requiredR\x15held_by_change_set_idR\x05prune\"\x9c\x03\n" +
+	"\x0fAgentAssignment\x124\n" +
+	"\bagent_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^agt-[0-9a-z]+$R\aagentId\x12)\n" +
+	"\x02id\x18\x03 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^asg-[0-9a-z]+$R\x02id\x12P\n" +
+	"\fplan_profile\x18\x06 \x01(\tB-\xbaH*r(\x18?2$^([a-z]([a-z0-9-]{0,61}[a-z0-9])?)?$R\vplanProfile\x12R\n" +
+	"\rapply_profile\x18\a \x01(\tB-\xbaH*r(\x18?2$^([a-z]([a-z0-9-]{0,61}[a-z0-9])?)?$R\fapplyProfile\x12P\n" +
+	"\n" +
+	"kubernetes\x18\x02 \x01(\v2..admiral.api.environment.v1.KubernetesSettingsH\x00R\n" +
+	"kubernetesB\n" +
+	"\n" +
+	"\bsettingsJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06R\x06targetR\x10cloud_identities\"\xe0\x01\n" +
+	"\x12KubernetesSettings\x12]\n" +
+	"\x11default_namespace\x18\x01 \x01(\tB0\xbaH-r+\x18?2'^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)?$R\x10defaultNamespace\x120\n" +
+	"\x11create_namespaces\x18\x02 \x01(\bH\x00R\x10createNamespaces\x88\x01\x01\x12\x19\n" +
+	"\x05prune\x18\x03 \x01(\bH\x01R\x05prune\x88\x01\x01B\x14\n" +
+	"\x12_create_namespacesB\b\n" +
+	"\x06_prune\"\xef\x02\n" +
+	"\fApprovalRule\x126\n" +
+	"\x12required_approvals\x18\x01 \x01(\x05B\a\xbaH\x04\x1a\x02(\x00R\x11requiredApprovals\x12\xb8\x01\n" +
+	"\x06groups\x18\x02 \x03(\v26.admiral.api.environment.v1.ApprovalRule.GroupApprovalBh\xbaHe\xba\x01]\n" +
+	"\x1bapproval_rule.unique_groups\x12\x1ca group appears at most once\x1a this.map(g, g.group_id).unique()\x92\x01\x02\x10\x10R\x06groups\x1al\n" +
+	"\rGroupApproval\x124\n" +
+	"\bgroup_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^grp-[0-9a-z]+$R\agroupId\x12%\n" +
+	"\tapprovals\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\tapprovals\"y\n" +
+	"\x04Hold\x12<\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\x18\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\vchangeSetId\x123\n" +
+	"\aheld_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x06heldAt\"\xc0\x01\n" +
+	"\tLastApply\x12<\n" +
+	"\rchange_set_id\x18\x01 \x01(\tB\x18\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\vchangeSetId\x12:\n" +
+	"\vrevision_id\x18\x02 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^rev-[0-9a-z]+$R\n" +
+	"revisionId\x129\n" +
+	"\n" +
+	"applied_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tappliedAt\"\xb2\x01\n" +
+	"\x18CreateEnvironmentRequest\x12@\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^app-[0-9a-z]+$R\rapplicationId\x12T\n" +
+	"\venvironment\x18\x02 \x01(\v2'.admiral.api.environment.v1.EnvironmentB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\venvironment\"f\n" +
 	"\x19CreateEnvironmentResponse\x12I\n" +
-	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"K\n" +
-	"\x15GetEnvironmentRequest\x122\n" +
-	"\x0eenvironment_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"c\n" +
+	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"Y\n" +
+	"\x15GetEnvironmentRequest\x12@\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^env-[0-9a-z]+$R\renvironmentId\"c\n" +
 	"\x16GetEnvironmentResponse\x12I\n" +
-	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"\x82\x01\n" +
-	"\x17ListEnvironmentsRequest\x12 \n" +
+	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"\xd9\x01\n" +
+	"\x17ListEnvironmentsRequest\x12B\n" +
+	"\x0eapplication_id\x18\x04 \x01(\tB\x16\xbaH\x13r\x112\x0f^app-[0-9a-z]+$H\x00R\rapplicationId\x88\x01\x01\x12 \n" +
 	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8f\x01\n" +
+	"page_token\x18\x03 \x01(\tR\tpageTokenB\x11\n" +
+	"\x0f_application_id\"\x8f\x01\n" +
 	"\x18ListEnvironmentsResponse\x12K\n" +
 	"\fenvironments\x18\x01 \x03(\v2'.admiral.api.environment.v1.EnvironmentR\fenvironments\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xad\x01\n" +
@@ -1317,33 +1578,41 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"f\n" +
 	"\x19UpdateEnvironmentResponse\x12I\n" +
-	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"d\n" +
-	"\x18DeleteEnvironmentRequest\x122\n" +
-	"\x0eenvironment_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12\x14\n" +
-	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
-	"\x19DeleteEnvironmentResponse\"\xbe\x01\n" +
-	"\x1fListEnvironmentVariablesRequest\x122\n" +
-	"\x0eenvironment_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\x12 \n" +
+	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"i\n" +
+	"\x18DeleteEnvironmentRequest\x12@\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^env-[0-9a-z]+$R\renvironmentIdJ\x04\b\x02\x10\x03R\x05force\"\x1b\n" +
+	"\x19DeleteEnvironmentResponse\"\x88\x03\n" +
+	"\x14EnvironmentComponent\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12C\n" +
+	"\x0eenvironment_id\x18\f \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\renvironmentId\x12:\n" +
+	"\x04kind\x18\x05 \x01(\x0e2&.admiral.api.registry.v1.ComponentKindR\x04kind\x12>\n" +
+	"\aversion\x18\n" +
+	" \x01(\v2$.admiral.api.changeset.v1.VersionRefR\aversion\x12D\n" +
+	"\n" +
+	"last_apply\x18\v \x01(\v2%.admiral.api.environment.v1.LastApplyR\tlastApplyJ\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
+	"R\x03refR\x10last_revision_idR\x14last_revision_statusR\x10last_deployed_at\"\xe8\x01\n" +
+	" ListEnvironmentComponentsRequest\x12B\n" +
+	"\x0eenvironment_id\x18\x05 \x01(\tB\x16\xbaH\x13r\x112\x0f^env-[0-9a-z]+$H\x00R\renvironmentId\x88\x01\x01\x12 \n" +
 	"\x06filter\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x03 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\"\x8b\x01\n" +
-	" ListEnvironmentVariablesResponse\x12?\n" +
-	"\tvariables\x18\x01 \x03(\v2!.admiral.api.variable.v1.VariableR\tvariables\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xbe\x02\n" +
-	"\x14EnvironmentComponent\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12:\n" +
-	"\x04kind\x18\x05 \x01(\x0e2&.admiral.api.registry.v1.ComponentKindR\x04kind\x12\x10\n" +
-	"\x03ref\x18\x06 \x01(\tR\x03ref\x12(\n" +
-	"\x10last_revision_id\x18\a \x01(\tR\x0elastRevisionId\x12T\n" +
-	"\x14last_revision_status\x18\b \x01(\x0e2\".admiral.api.run.v1.RevisionStatusR\x12lastRevisionStatus\x12D\n" +
-	"\x10last_deployed_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x0elastDeployedAt\"V\n" +
-	" ListEnvironmentComponentsRequest\x122\n" +
-	"\x0eenvironment_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\renvironmentId\"u\n" +
+	"page_token\x18\x04 \x01(\tR\tpageTokenB\x11\n" +
+	"\x0f_environment_idJ\x04\b\x01\x10\x02\"\xd6\x01\n" +
 	"!ListEnvironmentComponentsResponse\x12P\n" +
 	"\n" +
 	"components\x18\x01 \x03(\v20.admiral.api.environment.v1.EnvironmentComponentR\n" +
-	"components2\x88\r\n" +
+	"components\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x127\n" +
+	"\x17unreadable_environments\x18\x03 \x01(\x05R\x16unreadableEnvironments\"\xd5\x01\n" +
+	"$GetEnvironmentComponentValuesRequest\x12@\n" +
+	"\x0eenvironment_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^env-[0-9a-z]+$R\renvironmentId\x12M\n" +
+	"\tcomponent\x18\x02 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x1852!^[a-z]([a-z0-9-]{0,51}[a-z0-9])?$R\tcomponent\x12\x1c\n" +
+	"\teffective\x18\x03 \x01(\bR\teffective\"\xcb\x01\n" +
+	"%GetEnvironmentComponentValuesResponse\x12\x1b\n" +
+	"\ttree_json\x18\x01 \x01(\tR\btreeJson\x12?\n" +
+	"\asources\x18\x02 \x03(\v2%.admiral.api.changeset.v1.ValueSourceR\asources\x12D\n" +
+	"\n" +
+	"last_apply\x18\x03 \x01(\v2%.admiral.api.environment.v1.LastApplyR\tlastApply2\xa6\r\n" +
 	"\x0eEnvironmentAPI\x12\xd4\x01\n" +
 	"\x11CreateEnvironment\x124.admiral.api.environment.v1.CreateEnvironmentRequest\x1a5.admiral.api.environment.v1.CreateEnvironmentResponse\"R\xbaG%\n" +
 	"\fEnvironments\x12\x15Create an environment\xa2\x97$\v\n" +
@@ -1361,15 +1630,15 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\tenv:write\x82\xd3\xe4\x93\x02&:\x01*2!/v1/environments/{environment.id}\x12\xe2\x01\n" +
 	"\x11DeleteEnvironment\x124.admiral.api.environment.v1.DeleteEnvironmentRequest\x1a5.admiral.api.environment.v1.DeleteEnvironmentResponse\"`\xbaG%\n" +
 	"\fEnvironments\x12\x15Delete an environment\xa2\x97$\v\n" +
-	"\tenv:write\x82\xd3\xe4\x93\x02#*!/v1/environments/{environment_id}\x12\x8c\x02\n" +
-	"\x18ListEnvironmentVariables\x12;.admiral.api.environment.v1.ListEnvironmentVariablesRequest\x1a<.admiral.api.environment.v1.ListEnvironmentVariablesResponse\"u\xbaG1\n" +
-	"\fEnvironments\x12!List variables for an environment\xa2\x97$\n" +
+	"\tenv:write\x82\xd3\xe4\x93\x02#*!/v1/environments/{environment_id}\x12\x92\x02\n" +
+	"\x19ListEnvironmentComponents\x12<.admiral.api.environment.v1.ListEnvironmentComponentsRequest\x1a=.admiral.api.environment.v1.ListEnvironmentComponentsResponse\"x\xbaGE\n" +
+	"\fEnvironments\x125List live components in one environment or across all\xa2\x97$\n" +
 	"\n" +
-	"\bvar:read\x82\xd3\xe4\x93\x02-\x12+/v1/environments/{environment_id}/variables\x12\x99\x02\n" +
-	"\x19ListEnvironmentComponents\x12<.admiral.api.environment.v1.ListEnvironmentComponentsRequest\x1a=.admiral.api.environment.v1.ListEnvironmentComponentsResponse\"\x7f\xbaG:\n" +
-	"\fEnvironments\x12*List components deployed to an environment\xa2\x97$\n" +
+	"\benv:read\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/environment-components\x12\xb1\x02\n" +
+	"\x1dGetEnvironmentComponentValues\x12@.admiral.api.environment.v1.GetEnvironmentComponentValuesRequest\x1aA.admiral.api.environment.v1.GetEnvironmentComponentValuesResponse\"\x8a\x01\xbaG2\n" +
+	"\fEnvironments\x12\"Retrieve a live component's values\xa2\x97$\n" +
 	"\n" +
-	"\benv:read\x82\xd3\xe4\x93\x02.\x12,/v1/environments/{environment_id}/componentsB\xff\x01\n" +
+	"\benv:read\x82\xd3\xe4\x93\x02A\x12?/v1/environments/{environment_id}/components/{component}/valuesB\xff\x01\n" +
 	"\x1ecom.admiral.api.environment.v1B\x10EnvironmentProtoP\x01Z@go.admiral.io/sdk/proto/admiral/api/environment/v1;environmentv1\xa2\x02\x03AAE\xaa\x02\x1aAdmiral.Api.Environment.V1\xca\x02\x1aAdmiral\\Api\\Environment\\V1\xe2\x02&Admiral\\Api\\Environment\\V1\\GPBMetadata\xea\x02\x1dAdmiral::Api::Environment::V1b\x06proto3"
 
 var (
@@ -1384,76 +1653,83 @@ func file_admiral_api_environment_v1_environment_proto_rawDescGZIP() []byte {
 	return file_admiral_api_environment_v1_environment_proto_rawDescData
 }
 
-var file_admiral_api_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_admiral_api_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_admiral_api_environment_v1_environment_proto_goTypes = []any{
-	(*Environment)(nil),                       // 0: admiral.api.environment.v1.Environment
-	(*KubernetesTarget)(nil),                  // 1: admiral.api.environment.v1.KubernetesTarget
-	(*KubernetesCapabilities)(nil),            // 2: admiral.api.environment.v1.KubernetesCapabilities
-	(*CreateEnvironmentRequest)(nil),          // 3: admiral.api.environment.v1.CreateEnvironmentRequest
-	(*CreateEnvironmentResponse)(nil),         // 4: admiral.api.environment.v1.CreateEnvironmentResponse
-	(*GetEnvironmentRequest)(nil),             // 5: admiral.api.environment.v1.GetEnvironmentRequest
-	(*GetEnvironmentResponse)(nil),            // 6: admiral.api.environment.v1.GetEnvironmentResponse
-	(*ListEnvironmentsRequest)(nil),           // 7: admiral.api.environment.v1.ListEnvironmentsRequest
-	(*ListEnvironmentsResponse)(nil),          // 8: admiral.api.environment.v1.ListEnvironmentsResponse
-	(*UpdateEnvironmentRequest)(nil),          // 9: admiral.api.environment.v1.UpdateEnvironmentRequest
-	(*UpdateEnvironmentResponse)(nil),         // 10: admiral.api.environment.v1.UpdateEnvironmentResponse
-	(*DeleteEnvironmentRequest)(nil),          // 11: admiral.api.environment.v1.DeleteEnvironmentRequest
-	(*DeleteEnvironmentResponse)(nil),         // 12: admiral.api.environment.v1.DeleteEnvironmentResponse
-	(*ListEnvironmentVariablesRequest)(nil),   // 13: admiral.api.environment.v1.ListEnvironmentVariablesRequest
-	(*ListEnvironmentVariablesResponse)(nil),  // 14: admiral.api.environment.v1.ListEnvironmentVariablesResponse
-	(*EnvironmentComponent)(nil),              // 15: admiral.api.environment.v1.EnvironmentComponent
-	(*ListEnvironmentComponentsRequest)(nil),  // 16: admiral.api.environment.v1.ListEnvironmentComponentsRequest
-	(*ListEnvironmentComponentsResponse)(nil), // 17: admiral.api.environment.v1.ListEnvironmentComponentsResponse
-	nil,                           // 18: admiral.api.environment.v1.Environment.LabelsEntry
-	nil,                           // 19: admiral.api.environment.v1.CreateEnvironmentRequest.LabelsEntry
-	(*timestamppb.Timestamp)(nil), // 20: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),           // 21: admiral.common.v1.ActorRef
-	(*fieldmaskpb.FieldMask)(nil), // 22: google.protobuf.FieldMask
-	(*v11.Variable)(nil),          // 23: admiral.api.variable.v1.Variable
-	(v12.ComponentKind)(0),        // 24: admiral.api.registry.v1.ComponentKind
-	(v13.RevisionStatus)(0),       // 25: admiral.api.run.v1.RevisionStatus
+	(*Environment)(nil),                           // 0: admiral.api.environment.v1.Environment
+	(*AgentAssignment)(nil),                       // 1: admiral.api.environment.v1.AgentAssignment
+	(*KubernetesSettings)(nil),                    // 2: admiral.api.environment.v1.KubernetesSettings
+	(*ApprovalRule)(nil),                          // 3: admiral.api.environment.v1.ApprovalRule
+	(*Hold)(nil),                                  // 4: admiral.api.environment.v1.Hold
+	(*LastApply)(nil),                             // 5: admiral.api.environment.v1.LastApply
+	(*CreateEnvironmentRequest)(nil),              // 6: admiral.api.environment.v1.CreateEnvironmentRequest
+	(*CreateEnvironmentResponse)(nil),             // 7: admiral.api.environment.v1.CreateEnvironmentResponse
+	(*GetEnvironmentRequest)(nil),                 // 8: admiral.api.environment.v1.GetEnvironmentRequest
+	(*GetEnvironmentResponse)(nil),                // 9: admiral.api.environment.v1.GetEnvironmentResponse
+	(*ListEnvironmentsRequest)(nil),               // 10: admiral.api.environment.v1.ListEnvironmentsRequest
+	(*ListEnvironmentsResponse)(nil),              // 11: admiral.api.environment.v1.ListEnvironmentsResponse
+	(*UpdateEnvironmentRequest)(nil),              // 12: admiral.api.environment.v1.UpdateEnvironmentRequest
+	(*UpdateEnvironmentResponse)(nil),             // 13: admiral.api.environment.v1.UpdateEnvironmentResponse
+	(*DeleteEnvironmentRequest)(nil),              // 14: admiral.api.environment.v1.DeleteEnvironmentRequest
+	(*DeleteEnvironmentResponse)(nil),             // 15: admiral.api.environment.v1.DeleteEnvironmentResponse
+	(*EnvironmentComponent)(nil),                  // 16: admiral.api.environment.v1.EnvironmentComponent
+	(*ListEnvironmentComponentsRequest)(nil),      // 17: admiral.api.environment.v1.ListEnvironmentComponentsRequest
+	(*ListEnvironmentComponentsResponse)(nil),     // 18: admiral.api.environment.v1.ListEnvironmentComponentsResponse
+	(*GetEnvironmentComponentValuesRequest)(nil),  // 19: admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
+	(*GetEnvironmentComponentValuesResponse)(nil), // 20: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
+	nil,                                // 21: admiral.api.environment.v1.Environment.LabelsEntry
+	(*ApprovalRule_GroupApproval)(nil), // 22: admiral.api.environment.v1.ApprovalRule.GroupApproval
+	(*v1.ActorRef)(nil),                // 23: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),      // 24: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),      // 25: google.protobuf.FieldMask
+	(v11.ComponentKind)(0),             // 26: admiral.api.registry.v1.ComponentKind
+	(*v12.VersionRef)(nil),             // 27: admiral.api.changeset.v1.VersionRef
+	(*v12.ValueSource)(nil),            // 28: admiral.api.changeset.v1.ValueSource
 }
 var file_admiral_api_environment_v1_environment_proto_depIdxs = []int32{
-	18, // 0: admiral.api.environment.v1.Environment.labels:type_name -> admiral.api.environment.v1.Environment.LabelsEntry
-	20, // 1: admiral.api.environment.v1.Environment.last_deployed_at:type_name -> google.protobuf.Timestamp
-	21, // 2: admiral.api.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
-	20, // 3: admiral.api.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
-	20, // 4: admiral.api.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
-	1,  // 5: admiral.api.environment.v1.Environment.kubernetes:type_name -> admiral.api.environment.v1.KubernetesTarget
-	2,  // 6: admiral.api.environment.v1.KubernetesTarget.capabilities:type_name -> admiral.api.environment.v1.KubernetesCapabilities
-	20, // 7: admiral.api.environment.v1.KubernetesCapabilities.reported_at:type_name -> google.protobuf.Timestamp
-	19, // 8: admiral.api.environment.v1.CreateEnvironmentRequest.labels:type_name -> admiral.api.environment.v1.CreateEnvironmentRequest.LabelsEntry
-	1,  // 9: admiral.api.environment.v1.CreateEnvironmentRequest.kubernetes:type_name -> admiral.api.environment.v1.KubernetesTarget
-	0,  // 10: admiral.api.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	0,  // 11: admiral.api.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	0,  // 12: admiral.api.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.api.environment.v1.Environment
-	0,  // 13: admiral.api.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
-	22, // 14: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	0,  // 15: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	23, // 16: admiral.api.environment.v1.ListEnvironmentVariablesResponse.variables:type_name -> admiral.api.variable.v1.Variable
-	24, // 17: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
-	25, // 18: admiral.api.environment.v1.EnvironmentComponent.last_revision_status:type_name -> admiral.api.run.v1.RevisionStatus
-	20, // 19: admiral.api.environment.v1.EnvironmentComponent.last_deployed_at:type_name -> google.protobuf.Timestamp
-	15, // 20: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent
-	3,  // 21: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.api.environment.v1.CreateEnvironmentRequest
-	5,  // 22: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.api.environment.v1.GetEnvironmentRequest
-	7,  // 23: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.api.environment.v1.ListEnvironmentsRequest
-	9,  // 24: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.api.environment.v1.UpdateEnvironmentRequest
-	11, // 25: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.api.environment.v1.DeleteEnvironmentRequest
-	13, // 26: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentVariables:input_type -> admiral.api.environment.v1.ListEnvironmentVariablesRequest
-	16, // 27: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.api.environment.v1.ListEnvironmentComponentsRequest
-	4,  // 28: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.api.environment.v1.CreateEnvironmentResponse
-	6,  // 29: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.api.environment.v1.GetEnvironmentResponse
-	8,  // 30: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.api.environment.v1.ListEnvironmentsResponse
-	10, // 31: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.api.environment.v1.UpdateEnvironmentResponse
-	12, // 32: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.api.environment.v1.DeleteEnvironmentResponse
-	14, // 33: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentVariables:output_type -> admiral.api.environment.v1.ListEnvironmentVariablesResponse
-	17, // 34: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.api.environment.v1.ListEnvironmentComponentsResponse
-	28, // [28:35] is the sub-list for method output_type
-	21, // [21:28] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	21, // 0: admiral.api.environment.v1.Environment.labels:type_name -> admiral.api.environment.v1.Environment.LabelsEntry
+	23, // 1: admiral.api.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
+	24, // 2: admiral.api.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
+	24, // 3: admiral.api.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
+	1,  // 4: admiral.api.environment.v1.Environment.agents:type_name -> admiral.api.environment.v1.AgentAssignment
+	3,  // 5: admiral.api.environment.v1.Environment.approval:type_name -> admiral.api.environment.v1.ApprovalRule
+	4,  // 6: admiral.api.environment.v1.Environment.hold:type_name -> admiral.api.environment.v1.Hold
+	5,  // 7: admiral.api.environment.v1.Environment.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	2,  // 8: admiral.api.environment.v1.AgentAssignment.kubernetes:type_name -> admiral.api.environment.v1.KubernetesSettings
+	22, // 9: admiral.api.environment.v1.ApprovalRule.groups:type_name -> admiral.api.environment.v1.ApprovalRule.GroupApproval
+	24, // 10: admiral.api.environment.v1.Hold.held_at:type_name -> google.protobuf.Timestamp
+	24, // 11: admiral.api.environment.v1.LastApply.applied_at:type_name -> google.protobuf.Timestamp
+	0,  // 12: admiral.api.environment.v1.CreateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
+	0,  // 13: admiral.api.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	0,  // 14: admiral.api.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	0,  // 15: admiral.api.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.api.environment.v1.Environment
+	0,  // 16: admiral.api.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
+	25, // 17: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	0,  // 18: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	26, // 19: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
+	27, // 20: admiral.api.environment.v1.EnvironmentComponent.version:type_name -> admiral.api.changeset.v1.VersionRef
+	5,  // 21: admiral.api.environment.v1.EnvironmentComponent.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	16, // 22: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent
+	28, // 23: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.sources:type_name -> admiral.api.changeset.v1.ValueSource
+	5,  // 24: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	6,  // 25: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.api.environment.v1.CreateEnvironmentRequest
+	8,  // 26: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.api.environment.v1.GetEnvironmentRequest
+	10, // 27: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.api.environment.v1.ListEnvironmentsRequest
+	12, // 28: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.api.environment.v1.UpdateEnvironmentRequest
+	14, // 29: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.api.environment.v1.DeleteEnvironmentRequest
+	17, // 30: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.api.environment.v1.ListEnvironmentComponentsRequest
+	19, // 31: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:input_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
+	7,  // 32: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.api.environment.v1.CreateEnvironmentResponse
+	9,  // 33: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.api.environment.v1.GetEnvironmentResponse
+	11, // 34: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.api.environment.v1.ListEnvironmentsResponse
+	13, // 35: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.api.environment.v1.UpdateEnvironmentResponse
+	15, // 36: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.api.environment.v1.DeleteEnvironmentResponse
+	18, // 37: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.api.environment.v1.ListEnvironmentComponentsResponse
+	20, // 38: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:output_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
+	32, // [32:39] is the sub-list for method output_type
+	25, // [25:32] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_environment_v1_environment_proto_init() }
@@ -1461,15 +1737,19 @@ func file_admiral_api_environment_v1_environment_proto_init() {
 	if File_admiral_api_environment_v1_environment_proto != nil {
 		return
 	}
-	file_admiral_api_environment_v1_environment_proto_msgTypes[0].OneofWrappers = []any{}
-	file_admiral_api_environment_v1_environment_proto_msgTypes[1].OneofWrappers = []any{}
+	file_admiral_api_environment_v1_environment_proto_msgTypes[1].OneofWrappers = []any{
+		(*AgentAssignment_Kubernetes)(nil),
+	}
+	file_admiral_api_environment_v1_environment_proto_msgTypes[2].OneofWrappers = []any{}
+	file_admiral_api_environment_v1_environment_proto_msgTypes[10].OneofWrappers = []any{}
+	file_admiral_api_environment_v1_environment_proto_msgTypes[17].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_environment_v1_environment_proto_rawDesc), len(file_admiral_api_environment_v1_environment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

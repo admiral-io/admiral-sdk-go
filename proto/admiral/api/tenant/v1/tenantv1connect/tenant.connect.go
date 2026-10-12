@@ -5,38 +5,46 @@
 package tenantv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// TenantAPIName is the fully-qualified name of the TenantAPI service.
 	TenantAPIName = "admiral.api.tenant.v1.TenantAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// TenantAPIGetTenantProcedure is the fully-qualified name of the TenantAPI's GetTenant RPC.
+	// TenantAPIGetTenantProcedure is the procedure name of the TenantAPI's GetTenant RPC.
 	TenantAPIGetTenantProcedure = "/admiral.api.tenant.v1.TenantAPI/GetTenant"
-	// TenantAPIUpdateTenantProcedure is the fully-qualified name of the TenantAPI's UpdateTenant RPC.
+	// TenantAPIUpdateTenantProcedure is the procedure name of the TenantAPI's UpdateTenant RPC.
 	TenantAPIUpdateTenantProcedure = "/admiral.api.tenant.v1.TenantAPI/UpdateTenant"
+)
+
+var (
+	tenantAPIGetTenantSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_tenant_v1_tenant_proto.Services().ByName("TenantAPI").Methods().ByName("GetTenant"),
+			Procedure:  TenantAPIGetTenantProcedure,
+		}
+	})
+	tenantAPIUpdateTenantSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_tenant_v1_tenant_proto.Services().ByName("TenantAPI").Methods().ByName("UpdateTenant"),
+			Procedure:  TenantAPIUpdateTenantProcedure,
+		}
+	})
 )
 
 // TenantAPIClient is a client for the admiral.api.tenant.v1.TenantAPI service.
@@ -44,57 +52,21 @@ type TenantAPIClient interface {
 	// GetTenant returns the caller's own tenant.
 	//
 	// Scope: `tenant:read`
-	GetTenant(context.Context, *connect.Request[v1.GetTenantRequest]) (*connect.Response[v1.GetTenantResponse], error)
+	GetTenant(context.Context, *v1.GetTenantRequest) (*v1.GetTenantResponse, error)
 	// UpdateTenant updates the caller's own tenant's mutable settings.
 	//
-	// Only `display_name` and `labels` are mutable. `slug` is part of the
-	// account's identity and `status` is set by lifecycle operations, neither of
-	// which a tenant performs on itself.
+	// Only `display_name` is mutable. `slug` is part of the account's identity
+	// and `status` is set by lifecycle operations, neither of which a tenant
+	// performs on itself. The logo is set in the console.
 	//
 	// Scope: `tenant:write`
-	UpdateTenant(context.Context, *connect.Request[v1.UpdateTenantRequest]) (*connect.Response[v1.UpdateTenantResponse], error)
+	UpdateTenant(context.Context, *v1.UpdateTenantRequest) (*v1.UpdateTenantResponse, error)
 }
 
-// NewTenantAPIClient constructs a client for the admiral.api.tenant.v1.TenantAPI service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewTenantAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) TenantAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	tenantAPIMethods := v1.File_admiral_api_tenant_v1_tenant_proto.Services().ByName("TenantAPI").Methods()
-	return &tenantAPIClient{
-		getTenant: connect.NewClient[v1.GetTenantRequest, v1.GetTenantResponse](
-			httpClient,
-			baseURL+TenantAPIGetTenantProcedure,
-			connect.WithSchema(tenantAPIMethods.ByName("GetTenant")),
-			connect.WithClientOptions(opts...),
-		),
-		updateTenant: connect.NewClient[v1.UpdateTenantRequest, v1.UpdateTenantResponse](
-			httpClient,
-			baseURL+TenantAPIUpdateTenantProcedure,
-			connect.WithSchema(tenantAPIMethods.ByName("UpdateTenant")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// tenantAPIClient implements TenantAPIClient.
-type tenantAPIClient struct {
-	getTenant    *connect.Client[v1.GetTenantRequest, v1.GetTenantResponse]
-	updateTenant *connect.Client[v1.UpdateTenantRequest, v1.UpdateTenantResponse]
-}
-
-// GetTenant calls admiral.api.tenant.v1.TenantAPI.GetTenant.
-func (c *tenantAPIClient) GetTenant(ctx context.Context, req *connect.Request[v1.GetTenantRequest]) (*connect.Response[v1.GetTenantResponse], error) {
-	return c.getTenant.CallUnary(ctx, req)
-}
-
-// UpdateTenant calls admiral.api.tenant.v1.TenantAPI.UpdateTenant.
-func (c *tenantAPIClient) UpdateTenant(ctx context.Context, req *connect.Request[v1.UpdateTenantRequest]) (*connect.Response[v1.UpdateTenantResponse], error) {
-	return c.updateTenant.CallUnary(ctx, req)
+// NewTenantAPIClient constructs a client for the admiral.api.tenant.v1.TenantAPI service. Multiple
+// service clients may share a single connect.Client.
+func NewTenantAPIClient(client *connect.Client) TenantAPIClient {
+	return &tenantAPIClient{client: client}
 }
 
 // TenantAPIHandler is an implementation of the admiral.api.tenant.v1.TenantAPI service.
@@ -102,55 +74,80 @@ type TenantAPIHandler interface {
 	// GetTenant returns the caller's own tenant.
 	//
 	// Scope: `tenant:read`
-	GetTenant(context.Context, *connect.Request[v1.GetTenantRequest]) (*connect.Response[v1.GetTenantResponse], error)
+	GetTenant(context.Context, *v1.GetTenantRequest) (*v1.GetTenantResponse, error)
 	// UpdateTenant updates the caller's own tenant's mutable settings.
 	//
-	// Only `display_name` and `labels` are mutable. `slug` is part of the
-	// account's identity and `status` is set by lifecycle operations, neither of
-	// which a tenant performs on itself.
+	// Only `display_name` is mutable. `slug` is part of the account's identity
+	// and `status` is set by lifecycle operations, neither of which a tenant
+	// performs on itself. The logo is set in the console.
 	//
 	// Scope: `tenant:write`
-	UpdateTenant(context.Context, *connect.Request[v1.UpdateTenantRequest]) (*connect.Response[v1.UpdateTenantResponse], error)
+	UpdateTenant(context.Context, *v1.UpdateTenantRequest) (*v1.UpdateTenantResponse, error)
 }
 
-// NewTenantAPIHandler builds an HTTP handler from the service implementation. It returns the path
-// on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewTenantAPIHandler(svc TenantAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	tenantAPIMethods := v1.File_admiral_api_tenant_v1_tenant_proto.Services().ByName("TenantAPI").Methods()
-	tenantAPIGetTenantHandler := connect.NewUnaryHandler(
-		TenantAPIGetTenantProcedure,
-		svc.GetTenant,
-		connect.WithSchema(tenantAPIMethods.ByName("GetTenant")),
-		connect.WithHandlerOptions(opts...),
+// RegisterTenantAPIHandler registers svc as the admiral.api.tenant.v1.TenantAPI implementation on
+// server.
+func RegisterTenantAPIHandler(server *connect.Server, svc TenantAPIHandler) {
+	adapter := tenantAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: tenantAPIGetTenantSpec(), Handler: adapter.getTenant},
+		connect.Method{Spec: tenantAPIUpdateTenantSpec(), Handler: adapter.updateTenant},
 	)
-	tenantAPIUpdateTenantHandler := connect.NewUnaryHandler(
-		TenantAPIUpdateTenantProcedure,
-		svc.UpdateTenant,
-		connect.WithSchema(tenantAPIMethods.ByName("UpdateTenant")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.tenant.v1.TenantAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case TenantAPIGetTenantProcedure:
-			tenantAPIGetTenantHandler.ServeHTTP(w, r)
-		case TenantAPIUpdateTenantProcedure:
-			tenantAPIUpdateTenantHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedTenantAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedTenantAPIHandler struct{}
 
-func (UnimplementedTenantAPIHandler) GetTenant(context.Context, *connect.Request[v1.GetTenantRequest]) (*connect.Response[v1.GetTenantResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.tenant.v1.TenantAPI.GetTenant is not implemented"))
+func (UnimplementedTenantAPIHandler) GetTenant(context.Context, *v1.GetTenantRequest) (*v1.GetTenantResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.tenant.v1.TenantAPI.GetTenant is not implemented")
 }
 
-func (UnimplementedTenantAPIHandler) UpdateTenant(context.Context, *connect.Request[v1.UpdateTenantRequest]) (*connect.Response[v1.UpdateTenantResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.tenant.v1.TenantAPI.UpdateTenant is not implemented"))
+func (UnimplementedTenantAPIHandler) UpdateTenant(context.Context, *v1.UpdateTenantRequest) (*v1.UpdateTenantResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.tenant.v1.TenantAPI.UpdateTenant is not implemented")
+}
+
+type tenantAPIClient struct {
+	client *connect.Client
+}
+
+func (c *tenantAPIClient) GetTenant(ctx context.Context, req *v1.GetTenantRequest) (*v1.GetTenantResponse, error) {
+	var res v1.GetTenantResponse
+	if err := c.client.CallUnary(ctx, tenantAPIGetTenantSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *tenantAPIClient) UpdateTenant(ctx context.Context, req *v1.UpdateTenantRequest) (*v1.UpdateTenantResponse, error) {
+	var res v1.UpdateTenantResponse
+	if err := c.client.CallUnary(ctx, tenantAPIUpdateTenantSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type tenantAPIHandler struct{ svc TenantAPIHandler }
+
+func (h tenantAPIHandler) getTenant(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetTenantRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetTenant(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h tenantAPIHandler) updateTenant(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateTenantRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdateTenant(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

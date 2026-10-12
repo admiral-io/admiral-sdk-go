@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
+	apikeyv1 "go.admiral.io/sdk/proto/admiral/api/apikey/v1"
 	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
@@ -31,7 +32,10 @@ type Client struct {
 	authToken      string
 	tokenValidator TokenValidator
 	agent agentv1.AgentAPIClient
+	workloadIdentityProvider agentv1.WorkloadIdentityProviderAPIClient
+	job agentv1.JobAPIClient
 	agentRuntime agentv1.AgentRuntimeAPIClient
+	apiKey apikeyv1.ApiKeyAPIClient
 	application applicationv1.ApplicationAPIClient
 	changeSet changesetv1.ChangeSetAPIClient
 	credential credentialv1.CredentialAPIClient
@@ -54,6 +58,8 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 
 	// Configure transport credentials
 	if cfg.ConnectionOptions.Insecure {
+		// Opt-in plaintext for local dev or a TLS-terminating sidecar; TLS is the default.
+		// nosemgrep
 		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		tlsConfig := cfg.ConnectionOptions.TLSConfig
@@ -83,7 +89,10 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		authToken:      cfg.AuthToken,
 		tokenValidator: cfg.TokenValidator,
 		agent: agentv1.NewAgentAPIClient(conn),
+		workloadIdentityProvider: agentv1.NewWorkloadIdentityProviderAPIClient(conn),
+		job: agentv1.NewJobAPIClient(conn),
 		agentRuntime: agentv1.NewAgentRuntimeAPIClient(conn),
+		apiKey: apikeyv1.NewApiKeyAPIClient(conn),
 		application: applicationv1.NewApplicationAPIClient(conn),
 		changeSet: changesetv1.NewChangeSetAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
@@ -102,9 +111,24 @@ func (c *Client) Agent() agentv1.AgentAPIClient {
 	return c.agent
 }
 
+// WorkloadIdentityProvider returns the WorkloadIdentityProviderAPI client.
+func (c *Client) WorkloadIdentityProvider() agentv1.WorkloadIdentityProviderAPIClient {
+	return c.workloadIdentityProvider
+}
+
+// Job returns the JobAPI client.
+func (c *Client) Job() agentv1.JobAPIClient {
+	return c.job
+}
+
 // AgentRuntime returns the AgentRuntimeAPI client.
 func (c *Client) AgentRuntime() agentv1.AgentRuntimeAPIClient {
 	return c.agentRuntime
+}
+
+// ApiKey returns the ApiKeyAPI client.
+func (c *Client) ApiKey() apikeyv1.ApiKeyAPIClient {
+	return c.apiKey
 }
 
 // Application returns the ApplicationAPI client.

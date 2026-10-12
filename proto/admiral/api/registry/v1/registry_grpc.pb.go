@@ -19,17 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RegistryAPI_PublishComponent_FullMethodName  = "/admiral.api.registry.v1.RegistryAPI/PublishComponent"
-	RegistryAPI_PullComponent_FullMethodName     = "/admiral.api.registry.v1.RegistryAPI/PullComponent"
-	RegistryAPI_ListComponents_FullMethodName    = "/admiral.api.registry.v1.RegistryAPI/ListComponents"
-	RegistryAPI_GetComponent_FullMethodName      = "/admiral.api.registry.v1.RegistryAPI/GetComponent"
-	RegistryAPI_UpdateComponent_FullMethodName   = "/admiral.api.registry.v1.RegistryAPI/UpdateComponent"
-	RegistryAPI_DeleteComponent_FullMethodName   = "/admiral.api.registry.v1.RegistryAPI/DeleteComponent"
-	RegistryAPI_ListRevisions_FullMethodName     = "/admiral.api.registry.v1.RegistryAPI/ListRevisions"
-	RegistryAPI_GetRevision_FullMethodName       = "/admiral.api.registry.v1.RegistryAPI/GetRevision"
-	RegistryAPI_SetRevisionStatus_FullMethodName = "/admiral.api.registry.v1.RegistryAPI/SetRevisionStatus"
-	RegistryAPI_SetTag_FullMethodName            = "/admiral.api.registry.v1.RegistryAPI/SetTag"
-	RegistryAPI_DeleteTag_FullMethodName         = "/admiral.api.registry.v1.RegistryAPI/DeleteTag"
+	RegistryAPI_PublishComponent_FullMethodName   = "/admiral.api.registry.v1.RegistryAPI/PublishComponent"
+	RegistryAPI_PullComponent_FullMethodName      = "/admiral.api.registry.v1.RegistryAPI/PullComponent"
+	RegistryAPI_ListComponents_FullMethodName     = "/admiral.api.registry.v1.RegistryAPI/ListComponents"
+	RegistryAPI_GetComponent_FullMethodName       = "/admiral.api.registry.v1.RegistryAPI/GetComponent"
+	RegistryAPI_UpdateComponent_FullMethodName    = "/admiral.api.registry.v1.RegistryAPI/UpdateComponent"
+	RegistryAPI_SetComponentStatus_FullMethodName = "/admiral.api.registry.v1.RegistryAPI/SetComponentStatus"
+	RegistryAPI_DeleteComponent_FullMethodName    = "/admiral.api.registry.v1.RegistryAPI/DeleteComponent"
+	RegistryAPI_ListVersions_FullMethodName       = "/admiral.api.registry.v1.RegistryAPI/ListVersions"
+	RegistryAPI_GetVersion_FullMethodName         = "/admiral.api.registry.v1.RegistryAPI/GetVersion"
+	RegistryAPI_SetVersionStatus_FullMethodName   = "/admiral.api.registry.v1.RegistryAPI/SetVersionStatus"
+	RegistryAPI_SetTag_FullMethodName             = "/admiral.api.registry.v1.RegistryAPI/SetTag"
+	RegistryAPI_DeleteTag_FullMethodName          = "/admiral.api.registry.v1.RegistryAPI/DeleteTag"
 )
 
 // RegistryAPIClient is the client API for RegistryAPI service.
@@ -43,33 +44,34 @@ const (
 // publish` creates and later publishes land under -- not an instance running
 // in an environment. Both are called component on purpose; the verbs and the
 // address forms carry the distinction. Publish, tag and status changes act on
-// the registry (this service); add, update and copy act inside a change set.
+// the registry (this service); adding, moving to another version, setting
+// values and removing act inside a change set.
 // `cloud-sql:v1.2.0` is registry-speak, `my-api/prod/users-db` is
 // environment-speak.
 //
-// Three nouns. A Component is the name row. A Revision is one published
+// Three nouns. A Component is the name row. A Version is one published
 // artifact, identified by the SHA-256 of its normalized bundle; the digest is
 // the identity and the source repository is provenance. A Tag is a pointer
-// from a name to a revision, in the OCI sense: semver tags (v1.2.0) never move
+// from a name to a version, in the OCI sense: semver tags (v1.2.0) never move
 // once assigned, floating tags (latest, main) may.
 //
 // Publishing the same bytes under the same name twice yields the same
-// revision. Revisions are never deleted; revoking one refuses new adoption
-// while what already pins it keeps running.
+// version. Versions are never deleted; revoking one refuses new adoption
+// while what already runs it keeps running.
 type RegistryAPIClient interface {
-	// PublishComponent uploads a bundle and records it as a revision, creating
+	// PublishComponent uploads a bundle and records it as a version, creating
 	// the component on first use.
 	//
 	// The bundle is a gzipped tar of the component root, carried inline and
 	// capped at 64 MiB; a fully vendored tree that exceeds it will get a
 	// resumable upload path of its own. The server normalizes the bytes
 	// (strips `.git`, canonicalizes entry order and timestamps), digests them,
-	// runs the publish gate, stores the blob and answers with the revision. If
-	// the digest already exists under the name, the existing revision is
+	// runs the publish gate, stores the blob and answers with the version. If
+	// the digest already exists under the name, the existing version is
 	// returned with `unchanged` set and nothing is written, which is what makes
 	// a publish-everything CI recipe safe.
 	//
-	// Any tags named in the request are set on the resulting revision.
+	// Any tags named in the request are set on the resulting version.
 	// Repointing a semver tag is refused with FAILED_PRECONDITION and the whole
 	// publish fails; the bytes are not kept.
 	//
@@ -79,9 +81,9 @@ type RegistryAPIClient interface {
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
-	// records the revision with provenance saying where it came from. The
-	// bytes are a copy: upstream may move the tag and the revision does not.
-	// The same resolution under the same name is the same revision, returned
+	// records the version with provenance saying where it came from. The
+	// bytes are a copy: upstream may move the tag and the version does not.
+	// The same resolution under the same name is the same version, returned
 	// with `unchanged` set.
 	//
 	// Scope: `component:publish`
@@ -90,7 +92,8 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:read`
 	ListComponents(ctx context.Context, in *ListComponentsRequest, opts ...grpc.CallOption) (*ListComponentsResponse, error)
-	// GetComponent retrieves a component by name, with its tags.
+	// GetComponent retrieves a component by name or by `cmp-` id, with its
+	// tags. A name never starts with `cmp-`, so the two cannot collide.
 	//
 	// Scope: `component:read`
 	GetComponent(ctx context.Context, in *GetComponentRequest, opts ...grpc.CallOption) (*GetComponentResponse, error)
@@ -99,30 +102,39 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:write`
 	UpdateComponent(ctx context.Context, in *UpdateComponentRequest, opts ...grpc.CallOption) (*UpdateComponentResponse, error)
-	// DeleteComponent retires a name from the registry. Its revisions are kept
-	// and anything already pinned to them keeps running; the name no longer
-	// resolves and cannot be published to. FAILED_PRECONDITION while any
-	// environment pins one of its revisions.
+	// SetComponentStatus moves a component between ACTIVE and DEPRECATED,
+	// recording why. DEPRECATED warns, naming the successor, wherever the
+	// component is added, moved to another version or planned; nothing is
+	// refused. FAILED_PRECONDITION when the successor is itself or is not
+	// ACTIVE.
+	//
+	// Scope: `component:write`
+	SetComponentStatus(ctx context.Context, in *SetComponentStatusRequest, opts ...grpc.CallOption) (*SetComponentStatusResponse, error)
+	// DeleteComponent removes a component. FAILED_PRECONDITION while any
+	// environment runs one of its versions or an open change set uses it (the
+	// message names them). The change sets and runs that used it still read
+	// its versions. The name is then free: a later publish under it creates a
+	// new component with a new id.
 	//
 	// Scope: `component:write`
 	DeleteComponent(ctx context.Context, in *DeleteComponentRequest, opts ...grpc.CallOption) (*DeleteComponentResponse, error)
-	// ListRevisions pages through a component's revisions, newest first.
+	// ListVersions pages through a component's versions, newest first.
 	//
 	// Scope: `component:read`
-	ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error)
-	// GetRevision retrieves one revision by reference: a tag name or a
-	// `sha256:` digest.
+	ListVersions(ctx context.Context, in *ListVersionsRequest, opts ...grpc.CallOption) (*ListVersionsResponse, error)
+	// GetVersion retrieves one version by reference: a tag name, a `sha256:`
+	// digest or a `ver-` id.
 	//
 	// Scope: `component:read`
-	GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error)
-	// SetRevisionStatus moves a revision between PUBLISHED, DEPRECATED and
+	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
+	// SetVersionStatus moves a version between PUBLISHED, DEPRECATED and
 	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
 	//
 	// Scope: `component:write`
-	SetRevisionStatus(ctx context.Context, in *SetRevisionStatusRequest, opts ...grpc.CallOption) (*SetRevisionStatusResponse, error)
-	// SetTag points a tag at a revision, creating it or moving it. A semver tag
+	SetVersionStatus(ctx context.Context, in *SetVersionStatusRequest, opts ...grpc.CallOption) (*SetVersionStatusResponse, error)
+	// SetTag points a tag at a version, creating it or moving it. A semver tag
 	// may be created and never moved: FAILED_PRECONDITION on an attempt to
-	// repoint one, with the rule in the message. Setting a tag to the revision
+	// repoint one, with the rule in the message. Setting a tag to the version
 	// it already names succeeds and changes nothing.
 	//
 	// Scope: `component:publish`
@@ -192,6 +204,16 @@ func (c *registryAPIClient) UpdateComponent(ctx context.Context, in *UpdateCompo
 	return out, nil
 }
 
+func (c *registryAPIClient) SetComponentStatus(ctx context.Context, in *SetComponentStatusRequest, opts ...grpc.CallOption) (*SetComponentStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetComponentStatusResponse)
+	err := c.cc.Invoke(ctx, RegistryAPI_SetComponentStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *registryAPIClient) DeleteComponent(ctx context.Context, in *DeleteComponentRequest, opts ...grpc.CallOption) (*DeleteComponentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteComponentResponse)
@@ -202,30 +224,30 @@ func (c *registryAPIClient) DeleteComponent(ctx context.Context, in *DeleteCompo
 	return out, nil
 }
 
-func (c *registryAPIClient) ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error) {
+func (c *registryAPIClient) ListVersions(ctx context.Context, in *ListVersionsRequest, opts ...grpc.CallOption) (*ListVersionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListRevisionsResponse)
-	err := c.cc.Invoke(ctx, RegistryAPI_ListRevisions_FullMethodName, in, out, cOpts...)
+	out := new(ListVersionsResponse)
+	err := c.cc.Invoke(ctx, RegistryAPI_ListVersions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *registryAPIClient) GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error) {
+func (c *registryAPIClient) GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetRevisionResponse)
-	err := c.cc.Invoke(ctx, RegistryAPI_GetRevision_FullMethodName, in, out, cOpts...)
+	out := new(GetVersionResponse)
+	err := c.cc.Invoke(ctx, RegistryAPI_GetVersion_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *registryAPIClient) SetRevisionStatus(ctx context.Context, in *SetRevisionStatusRequest, opts ...grpc.CallOption) (*SetRevisionStatusResponse, error) {
+func (c *registryAPIClient) SetVersionStatus(ctx context.Context, in *SetVersionStatusRequest, opts ...grpc.CallOption) (*SetVersionStatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SetRevisionStatusResponse)
-	err := c.cc.Invoke(ctx, RegistryAPI_SetRevisionStatus_FullMethodName, in, out, cOpts...)
+	out := new(SetVersionStatusResponse)
+	err := c.cc.Invoke(ctx, RegistryAPI_SetVersionStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -263,33 +285,34 @@ func (c *registryAPIClient) DeleteTag(ctx context.Context, in *DeleteTagRequest,
 // publish` creates and later publishes land under -- not an instance running
 // in an environment. Both are called component on purpose; the verbs and the
 // address forms carry the distinction. Publish, tag and status changes act on
-// the registry (this service); add, update and copy act inside a change set.
+// the registry (this service); adding, moving to another version, setting
+// values and removing act inside a change set.
 // `cloud-sql:v1.2.0` is registry-speak, `my-api/prod/users-db` is
 // environment-speak.
 //
-// Three nouns. A Component is the name row. A Revision is one published
+// Three nouns. A Component is the name row. A Version is one published
 // artifact, identified by the SHA-256 of its normalized bundle; the digest is
 // the identity and the source repository is provenance. A Tag is a pointer
-// from a name to a revision, in the OCI sense: semver tags (v1.2.0) never move
+// from a name to a version, in the OCI sense: semver tags (v1.2.0) never move
 // once assigned, floating tags (latest, main) may.
 //
 // Publishing the same bytes under the same name twice yields the same
-// revision. Revisions are never deleted; revoking one refuses new adoption
-// while what already pins it keeps running.
+// version. Versions are never deleted; revoking one refuses new adoption
+// while what already runs it keeps running.
 type RegistryAPIServer interface {
-	// PublishComponent uploads a bundle and records it as a revision, creating
+	// PublishComponent uploads a bundle and records it as a version, creating
 	// the component on first use.
 	//
 	// The bundle is a gzipped tar of the component root, carried inline and
 	// capped at 64 MiB; a fully vendored tree that exceeds it will get a
 	// resumable upload path of its own. The server normalizes the bytes
 	// (strips `.git`, canonicalizes entry order and timestamps), digests them,
-	// runs the publish gate, stores the blob and answers with the revision. If
-	// the digest already exists under the name, the existing revision is
+	// runs the publish gate, stores the blob and answers with the version. If
+	// the digest already exists under the name, the existing version is
 	// returned with `unchanged` set and nothing is written, which is what makes
 	// a publish-everything CI recipe safe.
 	//
-	// Any tags named in the request are set on the resulting revision.
+	// Any tags named in the request are set on the resulting version.
 	// Repointing a semver tag is refused with FAILED_PRECONDITION and the whole
 	// publish fails; the bytes are not kept.
 	//
@@ -299,9 +322,9 @@ type RegistryAPIServer interface {
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
-	// records the revision with provenance saying where it came from. The
-	// bytes are a copy: upstream may move the tag and the revision does not.
-	// The same resolution under the same name is the same revision, returned
+	// records the version with provenance saying where it came from. The
+	// bytes are a copy: upstream may move the tag and the version does not.
+	// The same resolution under the same name is the same version, returned
 	// with `unchanged` set.
 	//
 	// Scope: `component:publish`
@@ -310,7 +333,8 @@ type RegistryAPIServer interface {
 	//
 	// Scope: `component:read`
 	ListComponents(context.Context, *ListComponentsRequest) (*ListComponentsResponse, error)
-	// GetComponent retrieves a component by name, with its tags.
+	// GetComponent retrieves a component by name or by `cmp-` id, with its
+	// tags. A name never starts with `cmp-`, so the two cannot collide.
 	//
 	// Scope: `component:read`
 	GetComponent(context.Context, *GetComponentRequest) (*GetComponentResponse, error)
@@ -319,30 +343,39 @@ type RegistryAPIServer interface {
 	//
 	// Scope: `component:write`
 	UpdateComponent(context.Context, *UpdateComponentRequest) (*UpdateComponentResponse, error)
-	// DeleteComponent retires a name from the registry. Its revisions are kept
-	// and anything already pinned to them keeps running; the name no longer
-	// resolves and cannot be published to. FAILED_PRECONDITION while any
-	// environment pins one of its revisions.
+	// SetComponentStatus moves a component between ACTIVE and DEPRECATED,
+	// recording why. DEPRECATED warns, naming the successor, wherever the
+	// component is added, moved to another version or planned; nothing is
+	// refused. FAILED_PRECONDITION when the successor is itself or is not
+	// ACTIVE.
+	//
+	// Scope: `component:write`
+	SetComponentStatus(context.Context, *SetComponentStatusRequest) (*SetComponentStatusResponse, error)
+	// DeleteComponent removes a component. FAILED_PRECONDITION while any
+	// environment runs one of its versions or an open change set uses it (the
+	// message names them). The change sets and runs that used it still read
+	// its versions. The name is then free: a later publish under it creates a
+	// new component with a new id.
 	//
 	// Scope: `component:write`
 	DeleteComponent(context.Context, *DeleteComponentRequest) (*DeleteComponentResponse, error)
-	// ListRevisions pages through a component's revisions, newest first.
+	// ListVersions pages through a component's versions, newest first.
 	//
 	// Scope: `component:read`
-	ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error)
-	// GetRevision retrieves one revision by reference: a tag name or a
-	// `sha256:` digest.
+	ListVersions(context.Context, *ListVersionsRequest) (*ListVersionsResponse, error)
+	// GetVersion retrieves one version by reference: a tag name, a `sha256:`
+	// digest or a `ver-` id.
 	//
 	// Scope: `component:read`
-	GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error)
-	// SetRevisionStatus moves a revision between PUBLISHED, DEPRECATED and
+	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
+	// SetVersionStatus moves a version between PUBLISHED, DEPRECATED and
 	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
 	//
 	// Scope: `component:write`
-	SetRevisionStatus(context.Context, *SetRevisionStatusRequest) (*SetRevisionStatusResponse, error)
-	// SetTag points a tag at a revision, creating it or moving it. A semver tag
+	SetVersionStatus(context.Context, *SetVersionStatusRequest) (*SetVersionStatusResponse, error)
+	// SetTag points a tag at a version, creating it or moving it. A semver tag
 	// may be created and never moved: FAILED_PRECONDITION on an attempt to
-	// repoint one, with the rule in the message. Setting a tag to the revision
+	// repoint one, with the rule in the message. Setting a tag to the version
 	// it already names succeeds and changes nothing.
 	//
 	// Scope: `component:publish`
@@ -376,17 +409,20 @@ func (UnimplementedRegistryAPIServer) GetComponent(context.Context, *GetComponen
 func (UnimplementedRegistryAPIServer) UpdateComponent(context.Context, *UpdateComponentRequest) (*UpdateComponentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateComponent not implemented")
 }
+func (UnimplementedRegistryAPIServer) SetComponentStatus(context.Context, *SetComponentStatusRequest) (*SetComponentStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetComponentStatus not implemented")
+}
 func (UnimplementedRegistryAPIServer) DeleteComponent(context.Context, *DeleteComponentRequest) (*DeleteComponentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteComponent not implemented")
 }
-func (UnimplementedRegistryAPIServer) ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListRevisions not implemented")
+func (UnimplementedRegistryAPIServer) ListVersions(context.Context, *ListVersionsRequest) (*ListVersionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListVersions not implemented")
 }
-func (UnimplementedRegistryAPIServer) GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetRevision not implemented")
+func (UnimplementedRegistryAPIServer) GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetVersion not implemented")
 }
-func (UnimplementedRegistryAPIServer) SetRevisionStatus(context.Context, *SetRevisionStatusRequest) (*SetRevisionStatusResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SetRevisionStatus not implemented")
+func (UnimplementedRegistryAPIServer) SetVersionStatus(context.Context, *SetVersionStatusRequest) (*SetVersionStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetVersionStatus not implemented")
 }
 func (UnimplementedRegistryAPIServer) SetTag(context.Context, *SetTagRequest) (*SetTagResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetTag not implemented")
@@ -504,6 +540,24 @@ func _RegistryAPI_UpdateComponent_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RegistryAPI_SetComponentStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetComponentStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryAPIServer).SetComponentStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RegistryAPI_SetComponentStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryAPIServer).SetComponentStatus(ctx, req.(*SetComponentStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RegistryAPI_DeleteComponent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteComponentRequest)
 	if err := dec(in); err != nil {
@@ -522,56 +576,56 @@ func _RegistryAPI_DeleteComponent_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RegistryAPI_ListRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListRevisionsRequest)
+func _RegistryAPI_ListVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListVersionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RegistryAPIServer).ListRevisions(ctx, in)
+		return srv.(RegistryAPIServer).ListVersions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RegistryAPI_ListRevisions_FullMethodName,
+		FullMethod: RegistryAPI_ListVersions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RegistryAPIServer).ListRevisions(ctx, req.(*ListRevisionsRequest))
+		return srv.(RegistryAPIServer).ListVersions(ctx, req.(*ListVersionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RegistryAPI_GetRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRevisionRequest)
+func _RegistryAPI_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVersionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RegistryAPIServer).GetRevision(ctx, in)
+		return srv.(RegistryAPIServer).GetVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RegistryAPI_GetRevision_FullMethodName,
+		FullMethod: RegistryAPI_GetVersion_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RegistryAPIServer).GetRevision(ctx, req.(*GetRevisionRequest))
+		return srv.(RegistryAPIServer).GetVersion(ctx, req.(*GetVersionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RegistryAPI_SetRevisionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetRevisionStatusRequest)
+func _RegistryAPI_SetVersionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetVersionStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RegistryAPIServer).SetRevisionStatus(ctx, in)
+		return srv.(RegistryAPIServer).SetVersionStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RegistryAPI_SetRevisionStatus_FullMethodName,
+		FullMethod: RegistryAPI_SetVersionStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RegistryAPIServer).SetRevisionStatus(ctx, req.(*SetRevisionStatusRequest))
+		return srv.(RegistryAPIServer).SetVersionStatus(ctx, req.(*SetVersionStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -640,20 +694,24 @@ var RegistryAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RegistryAPI_UpdateComponent_Handler,
 		},
 		{
+			MethodName: "SetComponentStatus",
+			Handler:    _RegistryAPI_SetComponentStatus_Handler,
+		},
+		{
 			MethodName: "DeleteComponent",
 			Handler:    _RegistryAPI_DeleteComponent_Handler,
 		},
 		{
-			MethodName: "ListRevisions",
-			Handler:    _RegistryAPI_ListRevisions_Handler,
+			MethodName: "ListVersions",
+			Handler:    _RegistryAPI_ListVersions_Handler,
 		},
 		{
-			MethodName: "GetRevision",
-			Handler:    _RegistryAPI_GetRevision_Handler,
+			MethodName: "GetVersion",
+			Handler:    _RegistryAPI_GetVersion_Handler,
 		},
 		{
-			MethodName: "SetRevisionStatus",
-			Handler:    _RegistryAPI_SetRevisionStatus_Handler,
+			MethodName: "SetVersionStatus",
+			Handler:    _RegistryAPI_SetVersionStatus_Handler,
 		},
 		{
 			MethodName: "SetTag",

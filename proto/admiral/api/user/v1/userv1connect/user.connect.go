@@ -5,50 +5,55 @@
 package userv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// UserAPIName is the fully-qualified name of the UserAPI service.
 	UserAPIName = "admiral.api.user.v1.UserAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// UserAPIGetMeProcedure is the fully-qualified name of the UserAPI's GetMe RPC.
+	// UserAPIGetMeProcedure is the procedure name of the UserAPI's GetMe RPC.
 	UserAPIGetMeProcedure = "/admiral.api.user.v1.UserAPI/GetMe"
-	// UserAPIGetUserProcedure is the fully-qualified name of the UserAPI's GetUser RPC.
+	// UserAPIGetUserProcedure is the procedure name of the UserAPI's GetUser RPC.
 	UserAPIGetUserProcedure = "/admiral.api.user.v1.UserAPI/GetUser"
-	// UserAPIListUsersProcedure is the fully-qualified name of the UserAPI's ListUsers RPC.
+	// UserAPIListUsersProcedure is the procedure name of the UserAPI's ListUsers RPC.
 	UserAPIListUsersProcedure = "/admiral.api.user.v1.UserAPI/ListUsers"
-	// UserAPICreateApiKeyProcedure is the fully-qualified name of the UserAPI's CreateApiKey RPC.
-	UserAPICreateApiKeyProcedure = "/admiral.api.user.v1.UserAPI/CreateApiKey"
-	// UserAPIListApiKeysProcedure is the fully-qualified name of the UserAPI's ListApiKeys RPC.
-	UserAPIListApiKeysProcedure = "/admiral.api.user.v1.UserAPI/ListApiKeys"
-	// UserAPIGetApiKeyProcedure is the fully-qualified name of the UserAPI's GetApiKey RPC.
-	UserAPIGetApiKeyProcedure = "/admiral.api.user.v1.UserAPI/GetApiKey"
-	// UserAPIUpdateApiKeyProcedure is the fully-qualified name of the UserAPI's UpdateApiKey RPC.
-	UserAPIUpdateApiKeyProcedure = "/admiral.api.user.v1.UserAPI/UpdateApiKey"
-	// UserAPIRevokeApiKeyProcedure is the fully-qualified name of the UserAPI's RevokeApiKey RPC.
-	UserAPIRevokeApiKeyProcedure = "/admiral.api.user.v1.UserAPI/RevokeApiKey"
+)
+
+var (
+	userAPIGetMeSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_user_v1_user_proto.Services().ByName("UserAPI").Methods().ByName("GetMe"),
+			Procedure:  UserAPIGetMeProcedure,
+		}
+	})
+	userAPIGetUserSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_user_v1_user_proto.Services().ByName("UserAPI").Methods().ByName("GetUser"),
+			Procedure:  UserAPIGetUserProcedure,
+		}
+	})
+	userAPIListUsersSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_user_v1_user_proto.Services().ByName("UserAPI").Methods().ByName("ListUsers"),
+			Procedure:  UserAPIListUsersProcedure,
+		}
+	})
 )
 
 // UserAPIClient is a client for the admiral.api.user.v1.UserAPI service.
@@ -57,158 +62,23 @@ type UserAPIClient interface {
 	// The user is identified by the authentication token provided in the request.
 	//
 	// Scope: any authenticated key (no specific scope required).
-	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	GetMe(context.Context, *v1.GetMeRequest) (*v1.GetMeResponse, error)
 	// GetUser retrieves a user's profile by ID.
 	//
 	// Scope: `user:read`
-	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
+	GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error)
 	// ListUsers returns a page of the caller's tenant's members: everyone who
 	// has joined, whatever their role or status. People who have been invited but
 	// have not joined are not users yet; they are listed by InvitationAPI.
 	//
 	// Scope: `user:read`
-	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
-	// CreateApiKey creates a new API key for the authenticated user.
-	// The response includes the raw secret, which is shown exactly once
-	// and cannot be retrieved again.
-	//
-	// Scope: `token:write`
-	CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error)
-	// ListApiKeys returns a paginated list of the authenticated user's own API
-	// keys. Secrets are never included.
-	//
-	// Scope: `token:read`
-	ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error)
-	// GetApiKey retrieves a single API key by ID.
-	// Returns metadata only. The key secret is never included.
-	//
-	// Scope: `token:read`
-	GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error)
-	// UpdateApiKey updates an API key's mutable fields (name, scopes).
-	// Only active keys can be updated. The secret and expiration are
-	// immutable after creation.
-	//
-	// Scope: `token:write`
-	UpdateApiKey(context.Context, *connect.Request[v1.UpdateApiKeyRequest]) (*connect.Response[v1.UpdateApiKeyResponse], error)
-	// RevokeApiKey permanently revokes an API key. The key becomes
-	// immediately unusable and cannot be restored.
-	//
-	// Scope: `token:write`
-	RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error)
+	ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error)
 }
 
-// NewUserAPIClient constructs a client for the admiral.api.user.v1.UserAPI service. By default, it
-// uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
-// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
-// connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewUserAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) UserAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	userAPIMethods := v1.File_admiral_api_user_v1_user_proto.Services().ByName("UserAPI").Methods()
-	return &userAPIClient{
-		getMe: connect.NewClient[v1.GetMeRequest, v1.GetMeResponse](
-			httpClient,
-			baseURL+UserAPIGetMeProcedure,
-			connect.WithSchema(userAPIMethods.ByName("GetMe")),
-			connect.WithClientOptions(opts...),
-		),
-		getUser: connect.NewClient[v1.GetUserRequest, v1.GetUserResponse](
-			httpClient,
-			baseURL+UserAPIGetUserProcedure,
-			connect.WithSchema(userAPIMethods.ByName("GetUser")),
-			connect.WithClientOptions(opts...),
-		),
-		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
-			httpClient,
-			baseURL+UserAPIListUsersProcedure,
-			connect.WithSchema(userAPIMethods.ByName("ListUsers")),
-			connect.WithClientOptions(opts...),
-		),
-		createApiKey: connect.NewClient[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse](
-			httpClient,
-			baseURL+UserAPICreateApiKeyProcedure,
-			connect.WithSchema(userAPIMethods.ByName("CreateApiKey")),
-			connect.WithClientOptions(opts...),
-		),
-		listApiKeys: connect.NewClient[v1.ListApiKeysRequest, v1.ListApiKeysResponse](
-			httpClient,
-			baseURL+UserAPIListApiKeysProcedure,
-			connect.WithSchema(userAPIMethods.ByName("ListApiKeys")),
-			connect.WithClientOptions(opts...),
-		),
-		getApiKey: connect.NewClient[v1.GetApiKeyRequest, v1.GetApiKeyResponse](
-			httpClient,
-			baseURL+UserAPIGetApiKeyProcedure,
-			connect.WithSchema(userAPIMethods.ByName("GetApiKey")),
-			connect.WithClientOptions(opts...),
-		),
-		updateApiKey: connect.NewClient[v1.UpdateApiKeyRequest, v1.UpdateApiKeyResponse](
-			httpClient,
-			baseURL+UserAPIUpdateApiKeyProcedure,
-			connect.WithSchema(userAPIMethods.ByName("UpdateApiKey")),
-			connect.WithClientOptions(opts...),
-		),
-		revokeApiKey: connect.NewClient[v1.RevokeApiKeyRequest, v1.RevokeApiKeyResponse](
-			httpClient,
-			baseURL+UserAPIRevokeApiKeyProcedure,
-			connect.WithSchema(userAPIMethods.ByName("RevokeApiKey")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// userAPIClient implements UserAPIClient.
-type userAPIClient struct {
-	getMe        *connect.Client[v1.GetMeRequest, v1.GetMeResponse]
-	getUser      *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
-	listUsers    *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
-	createApiKey *connect.Client[v1.CreateApiKeyRequest, v1.CreateApiKeyResponse]
-	listApiKeys  *connect.Client[v1.ListApiKeysRequest, v1.ListApiKeysResponse]
-	getApiKey    *connect.Client[v1.GetApiKeyRequest, v1.GetApiKeyResponse]
-	updateApiKey *connect.Client[v1.UpdateApiKeyRequest, v1.UpdateApiKeyResponse]
-	revokeApiKey *connect.Client[v1.RevokeApiKeyRequest, v1.RevokeApiKeyResponse]
-}
-
-// GetMe calls admiral.api.user.v1.UserAPI.GetMe.
-func (c *userAPIClient) GetMe(ctx context.Context, req *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error) {
-	return c.getMe.CallUnary(ctx, req)
-}
-
-// GetUser calls admiral.api.user.v1.UserAPI.GetUser.
-func (c *userAPIClient) GetUser(ctx context.Context, req *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
-	return c.getUser.CallUnary(ctx, req)
-}
-
-// ListUsers calls admiral.api.user.v1.UserAPI.ListUsers.
-func (c *userAPIClient) ListUsers(ctx context.Context, req *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
-	return c.listUsers.CallUnary(ctx, req)
-}
-
-// CreateApiKey calls admiral.api.user.v1.UserAPI.CreateApiKey.
-func (c *userAPIClient) CreateApiKey(ctx context.Context, req *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {
-	return c.createApiKey.CallUnary(ctx, req)
-}
-
-// ListApiKeys calls admiral.api.user.v1.UserAPI.ListApiKeys.
-func (c *userAPIClient) ListApiKeys(ctx context.Context, req *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error) {
-	return c.listApiKeys.CallUnary(ctx, req)
-}
-
-// GetApiKey calls admiral.api.user.v1.UserAPI.GetApiKey.
-func (c *userAPIClient) GetApiKey(ctx context.Context, req *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error) {
-	return c.getApiKey.CallUnary(ctx, req)
-}
-
-// UpdateApiKey calls admiral.api.user.v1.UserAPI.UpdateApiKey.
-func (c *userAPIClient) UpdateApiKey(ctx context.Context, req *connect.Request[v1.UpdateApiKeyRequest]) (*connect.Response[v1.UpdateApiKeyResponse], error) {
-	return c.updateApiKey.CallUnary(ctx, req)
-}
-
-// RevokeApiKey calls admiral.api.user.v1.UserAPI.RevokeApiKey.
-func (c *userAPIClient) RevokeApiKey(ctx context.Context, req *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error) {
-	return c.revokeApiKey.CallUnary(ctx, req)
+// NewUserAPIClient constructs a client for the admiral.api.user.v1.UserAPI service. Multiple
+// service clients may share a single connect.Client.
+func NewUserAPIClient(client *connect.Client) UserAPIClient {
+	return &userAPIClient{client: client}
 }
 
 // UserAPIHandler is an implementation of the admiral.api.user.v1.UserAPI service.
@@ -217,156 +87,106 @@ type UserAPIHandler interface {
 	// The user is identified by the authentication token provided in the request.
 	//
 	// Scope: any authenticated key (no specific scope required).
-	GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error)
+	GetMe(context.Context, *v1.GetMeRequest) (*v1.GetMeResponse, error)
 	// GetUser retrieves a user's profile by ID.
 	//
 	// Scope: `user:read`
-	GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error)
+	GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error)
 	// ListUsers returns a page of the caller's tenant's members: everyone who
 	// has joined, whatever their role or status. People who have been invited but
 	// have not joined are not users yet; they are listed by InvitationAPI.
 	//
 	// Scope: `user:read`
-	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
-	// CreateApiKey creates a new API key for the authenticated user.
-	// The response includes the raw secret, which is shown exactly once
-	// and cannot be retrieved again.
-	//
-	// Scope: `token:write`
-	CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error)
-	// ListApiKeys returns a paginated list of the authenticated user's own API
-	// keys. Secrets are never included.
-	//
-	// Scope: `token:read`
-	ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error)
-	// GetApiKey retrieves a single API key by ID.
-	// Returns metadata only. The key secret is never included.
-	//
-	// Scope: `token:read`
-	GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error)
-	// UpdateApiKey updates an API key's mutable fields (name, scopes).
-	// Only active keys can be updated. The secret and expiration are
-	// immutable after creation.
-	//
-	// Scope: `token:write`
-	UpdateApiKey(context.Context, *connect.Request[v1.UpdateApiKeyRequest]) (*connect.Response[v1.UpdateApiKeyResponse], error)
-	// RevokeApiKey permanently revokes an API key. The key becomes
-	// immediately unusable and cannot be restored.
-	//
-	// Scope: `token:write`
-	RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error)
+	ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error)
 }
 
-// NewUserAPIHandler builds an HTTP handler from the service implementation. It returns the path on
-// which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewUserAPIHandler(svc UserAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	userAPIMethods := v1.File_admiral_api_user_v1_user_proto.Services().ByName("UserAPI").Methods()
-	userAPIGetMeHandler := connect.NewUnaryHandler(
-		UserAPIGetMeProcedure,
-		svc.GetMe,
-		connect.WithSchema(userAPIMethods.ByName("GetMe")),
-		connect.WithHandlerOptions(opts...),
+// RegisterUserAPIHandler registers svc as the admiral.api.user.v1.UserAPI implementation on server.
+func RegisterUserAPIHandler(server *connect.Server, svc UserAPIHandler) {
+	adapter := userAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: userAPIGetMeSpec(), Handler: adapter.getMe},
+		connect.Method{Spec: userAPIGetUserSpec(), Handler: adapter.getUser},
+		connect.Method{Spec: userAPIListUsersSpec(), Handler: adapter.listUsers},
 	)
-	userAPIGetUserHandler := connect.NewUnaryHandler(
-		UserAPIGetUserProcedure,
-		svc.GetUser,
-		connect.WithSchema(userAPIMethods.ByName("GetUser")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userAPIListUsersHandler := connect.NewUnaryHandler(
-		UserAPIListUsersProcedure,
-		svc.ListUsers,
-		connect.WithSchema(userAPIMethods.ByName("ListUsers")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userAPICreateApiKeyHandler := connect.NewUnaryHandler(
-		UserAPICreateApiKeyProcedure,
-		svc.CreateApiKey,
-		connect.WithSchema(userAPIMethods.ByName("CreateApiKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userAPIListApiKeysHandler := connect.NewUnaryHandler(
-		UserAPIListApiKeysProcedure,
-		svc.ListApiKeys,
-		connect.WithSchema(userAPIMethods.ByName("ListApiKeys")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userAPIGetApiKeyHandler := connect.NewUnaryHandler(
-		UserAPIGetApiKeyProcedure,
-		svc.GetApiKey,
-		connect.WithSchema(userAPIMethods.ByName("GetApiKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userAPIUpdateApiKeyHandler := connect.NewUnaryHandler(
-		UserAPIUpdateApiKeyProcedure,
-		svc.UpdateApiKey,
-		connect.WithSchema(userAPIMethods.ByName("UpdateApiKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	userAPIRevokeApiKeyHandler := connect.NewUnaryHandler(
-		UserAPIRevokeApiKeyProcedure,
-		svc.RevokeApiKey,
-		connect.WithSchema(userAPIMethods.ByName("RevokeApiKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.user.v1.UserAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case UserAPIGetMeProcedure:
-			userAPIGetMeHandler.ServeHTTP(w, r)
-		case UserAPIGetUserProcedure:
-			userAPIGetUserHandler.ServeHTTP(w, r)
-		case UserAPIListUsersProcedure:
-			userAPIListUsersHandler.ServeHTTP(w, r)
-		case UserAPICreateApiKeyProcedure:
-			userAPICreateApiKeyHandler.ServeHTTP(w, r)
-		case UserAPIListApiKeysProcedure:
-			userAPIListApiKeysHandler.ServeHTTP(w, r)
-		case UserAPIGetApiKeyProcedure:
-			userAPIGetApiKeyHandler.ServeHTTP(w, r)
-		case UserAPIUpdateApiKeyProcedure:
-			userAPIUpdateApiKeyHandler.ServeHTTP(w, r)
-		case UserAPIRevokeApiKeyProcedure:
-			userAPIRevokeApiKeyHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedUserAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedUserAPIHandler struct{}
 
-func (UnimplementedUserAPIHandler) GetMe(context.Context, *connect.Request[v1.GetMeRequest]) (*connect.Response[v1.GetMeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.GetMe is not implemented"))
+func (UnimplementedUserAPIHandler) GetMe(context.Context, *v1.GetMeRequest) (*v1.GetMeResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.user.v1.UserAPI.GetMe is not implemented")
 }
 
-func (UnimplementedUserAPIHandler) GetUser(context.Context, *connect.Request[v1.GetUserRequest]) (*connect.Response[v1.GetUserResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.GetUser is not implemented"))
+func (UnimplementedUserAPIHandler) GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.user.v1.UserAPI.GetUser is not implemented")
 }
 
-func (UnimplementedUserAPIHandler) ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.ListUsers is not implemented"))
+func (UnimplementedUserAPIHandler) ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.user.v1.UserAPI.ListUsers is not implemented")
 }
 
-func (UnimplementedUserAPIHandler) CreateApiKey(context.Context, *connect.Request[v1.CreateApiKeyRequest]) (*connect.Response[v1.CreateApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.CreateApiKey is not implemented"))
+type userAPIClient struct {
+	client *connect.Client
 }
 
-func (UnimplementedUserAPIHandler) ListApiKeys(context.Context, *connect.Request[v1.ListApiKeysRequest]) (*connect.Response[v1.ListApiKeysResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.ListApiKeys is not implemented"))
+func (c *userAPIClient) GetMe(ctx context.Context, req *v1.GetMeRequest) (*v1.GetMeResponse, error) {
+	var res v1.GetMeResponse
+	if err := c.client.CallUnary(ctx, userAPIGetMeSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-func (UnimplementedUserAPIHandler) GetApiKey(context.Context, *connect.Request[v1.GetApiKeyRequest]) (*connect.Response[v1.GetApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.GetApiKey is not implemented"))
+func (c *userAPIClient) GetUser(ctx context.Context, req *v1.GetUserRequest) (*v1.GetUserResponse, error) {
+	var res v1.GetUserResponse
+	if err := c.client.CallUnary(ctx, userAPIGetUserSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-func (UnimplementedUserAPIHandler) UpdateApiKey(context.Context, *connect.Request[v1.UpdateApiKeyRequest]) (*connect.Response[v1.UpdateApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.UpdateApiKey is not implemented"))
+func (c *userAPIClient) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
+	var res v1.ListUsersResponse
+	if err := c.client.CallUnary(ctx, userAPIListUsersSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-func (UnimplementedUserAPIHandler) RevokeApiKey(context.Context, *connect.Request[v1.RevokeApiKeyRequest]) (*connect.Response[v1.RevokeApiKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.user.v1.UserAPI.RevokeApiKey is not implemented"))
+type userAPIHandler struct{ svc UserAPIHandler }
+
+func (h userAPIHandler) getMe(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetMeRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetMe(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h userAPIHandler) getUser(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetUserRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetUser(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h userAPIHandler) listUsers(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListUsersRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListUsers(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

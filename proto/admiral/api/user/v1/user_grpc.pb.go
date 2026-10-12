@@ -19,28 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserAPI_GetMe_FullMethodName        = "/admiral.api.user.v1.UserAPI/GetMe"
-	UserAPI_GetUser_FullMethodName      = "/admiral.api.user.v1.UserAPI/GetUser"
-	UserAPI_ListUsers_FullMethodName    = "/admiral.api.user.v1.UserAPI/ListUsers"
-	UserAPI_CreateApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/CreateApiKey"
-	UserAPI_ListApiKeys_FullMethodName  = "/admiral.api.user.v1.UserAPI/ListApiKeys"
-	UserAPI_GetApiKey_FullMethodName    = "/admiral.api.user.v1.UserAPI/GetApiKey"
-	UserAPI_UpdateApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/UpdateApiKey"
-	UserAPI_RevokeApiKey_FullMethodName = "/admiral.api.user.v1.UserAPI/RevokeApiKey"
+	UserAPI_GetMe_FullMethodName     = "/admiral.api.user.v1.UserAPI/GetMe"
+	UserAPI_GetUser_FullMethodName   = "/admiral.api.user.v1.UserAPI/GetUser"
+	UserAPI_ListUsers_FullMethodName = "/admiral.api.user.v1.UserAPI/ListUsers"
 )
 
 // UserAPIClient is the client API for UserAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UserAPI provides operations for user profile retrieval, the list of a
-// tenant's members, and management of the caller's own API keys.
-//
-// An API key here is bound to the calling user (BINDING_TYPE_USER) and lets them
-// authenticate from scripts, CI pipelines, and other programmatic contexts. Its
-// scopes are selected at creation and it may carry an expiration. Personal
-// access token is the same thing said in user-facing words, and the REST routes
-// and generated documentation keep that name; the contract has one noun.
+// UserAPI provides user profile retrieval and the list of a tenant's members.
+// The caller's own API keys are managed through ApiKeyAPI.
 type UserAPIClient interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
@@ -57,33 +46,6 @@ type UserAPIClient interface {
 	//
 	// Scope: `user:read`
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
-	// CreateApiKey creates a new API key for the authenticated user.
-	// The response includes the raw secret, which is shown exactly once
-	// and cannot be retrieved again.
-	//
-	// Scope: `token:write`
-	CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error)
-	// ListApiKeys returns a paginated list of the authenticated user's own API
-	// keys. Secrets are never included.
-	//
-	// Scope: `token:read`
-	ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error)
-	// GetApiKey retrieves a single API key by ID.
-	// Returns metadata only. The key secret is never included.
-	//
-	// Scope: `token:read`
-	GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error)
-	// UpdateApiKey updates an API key's mutable fields (name, scopes).
-	// Only active keys can be updated. The secret and expiration are
-	// immutable after creation.
-	//
-	// Scope: `token:write`
-	UpdateApiKey(ctx context.Context, in *UpdateApiKeyRequest, opts ...grpc.CallOption) (*UpdateApiKeyResponse, error)
-	// RevokeApiKey permanently revokes an API key. The key becomes
-	// immediately unusable and cannot be restored.
-	//
-	// Scope: `token:write`
-	RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error)
 }
 
 type userAPIClient struct {
@@ -124,68 +86,12 @@ func (c *userAPIClient) ListUsers(ctx context.Context, in *ListUsersRequest, opt
 	return out, nil
 }
 
-func (c *userAPIClient) CreateApiKey(ctx context.Context, in *CreateApiKeyRequest, opts ...grpc.CallOption) (*CreateApiKeyResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateApiKeyResponse)
-	err := c.cc.Invoke(ctx, UserAPI_CreateApiKey_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userAPIClient) ListApiKeys(ctx context.Context, in *ListApiKeysRequest, opts ...grpc.CallOption) (*ListApiKeysResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListApiKeysResponse)
-	err := c.cc.Invoke(ctx, UserAPI_ListApiKeys_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userAPIClient) GetApiKey(ctx context.Context, in *GetApiKeyRequest, opts ...grpc.CallOption) (*GetApiKeyResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetApiKeyResponse)
-	err := c.cc.Invoke(ctx, UserAPI_GetApiKey_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userAPIClient) UpdateApiKey(ctx context.Context, in *UpdateApiKeyRequest, opts ...grpc.CallOption) (*UpdateApiKeyResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateApiKeyResponse)
-	err := c.cc.Invoke(ctx, UserAPI_UpdateApiKey_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userAPIClient) RevokeApiKey(ctx context.Context, in *RevokeApiKeyRequest, opts ...grpc.CallOption) (*RevokeApiKeyResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RevokeApiKeyResponse)
-	err := c.cc.Invoke(ctx, UserAPI_RevokeApiKey_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserAPIServer is the server API for UserAPI service.
 // All implementations should embed UnimplementedUserAPIServer
 // for forward compatibility.
 //
-// UserAPI provides operations for user profile retrieval, the list of a
-// tenant's members, and management of the caller's own API keys.
-//
-// An API key here is bound to the calling user (BINDING_TYPE_USER) and lets them
-// authenticate from scripts, CI pipelines, and other programmatic contexts. Its
-// scopes are selected at creation and it may carry an expiration. Personal
-// access token is the same thing said in user-facing words, and the REST routes
-// and generated documentation keep that name; the contract has one noun.
+// UserAPI provides user profile retrieval and the list of a tenant's members.
+// The caller's own API keys are managed through ApiKeyAPI.
 type UserAPIServer interface {
 	// GetMe retrieves the profile of the currently authenticated user.
 	// The user is identified by the authentication token provided in the request.
@@ -202,33 +108,6 @@ type UserAPIServer interface {
 	//
 	// Scope: `user:read`
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
-	// CreateApiKey creates a new API key for the authenticated user.
-	// The response includes the raw secret, which is shown exactly once
-	// and cannot be retrieved again.
-	//
-	// Scope: `token:write`
-	CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error)
-	// ListApiKeys returns a paginated list of the authenticated user's own API
-	// keys. Secrets are never included.
-	//
-	// Scope: `token:read`
-	ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error)
-	// GetApiKey retrieves a single API key by ID.
-	// Returns metadata only. The key secret is never included.
-	//
-	// Scope: `token:read`
-	GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error)
-	// UpdateApiKey updates an API key's mutable fields (name, scopes).
-	// Only active keys can be updated. The secret and expiration are
-	// immutable after creation.
-	//
-	// Scope: `token:write`
-	UpdateApiKey(context.Context, *UpdateApiKeyRequest) (*UpdateApiKeyResponse, error)
-	// RevokeApiKey permanently revokes an API key. The key becomes
-	// immediately unusable and cannot be restored.
-	//
-	// Scope: `token:write`
-	RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error)
 }
 
 // UnimplementedUserAPIServer should be embedded to have
@@ -246,21 +125,6 @@ func (UnimplementedUserAPIServer) GetUser(context.Context, *GetUserRequest) (*Ge
 }
 func (UnimplementedUserAPIServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
-}
-func (UnimplementedUserAPIServer) CreateApiKey(context.Context, *CreateApiKeyRequest) (*CreateApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateApiKey not implemented")
-}
-func (UnimplementedUserAPIServer) ListApiKeys(context.Context, *ListApiKeysRequest) (*ListApiKeysResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListApiKeys not implemented")
-}
-func (UnimplementedUserAPIServer) GetApiKey(context.Context, *GetApiKeyRequest) (*GetApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetApiKey not implemented")
-}
-func (UnimplementedUserAPIServer) UpdateApiKey(context.Context, *UpdateApiKeyRequest) (*UpdateApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateApiKey not implemented")
-}
-func (UnimplementedUserAPIServer) RevokeApiKey(context.Context, *RevokeApiKeyRequest) (*RevokeApiKeyResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RevokeApiKey not implemented")
 }
 func (UnimplementedUserAPIServer) testEmbeddedByValue() {}
 
@@ -336,96 +200,6 @@ func _UserAPI_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAPI_CreateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateApiKeyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserAPIServer).CreateApiKey(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserAPI_CreateApiKey_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).CreateApiKey(ctx, req.(*CreateApiKeyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserAPI_ListApiKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListApiKeysRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserAPIServer).ListApiKeys(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserAPI_ListApiKeys_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).ListApiKeys(ctx, req.(*ListApiKeysRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserAPI_GetApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetApiKeyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserAPIServer).GetApiKey(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserAPI_GetApiKey_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).GetApiKey(ctx, req.(*GetApiKeyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserAPI_UpdateApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateApiKeyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserAPIServer).UpdateApiKey(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserAPI_UpdateApiKey_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).UpdateApiKey(ctx, req.(*UpdateApiKeyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserAPI_RevokeApiKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokeApiKeyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserAPIServer).RevokeApiKey(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserAPI_RevokeApiKey_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAPIServer).RevokeApiKey(ctx, req.(*RevokeApiKeyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserAPI_ServiceDesc is the grpc.ServiceDesc for UserAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -444,26 +218,6 @@ var UserAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListUsers",
 			Handler:    _UserAPI_ListUsers_Handler,
-		},
-		{
-			MethodName: "CreateApiKey",
-			Handler:    _UserAPI_CreateApiKey_Handler,
-		},
-		{
-			MethodName: "ListApiKeys",
-			Handler:    _UserAPI_ListApiKeys_Handler,
-		},
-		{
-			MethodName: "GetApiKey",
-			Handler:    _UserAPI_GetApiKey_Handler,
-		},
-		{
-			MethodName: "UpdateApiKey",
-			Handler:    _UserAPI_UpdateApiKey_Handler,
-		},
-		{
-			MethodName: "RevokeApiKey",
-			Handler:    _UserAPI_RevokeApiKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

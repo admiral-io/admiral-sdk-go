@@ -25,26 +25,26 @@ var File_admiral_api_openapi_proto protoreflect.FileDescriptor
 
 const file_admiral_api_openapi_proto_rawDesc = "" +
 	"\n" +
-	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xcb\r\xbaG\xa0\f\x12\x91\x01\n" +
+	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xa7\f\xbaG\xfc\n" +
+	"\x12\x91\x01\n" +
 	"\vAdmiral API\x12\x81\x01The Admiral REST API for managing applications, infrastructure, and runs. See https://admiral.io/docs for complete documentation.:?\n" +
 	"\fApplications\x12/Manage application lifecycle and configuration.:o\n" +
 	"\fEnvironments\x12_Manage deployment environments within an application, and view the components deployed to them.:\x88\x01\n" +
 	"\n" +
-	"ChangeSets\x12zManage change sets: scoped, isolated proposals to mutate the deployed state of an application within a single environment.:8\n" +
-	"\x04Runs\x120Manage runs across components in an environment.:I\n" +
-	"\rRun Revisions\x128Retrieve and retry per-component revisions within a run.:b\n" +
-	"\aCatalog\x12WManage catalog items: named, reusable references to a slice of content within a source.:<\n" +
-	"\aSources\x121Manage source definitions for external artifacts.:A\n" +
-	"\vCredentials\x122Manage credentials for accessing external systems.:U\n" +
-	"\bClusters\x12IConnect the clusters Admiral trusts, by their token issuer or their keys.:C\n" +
-	"\x06Agents\x129Manage the agents in your clusters, and who may use each.:.\n" +
+	"ChangeSets\x12zManage change sets: scoped, isolated proposals to mutate the deployed state of an application within a single environment.:_\n" +
+	"\x04Runs\x12WPlan and apply change sets, check environments for drift, and reapply what they desire.:c\n" +
+	"\n" +
+	"Components\x12UPublish, pull and curate the component registry: components, their versions and tags.:=\n" +
+	"\x06Tenant\x123Your organization: its name, slug, status and logo.:A\n" +
+	"\vCredentials\x122Manage credentials for accessing external systems.:\x80\x01\n" +
+	"\x1bWorkload Identity Providers\x12aRegister the token issuers Admiral trusts, such as a Kubernetes cluster's, by issuer URL or keys.:3\n" +
+	"\x06Agents\x12)Manage your agents, and who may use each.:.\n" +
 	"\x04Jobs\x12&Follow and cancel the work agents run.:C\n" +
 	"\x04User\x12;Retrieve user profiles and list the members of your tenant.:c\n" +
-	"\vInvitations\x12TInvite people into your tenant, see what is outstanding, and withdraw an invitation.:O\n" +
-	"\x16Personal Access Tokens\x125Manage personal access tokens for API authentication.:\x8d\x01\n" +
-	"\rState Backend\x12|Terraform/OpenTofu HTTP state backend, consumed by the terraform CLI during job execution (authenticated with a PAT or SAT).:%\n" +
-	"\x06Health\x12\x1bCheck service availability.:e\n" +
-	"\rAgent Runtime\x12TWhat an agent calls while it works. Called with the agent's cluster-issued identity.\n" +
+	"\vInvitations\x12TInvite people into your tenant, see what is outstanding, and withdraw an invitation.:G\n" +
+	"\bAPI Keys\x12;Manage your own API keys for authenticating scripts and CI.:%\n" +
+	"\x06Health\x12\x1bCheck service availability.:_\n" +
+	"\rAgent Runtime\x12NWhat an agent calls while it works. Called with the agent's workload identity.\n" +
 	"\x12com.admiral.api.v1B\fOpenapiProtoP\x01Z)go.admiral.io/sdk/proto/admiral/api;apiv1\xa2\x02\x03AAX\xaa\x02\x0eAdmiral.Api.V1\xca\x02\x0eAdmiral\\Api\\V1\xe2\x02\x1aAdmiral\\Api\\V1\\GPBMetadata\xea\x02\x10Admiral::Api::V1b\x06proto3"
 
 var file_admiral_api_openapi_proto_goTypes = []any{}

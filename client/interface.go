@@ -2,6 +2,7 @@ package client
 
 import (
 	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
+	apikeyv1 "go.admiral.io/sdk/proto/admiral/api/apikey/v1"
 	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
@@ -18,8 +19,14 @@ import (
 type AdmiralClient interface {
 	// Agent returns the AgentAPI client.
 	Agent() agentv1.AgentAPIClient
+	// WorkloadIdentityProvider returns the WorkloadIdentityProviderAPI client.
+	WorkloadIdentityProvider() agentv1.WorkloadIdentityProviderAPIClient
+	// Job returns the JobAPI client.
+	Job() agentv1.JobAPIClient
 	// AgentRuntime returns the AgentRuntimeAPI client.
 	AgentRuntime() agentv1.AgentRuntimeAPIClient
+	// ApiKey returns the ApiKeyAPI client.
+	ApiKey() apikeyv1.ApiKeyAPIClient
 	// Application returns the ApplicationAPI client.
 	Application() applicationv1.ApplicationAPIClient
 	// ChangeSet returns the ChangeSetAPI client.

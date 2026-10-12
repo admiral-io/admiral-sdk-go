@@ -5,394 +5,446 @@
 package runv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// RunAPIName is the fully-qualified name of the RunAPI service.
 	RunAPIName = "admiral.api.run.v1.RunAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// RunAPICreateRunProcedure is the fully-qualified name of the RunAPI's CreateRun RPC.
+	// RunAPICreateRunProcedure is the procedure name of the RunAPI's CreateRun RPC.
 	RunAPICreateRunProcedure = "/admiral.api.run.v1.RunAPI/CreateRun"
-	// RunAPIGetRunProcedure is the fully-qualified name of the RunAPI's GetRun RPC.
+	// RunAPIGetRunProcedure is the procedure name of the RunAPI's GetRun RPC.
 	RunAPIGetRunProcedure = "/admiral.api.run.v1.RunAPI/GetRun"
-	// RunAPIListRunsProcedure is the fully-qualified name of the RunAPI's ListRuns RPC.
+	// RunAPIListRunsProcedure is the procedure name of the RunAPI's ListRuns RPC.
 	RunAPIListRunsProcedure = "/admiral.api.run.v1.RunAPI/ListRuns"
-	// RunAPICancelRunProcedure is the fully-qualified name of the RunAPI's CancelRun RPC.
-	RunAPICancelRunProcedure = "/admiral.api.run.v1.RunAPI/CancelRun"
-	// RunAPIGetRevisionProcedure is the fully-qualified name of the RunAPI's GetRevision RPC.
-	RunAPIGetRevisionProcedure = "/admiral.api.run.v1.RunAPI/GetRevision"
-	// RunAPIListRevisionsProcedure is the fully-qualified name of the RunAPI's ListRevisions RPC.
-	RunAPIListRevisionsProcedure = "/admiral.api.run.v1.RunAPI/ListRevisions"
-	// RunAPIRetryRevisionProcedure is the fully-qualified name of the RunAPI's RetryRevision RPC.
-	RunAPIRetryRevisionProcedure = "/admiral.api.run.v1.RunAPI/RetryRevision"
-	// RunAPIApplyRunProcedure is the fully-qualified name of the RunAPI's ApplyRun RPC.
+	// RunAPIApproveRunProcedure is the procedure name of the RunAPI's ApproveRun RPC.
+	RunAPIApproveRunProcedure = "/admiral.api.run.v1.RunAPI/ApproveRun"
+	// RunAPIApplyRunProcedure is the procedure name of the RunAPI's ApplyRun RPC.
 	RunAPIApplyRunProcedure = "/admiral.api.run.v1.RunAPI/ApplyRun"
+	// RunAPIAcceptRunProcedure is the procedure name of the RunAPI's AcceptRun RPC.
+	RunAPIAcceptRunProcedure = "/admiral.api.run.v1.RunAPI/AcceptRun"
+	// RunAPICancelRunProcedure is the procedure name of the RunAPI's CancelRun RPC.
+	RunAPICancelRunProcedure = "/admiral.api.run.v1.RunAPI/CancelRun"
+	// RunAPIGetRunPlanDiffProcedure is the procedure name of the RunAPI's GetRunPlanDiff RPC.
+	RunAPIGetRunPlanDiffProcedure = "/admiral.api.run.v1.RunAPI/GetRunPlanDiff"
+)
+
+var (
+	runAPICreateRunSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("CreateRun"),
+			Procedure:  RunAPICreateRunProcedure,
+		}
+	})
+	runAPIGetRunSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("GetRun"),
+			Procedure:  RunAPIGetRunProcedure,
+		}
+	})
+	runAPIListRunsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("ListRuns"),
+			Procedure:  RunAPIListRunsProcedure,
+		}
+	})
+	runAPIApproveRunSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("ApproveRun"),
+			Procedure:  RunAPIApproveRunProcedure,
+		}
+	})
+	runAPIApplyRunSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("ApplyRun"),
+			Procedure:  RunAPIApplyRunProcedure,
+		}
+	})
+	runAPIAcceptRunSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("AcceptRun"),
+			Procedure:  RunAPIAcceptRunProcedure,
+		}
+	})
+	runAPICancelRunSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("CancelRun"),
+			Procedure:  RunAPICancelRunProcedure,
+		}
+	})
+	runAPIGetRunPlanDiffSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods().ByName("GetRunPlanDiff"),
+			Procedure:  RunAPIGetRunPlanDiffProcedure,
+		}
+	})
 )
 
 // RunAPIClient is a client for the admiral.api.run.v1.RunAPI service.
 type RunAPIClient interface {
-	// CreateRun triggers a new run for an application+environment.
+	// CreateRun starts a run. For a change set revision it prepares the
+	// revision if needed, then plans it. For what is desired it checks for
+	// drift or plans a reapply.
 	//
-	// The server resolves all components (with environment overrides applied),
-	// builds the dependency DAG, and begins rendering and executing revisions.
-	//
-	// Concurrency: only one run can be active per application+environment
-	// at a time. If a run is already in an active state (PENDING, QUEUED,
-	// PLANNING, PLANNED, or APPLYING), the new run is queued and will start
-	// automatically when the current run completes or is canceled.
+	// FAILED_PRECONDITION when the revision is not its change set's head, or
+	// the change set is not open.
 	//
 	// Scope: `run:write`
-	CreateRun(context.Context, *connect.Request[v1.CreateRunRequest]) (*connect.Response[v1.CreateRunResponse], error)
-	// GetRun retrieves a run by ID, including its composite status derived
-	// from all component revisions.
+	CreateRun(context.Context, *v1.CreateRunRequest) (*v1.CreateRunResponse, error)
+	// GetRun returns a run: where it is, its plan and apply phases, and its
+	// approvals.
 	//
 	// Scope: `run:read`
-	GetRun(context.Context, *connect.Request[v1.GetRunRequest]) (*connect.Response[v1.GetRunResponse], error)
-	// ListRuns returns a paginated list of runs.
-	//
-	// Common filter fields: `application_id`, `environment_id`, `status`.
-	// Use to view run history for an environment.
+	GetRun(context.Context, *v1.GetRunRequest) (*v1.GetRunResponse, error)
+	// ListRuns lists runs, newest first. Without a `kind` in the filter it
+	// lists change set runs.
 	//
 	// Scope: `run:read`
-	ListRuns(context.Context, *connect.Request[v1.ListRunsRequest]) (*connect.Response[v1.ListRunsResponse], error)
-	// CancelRun cancels an in-progress run. Stops pending and queued
-	// revisions from proceeding and prevents the queue from advancing; the run
-	// status becomes CANCELED. APPLYING runs cannot be canceled because
-	// terraform/apply cannot be interrupted mid-execution; the call is
-	// rejected with FAILED_PRECONDITION. Wait for the in-flight phase to
-	// complete before cancellation. Revisions already SUCCEEDED remain
-	// applied.
+	ListRuns(context.Context, *v1.ListRunsRequest) (*v1.ListRunsResponse, error)
+	// ApproveRun approves a run's plan. Only a person approves, and not one who
+	// revised the change set: the author never counts toward an approval rule,
+	// and an environment that needs no approval needs none of this. An
+	// approval carries to a later run of the same revision, or of a revision a
+	// rebase cut without resolving a conflict, when its plan gives every
+	// resource the same action and the same new value for each attribute the
+	// apply changes.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the run's plan, or the run
+	// is not PLANNED.
 	//
 	// Scope: `run:write`
-	CancelRun(context.Context, *connect.Request[v1.CancelRunRequest]) (*connect.Response[v1.CancelRunResponse], error)
-	// GetRevision retrieves a single component revision within a run.
+	ApproveRun(context.Context, *v1.ApproveRunRequest) (*v1.ApproveRunResponse, error)
+	// ApplyRun applies a run's plan. It takes the environment's lock. The agent
+	// checks the plan is still current before it changes anything.
 	//
-	// Scope: `run:read`
-	GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error)
-	// ListRevisions returns all component revisions for a run.
-	//
-	// Scope: `run:read`
-	ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error)
-	// RetryRevision retries a failed component revision. A new execution
-	// attempt is made using the same rendered artifacts. The retry count
-	// is incremented. Only applicable to revisions in FAILED status.
+	// FAILED_PRECONDITION when the run is not PLANNED, an approval in
+	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
+	// drift check.
 	//
 	// Scope: `run:write`
-	RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error)
-	// ApplyRun transitions a run from plan phase to apply phase. Revisions
-	// currently in PLANNED status get an APPLY job dispatched to their
-	// assigned TERRAFORM agent. This is the single authorization gate per changeset;
-	// downstream layers auto-continue plan->apply without re-prompting.
+	ApplyRun(context.Context, *v1.ApplyRunRequest) (*v1.ApplyRunResponse, error)
+	// AcceptRun takes a PARTIAL run's apply as the environment's new state and
+	// releases the hold. It is recorded with its reason, and a change set run's
+	// change set becomes APPLIED.
 	//
 	// Scope: `run:write`
-	ApplyRun(context.Context, *connect.Request[v1.ApplyRunRequest]) (*connect.Response[v1.ApplyRunResponse], error)
+	AcceptRun(context.Context, *v1.AcceptRunRequest) (*v1.AcceptRunResponse, error)
+	// CancelRun stops a run that is preparing, queued, planning or applying.
+	// An apply already changing the environment stops at the next component
+	// and ends PARTIAL.
+	//
+	// Scope: `run:write`
+	CancelRun(context.Context, *v1.CancelRunRequest) (*v1.CancelRunResponse, error)
+	// GetRunPlanDiff returns a finished plan's full diffs, with every value
+	// the component marks sensitive masked: a Kubernetes Secret's `data` and
+	// `stringData`, a Terraform value declared `sensitive`. FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `run:read`
+	GetRunPlanDiff(context.Context, *v1.GetRunPlanDiffRequest) (*v1.GetRunPlanDiffResponse, error)
 }
 
-// NewRunAPIClient constructs a client for the admiral.api.run.v1.RunAPI service. By default, it
-// uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
-// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
-// connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewRunAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) RunAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	runAPIMethods := v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods()
-	return &runAPIClient{
-		createRun: connect.NewClient[v1.CreateRunRequest, v1.CreateRunResponse](
-			httpClient,
-			baseURL+RunAPICreateRunProcedure,
-			connect.WithSchema(runAPIMethods.ByName("CreateRun")),
-			connect.WithClientOptions(opts...),
-		),
-		getRun: connect.NewClient[v1.GetRunRequest, v1.GetRunResponse](
-			httpClient,
-			baseURL+RunAPIGetRunProcedure,
-			connect.WithSchema(runAPIMethods.ByName("GetRun")),
-			connect.WithClientOptions(opts...),
-		),
-		listRuns: connect.NewClient[v1.ListRunsRequest, v1.ListRunsResponse](
-			httpClient,
-			baseURL+RunAPIListRunsProcedure,
-			connect.WithSchema(runAPIMethods.ByName("ListRuns")),
-			connect.WithClientOptions(opts...),
-		),
-		cancelRun: connect.NewClient[v1.CancelRunRequest, v1.CancelRunResponse](
-			httpClient,
-			baseURL+RunAPICancelRunProcedure,
-			connect.WithSchema(runAPIMethods.ByName("CancelRun")),
-			connect.WithClientOptions(opts...),
-		),
-		getRevision: connect.NewClient[v1.GetRevisionRequest, v1.GetRevisionResponse](
-			httpClient,
-			baseURL+RunAPIGetRevisionProcedure,
-			connect.WithSchema(runAPIMethods.ByName("GetRevision")),
-			connect.WithClientOptions(opts...),
-		),
-		listRevisions: connect.NewClient[v1.ListRevisionsRequest, v1.ListRevisionsResponse](
-			httpClient,
-			baseURL+RunAPIListRevisionsProcedure,
-			connect.WithSchema(runAPIMethods.ByName("ListRevisions")),
-			connect.WithClientOptions(opts...),
-		),
-		retryRevision: connect.NewClient[v1.RetryRevisionRequest, v1.RetryRevisionResponse](
-			httpClient,
-			baseURL+RunAPIRetryRevisionProcedure,
-			connect.WithSchema(runAPIMethods.ByName("RetryRevision")),
-			connect.WithClientOptions(opts...),
-		),
-		applyRun: connect.NewClient[v1.ApplyRunRequest, v1.ApplyRunResponse](
-			httpClient,
-			baseURL+RunAPIApplyRunProcedure,
-			connect.WithSchema(runAPIMethods.ByName("ApplyRun")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// runAPIClient implements RunAPIClient.
-type runAPIClient struct {
-	createRun     *connect.Client[v1.CreateRunRequest, v1.CreateRunResponse]
-	getRun        *connect.Client[v1.GetRunRequest, v1.GetRunResponse]
-	listRuns      *connect.Client[v1.ListRunsRequest, v1.ListRunsResponse]
-	cancelRun     *connect.Client[v1.CancelRunRequest, v1.CancelRunResponse]
-	getRevision   *connect.Client[v1.GetRevisionRequest, v1.GetRevisionResponse]
-	listRevisions *connect.Client[v1.ListRevisionsRequest, v1.ListRevisionsResponse]
-	retryRevision *connect.Client[v1.RetryRevisionRequest, v1.RetryRevisionResponse]
-	applyRun      *connect.Client[v1.ApplyRunRequest, v1.ApplyRunResponse]
-}
-
-// CreateRun calls admiral.api.run.v1.RunAPI.CreateRun.
-func (c *runAPIClient) CreateRun(ctx context.Context, req *connect.Request[v1.CreateRunRequest]) (*connect.Response[v1.CreateRunResponse], error) {
-	return c.createRun.CallUnary(ctx, req)
-}
-
-// GetRun calls admiral.api.run.v1.RunAPI.GetRun.
-func (c *runAPIClient) GetRun(ctx context.Context, req *connect.Request[v1.GetRunRequest]) (*connect.Response[v1.GetRunResponse], error) {
-	return c.getRun.CallUnary(ctx, req)
-}
-
-// ListRuns calls admiral.api.run.v1.RunAPI.ListRuns.
-func (c *runAPIClient) ListRuns(ctx context.Context, req *connect.Request[v1.ListRunsRequest]) (*connect.Response[v1.ListRunsResponse], error) {
-	return c.listRuns.CallUnary(ctx, req)
-}
-
-// CancelRun calls admiral.api.run.v1.RunAPI.CancelRun.
-func (c *runAPIClient) CancelRun(ctx context.Context, req *connect.Request[v1.CancelRunRequest]) (*connect.Response[v1.CancelRunResponse], error) {
-	return c.cancelRun.CallUnary(ctx, req)
-}
-
-// GetRevision calls admiral.api.run.v1.RunAPI.GetRevision.
-func (c *runAPIClient) GetRevision(ctx context.Context, req *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error) {
-	return c.getRevision.CallUnary(ctx, req)
-}
-
-// ListRevisions calls admiral.api.run.v1.RunAPI.ListRevisions.
-func (c *runAPIClient) ListRevisions(ctx context.Context, req *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error) {
-	return c.listRevisions.CallUnary(ctx, req)
-}
-
-// RetryRevision calls admiral.api.run.v1.RunAPI.RetryRevision.
-func (c *runAPIClient) RetryRevision(ctx context.Context, req *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error) {
-	return c.retryRevision.CallUnary(ctx, req)
-}
-
-// ApplyRun calls admiral.api.run.v1.RunAPI.ApplyRun.
-func (c *runAPIClient) ApplyRun(ctx context.Context, req *connect.Request[v1.ApplyRunRequest]) (*connect.Response[v1.ApplyRunResponse], error) {
-	return c.applyRun.CallUnary(ctx, req)
+// NewRunAPIClient constructs a client for the admiral.api.run.v1.RunAPI service. Multiple service
+// clients may share a single connect.Client.
+func NewRunAPIClient(client *connect.Client) RunAPIClient {
+	return &runAPIClient{client: client}
 }
 
 // RunAPIHandler is an implementation of the admiral.api.run.v1.RunAPI service.
 type RunAPIHandler interface {
-	// CreateRun triggers a new run for an application+environment.
+	// CreateRun starts a run. For a change set revision it prepares the
+	// revision if needed, then plans it. For what is desired it checks for
+	// drift or plans a reapply.
 	//
-	// The server resolves all components (with environment overrides applied),
-	// builds the dependency DAG, and begins rendering and executing revisions.
-	//
-	// Concurrency: only one run can be active per application+environment
-	// at a time. If a run is already in an active state (PENDING, QUEUED,
-	// PLANNING, PLANNED, or APPLYING), the new run is queued and will start
-	// automatically when the current run completes or is canceled.
+	// FAILED_PRECONDITION when the revision is not its change set's head, or
+	// the change set is not open.
 	//
 	// Scope: `run:write`
-	CreateRun(context.Context, *connect.Request[v1.CreateRunRequest]) (*connect.Response[v1.CreateRunResponse], error)
-	// GetRun retrieves a run by ID, including its composite status derived
-	// from all component revisions.
+	CreateRun(context.Context, *v1.CreateRunRequest) (*v1.CreateRunResponse, error)
+	// GetRun returns a run: where it is, its plan and apply phases, and its
+	// approvals.
 	//
 	// Scope: `run:read`
-	GetRun(context.Context, *connect.Request[v1.GetRunRequest]) (*connect.Response[v1.GetRunResponse], error)
-	// ListRuns returns a paginated list of runs.
-	//
-	// Common filter fields: `application_id`, `environment_id`, `status`.
-	// Use to view run history for an environment.
+	GetRun(context.Context, *v1.GetRunRequest) (*v1.GetRunResponse, error)
+	// ListRuns lists runs, newest first. Without a `kind` in the filter it
+	// lists change set runs.
 	//
 	// Scope: `run:read`
-	ListRuns(context.Context, *connect.Request[v1.ListRunsRequest]) (*connect.Response[v1.ListRunsResponse], error)
-	// CancelRun cancels an in-progress run. Stops pending and queued
-	// revisions from proceeding and prevents the queue from advancing; the run
-	// status becomes CANCELED. APPLYING runs cannot be canceled because
-	// terraform/apply cannot be interrupted mid-execution; the call is
-	// rejected with FAILED_PRECONDITION. Wait for the in-flight phase to
-	// complete before cancellation. Revisions already SUCCEEDED remain
-	// applied.
+	ListRuns(context.Context, *v1.ListRunsRequest) (*v1.ListRunsResponse, error)
+	// ApproveRun approves a run's plan. Only a person approves, and not one who
+	// revised the change set: the author never counts toward an approval rule,
+	// and an environment that needs no approval needs none of this. An
+	// approval carries to a later run of the same revision, or of a revision a
+	// rebase cut without resolving a conflict, when its plan gives every
+	// resource the same action and the same new value for each attribute the
+	// apply changes.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the run's plan, or the run
+	// is not PLANNED.
 	//
 	// Scope: `run:write`
-	CancelRun(context.Context, *connect.Request[v1.CancelRunRequest]) (*connect.Response[v1.CancelRunResponse], error)
-	// GetRevision retrieves a single component revision within a run.
+	ApproveRun(context.Context, *v1.ApproveRunRequest) (*v1.ApproveRunResponse, error)
+	// ApplyRun applies a run's plan. It takes the environment's lock. The agent
+	// checks the plan is still current before it changes anything.
 	//
-	// Scope: `run:read`
-	GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error)
-	// ListRevisions returns all component revisions for a run.
-	//
-	// Scope: `run:read`
-	ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error)
-	// RetryRevision retries a failed component revision. A new execution
-	// attempt is made using the same rendered artifacts. The retry count
-	// is incremented. Only applicable to revisions in FAILED status.
+	// FAILED_PRECONDITION when the run is not PLANNED, an approval in
+	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
+	// drift check.
 	//
 	// Scope: `run:write`
-	RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error)
-	// ApplyRun transitions a run from plan phase to apply phase. Revisions
-	// currently in PLANNED status get an APPLY job dispatched to their
-	// assigned TERRAFORM agent. This is the single authorization gate per changeset;
-	// downstream layers auto-continue plan->apply without re-prompting.
+	ApplyRun(context.Context, *v1.ApplyRunRequest) (*v1.ApplyRunResponse, error)
+	// AcceptRun takes a PARTIAL run's apply as the environment's new state and
+	// releases the hold. It is recorded with its reason, and a change set run's
+	// change set becomes APPLIED.
 	//
 	// Scope: `run:write`
-	ApplyRun(context.Context, *connect.Request[v1.ApplyRunRequest]) (*connect.Response[v1.ApplyRunResponse], error)
+	AcceptRun(context.Context, *v1.AcceptRunRequest) (*v1.AcceptRunResponse, error)
+	// CancelRun stops a run that is preparing, queued, planning or applying.
+	// An apply already changing the environment stops at the next component
+	// and ends PARTIAL.
+	//
+	// Scope: `run:write`
+	CancelRun(context.Context, *v1.CancelRunRequest) (*v1.CancelRunResponse, error)
+	// GetRunPlanDiff returns a finished plan's full diffs, with every value
+	// the component marks sensitive masked: a Kubernetes Secret's `data` and
+	// `stringData`, a Terraform value declared `sensitive`. FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `run:read`
+	GetRunPlanDiff(context.Context, *v1.GetRunPlanDiffRequest) (*v1.GetRunPlanDiffResponse, error)
 }
 
-// NewRunAPIHandler builds an HTTP handler from the service implementation. It returns the path on
-// which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewRunAPIHandler(svc RunAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	runAPIMethods := v1.File_admiral_api_run_v1_run_proto.Services().ByName("RunAPI").Methods()
-	runAPICreateRunHandler := connect.NewUnaryHandler(
-		RunAPICreateRunProcedure,
-		svc.CreateRun,
-		connect.WithSchema(runAPIMethods.ByName("CreateRun")),
-		connect.WithHandlerOptions(opts...),
+// RegisterRunAPIHandler registers svc as the admiral.api.run.v1.RunAPI implementation on server.
+func RegisterRunAPIHandler(server *connect.Server, svc RunAPIHandler) {
+	adapter := runAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: runAPICreateRunSpec(), Handler: adapter.createRun},
+		connect.Method{Spec: runAPIGetRunSpec(), Handler: adapter.getRun},
+		connect.Method{Spec: runAPIListRunsSpec(), Handler: adapter.listRuns},
+		connect.Method{Spec: runAPIApproveRunSpec(), Handler: adapter.approveRun},
+		connect.Method{Spec: runAPIApplyRunSpec(), Handler: adapter.applyRun},
+		connect.Method{Spec: runAPIAcceptRunSpec(), Handler: adapter.acceptRun},
+		connect.Method{Spec: runAPICancelRunSpec(), Handler: adapter.cancelRun},
+		connect.Method{Spec: runAPIGetRunPlanDiffSpec(), Handler: adapter.getRunPlanDiff},
 	)
-	runAPIGetRunHandler := connect.NewUnaryHandler(
-		RunAPIGetRunProcedure,
-		svc.GetRun,
-		connect.WithSchema(runAPIMethods.ByName("GetRun")),
-		connect.WithHandlerOptions(opts...),
-	)
-	runAPIListRunsHandler := connect.NewUnaryHandler(
-		RunAPIListRunsProcedure,
-		svc.ListRuns,
-		connect.WithSchema(runAPIMethods.ByName("ListRuns")),
-		connect.WithHandlerOptions(opts...),
-	)
-	runAPICancelRunHandler := connect.NewUnaryHandler(
-		RunAPICancelRunProcedure,
-		svc.CancelRun,
-		connect.WithSchema(runAPIMethods.ByName("CancelRun")),
-		connect.WithHandlerOptions(opts...),
-	)
-	runAPIGetRevisionHandler := connect.NewUnaryHandler(
-		RunAPIGetRevisionProcedure,
-		svc.GetRevision,
-		connect.WithSchema(runAPIMethods.ByName("GetRevision")),
-		connect.WithHandlerOptions(opts...),
-	)
-	runAPIListRevisionsHandler := connect.NewUnaryHandler(
-		RunAPIListRevisionsProcedure,
-		svc.ListRevisions,
-		connect.WithSchema(runAPIMethods.ByName("ListRevisions")),
-		connect.WithHandlerOptions(opts...),
-	)
-	runAPIRetryRevisionHandler := connect.NewUnaryHandler(
-		RunAPIRetryRevisionProcedure,
-		svc.RetryRevision,
-		connect.WithSchema(runAPIMethods.ByName("RetryRevision")),
-		connect.WithHandlerOptions(opts...),
-	)
-	runAPIApplyRunHandler := connect.NewUnaryHandler(
-		RunAPIApplyRunProcedure,
-		svc.ApplyRun,
-		connect.WithSchema(runAPIMethods.ByName("ApplyRun")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.run.v1.RunAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case RunAPICreateRunProcedure:
-			runAPICreateRunHandler.ServeHTTP(w, r)
-		case RunAPIGetRunProcedure:
-			runAPIGetRunHandler.ServeHTTP(w, r)
-		case RunAPIListRunsProcedure:
-			runAPIListRunsHandler.ServeHTTP(w, r)
-		case RunAPICancelRunProcedure:
-			runAPICancelRunHandler.ServeHTTP(w, r)
-		case RunAPIGetRevisionProcedure:
-			runAPIGetRevisionHandler.ServeHTTP(w, r)
-		case RunAPIListRevisionsProcedure:
-			runAPIListRevisionsHandler.ServeHTTP(w, r)
-		case RunAPIRetryRevisionProcedure:
-			runAPIRetryRevisionHandler.ServeHTTP(w, r)
-		case RunAPIApplyRunProcedure:
-			runAPIApplyRunHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedRunAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedRunAPIHandler struct{}
 
-func (UnimplementedRunAPIHandler) CreateRun(context.Context, *connect.Request[v1.CreateRunRequest]) (*connect.Response[v1.CreateRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.CreateRun is not implemented"))
+func (UnimplementedRunAPIHandler) CreateRun(context.Context, *v1.CreateRunRequest) (*v1.CreateRunResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.CreateRun is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) GetRun(context.Context, *connect.Request[v1.GetRunRequest]) (*connect.Response[v1.GetRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.GetRun is not implemented"))
+func (UnimplementedRunAPIHandler) GetRun(context.Context, *v1.GetRunRequest) (*v1.GetRunResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.GetRun is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) ListRuns(context.Context, *connect.Request[v1.ListRunsRequest]) (*connect.Response[v1.ListRunsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.ListRuns is not implemented"))
+func (UnimplementedRunAPIHandler) ListRuns(context.Context, *v1.ListRunsRequest) (*v1.ListRunsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.ListRuns is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) CancelRun(context.Context, *connect.Request[v1.CancelRunRequest]) (*connect.Response[v1.CancelRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.CancelRun is not implemented"))
+func (UnimplementedRunAPIHandler) ApproveRun(context.Context, *v1.ApproveRunRequest) (*v1.ApproveRunResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.ApproveRun is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.GetRevision is not implemented"))
+func (UnimplementedRunAPIHandler) ApplyRun(context.Context, *v1.ApplyRunRequest) (*v1.ApplyRunResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.ApplyRun is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.ListRevisions is not implemented"))
+func (UnimplementedRunAPIHandler) AcceptRun(context.Context, *v1.AcceptRunRequest) (*v1.AcceptRunResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.AcceptRun is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) RetryRevision(context.Context, *connect.Request[v1.RetryRevisionRequest]) (*connect.Response[v1.RetryRevisionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.RetryRevision is not implemented"))
+func (UnimplementedRunAPIHandler) CancelRun(context.Context, *v1.CancelRunRequest) (*v1.CancelRunResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.CancelRun is not implemented")
 }
 
-func (UnimplementedRunAPIHandler) ApplyRun(context.Context, *connect.Request[v1.ApplyRunRequest]) (*connect.Response[v1.ApplyRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.run.v1.RunAPI.ApplyRun is not implemented"))
+func (UnimplementedRunAPIHandler) GetRunPlanDiff(context.Context, *v1.GetRunPlanDiffRequest) (*v1.GetRunPlanDiffResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.run.v1.RunAPI.GetRunPlanDiff is not implemented")
+}
+
+type runAPIClient struct {
+	client *connect.Client
+}
+
+func (c *runAPIClient) CreateRun(ctx context.Context, req *v1.CreateRunRequest) (*v1.CreateRunResponse, error) {
+	var res v1.CreateRunResponse
+	if err := c.client.CallUnary(ctx, runAPICreateRunSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) GetRun(ctx context.Context, req *v1.GetRunRequest) (*v1.GetRunResponse, error) {
+	var res v1.GetRunResponse
+	if err := c.client.CallUnary(ctx, runAPIGetRunSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) ListRuns(ctx context.Context, req *v1.ListRunsRequest) (*v1.ListRunsResponse, error) {
+	var res v1.ListRunsResponse
+	if err := c.client.CallUnary(ctx, runAPIListRunsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) ApproveRun(ctx context.Context, req *v1.ApproveRunRequest) (*v1.ApproveRunResponse, error) {
+	var res v1.ApproveRunResponse
+	if err := c.client.CallUnary(ctx, runAPIApproveRunSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) ApplyRun(ctx context.Context, req *v1.ApplyRunRequest) (*v1.ApplyRunResponse, error) {
+	var res v1.ApplyRunResponse
+	if err := c.client.CallUnary(ctx, runAPIApplyRunSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) AcceptRun(ctx context.Context, req *v1.AcceptRunRequest) (*v1.AcceptRunResponse, error) {
+	var res v1.AcceptRunResponse
+	if err := c.client.CallUnary(ctx, runAPIAcceptRunSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) CancelRun(ctx context.Context, req *v1.CancelRunRequest) (*v1.CancelRunResponse, error) {
+	var res v1.CancelRunResponse
+	if err := c.client.CallUnary(ctx, runAPICancelRunSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *runAPIClient) GetRunPlanDiff(ctx context.Context, req *v1.GetRunPlanDiffRequest) (*v1.GetRunPlanDiffResponse, error) {
+	var res v1.GetRunPlanDiffResponse
+	if err := c.client.CallUnary(ctx, runAPIGetRunPlanDiffSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type runAPIHandler struct{ svc RunAPIHandler }
+
+func (h runAPIHandler) createRun(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateRunRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateRun(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) getRun(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetRunRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetRun(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) listRuns(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListRunsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListRuns(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) approveRun(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ApproveRunRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ApproveRun(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) applyRun(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ApplyRunRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ApplyRun(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) acceptRun(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.AcceptRunRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.AcceptRun(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) cancelRun(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CancelRunRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CancelRun(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h runAPIHandler) getRunPlanDiff(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetRunPlanDiffRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetRunPlanDiff(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

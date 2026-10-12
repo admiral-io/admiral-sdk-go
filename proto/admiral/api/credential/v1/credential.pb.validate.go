@@ -867,6 +867,35 @@ func (m *Credential) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetLastUsedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CredentialValidationError{
+					field:  "LastUsedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CredentialValidationError{
+					field:  "LastUsedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLastUsedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CredentialValidationError{
+				field:  "LastUsedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return CredentialMultiError(errors)
 	}
@@ -966,18 +995,12 @@ func (m *CreateCredentialRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Name
-
-	// no validation rules for Description
-
-	// no validation rules for Type
-
 	if all {
-		switch v := interface{}(m.GetAuthConfig()).(type) {
+		switch v := interface{}(m.GetCredential()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, CreateCredentialRequestValidationError{
-					field:  "AuthConfig",
+					field:  "Credential",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -985,23 +1008,21 @@ func (m *CreateCredentialRequest) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, CreateCredentialRequestValidationError{
-					field:  "AuthConfig",
+					field:  "Credential",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetAuthConfig()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetCredential()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return CreateCredentialRequestValidationError{
-				field:  "AuthConfig",
+				field:  "Credential",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
 		}
 	}
-
-	// no validation rules for Labels
 
 	if len(errors) > 0 {
 		return CreateCredentialRequestMultiError(errors)
@@ -1476,8 +1497,6 @@ func (m *ListCredentialsRequest) validate(all bool) error {
 	// no validation rules for PageSize
 
 	// no validation rules for PageToken
-
-	// no validation rules for Type
 
 	if len(errors) > 0 {
 		return ListCredentialsRequestMultiError(errors)

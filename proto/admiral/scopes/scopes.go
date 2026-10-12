@@ -43,9 +43,11 @@ const (
 const (
 	AgentEnroll      = "agent:enroll"
 	AgentExec        = "agent:exec"
+	AgentHeartbeat   = "agent:heartbeat"
 	AgentRead        = "agent:read"
-	AgentStatus      = "agent:status"
 	AgentWrite       = "agent:write"
+	ApikeyRead       = "apikey:read"
+	ApikeyWrite      = "apikey:write"
 	AppRead          = "app:read"
 	AppWrite         = "app:write"
 	ChangesetRead    = "changeset:read"
@@ -61,11 +63,8 @@ const (
 	RunWrite         = "run:write"
 	TenantRead       = "tenant:read"
 	TenantWrite      = "tenant:write"
-	TokenRead        = "token:read"
-	TokenWrite       = "token:write"
 	UserRead         = "user:read"
 	UserWrite        = "user:write"
-	VarRead          = "var:read"
 )
 
 // Group is one scope prefix and what it covers, for anything that shows
@@ -78,17 +77,16 @@ type Group struct {
 // Groups maps a scope prefix to its group. Every scope's prefix has an
 // entry; GroupOf finds it.
 var Groups = map[string]Group{
-	"agent":      {Name: "agent", Description: "Clusters, the agents in them, who may use each, and the jobs they run."},
+	"agent":      {Name: "agent", Description: "Workload identity providers, the agents that authenticate through them, who may use each, and the jobs they run."},
+	"apikey":     {Name: "apikey", Description: "Your own API keys."},
 	"app":        {Name: "app", Description: "Applications."},
 	"changeset":  {Name: "changeset", Description: "Change sets, their revisions, and the component values they propose."},
 	"component":  {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
 	"credential": {Name: "credential", Description: "Credentials for external systems."},
 	"env":        {Name: "env", Description: "Deployment environments and the components in them."},
-	"run":        {Name: "run", Description: "Runs of change sets, plan through apply."},
+	"run":        {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
 	"tenant":     {Name: "tenant", Description: "Your tenant."},
-	"token":      {Name: "token", Description: "Your own API keys."},
 	"user":       {Name: "user", Description: "Members of your tenant."},
-	"var":        {Name: "var", Description: "Configuration variables."},
 }
 
 // GroupOf is the group a scope name falls under: everything before the
@@ -128,23 +126,34 @@ var Catalog = map[string]Scope{
 	},
 	AgentExec: {
 		Name:         AgentExec,
-		Description:  "Agent runtime work — claim, start, renew, fetch the artifact of, and report jobs.",
+		Description:  "Agent runtime work: claim, start, renew, append the log of, fetch the artifact of, upload the plan diff of, check the plan of, and finish jobs.",
+		AssignableTo: []string{TokenTypeSAT},
+	},
+	AgentHeartbeat: {
+		Name:         AgentHeartbeat,
+		Description:  "Send an agent's heartbeat: its version, what it runs against, its profiles, and its issuer's current keys.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentRead: {
 		Name:         AgentRead,
-		Description:  "Read clusters, agents, who may use them, and their jobs.",
+		Description:  "Read workload identity providers, agents, who may use them, and their jobs.",
 		AssignableTo: []string{TokenTypePAT},
-	},
-	AgentStatus: {
-		Name:         AgentStatus,
-		Description:  "Report an agent's status, its cluster's capabilities, and its cluster's keys.",
-		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentWrite: {
 		Name:         AgentWrite,
-		Description:  "Connect clusters; create, update and delete agents; issue enrollment keys; grant use; cancel jobs.",
+		Description:  "Register workload identity providers; create, update and delete agents; issue enrollment keys; grant use; cancel jobs.",
 		Implies:      []string{AgentRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ApikeyRead: {
+		Name:         ApikeyRead,
+		Description:  "Read your own API keys.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ApikeyWrite: {
+		Name:         ApikeyWrite,
+		Description:  "Create, update, and revoke your own API keys.",
+		Implies:      []string{ApikeyRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	AppRead: {
@@ -171,18 +180,18 @@ var Catalog = map[string]Scope{
 	},
 	ComponentPublish: {
 		Name:         ComponentPublish,
-		Description:  "Publish revisions and set tags. Adds to the registry and removes nothing from it, which is what a CI publish key holds.",
+		Description:  "Publish versions and set tags. Adds to the registry and removes nothing from it, which is what a CI publish key holds.",
 		Implies:      []string{ComponentRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	ComponentRead: {
 		Name:         ComponentRead,
-		Description:  "Read components, their revisions and tags, and the contract and findings each revision carries.",
+		Description:  "Read components, their versions and tags, and the contract and findings each version carries.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	ComponentWrite: {
 		Name:         ComponentWrite,
-		Description:  "Edit a component's metadata, retire components, deprecate revisions, and delete floating tags, in addition to everything a publisher can do.",
+		Description:  "Edit a component's metadata, deprecate or delete components, set a version's status, and delete floating tags, in addition to everything a publisher can do.",
 		Implies:      []string{ComponentPublish},
 		AssignableTo: []string{TokenTypePAT},
 	},
@@ -210,35 +219,24 @@ var Catalog = map[string]Scope{
 	},
 	RunRead: {
 		Name:         RunRead,
-		Description:  "Read runs and revisions.",
+		Description:  "Read runs, their plans, applies and approvals.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	RunWrite: {
 		Name:         RunWrite,
-		Description:  "Create, apply, and cancel runs; retry revisions.",
+		Description:  "Start, approve, apply, accept and cancel runs.",
 		Implies:      []string{RunRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	TenantRead: {
 		Name:         TenantRead,
-		Description:  "Read the caller's own tenant -- name, slug, and status.",
+		Description:  "Read the caller's own tenant -- name, slug, status and logo.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	TenantWrite: {
 		Name:         TenantWrite,
-		Description:  "Update the caller's own tenant's settings, and close it -- suspending or deleting the tenant you own. Which of those you may actually do is decided per tenant, not by holding this.",
+		Description:  "Update the caller's own tenant's settings. Whether you may is decided per tenant, not by holding this.",
 		Implies:      []string{TenantRead},
-		AssignableTo: []string{TokenTypePAT},
-	},
-	TokenRead: {
-		Name:         TokenRead,
-		Description:  "Read your own API keys.",
-		AssignableTo: []string{TokenTypePAT},
-	},
-	TokenWrite: {
-		Name:         TokenWrite,
-		Description:  "Create, update, and revoke your own API keys.",
-		Implies:      []string{TokenRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	UserRead: {
@@ -252,17 +250,13 @@ var Catalog = map[string]Scope{
 		Implies:      []string{UserRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
-	VarRead: {
-		Name:         VarRead,
-		Description:  "Read resolved environment variables, including secret values.",
-		AssignableTo: []string{TokenTypePAT},
-	},
 }
 
 // impliesClosure precomputes the transitive closure of each scope's
 // implies edges (excluding the scope itself).
 var impliesClosure = map[string][]string{
 	AgentWrite:       []string{AgentRead},
+	ApikeyWrite:      []string{ApikeyRead},
 	AppWrite:         []string{AppRead},
 	ChangesetWrite:   []string{ChangesetRead},
 	ComponentPublish: []string{ComponentRead},
@@ -271,7 +265,6 @@ var impliesClosure = map[string][]string{
 	EnvWrite:         []string{EnvRead},
 	RunWrite:         []string{RunRead},
 	TenantWrite:      []string{TenantRead},
-	TokenWrite:       []string{TokenRead},
 	UserWrite:        []string{UserRead},
 }
 

@@ -62,6 +62,51 @@ func local_request_ChangeSetAPI_CreateChangeSet_0(ctx context.Context, marshaler
 	return msg, metadata, err
 }
 
+func request_ChangeSetAPI_UpdateChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq UpdateChangeSetRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["change_set.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set.id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "change_set.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set.id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.UpdateChangeSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ChangeSetAPI_UpdateChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq UpdateChangeSetRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["change_set.id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set.id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "change_set.id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set.id", err)
+	}
+	msg, err := server.UpdateChangeSet(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_ChangeSetAPI_EditChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq EditChangeSetRequest
@@ -104,6 +149,51 @@ func local_request_ChangeSetAPI_EditChangeSet_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
 	}
 	msg, err := server.EditChangeSet(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_ChangeSetAPI_RebaseChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RebaseChangeSetRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["change_set_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
+	}
+	protoReq.ChangeSetId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.RebaseChangeSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ChangeSetAPI_RebaseChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RebaseChangeSetRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["change_set_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
+	}
+	protoReq.ChangeSetId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
+	}
+	msg, err := server.RebaseChangeSet(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -226,6 +316,8 @@ func local_request_ChangeSetAPI_DiscardChangeSet_0(ctx context.Context, marshale
 	return msg, metadata, err
 }
 
+var filter_ChangeSetAPI_GetComponentValues_0 = &utilities.DoubleArray{Encoding: map[string]int{"change_set_id": 0, "component": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+
 func request_ChangeSetAPI_GetComponentValues_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq GetComponentValuesRequest
@@ -247,6 +339,12 @@ func request_ChangeSetAPI_GetComponentValues_0(ctx context.Context, marshaler ru
 	protoReq.Component, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChangeSetAPI_GetComponentValues_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -276,6 +374,12 @@ func local_request_ChangeSetAPI_GetComponentValues_0(ctx context.Context, marsha
 	protoReq.Component, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChangeSetAPI_GetComponentValues_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.GetComponentValues(ctx, &protoReq)
 	return msg, metadata, err
@@ -334,13 +438,13 @@ func request_ChangeSetAPI_GetRevision_0(ctx context.Context, marshaler runtime.M
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
 	}
-	val, ok = pathParams["number"]
+	val, ok = pathParams["revision"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
 	}
-	protoReq.Number, err = runtime.Int32(val)
+	protoReq.Revision, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -363,13 +467,13 @@ func local_request_ChangeSetAPI_GetRevision_0(ctx context.Context, marshaler run
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
 	}
-	val, ok = pathParams["number"]
+	val, ok = pathParams["revision"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "number")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
 	}
-	protoReq.Number, err = runtime.Int32(val)
+	protoReq.Revision, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "number", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
 	}
 	msg, err := server.GetRevision(ctx, &protoReq)
 	return msg, metadata, err
@@ -428,51 +532,6 @@ func local_request_ChangeSetAPI_ListRevisions_0(ctx context.Context, marshaler r
 	return msg, metadata, err
 }
 
-func request_ChangeSetAPI_PlanChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq PlanChangeSetRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.PlanChangeSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_PlanChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq PlanChangeSetRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	msg, err := server.PlanChangeSet(ctx, &protoReq)
-	return msg, metadata, err
-}
-
 func request_ChangeSetAPI_GetPrepare_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq GetPrepareRequest
@@ -491,7 +550,7 @@ func request_ChangeSetAPI_GetPrepare_0(ctx context.Context, marshaler runtime.Ma
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
 	}
-	protoReq.Revision, err = runtime.Int32(val)
+	protoReq.Revision, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
 	}
@@ -520,7 +579,7 @@ func local_request_ChangeSetAPI_GetPrepare_0(ctx context.Context, marshaler runt
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
 	}
-	protoReq.Revision, err = runtime.Int32(val)
+	protoReq.Revision, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
 	}
@@ -546,7 +605,7 @@ func request_ChangeSetAPI_GetArtifact_0(ctx context.Context, marshaler runtime.M
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
 	}
-	protoReq.Revision, err = runtime.Int32(val)
+	protoReq.Revision, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
 	}
@@ -575,311 +634,11 @@ func local_request_ChangeSetAPI_GetArtifact_0(ctx context.Context, marshaler run
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
 	}
-	protoReq.Revision, err = runtime.Int32(val)
+	protoReq.Revision, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
 	}
 	msg, err := server.GetArtifact(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_ChangeSetAPI_GetPlan_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetPlanRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	val, ok = pathParams["revision"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
-	}
-	protoReq.Revision, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.GetPlan(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_GetPlan_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetPlanRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	val, ok = pathParams["revision"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
-	}
-	protoReq.Revision, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
-	}
-	msg, err := server.GetPlan(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_ChangeSetAPI_GetPlanDiff_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetPlanDiffRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	val, ok = pathParams["revision"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
-	}
-	protoReq.Revision, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.GetPlanDiff(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_GetPlanDiff_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetPlanDiffRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	val, ok = pathParams["revision"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
-	}
-	protoReq.Revision, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
-	}
-	msg, err := server.GetPlanDiff(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_ChangeSetAPI_ApproveChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ApproveChangeSetRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.ApproveChangeSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_ApproveChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ApproveChangeSetRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	msg, err := server.ApproveChangeSet(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_ChangeSetAPI_ApplyChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ApplyChangeSetRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.ApplyChangeSet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_ApplyChangeSet_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ApplyChangeSetRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	msg, err := server.ApplyChangeSet(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_ChangeSetAPI_GetApply_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetApplyRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	val, ok = pathParams["revision"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
-	}
-	protoReq.Revision, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.GetApply(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_GetApply_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetApplyRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	val, ok = pathParams["revision"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
-	}
-	protoReq.Revision, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
-	}
-	msg, err := server.GetApply(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_ChangeSetAPI_AcceptPartialApply_0(ctx context.Context, marshaler runtime.Marshaler, client ChangeSetAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq AcceptPartialApplyRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.AcceptPartialApply(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChangeSetAPI_AcceptPartialApply_0(ctx context.Context, marshaler runtime.Marshaler, server ChangeSetAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq AcceptPartialApplyRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["change_set_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "change_set_id")
-	}
-	protoReq.ChangeSetId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "change_set_id", err)
-	}
-	msg, err := server.AcceptPartialApply(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -954,6 +713,26 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_ChangeSetAPI_CreateChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPatch, pattern_ChangeSetAPI_UpdateChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set.id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ChangeSetAPI_UpdateChangeSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ChangeSetAPI_UpdateChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_EditChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -973,6 +752,26 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_ChangeSetAPI_EditChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_RebaseChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RebaseChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/rebase"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ChangeSetAPI_RebaseChangeSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ChangeSetAPI_RebaseChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1080,7 +879,7 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{number}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1113,26 +912,6 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_ChangeSetAPI_ListRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_PlanChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/PlanChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/plan"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_PlanChangeSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_PlanChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetPrepare_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1173,126 +952,6 @@ func RegisterChangeSetAPIHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_ChangeSetAPI_GetArtifact_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetPlan", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}/plan"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_GetPlan_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_GetPlan_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetPlanDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}/plan/diff"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_GetPlanDiff_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_GetPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_ApproveChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ApproveChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/approve"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_ApproveChangeSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_ApproveChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_ApplyChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ApplyChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/apply"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_ApplyChangeSet_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_ApplyChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetApply_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetApply", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}/apply"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_GetApply_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_GetApply_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_AcceptPartialApply_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/AcceptPartialApply", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/accept-partial"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChangeSetAPI_AcceptPartialApply_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_AcceptPartialApply_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_RevertChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1371,6 +1030,23 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_ChangeSetAPI_CreateChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPatch, pattern_ChangeSetAPI_UpdateChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set.id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ChangeSetAPI_UpdateChangeSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ChangeSetAPI_UpdateChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_EditChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1387,6 +1063,23 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_ChangeSetAPI_EditChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_RebaseChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/RebaseChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/rebase"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ChangeSetAPI_RebaseChangeSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ChangeSetAPI_RebaseChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1477,7 +1170,7 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{number}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1506,23 +1199,6 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_ChangeSetAPI_ListRevisions_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_PlanChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/PlanChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/plan"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_PlanChangeSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_PlanChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetPrepare_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1558,108 +1234,6 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_ChangeSetAPI_GetArtifact_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetPlan", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}/plan"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_GetPlan_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_GetPlan_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetPlanDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}/plan/diff"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_GetPlanDiff_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_GetPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_ApproveChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ApproveChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/approve"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_ApproveChangeSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_ApproveChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_ApplyChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/ApplyChangeSet", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/apply"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_ApplyChangeSet_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_ApplyChangeSet_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_ChangeSetAPI_GetApply_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/GetApply", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/revisions/{revision}/apply"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_GetApply_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_GetApply_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_AcceptPartialApply_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.changeset.v1.ChangeSetAPI/AcceptPartialApply", runtime.WithHTTPPathPattern("/v1/changesets/{change_set_id}/accept-partial"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChangeSetAPI_AcceptPartialApply_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChangeSetAPI_AcceptPartialApply_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_ChangeSetAPI_RevertChangeSet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1682,29 +1256,26 @@ func RegisterChangeSetAPIHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 var (
 	pattern_ChangeSetAPI_CreateChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "changesets"}, ""))
+	pattern_ChangeSetAPI_UpdateChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "changesets", "change_set.id"}, ""))
 	pattern_ChangeSetAPI_EditChangeSet_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "edit"}, ""))
+	pattern_ChangeSetAPI_RebaseChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "rebase"}, ""))
 	pattern_ChangeSetAPI_GetChangeSet_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "changesets", "change_set_id"}, ""))
 	pattern_ChangeSetAPI_ListChangeSets_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "changesets"}, ""))
 	pattern_ChangeSetAPI_DiscardChangeSet_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "discard"}, ""))
 	pattern_ChangeSetAPI_GetComponentValues_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "changesets", "change_set_id", "components", "component", "values"}, ""))
 	pattern_ChangeSetAPI_DiffChangeSet_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "diff"}, ""))
-	pattern_ChangeSetAPI_GetRevision_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "changesets", "change_set_id", "revisions", "number"}, ""))
+	pattern_ChangeSetAPI_GetRevision_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "changesets", "change_set_id", "revisions", "revision"}, ""))
 	pattern_ChangeSetAPI_ListRevisions_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "revisions"}, ""))
-	pattern_ChangeSetAPI_PlanChangeSet_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "plan"}, ""))
 	pattern_ChangeSetAPI_GetPrepare_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "changesets", "change_set_id", "revisions", "revision", "prepare"}, ""))
 	pattern_ChangeSetAPI_GetArtifact_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "changesets", "change_set_id", "revisions", "revision", "artifact"}, ""))
-	pattern_ChangeSetAPI_GetPlan_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "changesets", "change_set_id", "revisions", "revision", "plan"}, ""))
-	pattern_ChangeSetAPI_GetPlanDiff_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"v1", "changesets", "change_set_id", "revisions", "revision", "plan", "diff"}, ""))
-	pattern_ChangeSetAPI_ApproveChangeSet_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "approve"}, ""))
-	pattern_ChangeSetAPI_ApplyChangeSet_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "apply"}, ""))
-	pattern_ChangeSetAPI_GetApply_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "changesets", "change_set_id", "revisions", "revision", "apply"}, ""))
-	pattern_ChangeSetAPI_AcceptPartialApply_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "accept-partial"}, ""))
 	pattern_ChangeSetAPI_RevertChangeSet_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "changesets", "change_set_id", "revert"}, ""))
 )
 
 var (
 	forward_ChangeSetAPI_CreateChangeSet_0    = runtime.ForwardResponseMessage
+	forward_ChangeSetAPI_UpdateChangeSet_0    = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_EditChangeSet_0      = runtime.ForwardResponseMessage
+	forward_ChangeSetAPI_RebaseChangeSet_0    = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_GetChangeSet_0       = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_ListChangeSets_0     = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_DiscardChangeSet_0   = runtime.ForwardResponseMessage
@@ -1712,14 +1283,7 @@ var (
 	forward_ChangeSetAPI_DiffChangeSet_0      = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_GetRevision_0        = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_ListRevisions_0      = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_PlanChangeSet_0      = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_GetPrepare_0         = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_GetArtifact_0        = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_GetPlan_0            = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_GetPlanDiff_0        = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_ApproveChangeSet_0   = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_ApplyChangeSet_0     = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_GetApply_0           = runtime.ForwardResponseMessage
-	forward_ChangeSetAPI_AcceptPartialApply_0 = runtime.ForwardResponseMessage
 	forward_ChangeSetAPI_RevertChangeSet_0    = runtime.ForwardResponseMessage
 )

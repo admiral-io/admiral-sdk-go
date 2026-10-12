@@ -5,43 +5,58 @@
 package invitationv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// InvitationAPIName is the fully-qualified name of the InvitationAPI service.
 	InvitationAPIName = "admiral.api.invitation.v1.InvitationAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// InvitationAPICreateInvitationProcedure is the fully-qualified name of the InvitationAPI's
+	// InvitationAPICreateInvitationProcedure is the procedure name of the InvitationAPI's
 	// CreateInvitation RPC.
 	InvitationAPICreateInvitationProcedure = "/admiral.api.invitation.v1.InvitationAPI/CreateInvitation"
-	// InvitationAPIListInvitationsProcedure is the fully-qualified name of the InvitationAPI's
+	// InvitationAPIListInvitationsProcedure is the procedure name of the InvitationAPI's
 	// ListInvitations RPC.
 	InvitationAPIListInvitationsProcedure = "/admiral.api.invitation.v1.InvitationAPI/ListInvitations"
-	// InvitationAPIRevokeInvitationProcedure is the fully-qualified name of the InvitationAPI's
+	// InvitationAPIRevokeInvitationProcedure is the procedure name of the InvitationAPI's
 	// RevokeInvitation RPC.
 	InvitationAPIRevokeInvitationProcedure = "/admiral.api.invitation.v1.InvitationAPI/RevokeInvitation"
+)
+
+var (
+	invitationAPICreateInvitationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_invitation_v1_invitation_proto.Services().ByName("InvitationAPI").Methods().ByName("CreateInvitation"),
+			Procedure:  InvitationAPICreateInvitationProcedure,
+		}
+	})
+	invitationAPIListInvitationsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_invitation_v1_invitation_proto.Services().ByName("InvitationAPI").Methods().ByName("ListInvitations"),
+			Procedure:  InvitationAPIListInvitationsProcedure,
+		}
+	})
+	invitationAPIRevokeInvitationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_invitation_v1_invitation_proto.Services().ByName("InvitationAPI").Methods().ByName("RevokeInvitation"),
+			Procedure:  InvitationAPIRevokeInvitationProcedure,
+		}
+	})
 )
 
 // InvitationAPIClient is a client for the admiral.api.invitation.v1.InvitationAPI service.
@@ -51,79 +66,30 @@ type InvitationAPIClient interface {
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
 	// or a "send it again" is this same call. ALREADY_EXISTS when the address is
-	// already a member. INVALID_ARGUMENT for a role that cannot be granted by
-	// invitation: OWNER moves by transfer, and APP_CREATOR is a capability
-	// rather than a role.
+	// already a member. INVALID_ARGUMENT for OWNER, which moves by transfer, never by
+	// invitation.
 	//
 	// Scope: `user:write`
-	CreateInvitation(context.Context, *connect.Request[v1.CreateInvitationRequest]) (*connect.Response[v1.CreateInvitationResponse], error)
+	CreateInvitation(context.Context, *v1.CreateInvitationRequest) (*v1.CreateInvitationResponse, error)
 	// ListInvitations returns a page of the caller's tenant's invitations, every
 	// status included, so an administrator can see what is outstanding, what
 	// expired and what was withdrawn.
 	//
 	// Scope: `user:read`
-	ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error)
+	ListInvitations(context.Context, *v1.ListInvitationsRequest) (*v1.ListInvitationsResponse, error)
 	// RevokeInvitation withdraws a PENDING invitation; the link in the mail stops
 	// working at once. Idempotent: revoking one already revoked succeeds and
 	// changes nothing. FAILED_PRECONDITION when it was already accepted: there is
 	// a member now, and that is a different act.
 	//
 	// Scope: `user:write`
-	RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error)
+	RevokeInvitation(context.Context, *v1.RevokeInvitationRequest) (*v1.RevokeInvitationResponse, error)
 }
 
 // NewInvitationAPIClient constructs a client for the admiral.api.invitation.v1.InvitationAPI
-// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
-// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
-// the connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewInvitationAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) InvitationAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	invitationAPIMethods := v1.File_admiral_api_invitation_v1_invitation_proto.Services().ByName("InvitationAPI").Methods()
-	return &invitationAPIClient{
-		createInvitation: connect.NewClient[v1.CreateInvitationRequest, v1.CreateInvitationResponse](
-			httpClient,
-			baseURL+InvitationAPICreateInvitationProcedure,
-			connect.WithSchema(invitationAPIMethods.ByName("CreateInvitation")),
-			connect.WithClientOptions(opts...),
-		),
-		listInvitations: connect.NewClient[v1.ListInvitationsRequest, v1.ListInvitationsResponse](
-			httpClient,
-			baseURL+InvitationAPIListInvitationsProcedure,
-			connect.WithSchema(invitationAPIMethods.ByName("ListInvitations")),
-			connect.WithClientOptions(opts...),
-		),
-		revokeInvitation: connect.NewClient[v1.RevokeInvitationRequest, v1.RevokeInvitationResponse](
-			httpClient,
-			baseURL+InvitationAPIRevokeInvitationProcedure,
-			connect.WithSchema(invitationAPIMethods.ByName("RevokeInvitation")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// invitationAPIClient implements InvitationAPIClient.
-type invitationAPIClient struct {
-	createInvitation *connect.Client[v1.CreateInvitationRequest, v1.CreateInvitationResponse]
-	listInvitations  *connect.Client[v1.ListInvitationsRequest, v1.ListInvitationsResponse]
-	revokeInvitation *connect.Client[v1.RevokeInvitationRequest, v1.RevokeInvitationResponse]
-}
-
-// CreateInvitation calls admiral.api.invitation.v1.InvitationAPI.CreateInvitation.
-func (c *invitationAPIClient) CreateInvitation(ctx context.Context, req *connect.Request[v1.CreateInvitationRequest]) (*connect.Response[v1.CreateInvitationResponse], error) {
-	return c.createInvitation.CallUnary(ctx, req)
-}
-
-// ListInvitations calls admiral.api.invitation.v1.InvitationAPI.ListInvitations.
-func (c *invitationAPIClient) ListInvitations(ctx context.Context, req *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error) {
-	return c.listInvitations.CallUnary(ctx, req)
-}
-
-// RevokeInvitation calls admiral.api.invitation.v1.InvitationAPI.RevokeInvitation.
-func (c *invitationAPIClient) RevokeInvitation(ctx context.Context, req *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error) {
-	return c.revokeInvitation.CallUnary(ctx, req)
+// service. Multiple service clients may share a single connect.Client.
+func NewInvitationAPIClient(client *connect.Client) InvitationAPIClient {
+	return &invitationAPIClient{client: client}
 }
 
 // InvitationAPIHandler is an implementation of the admiral.api.invitation.v1.InvitationAPI service.
@@ -133,77 +99,114 @@ type InvitationAPIHandler interface {
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
 	// or a "send it again" is this same call. ALREADY_EXISTS when the address is
-	// already a member. INVALID_ARGUMENT for a role that cannot be granted by
-	// invitation: OWNER moves by transfer, and APP_CREATOR is a capability
-	// rather than a role.
+	// already a member. INVALID_ARGUMENT for OWNER, which moves by transfer, never by
+	// invitation.
 	//
 	// Scope: `user:write`
-	CreateInvitation(context.Context, *connect.Request[v1.CreateInvitationRequest]) (*connect.Response[v1.CreateInvitationResponse], error)
+	CreateInvitation(context.Context, *v1.CreateInvitationRequest) (*v1.CreateInvitationResponse, error)
 	// ListInvitations returns a page of the caller's tenant's invitations, every
 	// status included, so an administrator can see what is outstanding, what
 	// expired and what was withdrawn.
 	//
 	// Scope: `user:read`
-	ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error)
+	ListInvitations(context.Context, *v1.ListInvitationsRequest) (*v1.ListInvitationsResponse, error)
 	// RevokeInvitation withdraws a PENDING invitation; the link in the mail stops
 	// working at once. Idempotent: revoking one already revoked succeeds and
 	// changes nothing. FAILED_PRECONDITION when it was already accepted: there is
 	// a member now, and that is a different act.
 	//
 	// Scope: `user:write`
-	RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error)
+	RevokeInvitation(context.Context, *v1.RevokeInvitationRequest) (*v1.RevokeInvitationResponse, error)
 }
 
-// NewInvitationAPIHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewInvitationAPIHandler(svc InvitationAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	invitationAPIMethods := v1.File_admiral_api_invitation_v1_invitation_proto.Services().ByName("InvitationAPI").Methods()
-	invitationAPICreateInvitationHandler := connect.NewUnaryHandler(
-		InvitationAPICreateInvitationProcedure,
-		svc.CreateInvitation,
-		connect.WithSchema(invitationAPIMethods.ByName("CreateInvitation")),
-		connect.WithHandlerOptions(opts...),
+// RegisterInvitationAPIHandler registers svc as the admiral.api.invitation.v1.InvitationAPI
+// implementation on server.
+func RegisterInvitationAPIHandler(server *connect.Server, svc InvitationAPIHandler) {
+	adapter := invitationAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: invitationAPICreateInvitationSpec(), Handler: adapter.createInvitation},
+		connect.Method{Spec: invitationAPIListInvitationsSpec(), Handler: adapter.listInvitations},
+		connect.Method{Spec: invitationAPIRevokeInvitationSpec(), Handler: adapter.revokeInvitation},
 	)
-	invitationAPIListInvitationsHandler := connect.NewUnaryHandler(
-		InvitationAPIListInvitationsProcedure,
-		svc.ListInvitations,
-		connect.WithSchema(invitationAPIMethods.ByName("ListInvitations")),
-		connect.WithHandlerOptions(opts...),
-	)
-	invitationAPIRevokeInvitationHandler := connect.NewUnaryHandler(
-		InvitationAPIRevokeInvitationProcedure,
-		svc.RevokeInvitation,
-		connect.WithSchema(invitationAPIMethods.ByName("RevokeInvitation")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.invitation.v1.InvitationAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case InvitationAPICreateInvitationProcedure:
-			invitationAPICreateInvitationHandler.ServeHTTP(w, r)
-		case InvitationAPIListInvitationsProcedure:
-			invitationAPIListInvitationsHandler.ServeHTTP(w, r)
-		case InvitationAPIRevokeInvitationProcedure:
-			invitationAPIRevokeInvitationHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedInvitationAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedInvitationAPIHandler struct{}
 
-func (UnimplementedInvitationAPIHandler) CreateInvitation(context.Context, *connect.Request[v1.CreateInvitationRequest]) (*connect.Response[v1.CreateInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.invitation.v1.InvitationAPI.CreateInvitation is not implemented"))
+func (UnimplementedInvitationAPIHandler) CreateInvitation(context.Context, *v1.CreateInvitationRequest) (*v1.CreateInvitationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.invitation.v1.InvitationAPI.CreateInvitation is not implemented")
 }
 
-func (UnimplementedInvitationAPIHandler) ListInvitations(context.Context, *connect.Request[v1.ListInvitationsRequest]) (*connect.Response[v1.ListInvitationsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.invitation.v1.InvitationAPI.ListInvitations is not implemented"))
+func (UnimplementedInvitationAPIHandler) ListInvitations(context.Context, *v1.ListInvitationsRequest) (*v1.ListInvitationsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.invitation.v1.InvitationAPI.ListInvitations is not implemented")
 }
 
-func (UnimplementedInvitationAPIHandler) RevokeInvitation(context.Context, *connect.Request[v1.RevokeInvitationRequest]) (*connect.Response[v1.RevokeInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.invitation.v1.InvitationAPI.RevokeInvitation is not implemented"))
+func (UnimplementedInvitationAPIHandler) RevokeInvitation(context.Context, *v1.RevokeInvitationRequest) (*v1.RevokeInvitationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.invitation.v1.InvitationAPI.RevokeInvitation is not implemented")
+}
+
+type invitationAPIClient struct {
+	client *connect.Client
+}
+
+func (c *invitationAPIClient) CreateInvitation(ctx context.Context, req *v1.CreateInvitationRequest) (*v1.CreateInvitationResponse, error) {
+	var res v1.CreateInvitationResponse
+	if err := c.client.CallUnary(ctx, invitationAPICreateInvitationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *invitationAPIClient) ListInvitations(ctx context.Context, req *v1.ListInvitationsRequest) (*v1.ListInvitationsResponse, error) {
+	var res v1.ListInvitationsResponse
+	if err := c.client.CallUnary(ctx, invitationAPIListInvitationsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *invitationAPIClient) RevokeInvitation(ctx context.Context, req *v1.RevokeInvitationRequest) (*v1.RevokeInvitationResponse, error) {
+	var res v1.RevokeInvitationResponse
+	if err := c.client.CallUnary(ctx, invitationAPIRevokeInvitationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type invitationAPIHandler struct{ svc InvitationAPIHandler }
+
+func (h invitationAPIHandler) createInvitation(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateInvitationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateInvitation(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h invitationAPIHandler) listInvitations(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListInvitationsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListInvitations(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h invitationAPIHandler) revokeInvitation(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RevokeInvitationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RevokeInvitation(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

@@ -5,49 +5,78 @@
 package applicationv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// ApplicationAPIName is the fully-qualified name of the ApplicationAPI service.
 	ApplicationAPIName = "admiral.api.application.v1.ApplicationAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// ApplicationAPICreateApplicationProcedure is the fully-qualified name of the ApplicationAPI's
+	// ApplicationAPICreateApplicationProcedure is the procedure name of the ApplicationAPI's
 	// CreateApplication RPC.
 	ApplicationAPICreateApplicationProcedure = "/admiral.api.application.v1.ApplicationAPI/CreateApplication"
-	// ApplicationAPIGetApplicationProcedure is the fully-qualified name of the ApplicationAPI's
+	// ApplicationAPIGetApplicationProcedure is the procedure name of the ApplicationAPI's
 	// GetApplication RPC.
 	ApplicationAPIGetApplicationProcedure = "/admiral.api.application.v1.ApplicationAPI/GetApplication"
-	// ApplicationAPIListApplicationsProcedure is the fully-qualified name of the ApplicationAPI's
+	// ApplicationAPIListApplicationsProcedure is the procedure name of the ApplicationAPI's
 	// ListApplications RPC.
 	ApplicationAPIListApplicationsProcedure = "/admiral.api.application.v1.ApplicationAPI/ListApplications"
-	// ApplicationAPIUpdateApplicationProcedure is the fully-qualified name of the ApplicationAPI's
+	// ApplicationAPIUpdateApplicationProcedure is the procedure name of the ApplicationAPI's
 	// UpdateApplication RPC.
 	ApplicationAPIUpdateApplicationProcedure = "/admiral.api.application.v1.ApplicationAPI/UpdateApplication"
-	// ApplicationAPIDeleteApplicationProcedure is the fully-qualified name of the ApplicationAPI's
+	// ApplicationAPIDeleteApplicationProcedure is the procedure name of the ApplicationAPI's
 	// DeleteApplication RPC.
 	ApplicationAPIDeleteApplicationProcedure = "/admiral.api.application.v1.ApplicationAPI/DeleteApplication"
+)
+
+var (
+	applicationAPICreateApplicationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods().ByName("CreateApplication"),
+			Procedure:  ApplicationAPICreateApplicationProcedure,
+		}
+	})
+	applicationAPIGetApplicationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods().ByName("GetApplication"),
+			Procedure:  ApplicationAPIGetApplicationProcedure,
+		}
+	})
+	applicationAPIListApplicationsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods().ByName("ListApplications"),
+			Procedure:  ApplicationAPIListApplicationsProcedure,
+		}
+	})
+	applicationAPIUpdateApplicationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods().ByName("UpdateApplication"),
+			Procedure:  ApplicationAPIUpdateApplicationProcedure,
+		}
+	})
+	applicationAPIDeleteApplicationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods().ByName("DeleteApplication"),
+			Procedure:  ApplicationAPIDeleteApplicationProcedure,
+		}
+	})
 )
 
 // ApplicationAPIClient is a client for the admiral.api.application.v1.ApplicationAPI service.
@@ -55,107 +84,34 @@ type ApplicationAPIClient interface {
 	// CreateApplication creates a new application within the caller's tenant.
 	//
 	// Scope: `app:write`
-	CreateApplication(context.Context, *connect.Request[v1.CreateApplicationRequest]) (*connect.Response[v1.CreateApplicationResponse], error)
+	CreateApplication(context.Context, *v1.CreateApplicationRequest) (*v1.CreateApplicationResponse, error)
 	// GetApplication retrieves an application by ID.
 	//
 	// Scope: `app:read`
-	GetApplication(context.Context, *connect.Request[v1.GetApplicationRequest]) (*connect.Response[v1.GetApplicationResponse], error)
+	GetApplication(context.Context, *v1.GetApplicationRequest) (*v1.GetApplicationResponse, error)
 	// ListApplications returns a paginated list of applications within the
 	// caller's tenant.
 	//
 	// Scope: `app:read`
-	ListApplications(context.Context, *connect.Request[v1.ListApplicationsRequest]) (*connect.Response[v1.ListApplicationsResponse], error)
+	ListApplications(context.Context, *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error)
 	// UpdateApplication updates an application's mutable fields.
 	// Use the `update_mask` to specify which fields to update.
 	//
 	// Scope: `app:write`
-	UpdateApplication(context.Context, *connect.Request[v1.UpdateApplicationRequest]) (*connect.Response[v1.UpdateApplicationResponse], error)
+	UpdateApplication(context.Context, *v1.UpdateApplicationRequest) (*v1.UpdateApplicationResponse, error)
 	// DeleteApplication permanently deletes an application. Fails with
-	// FAILED_PRECONDITION if the application still has environments. Pass
-	// force = true to cascade-delete all environments and their runs
-	// (metadata only; no cloud resources are destroyed). This action cannot
-	// be undone.
+	// FAILED_PRECONDITION while the application has environments: delete them
+	// first, each of which refuses while it manages anything. This action
+	// cannot be undone.
 	//
 	// Scope: `app:write`
-	DeleteApplication(context.Context, *connect.Request[v1.DeleteApplicationRequest]) (*connect.Response[v1.DeleteApplicationResponse], error)
+	DeleteApplication(context.Context, *v1.DeleteApplicationRequest) (*v1.DeleteApplicationResponse, error)
 }
 
 // NewApplicationAPIClient constructs a client for the admiral.api.application.v1.ApplicationAPI
-// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
-// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
-// the connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewApplicationAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ApplicationAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	applicationAPIMethods := v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods()
-	return &applicationAPIClient{
-		createApplication: connect.NewClient[v1.CreateApplicationRequest, v1.CreateApplicationResponse](
-			httpClient,
-			baseURL+ApplicationAPICreateApplicationProcedure,
-			connect.WithSchema(applicationAPIMethods.ByName("CreateApplication")),
-			connect.WithClientOptions(opts...),
-		),
-		getApplication: connect.NewClient[v1.GetApplicationRequest, v1.GetApplicationResponse](
-			httpClient,
-			baseURL+ApplicationAPIGetApplicationProcedure,
-			connect.WithSchema(applicationAPIMethods.ByName("GetApplication")),
-			connect.WithClientOptions(opts...),
-		),
-		listApplications: connect.NewClient[v1.ListApplicationsRequest, v1.ListApplicationsResponse](
-			httpClient,
-			baseURL+ApplicationAPIListApplicationsProcedure,
-			connect.WithSchema(applicationAPIMethods.ByName("ListApplications")),
-			connect.WithClientOptions(opts...),
-		),
-		updateApplication: connect.NewClient[v1.UpdateApplicationRequest, v1.UpdateApplicationResponse](
-			httpClient,
-			baseURL+ApplicationAPIUpdateApplicationProcedure,
-			connect.WithSchema(applicationAPIMethods.ByName("UpdateApplication")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteApplication: connect.NewClient[v1.DeleteApplicationRequest, v1.DeleteApplicationResponse](
-			httpClient,
-			baseURL+ApplicationAPIDeleteApplicationProcedure,
-			connect.WithSchema(applicationAPIMethods.ByName("DeleteApplication")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// applicationAPIClient implements ApplicationAPIClient.
-type applicationAPIClient struct {
-	createApplication *connect.Client[v1.CreateApplicationRequest, v1.CreateApplicationResponse]
-	getApplication    *connect.Client[v1.GetApplicationRequest, v1.GetApplicationResponse]
-	listApplications  *connect.Client[v1.ListApplicationsRequest, v1.ListApplicationsResponse]
-	updateApplication *connect.Client[v1.UpdateApplicationRequest, v1.UpdateApplicationResponse]
-	deleteApplication *connect.Client[v1.DeleteApplicationRequest, v1.DeleteApplicationResponse]
-}
-
-// CreateApplication calls admiral.api.application.v1.ApplicationAPI.CreateApplication.
-func (c *applicationAPIClient) CreateApplication(ctx context.Context, req *connect.Request[v1.CreateApplicationRequest]) (*connect.Response[v1.CreateApplicationResponse], error) {
-	return c.createApplication.CallUnary(ctx, req)
-}
-
-// GetApplication calls admiral.api.application.v1.ApplicationAPI.GetApplication.
-func (c *applicationAPIClient) GetApplication(ctx context.Context, req *connect.Request[v1.GetApplicationRequest]) (*connect.Response[v1.GetApplicationResponse], error) {
-	return c.getApplication.CallUnary(ctx, req)
-}
-
-// ListApplications calls admiral.api.application.v1.ApplicationAPI.ListApplications.
-func (c *applicationAPIClient) ListApplications(ctx context.Context, req *connect.Request[v1.ListApplicationsRequest]) (*connect.Response[v1.ListApplicationsResponse], error) {
-	return c.listApplications.CallUnary(ctx, req)
-}
-
-// UpdateApplication calls admiral.api.application.v1.ApplicationAPI.UpdateApplication.
-func (c *applicationAPIClient) UpdateApplication(ctx context.Context, req *connect.Request[v1.UpdateApplicationRequest]) (*connect.Response[v1.UpdateApplicationResponse], error) {
-	return c.updateApplication.CallUnary(ctx, req)
-}
-
-// DeleteApplication calls admiral.api.application.v1.ApplicationAPI.DeleteApplication.
-func (c *applicationAPIClient) DeleteApplication(ctx context.Context, req *connect.Request[v1.DeleteApplicationRequest]) (*connect.Response[v1.DeleteApplicationResponse], error) {
-	return c.deleteApplication.CallUnary(ctx, req)
+// service. Multiple service clients may share a single connect.Client.
+func NewApplicationAPIClient(client *connect.Client) ApplicationAPIClient {
+	return &applicationAPIClient{client: client}
 }
 
 // ApplicationAPIHandler is an implementation of the admiral.api.application.v1.ApplicationAPI
@@ -164,105 +120,168 @@ type ApplicationAPIHandler interface {
 	// CreateApplication creates a new application within the caller's tenant.
 	//
 	// Scope: `app:write`
-	CreateApplication(context.Context, *connect.Request[v1.CreateApplicationRequest]) (*connect.Response[v1.CreateApplicationResponse], error)
+	CreateApplication(context.Context, *v1.CreateApplicationRequest) (*v1.CreateApplicationResponse, error)
 	// GetApplication retrieves an application by ID.
 	//
 	// Scope: `app:read`
-	GetApplication(context.Context, *connect.Request[v1.GetApplicationRequest]) (*connect.Response[v1.GetApplicationResponse], error)
+	GetApplication(context.Context, *v1.GetApplicationRequest) (*v1.GetApplicationResponse, error)
 	// ListApplications returns a paginated list of applications within the
 	// caller's tenant.
 	//
 	// Scope: `app:read`
-	ListApplications(context.Context, *connect.Request[v1.ListApplicationsRequest]) (*connect.Response[v1.ListApplicationsResponse], error)
+	ListApplications(context.Context, *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error)
 	// UpdateApplication updates an application's mutable fields.
 	// Use the `update_mask` to specify which fields to update.
 	//
 	// Scope: `app:write`
-	UpdateApplication(context.Context, *connect.Request[v1.UpdateApplicationRequest]) (*connect.Response[v1.UpdateApplicationResponse], error)
+	UpdateApplication(context.Context, *v1.UpdateApplicationRequest) (*v1.UpdateApplicationResponse, error)
 	// DeleteApplication permanently deletes an application. Fails with
-	// FAILED_PRECONDITION if the application still has environments. Pass
-	// force = true to cascade-delete all environments and their runs
-	// (metadata only; no cloud resources are destroyed). This action cannot
-	// be undone.
+	// FAILED_PRECONDITION while the application has environments: delete them
+	// first, each of which refuses while it manages anything. This action
+	// cannot be undone.
 	//
 	// Scope: `app:write`
-	DeleteApplication(context.Context, *connect.Request[v1.DeleteApplicationRequest]) (*connect.Response[v1.DeleteApplicationResponse], error)
+	DeleteApplication(context.Context, *v1.DeleteApplicationRequest) (*v1.DeleteApplicationResponse, error)
 }
 
-// NewApplicationAPIHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewApplicationAPIHandler(svc ApplicationAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	applicationAPIMethods := v1.File_admiral_api_application_v1_application_proto.Services().ByName("ApplicationAPI").Methods()
-	applicationAPICreateApplicationHandler := connect.NewUnaryHandler(
-		ApplicationAPICreateApplicationProcedure,
-		svc.CreateApplication,
-		connect.WithSchema(applicationAPIMethods.ByName("CreateApplication")),
-		connect.WithHandlerOptions(opts...),
+// RegisterApplicationAPIHandler registers svc as the admiral.api.application.v1.ApplicationAPI
+// implementation on server.
+func RegisterApplicationAPIHandler(server *connect.Server, svc ApplicationAPIHandler) {
+	adapter := applicationAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: applicationAPICreateApplicationSpec(), Handler: adapter.createApplication},
+		connect.Method{Spec: applicationAPIGetApplicationSpec(), Handler: adapter.getApplication},
+		connect.Method{Spec: applicationAPIListApplicationsSpec(), Handler: adapter.listApplications},
+		connect.Method{Spec: applicationAPIUpdateApplicationSpec(), Handler: adapter.updateApplication},
+		connect.Method{Spec: applicationAPIDeleteApplicationSpec(), Handler: adapter.deleteApplication},
 	)
-	applicationAPIGetApplicationHandler := connect.NewUnaryHandler(
-		ApplicationAPIGetApplicationProcedure,
-		svc.GetApplication,
-		connect.WithSchema(applicationAPIMethods.ByName("GetApplication")),
-		connect.WithHandlerOptions(opts...),
-	)
-	applicationAPIListApplicationsHandler := connect.NewUnaryHandler(
-		ApplicationAPIListApplicationsProcedure,
-		svc.ListApplications,
-		connect.WithSchema(applicationAPIMethods.ByName("ListApplications")),
-		connect.WithHandlerOptions(opts...),
-	)
-	applicationAPIUpdateApplicationHandler := connect.NewUnaryHandler(
-		ApplicationAPIUpdateApplicationProcedure,
-		svc.UpdateApplication,
-		connect.WithSchema(applicationAPIMethods.ByName("UpdateApplication")),
-		connect.WithHandlerOptions(opts...),
-	)
-	applicationAPIDeleteApplicationHandler := connect.NewUnaryHandler(
-		ApplicationAPIDeleteApplicationProcedure,
-		svc.DeleteApplication,
-		connect.WithSchema(applicationAPIMethods.ByName("DeleteApplication")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.application.v1.ApplicationAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case ApplicationAPICreateApplicationProcedure:
-			applicationAPICreateApplicationHandler.ServeHTTP(w, r)
-		case ApplicationAPIGetApplicationProcedure:
-			applicationAPIGetApplicationHandler.ServeHTTP(w, r)
-		case ApplicationAPIListApplicationsProcedure:
-			applicationAPIListApplicationsHandler.ServeHTTP(w, r)
-		case ApplicationAPIUpdateApplicationProcedure:
-			applicationAPIUpdateApplicationHandler.ServeHTTP(w, r)
-		case ApplicationAPIDeleteApplicationProcedure:
-			applicationAPIDeleteApplicationHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedApplicationAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedApplicationAPIHandler struct{}
 
-func (UnimplementedApplicationAPIHandler) CreateApplication(context.Context, *connect.Request[v1.CreateApplicationRequest]) (*connect.Response[v1.CreateApplicationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.application.v1.ApplicationAPI.CreateApplication is not implemented"))
+func (UnimplementedApplicationAPIHandler) CreateApplication(context.Context, *v1.CreateApplicationRequest) (*v1.CreateApplicationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.application.v1.ApplicationAPI.CreateApplication is not implemented")
 }
 
-func (UnimplementedApplicationAPIHandler) GetApplication(context.Context, *connect.Request[v1.GetApplicationRequest]) (*connect.Response[v1.GetApplicationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.application.v1.ApplicationAPI.GetApplication is not implemented"))
+func (UnimplementedApplicationAPIHandler) GetApplication(context.Context, *v1.GetApplicationRequest) (*v1.GetApplicationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.application.v1.ApplicationAPI.GetApplication is not implemented")
 }
 
-func (UnimplementedApplicationAPIHandler) ListApplications(context.Context, *connect.Request[v1.ListApplicationsRequest]) (*connect.Response[v1.ListApplicationsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.application.v1.ApplicationAPI.ListApplications is not implemented"))
+func (UnimplementedApplicationAPIHandler) ListApplications(context.Context, *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.application.v1.ApplicationAPI.ListApplications is not implemented")
 }
 
-func (UnimplementedApplicationAPIHandler) UpdateApplication(context.Context, *connect.Request[v1.UpdateApplicationRequest]) (*connect.Response[v1.UpdateApplicationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.application.v1.ApplicationAPI.UpdateApplication is not implemented"))
+func (UnimplementedApplicationAPIHandler) UpdateApplication(context.Context, *v1.UpdateApplicationRequest) (*v1.UpdateApplicationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.application.v1.ApplicationAPI.UpdateApplication is not implemented")
 }
 
-func (UnimplementedApplicationAPIHandler) DeleteApplication(context.Context, *connect.Request[v1.DeleteApplicationRequest]) (*connect.Response[v1.DeleteApplicationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.application.v1.ApplicationAPI.DeleteApplication is not implemented"))
+func (UnimplementedApplicationAPIHandler) DeleteApplication(context.Context, *v1.DeleteApplicationRequest) (*v1.DeleteApplicationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.application.v1.ApplicationAPI.DeleteApplication is not implemented")
+}
+
+type applicationAPIClient struct {
+	client *connect.Client
+}
+
+func (c *applicationAPIClient) CreateApplication(ctx context.Context, req *v1.CreateApplicationRequest) (*v1.CreateApplicationResponse, error) {
+	var res v1.CreateApplicationResponse
+	if err := c.client.CallUnary(ctx, applicationAPICreateApplicationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *applicationAPIClient) GetApplication(ctx context.Context, req *v1.GetApplicationRequest) (*v1.GetApplicationResponse, error) {
+	var res v1.GetApplicationResponse
+	if err := c.client.CallUnary(ctx, applicationAPIGetApplicationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *applicationAPIClient) ListApplications(ctx context.Context, req *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error) {
+	var res v1.ListApplicationsResponse
+	if err := c.client.CallUnary(ctx, applicationAPIListApplicationsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *applicationAPIClient) UpdateApplication(ctx context.Context, req *v1.UpdateApplicationRequest) (*v1.UpdateApplicationResponse, error) {
+	var res v1.UpdateApplicationResponse
+	if err := c.client.CallUnary(ctx, applicationAPIUpdateApplicationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *applicationAPIClient) DeleteApplication(ctx context.Context, req *v1.DeleteApplicationRequest) (*v1.DeleteApplicationResponse, error) {
+	var res v1.DeleteApplicationResponse
+	if err := c.client.CallUnary(ctx, applicationAPIDeleteApplicationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type applicationAPIHandler struct{ svc ApplicationAPIHandler }
+
+func (h applicationAPIHandler) createApplication(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateApplicationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateApplication(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h applicationAPIHandler) getApplication(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetApplicationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetApplication(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h applicationAPIHandler) listApplications(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListApplicationsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListApplications(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h applicationAPIHandler) updateApplication(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateApplicationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdateApplication(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h applicationAPIHandler) deleteApplication(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteApplicationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteApplication(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

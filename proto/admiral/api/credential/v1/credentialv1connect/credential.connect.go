@@ -5,49 +5,78 @@
 package credentialv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// CredentialAPIName is the fully-qualified name of the CredentialAPI service.
 	CredentialAPIName = "admiral.api.credential.v1.CredentialAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// CredentialAPICreateCredentialProcedure is the fully-qualified name of the CredentialAPI's
+	// CredentialAPICreateCredentialProcedure is the procedure name of the CredentialAPI's
 	// CreateCredential RPC.
 	CredentialAPICreateCredentialProcedure = "/admiral.api.credential.v1.CredentialAPI/CreateCredential"
-	// CredentialAPIGetCredentialProcedure is the fully-qualified name of the CredentialAPI's
-	// GetCredential RPC.
+	// CredentialAPIGetCredentialProcedure is the procedure name of the CredentialAPI's GetCredential
+	// RPC.
 	CredentialAPIGetCredentialProcedure = "/admiral.api.credential.v1.CredentialAPI/GetCredential"
-	// CredentialAPIListCredentialsProcedure is the fully-qualified name of the CredentialAPI's
+	// CredentialAPIListCredentialsProcedure is the procedure name of the CredentialAPI's
 	// ListCredentials RPC.
 	CredentialAPIListCredentialsProcedure = "/admiral.api.credential.v1.CredentialAPI/ListCredentials"
-	// CredentialAPIUpdateCredentialProcedure is the fully-qualified name of the CredentialAPI's
+	// CredentialAPIUpdateCredentialProcedure is the procedure name of the CredentialAPI's
 	// UpdateCredential RPC.
 	CredentialAPIUpdateCredentialProcedure = "/admiral.api.credential.v1.CredentialAPI/UpdateCredential"
-	// CredentialAPIDeleteCredentialProcedure is the fully-qualified name of the CredentialAPI's
+	// CredentialAPIDeleteCredentialProcedure is the procedure name of the CredentialAPI's
 	// DeleteCredential RPC.
 	CredentialAPIDeleteCredentialProcedure = "/admiral.api.credential.v1.CredentialAPI/DeleteCredential"
+)
+
+var (
+	credentialAPICreateCredentialSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods().ByName("CreateCredential"),
+			Procedure:  CredentialAPICreateCredentialProcedure,
+		}
+	})
+	credentialAPIGetCredentialSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods().ByName("GetCredential"),
+			Procedure:  CredentialAPIGetCredentialProcedure,
+		}
+	})
+	credentialAPIListCredentialsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods().ByName("ListCredentials"),
+			Procedure:  CredentialAPIListCredentialsProcedure,
+		}
+	})
+	credentialAPIUpdateCredentialSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods().ByName("UpdateCredential"),
+			Procedure:  CredentialAPIUpdateCredentialProcedure,
+		}
+	})
+	credentialAPIDeleteCredentialSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods().ByName("DeleteCredential"),
+			Procedure:  CredentialAPIDeleteCredentialProcedure,
+		}
+	})
 )
 
 // CredentialAPIClient is a client for the admiral.api.credential.v1.CredentialAPI service.
@@ -57,108 +86,37 @@ type CredentialAPIClient interface {
 	// The `type` and the populated `auth_config` variant must agree.
 	//
 	// Scope: `credential:write`
-	CreateCredential(context.Context, *connect.Request[v1.CreateCredentialRequest]) (*connect.Response[v1.CreateCredentialResponse], error)
+	CreateCredential(context.Context, *v1.CreateCredentialRequest) (*v1.CreateCredentialResponse, error)
 	// GetCredential retrieves a credential's metadata by id. The secret is
 	// never included.
 	//
 	// Scope: `credential:read`
-	GetCredential(context.Context, *connect.Request[v1.GetCredentialRequest]) (*connect.Response[v1.GetCredentialResponse], error)
+	GetCredential(context.Context, *v1.GetCredentialRequest) (*v1.GetCredentialResponse, error)
 	// ListCredentials pages through the caller's tenant's credentials.
 	// Secrets are never included.
 	//
 	// Scope: `credential:read`
-	ListCredentials(context.Context, *connect.Request[v1.ListCredentialsRequest]) (*connect.Response[v1.ListCredentialsResponse], error)
+	ListCredentials(context.Context, *v1.ListCredentialsRequest) (*v1.ListCredentialsResponse, error)
 	// UpdateCredential changes a credential's description, labels, allowed
 	// hosts, or secret. The name and type are immutable. A new secret
 	// replaces the old one whole; a rotation is an update with `auth_config`
 	// in the mask.
 	//
 	// Scope: `credential:write`
-	UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error)
-	// DeleteCredential removes a credential. A component whose pull-publish
-	// names it keeps the reference; its next pull fails naming the missing
-	// credential until it is attached to another.
+	UpdateCredential(context.Context, *v1.UpdateCredentialRequest) (*v1.UpdateCredentialResponse, error)
+	// DeleteCredential removes a credential and destroys its secret. Nothing
+	// stores a reference to it: versions already published are unaffected,
+	// their provenance keeps the credential's id and name as history, and the
+	// next pull that names it fails naming the missing credential.
 	//
 	// Scope: `credential:write`
-	DeleteCredential(context.Context, *connect.Request[v1.DeleteCredentialRequest]) (*connect.Response[v1.DeleteCredentialResponse], error)
+	DeleteCredential(context.Context, *v1.DeleteCredentialRequest) (*v1.DeleteCredentialResponse, error)
 }
 
 // NewCredentialAPIClient constructs a client for the admiral.api.credential.v1.CredentialAPI
-// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
-// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
-// the connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewCredentialAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) CredentialAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	credentialAPIMethods := v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods()
-	return &credentialAPIClient{
-		createCredential: connect.NewClient[v1.CreateCredentialRequest, v1.CreateCredentialResponse](
-			httpClient,
-			baseURL+CredentialAPICreateCredentialProcedure,
-			connect.WithSchema(credentialAPIMethods.ByName("CreateCredential")),
-			connect.WithClientOptions(opts...),
-		),
-		getCredential: connect.NewClient[v1.GetCredentialRequest, v1.GetCredentialResponse](
-			httpClient,
-			baseURL+CredentialAPIGetCredentialProcedure,
-			connect.WithSchema(credentialAPIMethods.ByName("GetCredential")),
-			connect.WithClientOptions(opts...),
-		),
-		listCredentials: connect.NewClient[v1.ListCredentialsRequest, v1.ListCredentialsResponse](
-			httpClient,
-			baseURL+CredentialAPIListCredentialsProcedure,
-			connect.WithSchema(credentialAPIMethods.ByName("ListCredentials")),
-			connect.WithClientOptions(opts...),
-		),
-		updateCredential: connect.NewClient[v1.UpdateCredentialRequest, v1.UpdateCredentialResponse](
-			httpClient,
-			baseURL+CredentialAPIUpdateCredentialProcedure,
-			connect.WithSchema(credentialAPIMethods.ByName("UpdateCredential")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteCredential: connect.NewClient[v1.DeleteCredentialRequest, v1.DeleteCredentialResponse](
-			httpClient,
-			baseURL+CredentialAPIDeleteCredentialProcedure,
-			connect.WithSchema(credentialAPIMethods.ByName("DeleteCredential")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// credentialAPIClient implements CredentialAPIClient.
-type credentialAPIClient struct {
-	createCredential *connect.Client[v1.CreateCredentialRequest, v1.CreateCredentialResponse]
-	getCredential    *connect.Client[v1.GetCredentialRequest, v1.GetCredentialResponse]
-	listCredentials  *connect.Client[v1.ListCredentialsRequest, v1.ListCredentialsResponse]
-	updateCredential *connect.Client[v1.UpdateCredentialRequest, v1.UpdateCredentialResponse]
-	deleteCredential *connect.Client[v1.DeleteCredentialRequest, v1.DeleteCredentialResponse]
-}
-
-// CreateCredential calls admiral.api.credential.v1.CredentialAPI.CreateCredential.
-func (c *credentialAPIClient) CreateCredential(ctx context.Context, req *connect.Request[v1.CreateCredentialRequest]) (*connect.Response[v1.CreateCredentialResponse], error) {
-	return c.createCredential.CallUnary(ctx, req)
-}
-
-// GetCredential calls admiral.api.credential.v1.CredentialAPI.GetCredential.
-func (c *credentialAPIClient) GetCredential(ctx context.Context, req *connect.Request[v1.GetCredentialRequest]) (*connect.Response[v1.GetCredentialResponse], error) {
-	return c.getCredential.CallUnary(ctx, req)
-}
-
-// ListCredentials calls admiral.api.credential.v1.CredentialAPI.ListCredentials.
-func (c *credentialAPIClient) ListCredentials(ctx context.Context, req *connect.Request[v1.ListCredentialsRequest]) (*connect.Response[v1.ListCredentialsResponse], error) {
-	return c.listCredentials.CallUnary(ctx, req)
-}
-
-// UpdateCredential calls admiral.api.credential.v1.CredentialAPI.UpdateCredential.
-func (c *credentialAPIClient) UpdateCredential(ctx context.Context, req *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error) {
-	return c.updateCredential.CallUnary(ctx, req)
-}
-
-// DeleteCredential calls admiral.api.credential.v1.CredentialAPI.DeleteCredential.
-func (c *credentialAPIClient) DeleteCredential(ctx context.Context, req *connect.Request[v1.DeleteCredentialRequest]) (*connect.Response[v1.DeleteCredentialResponse], error) {
-	return c.deleteCredential.CallUnary(ctx, req)
+// service. Multiple service clients may share a single connect.Client.
+func NewCredentialAPIClient(client *connect.Client) CredentialAPIClient {
+	return &credentialAPIClient{client: client}
 }
 
 // CredentialAPIHandler is an implementation of the admiral.api.credential.v1.CredentialAPI service.
@@ -168,106 +126,171 @@ type CredentialAPIHandler interface {
 	// The `type` and the populated `auth_config` variant must agree.
 	//
 	// Scope: `credential:write`
-	CreateCredential(context.Context, *connect.Request[v1.CreateCredentialRequest]) (*connect.Response[v1.CreateCredentialResponse], error)
+	CreateCredential(context.Context, *v1.CreateCredentialRequest) (*v1.CreateCredentialResponse, error)
 	// GetCredential retrieves a credential's metadata by id. The secret is
 	// never included.
 	//
 	// Scope: `credential:read`
-	GetCredential(context.Context, *connect.Request[v1.GetCredentialRequest]) (*connect.Response[v1.GetCredentialResponse], error)
+	GetCredential(context.Context, *v1.GetCredentialRequest) (*v1.GetCredentialResponse, error)
 	// ListCredentials pages through the caller's tenant's credentials.
 	// Secrets are never included.
 	//
 	// Scope: `credential:read`
-	ListCredentials(context.Context, *connect.Request[v1.ListCredentialsRequest]) (*connect.Response[v1.ListCredentialsResponse], error)
+	ListCredentials(context.Context, *v1.ListCredentialsRequest) (*v1.ListCredentialsResponse, error)
 	// UpdateCredential changes a credential's description, labels, allowed
 	// hosts, or secret. The name and type are immutable. A new secret
 	// replaces the old one whole; a rotation is an update with `auth_config`
 	// in the mask.
 	//
 	// Scope: `credential:write`
-	UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error)
-	// DeleteCredential removes a credential. A component whose pull-publish
-	// names it keeps the reference; its next pull fails naming the missing
-	// credential until it is attached to another.
+	UpdateCredential(context.Context, *v1.UpdateCredentialRequest) (*v1.UpdateCredentialResponse, error)
+	// DeleteCredential removes a credential and destroys its secret. Nothing
+	// stores a reference to it: versions already published are unaffected,
+	// their provenance keeps the credential's id and name as history, and the
+	// next pull that names it fails naming the missing credential.
 	//
 	// Scope: `credential:write`
-	DeleteCredential(context.Context, *connect.Request[v1.DeleteCredentialRequest]) (*connect.Response[v1.DeleteCredentialResponse], error)
+	DeleteCredential(context.Context, *v1.DeleteCredentialRequest) (*v1.DeleteCredentialResponse, error)
 }
 
-// NewCredentialAPIHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewCredentialAPIHandler(svc CredentialAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	credentialAPIMethods := v1.File_admiral_api_credential_v1_credential_proto.Services().ByName("CredentialAPI").Methods()
-	credentialAPICreateCredentialHandler := connect.NewUnaryHandler(
-		CredentialAPICreateCredentialProcedure,
-		svc.CreateCredential,
-		connect.WithSchema(credentialAPIMethods.ByName("CreateCredential")),
-		connect.WithHandlerOptions(opts...),
+// RegisterCredentialAPIHandler registers svc as the admiral.api.credential.v1.CredentialAPI
+// implementation on server.
+func RegisterCredentialAPIHandler(server *connect.Server, svc CredentialAPIHandler) {
+	adapter := credentialAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: credentialAPICreateCredentialSpec(), Handler: adapter.createCredential},
+		connect.Method{Spec: credentialAPIGetCredentialSpec(), Handler: adapter.getCredential},
+		connect.Method{Spec: credentialAPIListCredentialsSpec(), Handler: adapter.listCredentials},
+		connect.Method{Spec: credentialAPIUpdateCredentialSpec(), Handler: adapter.updateCredential},
+		connect.Method{Spec: credentialAPIDeleteCredentialSpec(), Handler: adapter.deleteCredential},
 	)
-	credentialAPIGetCredentialHandler := connect.NewUnaryHandler(
-		CredentialAPIGetCredentialProcedure,
-		svc.GetCredential,
-		connect.WithSchema(credentialAPIMethods.ByName("GetCredential")),
-		connect.WithHandlerOptions(opts...),
-	)
-	credentialAPIListCredentialsHandler := connect.NewUnaryHandler(
-		CredentialAPIListCredentialsProcedure,
-		svc.ListCredentials,
-		connect.WithSchema(credentialAPIMethods.ByName("ListCredentials")),
-		connect.WithHandlerOptions(opts...),
-	)
-	credentialAPIUpdateCredentialHandler := connect.NewUnaryHandler(
-		CredentialAPIUpdateCredentialProcedure,
-		svc.UpdateCredential,
-		connect.WithSchema(credentialAPIMethods.ByName("UpdateCredential")),
-		connect.WithHandlerOptions(opts...),
-	)
-	credentialAPIDeleteCredentialHandler := connect.NewUnaryHandler(
-		CredentialAPIDeleteCredentialProcedure,
-		svc.DeleteCredential,
-		connect.WithSchema(credentialAPIMethods.ByName("DeleteCredential")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.credential.v1.CredentialAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case CredentialAPICreateCredentialProcedure:
-			credentialAPICreateCredentialHandler.ServeHTTP(w, r)
-		case CredentialAPIGetCredentialProcedure:
-			credentialAPIGetCredentialHandler.ServeHTTP(w, r)
-		case CredentialAPIListCredentialsProcedure:
-			credentialAPIListCredentialsHandler.ServeHTTP(w, r)
-		case CredentialAPIUpdateCredentialProcedure:
-			credentialAPIUpdateCredentialHandler.ServeHTTP(w, r)
-		case CredentialAPIDeleteCredentialProcedure:
-			credentialAPIDeleteCredentialHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedCredentialAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedCredentialAPIHandler struct{}
 
-func (UnimplementedCredentialAPIHandler) CreateCredential(context.Context, *connect.Request[v1.CreateCredentialRequest]) (*connect.Response[v1.CreateCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.credential.v1.CredentialAPI.CreateCredential is not implemented"))
+func (UnimplementedCredentialAPIHandler) CreateCredential(context.Context, *v1.CreateCredentialRequest) (*v1.CreateCredentialResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.credential.v1.CredentialAPI.CreateCredential is not implemented")
 }
 
-func (UnimplementedCredentialAPIHandler) GetCredential(context.Context, *connect.Request[v1.GetCredentialRequest]) (*connect.Response[v1.GetCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.credential.v1.CredentialAPI.GetCredential is not implemented"))
+func (UnimplementedCredentialAPIHandler) GetCredential(context.Context, *v1.GetCredentialRequest) (*v1.GetCredentialResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.credential.v1.CredentialAPI.GetCredential is not implemented")
 }
 
-func (UnimplementedCredentialAPIHandler) ListCredentials(context.Context, *connect.Request[v1.ListCredentialsRequest]) (*connect.Response[v1.ListCredentialsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.credential.v1.CredentialAPI.ListCredentials is not implemented"))
+func (UnimplementedCredentialAPIHandler) ListCredentials(context.Context, *v1.ListCredentialsRequest) (*v1.ListCredentialsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.credential.v1.CredentialAPI.ListCredentials is not implemented")
 }
 
-func (UnimplementedCredentialAPIHandler) UpdateCredential(context.Context, *connect.Request[v1.UpdateCredentialRequest]) (*connect.Response[v1.UpdateCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.credential.v1.CredentialAPI.UpdateCredential is not implemented"))
+func (UnimplementedCredentialAPIHandler) UpdateCredential(context.Context, *v1.UpdateCredentialRequest) (*v1.UpdateCredentialResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.credential.v1.CredentialAPI.UpdateCredential is not implemented")
 }
 
-func (UnimplementedCredentialAPIHandler) DeleteCredential(context.Context, *connect.Request[v1.DeleteCredentialRequest]) (*connect.Response[v1.DeleteCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.credential.v1.CredentialAPI.DeleteCredential is not implemented"))
+func (UnimplementedCredentialAPIHandler) DeleteCredential(context.Context, *v1.DeleteCredentialRequest) (*v1.DeleteCredentialResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.credential.v1.CredentialAPI.DeleteCredential is not implemented")
+}
+
+type credentialAPIClient struct {
+	client *connect.Client
+}
+
+func (c *credentialAPIClient) CreateCredential(ctx context.Context, req *v1.CreateCredentialRequest) (*v1.CreateCredentialResponse, error) {
+	var res v1.CreateCredentialResponse
+	if err := c.client.CallUnary(ctx, credentialAPICreateCredentialSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *credentialAPIClient) GetCredential(ctx context.Context, req *v1.GetCredentialRequest) (*v1.GetCredentialResponse, error) {
+	var res v1.GetCredentialResponse
+	if err := c.client.CallUnary(ctx, credentialAPIGetCredentialSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *credentialAPIClient) ListCredentials(ctx context.Context, req *v1.ListCredentialsRequest) (*v1.ListCredentialsResponse, error) {
+	var res v1.ListCredentialsResponse
+	if err := c.client.CallUnary(ctx, credentialAPIListCredentialsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *credentialAPIClient) UpdateCredential(ctx context.Context, req *v1.UpdateCredentialRequest) (*v1.UpdateCredentialResponse, error) {
+	var res v1.UpdateCredentialResponse
+	if err := c.client.CallUnary(ctx, credentialAPIUpdateCredentialSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *credentialAPIClient) DeleteCredential(ctx context.Context, req *v1.DeleteCredentialRequest) (*v1.DeleteCredentialResponse, error) {
+	var res v1.DeleteCredentialResponse
+	if err := c.client.CallUnary(ctx, credentialAPIDeleteCredentialSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type credentialAPIHandler struct{ svc CredentialAPIHandler }
+
+func (h credentialAPIHandler) createCredential(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateCredentialRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateCredential(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h credentialAPIHandler) getCredential(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetCredentialRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetCredential(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h credentialAPIHandler) listCredentials(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListCredentialsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListCredentials(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h credentialAPIHandler) updateCredential(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateCredentialRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdateCredential(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h credentialAPIHandler) deleteCredential(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteCredentialRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteCredential(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

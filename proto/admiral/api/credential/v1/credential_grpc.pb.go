@@ -68,9 +68,10 @@ type CredentialAPIClient interface {
 	//
 	// Scope: `credential:write`
 	UpdateCredential(ctx context.Context, in *UpdateCredentialRequest, opts ...grpc.CallOption) (*UpdateCredentialResponse, error)
-	// DeleteCredential removes a credential. A component whose pull-publish
-	// names it keeps the reference; its next pull fails naming the missing
-	// credential until it is attached to another.
+	// DeleteCredential removes a credential and destroys its secret. Nothing
+	// stores a reference to it: versions already published are unaffected,
+	// their provenance keeps the credential's id and name as history, and the
+	// next pull that names it fails naming the missing credential.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(ctx context.Context, in *DeleteCredentialRequest, opts ...grpc.CallOption) (*DeleteCredentialResponse, error)
@@ -176,9 +177,10 @@ type CredentialAPIServer interface {
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *UpdateCredentialRequest) (*UpdateCredentialResponse, error)
-	// DeleteCredential removes a credential. A component whose pull-publish
-	// names it keeps the reference; its next pull fails naming the missing
-	// credential until it is attached to another.
+	// DeleteCredential removes a credential and destroys its secret. Nothing
+	// stores a reference to it: versions already published are unaffected,
+	// their provenance keeps the credential's id and name as history, and the
+	// next pull that names it fails naming the missing credential.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *DeleteCredentialRequest) (*DeleteCredentialResponse, error)

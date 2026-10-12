@@ -32,11 +32,8 @@ const (
 //
 // ApplicationAPI manages applications within a tenant.
 //
-// An application is the fundamental unit in Admiral. It groups deployment
-// manifests, infrastructure dependencies, environment configuration, and
-// relationships into a single entity that can be deployed across multiple
-// environments. Applications are defined once and promoted explicitly between
-// environments.
+// An application is the fundamental unit in Admiral. It groups the
+// environments one system is deployed to, such as dev, staging and prod.
 type ApplicationAPIClient interface {
 	// CreateApplication creates a new application within the caller's tenant.
 	//
@@ -57,10 +54,9 @@ type ApplicationAPIClient interface {
 	// Scope: `app:write`
 	UpdateApplication(ctx context.Context, in *UpdateApplicationRequest, opts ...grpc.CallOption) (*UpdateApplicationResponse, error)
 	// DeleteApplication permanently deletes an application. Fails with
-	// FAILED_PRECONDITION if the application still has environments. Pass
-	// force = true to cascade-delete all environments and their runs
-	// (metadata only; no cloud resources are destroyed). This action cannot
-	// be undone.
+	// FAILED_PRECONDITION while the application has environments: delete them
+	// first, each of which refuses while it manages anything. This action
+	// cannot be undone.
 	//
 	// Scope: `app:write`
 	DeleteApplication(ctx context.Context, in *DeleteApplicationRequest, opts ...grpc.CallOption) (*DeleteApplicationResponse, error)
@@ -130,11 +126,8 @@ func (c *applicationAPIClient) DeleteApplication(ctx context.Context, in *Delete
 //
 // ApplicationAPI manages applications within a tenant.
 //
-// An application is the fundamental unit in Admiral. It groups deployment
-// manifests, infrastructure dependencies, environment configuration, and
-// relationships into a single entity that can be deployed across multiple
-// environments. Applications are defined once and promoted explicitly between
-// environments.
+// An application is the fundamental unit in Admiral. It groups the
+// environments one system is deployed to, such as dev, staging and prod.
 type ApplicationAPIServer interface {
 	// CreateApplication creates a new application within the caller's tenant.
 	//
@@ -155,10 +148,9 @@ type ApplicationAPIServer interface {
 	// Scope: `app:write`
 	UpdateApplication(context.Context, *UpdateApplicationRequest) (*UpdateApplicationResponse, error)
 	// DeleteApplication permanently deletes an application. Fails with
-	// FAILED_PRECONDITION if the application still has environments. Pass
-	// force = true to cascade-delete all environments and their runs
-	// (metadata only; no cloud resources are destroyed). This action cannot
-	// be undone.
+	// FAILED_PRECONDITION while the application has environments: delete them
+	// first, each of which refuses while it manages anything. This action
+	// cannot be undone.
 	//
 	// Scope: `app:write`
 	DeleteApplication(context.Context, *DeleteApplicationRequest) (*DeleteApplicationResponse, error)

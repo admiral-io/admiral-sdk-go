@@ -44,9 +44,9 @@ type TenantAPIClient interface {
 	GetTenant(ctx context.Context, in *GetTenantRequest, opts ...grpc.CallOption) (*GetTenantResponse, error)
 	// UpdateTenant updates the caller's own tenant's mutable settings.
 	//
-	// Only `display_name` and `labels` are mutable. `slug` is part of the
-	// account's identity and `status` is set by lifecycle operations, neither of
-	// which a tenant performs on itself.
+	// Only `display_name` is mutable. `slug` is part of the account's identity
+	// and `status` is set by lifecycle operations, neither of which a tenant
+	// performs on itself. The logo is set in the console.
 	//
 	// Scope: `tenant:write`
 	UpdateTenant(ctx context.Context, in *UpdateTenantRequest, opts ...grpc.CallOption) (*UpdateTenantResponse, error)
@@ -101,9 +101,9 @@ type TenantAPIServer interface {
 	GetTenant(context.Context, *GetTenantRequest) (*GetTenantResponse, error)
 	// UpdateTenant updates the caller's own tenant's mutable settings.
 	//
-	// Only `display_name` and `labels` are mutable. `slug` is part of the
-	// account's identity and `status` is set by lifecycle operations, neither of
-	// which a tenant performs on itself.
+	// Only `display_name` is mutable. `slug` is part of the account's identity
+	// and `status` is set by lifecycle operations, neither of which a tenant
+	// performs on itself. The logo is set in the console.
 	//
 	// Scope: `tenant:write`
 	UpdateTenant(context.Context, *UpdateTenantRequest) (*UpdateTenantResponse, error)

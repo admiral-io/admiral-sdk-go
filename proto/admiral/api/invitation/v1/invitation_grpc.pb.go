@@ -47,9 +47,8 @@ type InvitationAPIClient interface {
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
 	// or a "send it again" is this same call. ALREADY_EXISTS when the address is
-	// already a member. INVALID_ARGUMENT for a role that cannot be granted by
-	// invitation: OWNER moves by transfer, and APP_CREATOR is a capability
-	// rather than a role.
+	// already a member. INVALID_ARGUMENT for OWNER, which moves by transfer, never by
+	// invitation.
 	//
 	// Scope: `user:write`
 	CreateInvitation(ctx context.Context, in *CreateInvitationRequest, opts ...grpc.CallOption) (*CreateInvitationResponse, error)
@@ -129,9 +128,8 @@ type InvitationAPIServer interface {
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
 	// or a "send it again" is this same call. ALREADY_EXISTS when the address is
-	// already a member. INVALID_ARGUMENT for a role that cannot be granted by
-	// invitation: OWNER moves by transfer, and APP_CREATOR is a capability
-	// rather than a role.
+	// already a member. INVALID_ARGUMENT for OWNER, which moves by transfer, never by
+	// invitation.
 	//
 	// Scope: `user:write`
 	CreateInvitation(context.Context, *CreateInvitationRequest) (*CreateInvitationResponse, error)

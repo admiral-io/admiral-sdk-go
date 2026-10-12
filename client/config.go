@@ -48,6 +48,9 @@ type Config struct {
 
 type ConnectionOptions struct {
 	TLSConfig                    *tls.Config
+	// Insecure disables TLS and dials in plaintext, sending the auth token
+	// unencrypted. Use it only for local development or behind a sidecar
+	// that terminates TLS.
 	Insecure                     bool
 	DialOptions                  []grpc.DialOption
 	DialTimeout                  time.Duration

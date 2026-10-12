@@ -7,7 +7,7 @@
 package invitationv1
 
 import (
-	_ "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
+	v11 "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
 	v1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
@@ -27,89 +27,89 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// InvitationStatus is where an invitation is in its life.
-type InvitationStatus int32
+// Status is where an invitation is in its life.
+type Invitation_Status int32
 
 const (
 	// Default value. Must not be used.
-	InvitationStatus_INVITATION_STATUS_UNSPECIFIED InvitationStatus = 0
+	Invitation_STATUS_UNSPECIFIED Invitation_Status = 0
 	// Issued and redeemable until expires_at.
-	InvitationStatus_INVITATION_STATUS_PENDING InvitationStatus = 1
-	// Redeemed; accepted_user_id names the member it became.
-	InvitationStatus_INVITATION_STATUS_ACCEPTED InvitationStatus = 2
+	Invitation_STATUS_PENDING Invitation_Status = 1
+	// Redeemed; accepted_by names the member it became.
+	Invitation_STATUS_ACCEPTED Invitation_Status = 2
 	// expires_at passed with nobody redeeming it.
-	InvitationStatus_INVITATION_STATUS_EXPIRED InvitationStatus = 3
+	Invitation_STATUS_EXPIRED Invitation_Status = 3
 	// Withdrawn, or retired because a newer invitation was issued for the same
 	// address.
-	InvitationStatus_INVITATION_STATUS_REVOKED InvitationStatus = 4
+	Invitation_STATUS_REVOKED Invitation_Status = 4
 )
 
-// Enum value maps for InvitationStatus.
+// Enum value maps for Invitation_Status.
 var (
-	InvitationStatus_name = map[int32]string{
-		0: "INVITATION_STATUS_UNSPECIFIED",
-		1: "INVITATION_STATUS_PENDING",
-		2: "INVITATION_STATUS_ACCEPTED",
-		3: "INVITATION_STATUS_EXPIRED",
-		4: "INVITATION_STATUS_REVOKED",
+	Invitation_Status_name = map[int32]string{
+		0: "STATUS_UNSPECIFIED",
+		1: "STATUS_PENDING",
+		2: "STATUS_ACCEPTED",
+		3: "STATUS_EXPIRED",
+		4: "STATUS_REVOKED",
 	}
-	InvitationStatus_value = map[string]int32{
-		"INVITATION_STATUS_UNSPECIFIED": 0,
-		"INVITATION_STATUS_PENDING":     1,
-		"INVITATION_STATUS_ACCEPTED":    2,
-		"INVITATION_STATUS_EXPIRED":     3,
-		"INVITATION_STATUS_REVOKED":     4,
+	Invitation_Status_value = map[string]int32{
+		"STATUS_UNSPECIFIED": 0,
+		"STATUS_PENDING":     1,
+		"STATUS_ACCEPTED":    2,
+		"STATUS_EXPIRED":     3,
+		"STATUS_REVOKED":     4,
 	}
 )
 
-func (x InvitationStatus) Enum() *InvitationStatus {
-	p := new(InvitationStatus)
+func (x Invitation_Status) Enum() *Invitation_Status {
+	p := new(Invitation_Status)
 	*p = x
 	return p
 }
 
-func (x InvitationStatus) String() string {
+func (x Invitation_Status) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (InvitationStatus) Descriptor() protoreflect.EnumDescriptor {
+func (Invitation_Status) Descriptor() protoreflect.EnumDescriptor {
 	return file_admiral_api_invitation_v1_invitation_proto_enumTypes[0].Descriptor()
 }
 
-func (InvitationStatus) Type() protoreflect.EnumType {
+func (Invitation_Status) Type() protoreflect.EnumType {
 	return &file_admiral_api_invitation_v1_invitation_proto_enumTypes[0]
 }
 
-func (x InvitationStatus) Number() protoreflect.EnumNumber {
+func (x Invitation_Status) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use InvitationStatus.Descriptor instead.
-func (InvitationStatus) EnumDescriptor() ([]byte, []int) {
-	return file_admiral_api_invitation_v1_invitation_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use Invitation_Status.Descriptor instead.
+func (Invitation_Status) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_invitation_v1_invitation_proto_rawDescGZIP(), []int{0, 0}
 }
 
 // Invitation is one person invited into the caller's tenant. Never carries
 // the link or its token.
 type Invitation struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier (UUID).
+	// Unique identifier.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The address the invitation was sent to.
+	// Where the mail goes, and the address the user will be created with.
 	Email string `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	// The role the person holds once they join. ADMIN or MEMBER.
-	Role   v1.UserRole      `protobuf:"varint,3,opt,name=role,proto3,enum=admiral.api.user.v1.UserRole" json:"role,omitempty"`
-	Status InvitationStatus `protobuf:"varint,4,opt,name=status,proto3,enum=admiral.api.invitation.v1.InvitationStatus" json:"status,omitempty"`
-	// The member who issued it (UUID). Absent when it was issued by an operator
-	// from outside the tenant.
-	InvitedBy *string                `protobuf:"bytes,5,opt,name=invited_by,json=invitedBy,proto3,oneof" json:"invited_by,omitempty"`
+	Role   v1.UserRole       `protobuf:"varint,3,opt,name=role,proto3,enum=admiral.api.user.v1.UserRole" json:"role,omitempty"`
+	Status Invitation_Status `protobuf:"varint,4,opt,name=status,proto3,enum=admiral.api.invitation.v1.Invitation_Status" json:"status,omitempty"`
+	// The member who issued it. Absent when it was issued by an operator from
+	// outside the tenant.
+	InvitedBy *v11.ActorRef          `protobuf:"bytes,11,opt,name=invited_by,json=invitedBy,proto3" json:"invited_by,omitempty"`
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// After this instant the link no longer works.
 	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	// When it was redeemed, and who it became. Both set together, only on
-	// ACCEPTED.
-	AcceptedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=accepted_at,json=acceptedAt,proto3,oneof" json:"accepted_at,omitempty"`
-	AcceptedUserId *string                `protobuf:"bytes,9,opt,name=accepted_user_id,json=acceptedUserId,proto3,oneof" json:"accepted_user_id,omitempty"`
+	// When it was redeemed, and the member it became. Both set together, only
+	// on ACCEPTED.
+	AcceptedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=accepted_at,json=acceptedAt,proto3,oneof" json:"accepted_at,omitempty"`
+	AcceptedBy *v11.ActorRef          `protobuf:"bytes,12,opt,name=accepted_by,json=acceptedBy,proto3" json:"accepted_by,omitempty"`
 	// When it was withdrawn or retired. Only on REVOKED.
 	RevokedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=revoked_at,json=revokedAt,proto3,oneof" json:"revoked_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -167,18 +167,18 @@ func (x *Invitation) GetRole() v1.UserRole {
 	return v1.UserRole(0)
 }
 
-func (x *Invitation) GetStatus() InvitationStatus {
+func (x *Invitation) GetStatus() Invitation_Status {
 	if x != nil {
 		return x.Status
 	}
-	return InvitationStatus_INVITATION_STATUS_UNSPECIFIED
+	return Invitation_STATUS_UNSPECIFIED
 }
 
-func (x *Invitation) GetInvitedBy() string {
-	if x != nil && x.InvitedBy != nil {
-		return *x.InvitedBy
+func (x *Invitation) GetInvitedBy() *v11.ActorRef {
+	if x != nil {
+		return x.InvitedBy
 	}
-	return ""
+	return nil
 }
 
 func (x *Invitation) GetCreatedAt() *timestamppb.Timestamp {
@@ -202,11 +202,11 @@ func (x *Invitation) GetAcceptedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Invitation) GetAcceptedUserId() string {
-	if x != nil && x.AcceptedUserId != nil {
-		return *x.AcceptedUserId
+func (x *Invitation) GetAcceptedBy() *v11.ActorRef {
+	if x != nil {
+		return x.AcceptedBy
 	}
-	return ""
+	return nil
 }
 
 func (x *Invitation) GetRevokedAt() *timestamppb.Timestamp {
@@ -219,10 +219,8 @@ func (x *Invitation) GetRevokedAt() *timestamppb.Timestamp {
 // CreateInvitationRequest invites one address into the caller's tenant.
 type CreateInvitationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Where the mail goes, and the address the user will be created with.
-	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	// The role to hold on joining. ADMIN or MEMBER.
-	Role          v1.UserRole `protobuf:"varint,2,opt,name=role,proto3,enum=admiral.api.user.v1.UserRole" json:"role,omitempty"`
+	// The invitation to issue: `email` and `role`.
+	Invitation    *Invitation `protobuf:"bytes,3,opt,name=invitation,proto3" json:"invitation,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -257,18 +255,11 @@ func (*CreateInvitationRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_invitation_v1_invitation_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateInvitationRequest) GetEmail() string {
+func (x *CreateInvitationRequest) GetInvitation() *Invitation {
 	if x != nil {
-		return x.Email
+		return x.Invitation
 	}
-	return ""
-}
-
-func (x *CreateInvitationRequest) GetRole() v1.UserRole {
-	if x != nil {
-		return x.Role
-	}
-	return v1.UserRole(0)
+	return nil
 }
 
 // CreateInvitationResponse carries the invitation, without its link.
@@ -326,7 +317,7 @@ type ListInvitationsRequest struct {
 	//   - `email`: filter by address.
 	//   - `status`: filter by lifecycle status.
 	//
-	// Example: `field['status'] = 'PENDING'`
+	// Example: `field['status'] = 'STATUS_PENDING'`
 	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Maximum number of invitations to return per page. Defaults to 50 when
 	// omitted or 0; must not exceed 100.
@@ -445,7 +436,7 @@ func (x *ListInvitationsResponse) GetNextPageToken() string {
 // RevokeInvitationRequest names one invitation in the caller's tenant.
 type RevokeInvitationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The invitation (UUID), from CreateInvitation or ListInvitations.
+	// The invitation, from CreateInvitation or ListInvitations.
 	InvitationId  string `protobuf:"bytes,1,opt,name=invitation_id,json=invitationId,proto3" json:"invitation_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -537,32 +528,40 @@ var File_admiral_api_invitation_v1_invitation_proto protoreflect.FileDescriptor
 
 const file_admiral_api_invitation_v1_invitation_proto_rawDesc = "" +
 	"\n" +
-	"*admiral/api/invitation/v1/invitation.proto\x12\x19admiral.api.invitation.v1\x1a\x1eadmiral/api/user/v1/user.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xea\x04\n" +
+	"*admiral/api/invitation/v1/invitation.proto\x12\x19admiral.api.invitation.v1\x1a\x1eadmiral/api/user/v1/user.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb4\x06\n" +
 	"\n" +
-	"Invitation\x12\x13\n" +
-	"\x02id\x18\x01 \x01(\tB\x03\xe0A\x03R\x02id\x12\x19\n" +
-	"\x05email\x18\x02 \x01(\tB\x03\xe0A\x03R\x05email\x126\n" +
-	"\x04role\x18\x03 \x01(\x0e2\x1d.admiral.api.user.v1.UserRoleB\x03\xe0A\x03R\x04role\x12H\n" +
-	"\x06status\x18\x04 \x01(\x0e2+.admiral.api.invitation.v1.InvitationStatusB\x03\xe0A\x03R\x06status\x12'\n" +
+	"Invitation\x12,\n" +
+	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^inv-[0-9a-z]+$R\x02id\x12&\n" +
+	"\x05email\x18\x02 \x01(\tB\x10\xe0A\x05\xbaH\n" +
+	"\xd8\x01\x01r\x05\x18\xfe\x01`\x01R\x05email\x12E\n" +
+	"\x04role\x18\x03 \x01(\x0e2\x1d.admiral.api.user.v1.UserRoleB\x12\xe0A\x05\xbaH\f\xd8\x01\x01\x82\x01\x06\x10\x01\x18\x02\x18\x03R\x04role\x12I\n" +
+	"\x06status\x18\x04 \x01(\x0e2,.admiral.api.invitation.v1.Invitation.StatusB\x03\xe0A\x03R\x06status\x12?\n" +
 	"\n" +
-	"invited_by\x18\x05 \x01(\tB\x03\xe0A\x03H\x00R\tinvitedBy\x88\x01\x01\x12>\n" +
+	"invited_by\x18\v \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tinvitedBy\x12>\n" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12>\n" +
 	"\n" +
 	"expires_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\texpiresAt\x12E\n" +
-	"\vaccepted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03H\x01R\n" +
-	"acceptedAt\x88\x01\x01\x122\n" +
-	"\x10accepted_user_id\x18\t \x01(\tB\x03\xe0A\x03H\x02R\x0eacceptedUserId\x88\x01\x01\x12C\n" +
+	"\vaccepted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03H\x00R\n" +
+	"acceptedAt\x88\x01\x01\x12A\n" +
+	"\vaccepted_by\x18\f \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\n" +
+	"acceptedBy\x12C\n" +
 	"\n" +
 	"revoked_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03H\x03R\trevokedAt\x88\x01\x01B\r\n" +
-	"\v_invited_byB\x0e\n" +
-	"\f_accepted_atB\x13\n" +
-	"\x11_accepted_user_idB\r\n" +
-	"\v_revoked_at\"\x82\x01\n" +
-	"\x17CreateInvitationRequest\x12#\n" +
-	"\x05email\x18\x01 \x01(\tB\r\xe0A\x02\xbaH\ar\x05\x18\xfe\x01`\x01R\x05email\x12B\n" +
-	"\x04role\x18\x02 \x01(\x0e2\x1d.admiral.api.user.v1.UserRoleB\x0f\xe0A\x02\xbaH\t\x82\x01\x06\x10\x01\x18\x02\x18\x03R\x04role\"a\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03H\x01R\trevokedAt\x88\x01\x01\"q\n" +
+	"\x06Status\x12\x16\n" +
+	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x12\n" +
+	"\x0eSTATUS_PENDING\x10\x01\x12\x13\n" +
+	"\x0fSTATUS_ACCEPTED\x10\x02\x12\x12\n" +
+	"\x0eSTATUS_EXPIRED\x10\x03\x12\x12\n" +
+	"\x0eSTATUS_REVOKED\x10\x04B\x0e\n" +
+	"\f_accepted_atB\r\n" +
+	"\v_revoked_atJ\x04\b\x05\x10\x06J\x04\b\t\x10\n" +
+	"R\x10accepted_user_id\"\x84\x01\n" +
+	"\x17CreateInvitationRequest\x12P\n" +
+	"\n" +
+	"invitation\x18\x03 \x01(\v2%.admiral.api.invitation.v1.InvitationB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\n" +
+	"invitationJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\x05emailR\x04role\"a\n" +
 	"\x18CreateInvitationResponse\x12E\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2%.admiral.api.invitation.v1.InvitationR\n" +
@@ -574,19 +573,13 @@ const file_admiral_api_invitation_v1_invitation_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"\x8a\x01\n" +
 	"\x17ListInvitationsResponse\x12G\n" +
 	"\vinvitations\x18\x01 \x03(\v2%.admiral.api.invitation.v1.InvitationR\vinvitations\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"K\n" +
-	"\x17RevokeInvitationRequest\x120\n" +
-	"\rinvitation_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\finvitationId\"a\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"Y\n" +
+	"\x17RevokeInvitationRequest\x12>\n" +
+	"\rinvitation_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^inv-[0-9a-z]+$R\finvitationId\"a\n" +
 	"\x18RevokeInvitationResponse\x12E\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2%.admiral.api.invitation.v1.InvitationR\n" +
-	"invitation*\xb2\x01\n" +
-	"\x10InvitationStatus\x12!\n" +
-	"\x1dINVITATION_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
-	"\x19INVITATION_STATUS_PENDING\x10\x01\x12\x1e\n" +
-	"\x1aINVITATION_STATUS_ACCEPTED\x10\x02\x12\x1d\n" +
-	"\x19INVITATION_STATUS_EXPIRED\x10\x03\x12\x1d\n" +
-	"\x19INVITATION_STATUS_REVOKED\x10\x042\x9f\x05\n" +
+	"invitation2\x9f\x05\n" +
 	"\rInvitationAPI\x12\xdf\x01\n" +
 	"\x10CreateInvitation\x122.admiral.api.invitation.v1.CreateInvitationRequest\x1a3.admiral.api.invitation.v1.CreateInvitationResponse\"b\xbaG5\n" +
 	"\vInvitations\x12&Invite someone into the current tenant\xa2\x97$\f\n" +
@@ -616,7 +609,7 @@ func file_admiral_api_invitation_v1_invitation_proto_rawDescGZIP() []byte {
 var file_admiral_api_invitation_v1_invitation_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_admiral_api_invitation_v1_invitation_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_admiral_api_invitation_v1_invitation_proto_goTypes = []any{
-	(InvitationStatus)(0),            // 0: admiral.api.invitation.v1.InvitationStatus
+	(Invitation_Status)(0),           // 0: admiral.api.invitation.v1.Invitation.Status
 	(*Invitation)(nil),               // 1: admiral.api.invitation.v1.Invitation
 	(*CreateInvitationRequest)(nil),  // 2: admiral.api.invitation.v1.CreateInvitationRequest
 	(*CreateInvitationResponse)(nil), // 3: admiral.api.invitation.v1.CreateInvitationResponse
@@ -625,30 +618,33 @@ var file_admiral_api_invitation_v1_invitation_proto_goTypes = []any{
 	(*RevokeInvitationRequest)(nil),  // 6: admiral.api.invitation.v1.RevokeInvitationRequest
 	(*RevokeInvitationResponse)(nil), // 7: admiral.api.invitation.v1.RevokeInvitationResponse
 	(v1.UserRole)(0),                 // 8: admiral.api.user.v1.UserRole
-	(*timestamppb.Timestamp)(nil),    // 9: google.protobuf.Timestamp
+	(*v11.ActorRef)(nil),             // 9: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),    // 10: google.protobuf.Timestamp
 }
 var file_admiral_api_invitation_v1_invitation_proto_depIdxs = []int32{
 	8,  // 0: admiral.api.invitation.v1.Invitation.role:type_name -> admiral.api.user.v1.UserRole
-	0,  // 1: admiral.api.invitation.v1.Invitation.status:type_name -> admiral.api.invitation.v1.InvitationStatus
-	9,  // 2: admiral.api.invitation.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 3: admiral.api.invitation.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
-	9,  // 4: admiral.api.invitation.v1.Invitation.accepted_at:type_name -> google.protobuf.Timestamp
-	9,  // 5: admiral.api.invitation.v1.Invitation.revoked_at:type_name -> google.protobuf.Timestamp
-	8,  // 6: admiral.api.invitation.v1.CreateInvitationRequest.role:type_name -> admiral.api.user.v1.UserRole
-	1,  // 7: admiral.api.invitation.v1.CreateInvitationResponse.invitation:type_name -> admiral.api.invitation.v1.Invitation
-	1,  // 8: admiral.api.invitation.v1.ListInvitationsResponse.invitations:type_name -> admiral.api.invitation.v1.Invitation
-	1,  // 9: admiral.api.invitation.v1.RevokeInvitationResponse.invitation:type_name -> admiral.api.invitation.v1.Invitation
-	2,  // 10: admiral.api.invitation.v1.InvitationAPI.CreateInvitation:input_type -> admiral.api.invitation.v1.CreateInvitationRequest
-	4,  // 11: admiral.api.invitation.v1.InvitationAPI.ListInvitations:input_type -> admiral.api.invitation.v1.ListInvitationsRequest
-	6,  // 12: admiral.api.invitation.v1.InvitationAPI.RevokeInvitation:input_type -> admiral.api.invitation.v1.RevokeInvitationRequest
-	3,  // 13: admiral.api.invitation.v1.InvitationAPI.CreateInvitation:output_type -> admiral.api.invitation.v1.CreateInvitationResponse
-	5,  // 14: admiral.api.invitation.v1.InvitationAPI.ListInvitations:output_type -> admiral.api.invitation.v1.ListInvitationsResponse
-	7,  // 15: admiral.api.invitation.v1.InvitationAPI.RevokeInvitation:output_type -> admiral.api.invitation.v1.RevokeInvitationResponse
-	13, // [13:16] is the sub-list for method output_type
-	10, // [10:13] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	0,  // 1: admiral.api.invitation.v1.Invitation.status:type_name -> admiral.api.invitation.v1.Invitation.Status
+	9,  // 2: admiral.api.invitation.v1.Invitation.invited_by:type_name -> admiral.common.v1.ActorRef
+	10, // 3: admiral.api.invitation.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
+	10, // 4: admiral.api.invitation.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
+	10, // 5: admiral.api.invitation.v1.Invitation.accepted_at:type_name -> google.protobuf.Timestamp
+	9,  // 6: admiral.api.invitation.v1.Invitation.accepted_by:type_name -> admiral.common.v1.ActorRef
+	10, // 7: admiral.api.invitation.v1.Invitation.revoked_at:type_name -> google.protobuf.Timestamp
+	1,  // 8: admiral.api.invitation.v1.CreateInvitationRequest.invitation:type_name -> admiral.api.invitation.v1.Invitation
+	1,  // 9: admiral.api.invitation.v1.CreateInvitationResponse.invitation:type_name -> admiral.api.invitation.v1.Invitation
+	1,  // 10: admiral.api.invitation.v1.ListInvitationsResponse.invitations:type_name -> admiral.api.invitation.v1.Invitation
+	1,  // 11: admiral.api.invitation.v1.RevokeInvitationResponse.invitation:type_name -> admiral.api.invitation.v1.Invitation
+	2,  // 12: admiral.api.invitation.v1.InvitationAPI.CreateInvitation:input_type -> admiral.api.invitation.v1.CreateInvitationRequest
+	4,  // 13: admiral.api.invitation.v1.InvitationAPI.ListInvitations:input_type -> admiral.api.invitation.v1.ListInvitationsRequest
+	6,  // 14: admiral.api.invitation.v1.InvitationAPI.RevokeInvitation:input_type -> admiral.api.invitation.v1.RevokeInvitationRequest
+	3,  // 15: admiral.api.invitation.v1.InvitationAPI.CreateInvitation:output_type -> admiral.api.invitation.v1.CreateInvitationResponse
+	5,  // 16: admiral.api.invitation.v1.InvitationAPI.ListInvitations:output_type -> admiral.api.invitation.v1.ListInvitationsResponse
+	7,  // 17: admiral.api.invitation.v1.InvitationAPI.RevokeInvitation:output_type -> admiral.api.invitation.v1.RevokeInvitationResponse
+	15, // [15:18] is the sub-list for method output_type
+	12, // [12:15] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_invitation_v1_invitation_proto_init() }

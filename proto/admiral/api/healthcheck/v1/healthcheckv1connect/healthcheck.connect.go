@@ -5,37 +5,37 @@
 package healthcheckv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// HealthcheckAPIName is the fully-qualified name of the HealthcheckAPI service.
 	HealthcheckAPIName = "admiral.api.healthcheck.v1.HealthcheckAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// HealthcheckAPIHealthcheckProcedure is the fully-qualified name of the HealthcheckAPI's
-	// Healthcheck RPC.
+	// HealthcheckAPIHealthcheckProcedure is the procedure name of the HealthcheckAPI's Healthcheck RPC.
 	HealthcheckAPIHealthcheckProcedure = "/admiral.api.healthcheck.v1.HealthcheckAPI/Healthcheck"
+)
+
+var (
+	healthcheckAPIHealthcheckSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_healthcheck_v1_healthcheck_proto.Services().ByName("HealthcheckAPI").Methods().ByName("Healthcheck"),
+			Procedure:  HealthcheckAPIHealthcheckProcedure,
+		}
+	})
 )
 
 // HealthcheckAPIClient is a client for the admiral.api.healthcheck.v1.HealthcheckAPI service.
@@ -43,37 +43,13 @@ type HealthcheckAPIClient interface {
 	// Healthcheck verifies that the service is running and healthy.
 	// Returns an empty response on success. Use this endpoint for load balancer
 	// health checks and monitoring systems.
-	Healthcheck(context.Context, *connect.Request[v1.HealthcheckRequest]) (*connect.Response[v1.HealthcheckResponse], error)
+	Healthcheck(context.Context, *v1.HealthcheckRequest) (*v1.HealthcheckResponse, error)
 }
 
 // NewHealthcheckAPIClient constructs a client for the admiral.api.healthcheck.v1.HealthcheckAPI
-// service. By default, it uses the Connect protocol with the binary Protobuf Codec, asks for
-// gzipped responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply
-// the connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewHealthcheckAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) HealthcheckAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	healthcheckAPIMethods := v1.File_admiral_api_healthcheck_v1_healthcheck_proto.Services().ByName("HealthcheckAPI").Methods()
-	return &healthcheckAPIClient{
-		healthcheck: connect.NewClient[v1.HealthcheckRequest, v1.HealthcheckResponse](
-			httpClient,
-			baseURL+HealthcheckAPIHealthcheckProcedure,
-			connect.WithSchema(healthcheckAPIMethods.ByName("Healthcheck")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// healthcheckAPIClient implements HealthcheckAPIClient.
-type healthcheckAPIClient struct {
-	healthcheck *connect.Client[v1.HealthcheckRequest, v1.HealthcheckResponse]
-}
-
-// Healthcheck calls admiral.api.healthcheck.v1.HealthcheckAPI.Healthcheck.
-func (c *healthcheckAPIClient) Healthcheck(ctx context.Context, req *connect.Request[v1.HealthcheckRequest]) (*connect.Response[v1.HealthcheckResponse], error) {
-	return c.healthcheck.CallUnary(ctx, req)
+// service. Multiple service clients may share a single connect.Client.
+func NewHealthcheckAPIClient(client *connect.Client) HealthcheckAPIClient {
+	return &healthcheckAPIClient{client: client}
 }
 
 // HealthcheckAPIHandler is an implementation of the admiral.api.healthcheck.v1.HealthcheckAPI
@@ -82,35 +58,47 @@ type HealthcheckAPIHandler interface {
 	// Healthcheck verifies that the service is running and healthy.
 	// Returns an empty response on success. Use this endpoint for load balancer
 	// health checks and monitoring systems.
-	Healthcheck(context.Context, *connect.Request[v1.HealthcheckRequest]) (*connect.Response[v1.HealthcheckResponse], error)
+	Healthcheck(context.Context, *v1.HealthcheckRequest) (*v1.HealthcheckResponse, error)
 }
 
-// NewHealthcheckAPIHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewHealthcheckAPIHandler(svc HealthcheckAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	healthcheckAPIMethods := v1.File_admiral_api_healthcheck_v1_healthcheck_proto.Services().ByName("HealthcheckAPI").Methods()
-	healthcheckAPIHealthcheckHandler := connect.NewUnaryHandler(
-		HealthcheckAPIHealthcheckProcedure,
-		svc.Healthcheck,
-		connect.WithSchema(healthcheckAPIMethods.ByName("Healthcheck")),
-		connect.WithHandlerOptions(opts...),
+// RegisterHealthcheckAPIHandler registers svc as the admiral.api.healthcheck.v1.HealthcheckAPI
+// implementation on server.
+func RegisterHealthcheckAPIHandler(server *connect.Server, svc HealthcheckAPIHandler) {
+	adapter := healthcheckAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: healthcheckAPIHealthcheckSpec(), Handler: adapter.healthcheck},
 	)
-	return "/admiral.api.healthcheck.v1.HealthcheckAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case HealthcheckAPIHealthcheckProcedure:
-			healthcheckAPIHealthcheckHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedHealthcheckAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedHealthcheckAPIHandler struct{}
 
-func (UnimplementedHealthcheckAPIHandler) Healthcheck(context.Context, *connect.Request[v1.HealthcheckRequest]) (*connect.Response[v1.HealthcheckResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.healthcheck.v1.HealthcheckAPI.Healthcheck is not implemented"))
+func (UnimplementedHealthcheckAPIHandler) Healthcheck(context.Context, *v1.HealthcheckRequest) (*v1.HealthcheckResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.healthcheck.v1.HealthcheckAPI.Healthcheck is not implemented")
+}
+
+type healthcheckAPIClient struct {
+	client *connect.Client
+}
+
+func (c *healthcheckAPIClient) Healthcheck(ctx context.Context, req *v1.HealthcheckRequest) (*v1.HealthcheckResponse, error) {
+	var res v1.HealthcheckResponse
+	if err := c.client.CallUnary(ctx, healthcheckAPIHealthcheckSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type healthcheckAPIHandler struct{ svc HealthcheckAPIHandler }
+
+func (h healthcheckAPIHandler) healthcheck(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.HealthcheckRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Healthcheck(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

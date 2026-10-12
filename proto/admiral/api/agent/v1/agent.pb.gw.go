@@ -35,191 +35,6 @@ var (
 	_ = metadata.Join
 )
 
-func request_AgentAPI_CreateCluster_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq CreateClusterRequest
-		metadata runtime.ServerMetadata
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.CreateCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_AgentAPI_CreateCluster_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq CreateClusterRequest
-		metadata runtime.ServerMetadata
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.CreateCluster(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_AgentAPI_GetCluster_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetClusterRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.GetCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_AgentAPI_GetCluster_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetClusterRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
-	}
-	msg, err := server.GetCluster(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-var filter_AgentAPI_ListClusters_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-
-func request_AgentAPI_ListClusters_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ListClustersRequest
-		metadata runtime.ServerMetadata
-	)
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_AgentAPI_ListClusters_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.ListClusters(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_AgentAPI_ListClusters_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ListClustersRequest
-		metadata runtime.ServerMetadata
-	)
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_AgentAPI_ListClusters_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.ListClusters(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_AgentAPI_SetClusterTrust_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq SetClusterTrustRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.SetClusterTrust(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_AgentAPI_SetClusterTrust_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq SetClusterTrustRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
-	}
-	msg, err := server.SetClusterTrust(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-func request_AgentAPI_DeleteCluster_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq DeleteClusterRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.DeleteCluster(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_AgentAPI_DeleteCluster_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq DeleteClusterRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["cluster_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "cluster_id")
-	}
-	protoReq.ClusterId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "cluster_id", err)
-	}
-	msg, err := server.DeleteCluster(ctx, &protoReq)
-	return msg, metadata, err
-}
-
 func request_AgentAPI_CreateAgent_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq CreateAgentRequest
@@ -330,13 +145,13 @@ func request_AgentAPI_UpdateAgent_0(ctx context.Context, marshaler runtime.Marsh
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["agent_id"]
+	val, ok := pathParams["agent.id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "agent_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "agent.id")
 	}
-	protoReq.AgentId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "agent.id", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent.id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -354,13 +169,13 @@ func local_request_AgentAPI_UpdateAgent_0(ctx context.Context, marshaler runtime
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["agent_id"]
+	val, ok := pathParams["agent.id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "agent_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "agent.id")
 	}
-	protoReq.AgentId, err = runtime.String(val)
+	err = runtime.PopulateFieldFromPath(&protoReq, "agent.id", val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent.id", err)
 	}
 	msg, err := server.UpdateAgent(ctx, &protoReq)
 	return msg, metadata, err
@@ -540,6 +355,8 @@ func local_request_AgentAPI_RevokeAgentUse_0(ctx context.Context, marshaler runt
 	return msg, metadata, err
 }
 
+var filter_AgentAPI_ListAgentGrants_0 = &utilities.DoubleArray{Encoding: map[string]int{"agent_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+
 func request_AgentAPI_ListAgentGrants_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ListAgentGrantsRequest
@@ -553,6 +370,12 @@ func request_AgentAPI_ListAgentGrants_0(ctx context.Context, marshaler runtime.M
 	protoReq.AgentId, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_AgentAPI_ListAgentGrants_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -575,11 +398,202 @@ func local_request_AgentAPI_ListAgentGrants_0(ctx context.Context, marshaler run
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent_id", err)
 	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_AgentAPI_ListAgentGrants_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 	msg, err := server.ListAgentGrants(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_AgentAPI_GetJob_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityProviderAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CreateWorkloadIdentityProviderRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.CreateWorkloadIdentityProvider(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityProviderAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CreateWorkloadIdentityProviderRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.CreateWorkloadIdentityProvider(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityProviderAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetWorkloadIdentityProviderRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+	protoReq.ProviderId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.GetWorkloadIdentityProvider(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityProviderAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetWorkloadIdentityProviderRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+	protoReq.ProviderId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+	msg, err := server.GetWorkloadIdentityProvider(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityProviderAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListWorkloadIdentityProvidersRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.ListWorkloadIdentityProviders(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityProviderAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListWorkloadIdentityProvidersRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListWorkloadIdentityProviders(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityProviderAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq SetWorkloadIdentityProviderKeysRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+	protoReq.ProviderId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.SetWorkloadIdentityProviderKeys(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityProviderAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq SetWorkloadIdentityProviderKeysRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+	protoReq.ProviderId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+	msg, err := server.SetWorkloadIdentityProviderKeys(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0(ctx context.Context, marshaler runtime.Marshaler, client WorkloadIdentityProviderAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq DeleteWorkloadIdentityProviderRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+	protoReq.ProviderId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.DeleteWorkloadIdentityProvider(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0(ctx context.Context, marshaler runtime.Marshaler, server WorkloadIdentityProviderAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq DeleteWorkloadIdentityProviderRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+	protoReq.ProviderId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+	msg, err := server.DeleteWorkloadIdentityProvider(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_JobAPI_GetJob_0(ctx context.Context, marshaler runtime.Marshaler, client JobAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq GetJobRequest
 		metadata runtime.ServerMetadata
@@ -600,7 +614,7 @@ func request_AgentAPI_GetJob_0(ctx context.Context, marshaler runtime.Marshaler,
 	return msg, metadata, err
 }
 
-func local_request_AgentAPI_GetJob_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_JobAPI_GetJob_0(ctx context.Context, marshaler runtime.Marshaler, server JobAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq GetJobRequest
 		metadata runtime.ServerMetadata
@@ -618,9 +632,62 @@ func local_request_AgentAPI_GetJob_0(ctx context.Context, marshaler runtime.Mars
 	return msg, metadata, err
 }
 
-var filter_AgentAPI_ListJobs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+var filter_JobAPI_GetJobLog_0 = &utilities.DoubleArray{Encoding: map[string]int{"job_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
-func request_AgentAPI_ListJobs_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_JobAPI_GetJobLog_0(ctx context.Context, marshaler runtime.Marshaler, client JobAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetJobLogRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_JobAPI_GetJobLog_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.GetJobLog(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_JobAPI_GetJobLog_0(ctx context.Context, marshaler runtime.Marshaler, server JobAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetJobLogRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "job_id")
+	}
+	protoReq.JobId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "job_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_JobAPI_GetJobLog_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.GetJobLog(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_JobAPI_ListJobs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_JobAPI_ListJobs_0(ctx context.Context, marshaler runtime.Marshaler, client JobAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ListJobsRequest
 		metadata runtime.ServerMetadata
@@ -628,7 +695,7 @@ func request_AgentAPI_ListJobs_0(ctx context.Context, marshaler runtime.Marshale
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_AgentAPI_ListJobs_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_JobAPI_ListJobs_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
@@ -638,7 +705,7 @@ func request_AgentAPI_ListJobs_0(ctx context.Context, marshaler runtime.Marshale
 	return msg, metadata, err
 }
 
-func local_request_AgentAPI_ListJobs_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_JobAPI_ListJobs_0(ctx context.Context, marshaler runtime.Marshaler, server JobAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ListJobsRequest
 		metadata runtime.ServerMetadata
@@ -646,14 +713,14 @@ func local_request_AgentAPI_ListJobs_0(ctx context.Context, marshaler runtime.Ma
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_AgentAPI_ListJobs_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_JobAPI_ListJobs_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.ListJobs(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_AgentAPI_CancelJob_0(ctx context.Context, marshaler runtime.Marshaler, client AgentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_JobAPI_CancelJob_0(ctx context.Context, marshaler runtime.Marshaler, client JobAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq CancelJobRequest
 		metadata runtime.ServerMetadata
@@ -677,7 +744,7 @@ func request_AgentAPI_CancelJob_0(ctx context.Context, marshaler runtime.Marshal
 	return msg, metadata, err
 }
 
-func local_request_AgentAPI_CancelJob_0(ctx context.Context, marshaler runtime.Marshaler, server AgentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_JobAPI_CancelJob_0(ctx context.Context, marshaler runtime.Marshaler, server JobAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq CancelJobRequest
 		metadata runtime.ServerMetadata
@@ -725,9 +792,9 @@ func local_request_AgentRuntimeAPI_Enroll_0(ctx context.Context, marshaler runti
 	return msg, metadata, err
 }
 
-func request_AgentRuntimeAPI_ReportStatus_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AgentRuntimeAPI_Heartbeat_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ReportStatusRequest
+		protoReq HeartbeatRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -736,19 +803,19 @@ func request_AgentRuntimeAPI_ReportStatus_0(ctx context.Context, marshaler runti
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.ReportStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.Heartbeat(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_AgentRuntimeAPI_ReportStatus_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AgentRuntimeAPI_Heartbeat_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ReportStatusRequest
+		protoReq HeartbeatRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.ReportStatus(ctx, &protoReq)
+	msg, err := server.Heartbeat(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -783,9 +850,18 @@ func request_AgentRuntimeAPI_StartJob_0(ctx context.Context, marshaler runtime.M
 	var (
 		protoReq StartJobRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -798,38 +874,110 @@ func local_request_AgentRuntimeAPI_StartJob_0(ctx context.Context, marshaler run
 	var (
 		protoReq StartJobRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	msg, err := server.StartJob(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_AgentRuntimeAPI_RenewLease_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AgentRuntimeAPI_RenewJob_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq RenewLeaseRequest
+		protoReq RenewJobRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.RenewLease(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.RenewJob(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_AgentRuntimeAPI_RenewLease_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AgentRuntimeAPI_RenewJob_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq RenewLeaseRequest
+		protoReq RenewJobRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.RenewLease(ctx, &protoReq)
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.RenewJob(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_AgentRuntimeAPI_AppendJobLog_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AppendJobLogRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.AppendJobLog(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AgentRuntimeAPI_AppendJobLog_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AppendJobLogRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.AppendJobLog(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -837,9 +985,18 @@ func request_AgentRuntimeAPI_GetJobArtifact_0(ctx context.Context, marshaler run
 	var (
 		protoReq GetJobArtifactRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -852,92 +1009,155 @@ func local_request_AgentRuntimeAPI_GetJobArtifact_0(ctx context.Context, marshal
 	var (
 		protoReq GetJobArtifactRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	msg, err := server.GetJobArtifact(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_AgentRuntimeAPI_UploadPlanDiff_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AgentRuntimeAPI_UploadJobPlanDiff_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UploadPlanDiffRequest
+		protoReq UploadJobPlanDiffRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.UploadPlanDiff(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UploadJobPlanDiff(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_AgentRuntimeAPI_UploadPlanDiff_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AgentRuntimeAPI_UploadJobPlanDiff_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UploadPlanDiffRequest
+		protoReq UploadJobPlanDiffRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.UploadPlanDiff(ctx, &protoReq)
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.UploadJobPlanDiff(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_AgentRuntimeAPI_CheckApplyPlan_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AgentRuntimeAPI_CheckJobPlan_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CheckApplyPlanRequest
+		protoReq CheckJobPlanRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.CheckApplyPlan(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CheckJobPlan(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_AgentRuntimeAPI_CheckApplyPlan_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AgentRuntimeAPI_CheckJobPlan_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CheckApplyPlanRequest
+		protoReq CheckJobPlanRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.CheckApplyPlan(ctx, &protoReq)
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.CheckJobPlan(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_AgentRuntimeAPI_ReportJobResult_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AgentRuntimeAPI_FinishJob_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ReportJobResultRequest
+		protoReq FinishJobRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.ReportJobResult(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.FinishJob(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_AgentRuntimeAPI_ReportJobResult_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_AgentRuntimeAPI_FinishJob_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ReportJobResultRequest
+		protoReq FinishJobRequest
 		metadata runtime.ServerMetadata
+		err      error
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.ReportJobResult(ctx, &protoReq)
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.FinishJob(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -947,106 +1167,6 @@ func local_request_AgentRuntimeAPI_ReportJobResult_0(ctx context.Context, marsha
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterAgentAPIHandlerFromEndpoint instead.
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AgentAPIServer) error {
-	mux.Handle(http.MethodPost, pattern_AgentAPI_CreateCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateCluster", runtime.WithHTTPPathPattern("/v1/clusters"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AgentAPI_CreateCluster_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_CreateCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_GetCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetCluster", runtime.WithHTTPPathPattern("/v1/clusters/{cluster_id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AgentAPI_GetCluster_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_GetCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_ListClusters_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListClusters", runtime.WithHTTPPathPattern("/v1/clusters"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AgentAPI_ListClusters_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_ListClusters_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_AgentAPI_SetClusterTrust_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/SetClusterTrust", runtime.WithHTTPPathPattern("/v1/clusters/{cluster_id}/trust"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AgentAPI_SetClusterTrust_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_SetClusterTrust_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodDelete, pattern_AgentAPI_DeleteCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/DeleteCluster", runtime.WithHTTPPathPattern("/v1/clusters/{cluster_id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_AgentAPI_DeleteCluster_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_DeleteCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_AgentAPI_CreateAgent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1113,7 +1233,7 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1227,65 +1347,205 @@ func RegisterAgentAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		}
 		forward_AgentAPI_ListAgentGrants_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_GetJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+
+	return nil
+}
+
+// RegisterWorkloadIdentityProviderAPIHandlerServer registers the http handlers for service WorkloadIdentityProviderAPI to "mux".
+// UnaryRPC     :call WorkloadIdentityProviderAPIServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterWorkloadIdentityProviderAPIHandlerFromEndpoint instead.
+// GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
+func RegisterWorkloadIdentityProviderAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server WorkloadIdentityProviderAPIServer) error {
+	mux.Handle(http.MethodPost, pattern_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/CreateWorkloadIdentityProvider", runtime.WithHTTPPathPattern("/v1/workload-identity-providers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentAPI_GetJob_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentAPI_GetJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_ListJobs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/GetWorkloadIdentityProvider", runtime.WithHTTPPathPattern("/v1/workload-identity-providers/{provider_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentAPI_ListJobs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentAPI_ListJobs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentAPI_CancelJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CancelJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}/cancel"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/ListWorkloadIdentityProviders", runtime.WithHTTPPathPattern("/v1/workload-identity-providers"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentAPI_CancelJob_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentAPI_CancelJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/SetWorkloadIdentityProviderKeys", runtime.WithHTTPPathPattern("/v1/workload-identity-providers/{provider_id}/keys"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/DeleteWorkloadIdentityProvider", runtime.WithHTTPPathPattern("/v1/workload-identity-providers/{provider_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+
+	return nil
+}
+
+// RegisterJobAPIHandlerServer registers the http handlers for service JobAPI to "mux".
+// UnaryRPC     :call JobAPIServer directly.
+// StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterJobAPIHandlerFromEndpoint instead.
+// GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
+func RegisterJobAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server JobAPIServer) error {
+	mux.Handle(http.MethodGet, pattern_JobAPI_GetJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/GetJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_JobAPI_GetJob_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_GetJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_JobAPI_GetJobLog_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/GetJobLog", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}/log"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_JobAPI_GetJobLog_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_GetJobLog_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_JobAPI_ListJobs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_JobAPI_ListJobs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_ListJobs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_JobAPI_CancelJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/CancelJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}/cancel"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_JobAPI_CancelJob_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_CancelJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -1317,25 +1577,25 @@ func RegisterAgentRuntimeAPIHandlerServer(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_Enroll_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_ReportStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_Heartbeat_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/ReportStatus", runtime.WithHTTPPathPattern("/v1/agent/status"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/Heartbeat", runtime.WithHTTPPathPattern("/v1/agent/heartbeat"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentRuntimeAPI_ReportStatus_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AgentRuntimeAPI_Heartbeat_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_ReportStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_Heartbeat_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_ClaimJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1363,7 +1623,7 @@ func RegisterAgentRuntimeAPIHandlerServer(ctx context.Context, mux *runtime.Serv
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/start"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/start"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1377,25 +1637,45 @@ func RegisterAgentRuntimeAPIHandlerServer(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_StartJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_RenewLease_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_RenewJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease", runtime.WithHTTPPathPattern("/v1/agent/jobs/renew"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/RenewJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/renew"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentRuntimeAPI_RenewLease_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AgentRuntimeAPI_RenewJob_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_RenewLease_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_RenewJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_AppendJobLog_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/AppendJobLog", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/log"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AgentRuntimeAPI_AppendJobLog_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AgentRuntimeAPI_AppendJobLog_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_GetJobArtifact_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1403,7 +1683,7 @@ func RegisterAgentRuntimeAPIHandlerServer(ctx context.Context, mux *runtime.Serv
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact", runtime.WithHTTPPathPattern("/v1/agent/jobs/artifact"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/artifact"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1417,65 +1697,65 @@ func RegisterAgentRuntimeAPIHandlerServer(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_GetJobArtifact_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_UploadPlanDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_UploadJobPlanDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff", runtime.WithHTTPPathPattern("/v1/agent/jobs/plan-diff"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanDiff", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/plan-diff"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentRuntimeAPI_UploadPlanDiff_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AgentRuntimeAPI_UploadJobPlanDiff_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_UploadPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_UploadJobPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_CheckApplyPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_CheckJobPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/CheckApplyPlan", runtime.WithHTTPPathPattern("/v1/agent/jobs/check-plan"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/CheckJobPlan", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/check-plan"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentRuntimeAPI_CheckApplyPlan_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AgentRuntimeAPI_CheckJobPlan_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_CheckApplyPlan_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_CheckJobPlan_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_ReportJobResult_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_FinishJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult", runtime.WithHTTPPathPattern("/v1/agent/jobs/result"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/FinishJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/finish"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_AgentRuntimeAPI_ReportJobResult_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_AgentRuntimeAPI_FinishJob_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_ReportJobResult_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_FinishJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -1517,91 +1797,6 @@ func RegisterAgentAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *g
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "AgentAPIClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client AgentAPIClient) error {
-	mux.Handle(http.MethodPost, pattern_AgentAPI_CreateCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CreateCluster", runtime.WithHTTPPathPattern("/v1/clusters"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_CreateCluster_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_CreateCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_GetCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetCluster", runtime.WithHTTPPathPattern("/v1/clusters/{cluster_id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_GetCluster_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_GetCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_ListClusters_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListClusters", runtime.WithHTTPPathPattern("/v1/clusters"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_ListClusters_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_ListClusters_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_AgentAPI_SetClusterTrust_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/SetClusterTrust", runtime.WithHTTPPathPattern("/v1/clusters/{cluster_id}/trust"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_SetClusterTrust_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_SetClusterTrust_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodDelete, pattern_AgentAPI_DeleteCluster_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/DeleteCluster", runtime.WithHTTPPathPattern("/v1/clusters/{cluster_id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_DeleteCluster_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_DeleteCluster_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_AgentAPI_CreateAgent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1657,7 +1852,7 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent_id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/UpdateAgent", runtime.WithHTTPPathPattern("/v1/agents/{agent.id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1755,86 +1950,22 @@ func RegisterAgentAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		}
 		forward_AgentAPI_ListAgentGrants_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_GetJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/GetJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_GetJob_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_GetJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodGet, pattern_AgentAPI_ListJobs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_ListJobs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_ListJobs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPost, pattern_AgentAPI_CancelJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentAPI/CancelJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}/cancel"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_AgentAPI_CancelJob_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_AgentAPI_CancelJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	return nil
 }
 
 var (
-	pattern_AgentAPI_CreateCluster_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusters"}, ""))
-	pattern_AgentAPI_GetCluster_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusters", "cluster_id"}, ""))
-	pattern_AgentAPI_ListClusters_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "clusters"}, ""))
-	pattern_AgentAPI_SetClusterTrust_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "clusters", "cluster_id", "trust"}, ""))
-	pattern_AgentAPI_DeleteCluster_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "clusters", "cluster_id"}, ""))
 	pattern_AgentAPI_CreateAgent_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "agents"}, ""))
 	pattern_AgentAPI_GetAgent_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent_id"}, ""))
 	pattern_AgentAPI_ListAgents_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "agents"}, ""))
-	pattern_AgentAPI_UpdateAgent_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent_id"}, ""))
+	pattern_AgentAPI_UpdateAgent_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent.id"}, ""))
 	pattern_AgentAPI_DeleteAgent_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "agents", "agent_id"}, ""))
 	pattern_AgentAPI_CreateEnrollmentKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "enrollment-keys"}, ""))
 	pattern_AgentAPI_GrantAgentUse_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "grants"}, ""))
 	pattern_AgentAPI_RevokeAgentUse_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 2, 4}, []string{"v1", "agents", "agent_id", "grants", "revoke"}, ""))
 	pattern_AgentAPI_ListAgentGrants_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "agents", "agent_id", "grants"}, ""))
-	pattern_AgentAPI_GetJob_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "jobs", "job_id"}, ""))
-	pattern_AgentAPI_ListJobs_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "jobs"}, ""))
-	pattern_AgentAPI_CancelJob_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "jobs", "job_id", "cancel"}, ""))
 )
 
 var (
-	forward_AgentAPI_CreateCluster_0       = runtime.ForwardResponseMessage
-	forward_AgentAPI_GetCluster_0          = runtime.ForwardResponseMessage
-	forward_AgentAPI_ListClusters_0        = runtime.ForwardResponseMessage
-	forward_AgentAPI_SetClusterTrust_0     = runtime.ForwardResponseMessage
-	forward_AgentAPI_DeleteCluster_0       = runtime.ForwardResponseMessage
 	forward_AgentAPI_CreateAgent_0         = runtime.ForwardResponseMessage
 	forward_AgentAPI_GetAgent_0            = runtime.ForwardResponseMessage
 	forward_AgentAPI_ListAgents_0          = runtime.ForwardResponseMessage
@@ -1844,9 +1975,267 @@ var (
 	forward_AgentAPI_GrantAgentUse_0       = runtime.ForwardResponseMessage
 	forward_AgentAPI_RevokeAgentUse_0      = runtime.ForwardResponseMessage
 	forward_AgentAPI_ListAgentGrants_0     = runtime.ForwardResponseMessage
-	forward_AgentAPI_GetJob_0              = runtime.ForwardResponseMessage
-	forward_AgentAPI_ListJobs_0            = runtime.ForwardResponseMessage
-	forward_AgentAPI_CancelJob_0           = runtime.ForwardResponseMessage
+)
+
+// RegisterWorkloadIdentityProviderAPIHandlerFromEndpoint is same as RegisterWorkloadIdentityProviderAPIHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterWorkloadIdentityProviderAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.NewClient(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+	return RegisterWorkloadIdentityProviderAPIHandler(ctx, mux, conn)
+}
+
+// RegisterWorkloadIdentityProviderAPIHandler registers the http handlers for service WorkloadIdentityProviderAPI to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterWorkloadIdentityProviderAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterWorkloadIdentityProviderAPIHandlerClient(ctx, mux, NewWorkloadIdentityProviderAPIClient(conn))
+}
+
+// RegisterWorkloadIdentityProviderAPIHandlerClient registers the http handlers for service WorkloadIdentityProviderAPI
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "WorkloadIdentityProviderAPIClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "WorkloadIdentityProviderAPIClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "WorkloadIdentityProviderAPIClient" to call the correct interceptors. This client ignores the HTTP middlewares.
+func RegisterWorkloadIdentityProviderAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client WorkloadIdentityProviderAPIClient) error {
+	mux.Handle(http.MethodPost, pattern_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/CreateWorkloadIdentityProvider", runtime.WithHTTPPathPattern("/v1/workload-identity-providers"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/GetWorkloadIdentityProvider", runtime.WithHTTPPathPattern("/v1/workload-identity-providers/{provider_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/ListWorkloadIdentityProviders", runtime.WithHTTPPathPattern("/v1/workload-identity-providers"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/SetWorkloadIdentityProviderKeys", runtime.WithHTTPPathPattern("/v1/workload-identity-providers/{provider_id}/keys"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/DeleteWorkloadIdentityProvider", runtime.WithHTTPPathPattern("/v1/workload-identity-providers/{provider_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	return nil
+}
+
+var (
+	pattern_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "workload-identity-providers"}, ""))
+	pattern_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "workload-identity-providers", "provider_id"}, ""))
+	pattern_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "workload-identity-providers"}, ""))
+	pattern_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "workload-identity-providers", "provider_id", "keys"}, ""))
+	pattern_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "workload-identity-providers", "provider_id"}, ""))
+)
+
+var (
+	forward_WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_0  = runtime.ForwardResponseMessage
+	forward_WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_0     = runtime.ForwardResponseMessage
+	forward_WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_0   = runtime.ForwardResponseMessage
+	forward_WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_0 = runtime.ForwardResponseMessage
+	forward_WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_0  = runtime.ForwardResponseMessage
+)
+
+// RegisterJobAPIHandlerFromEndpoint is same as RegisterJobAPIHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterJobAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.NewClient(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+	return RegisterJobAPIHandler(ctx, mux, conn)
+}
+
+// RegisterJobAPIHandler registers the http handlers for service JobAPI to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterJobAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterJobAPIHandlerClient(ctx, mux, NewJobAPIClient(conn))
+}
+
+// RegisterJobAPIHandlerClient registers the http handlers for service JobAPI
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "JobAPIClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "JobAPIClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "JobAPIClient" to call the correct interceptors. This client ignores the HTTP middlewares.
+func RegisterJobAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client JobAPIClient) error {
+	mux.Handle(http.MethodGet, pattern_JobAPI_GetJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/GetJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_JobAPI_GetJob_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_GetJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_JobAPI_GetJobLog_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/GetJobLog", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}/log"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_JobAPI_GetJobLog_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_GetJobLog_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_JobAPI_ListJobs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/ListJobs", runtime.WithHTTPPathPattern("/v1/jobs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_JobAPI_ListJobs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_ListJobs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_JobAPI_CancelJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.JobAPI/CancelJob", runtime.WithHTTPPathPattern("/v1/jobs/{job_id}/cancel"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_JobAPI_CancelJob_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_JobAPI_CancelJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	return nil
+}
+
+var (
+	pattern_JobAPI_GetJob_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "jobs", "job_id"}, ""))
+	pattern_JobAPI_GetJobLog_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "jobs", "job_id", "log"}, ""))
+	pattern_JobAPI_ListJobs_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "jobs"}, ""))
+	pattern_JobAPI_CancelJob_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "jobs", "job_id", "cancel"}, ""))
+)
+
+var (
+	forward_JobAPI_GetJob_0    = runtime.ForwardResponseMessage
+	forward_JobAPI_GetJobLog_0 = runtime.ForwardResponseMessage
+	forward_JobAPI_ListJobs_0  = runtime.ForwardResponseMessage
+	forward_JobAPI_CancelJob_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterAgentRuntimeAPIHandlerFromEndpoint is same as RegisterAgentRuntimeAPIHandler but
@@ -1902,22 +2291,22 @@ func RegisterAgentRuntimeAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_Enroll_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_ReportStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_Heartbeat_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/ReportStatus", runtime.WithHTTPPathPattern("/v1/agent/status"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/Heartbeat", runtime.WithHTTPPathPattern("/v1/agent/heartbeat"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AgentRuntimeAPI_ReportStatus_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AgentRuntimeAPI_Heartbeat_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_ReportStatus_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_Heartbeat_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_ClaimJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1940,7 +2329,7 @@ func RegisterAgentRuntimeAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/start"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/start"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1953,28 +2342,45 @@ func RegisterAgentRuntimeAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_StartJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_RenewLease_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_RenewJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease", runtime.WithHTTPPathPattern("/v1/agent/jobs/renew"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/RenewJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/renew"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AgentRuntimeAPI_RenewLease_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AgentRuntimeAPI_RenewJob_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_RenewLease_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_RenewJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_AppendJobLog_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/AppendJobLog", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/log"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AgentRuntimeAPI_AppendJobLog_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AgentRuntimeAPI_AppendJobLog_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_GetJobArtifact_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact", runtime.WithHTTPPathPattern("/v1/agent/jobs/artifact"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/artifact"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1987,80 +2393,82 @@ func RegisterAgentRuntimeAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_GetJobArtifact_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_UploadPlanDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_UploadJobPlanDiff_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff", runtime.WithHTTPPathPattern("/v1/agent/jobs/plan-diff"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanDiff", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/plan-diff"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AgentRuntimeAPI_UploadPlanDiff_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AgentRuntimeAPI_UploadJobPlanDiff_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_UploadPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_UploadJobPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_CheckApplyPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_CheckJobPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/CheckApplyPlan", runtime.WithHTTPPathPattern("/v1/agent/jobs/check-plan"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/CheckJobPlan", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/check-plan"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AgentRuntimeAPI_CheckApplyPlan_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AgentRuntimeAPI_CheckJobPlan_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_CheckApplyPlan_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_CheckJobPlan_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_ReportJobResult_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_FinishJob_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult", runtime.WithHTTPPathPattern("/v1/agent/jobs/result"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/FinishJob", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/finish"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_AgentRuntimeAPI_ReportJobResult_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_AgentRuntimeAPI_FinishJob_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_AgentRuntimeAPI_ReportJobResult_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AgentRuntimeAPI_FinishJob_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	return nil
 }
 
 var (
-	pattern_AgentRuntimeAPI_Enroll_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "agent", "enroll"}, ""))
-	pattern_AgentRuntimeAPI_ReportStatus_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "agent", "status"}, ""))
-	pattern_AgentRuntimeAPI_ClaimJob_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "claim"}, ""))
-	pattern_AgentRuntimeAPI_StartJob_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "start"}, ""))
-	pattern_AgentRuntimeAPI_RenewLease_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "renew"}, ""))
-	pattern_AgentRuntimeAPI_GetJobArtifact_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "artifact"}, ""))
-	pattern_AgentRuntimeAPI_UploadPlanDiff_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "plan-diff"}, ""))
-	pattern_AgentRuntimeAPI_CheckApplyPlan_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "check-plan"}, ""))
-	pattern_AgentRuntimeAPI_ReportJobResult_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "result"}, ""))
+	pattern_AgentRuntimeAPI_Enroll_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "agent", "enroll"}, ""))
+	pattern_AgentRuntimeAPI_Heartbeat_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "agent", "heartbeat"}, ""))
+	pattern_AgentRuntimeAPI_ClaimJob_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "agent", "jobs", "claim"}, ""))
+	pattern_AgentRuntimeAPI_StartJob_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "start"}, ""))
+	pattern_AgentRuntimeAPI_RenewJob_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "renew"}, ""))
+	pattern_AgentRuntimeAPI_AppendJobLog_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "log"}, ""))
+	pattern_AgentRuntimeAPI_GetJobArtifact_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "artifact"}, ""))
+	pattern_AgentRuntimeAPI_UploadJobPlanDiff_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "plan-diff"}, ""))
+	pattern_AgentRuntimeAPI_CheckJobPlan_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "check-plan"}, ""))
+	pattern_AgentRuntimeAPI_FinishJob_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "finish"}, ""))
 )
 
 var (
-	forward_AgentRuntimeAPI_Enroll_0          = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_ReportStatus_0    = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_ClaimJob_0        = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_StartJob_0        = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_RenewLease_0      = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_GetJobArtifact_0  = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_UploadPlanDiff_0  = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_CheckApplyPlan_0  = runtime.ForwardResponseMessage
-	forward_AgentRuntimeAPI_ReportJobResult_0 = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_Enroll_0            = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_Heartbeat_0         = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_ClaimJob_0          = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_StartJob_0          = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_RenewJob_0          = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_AppendJobLog_0      = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_GetJobArtifact_0    = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_UploadJobPlanDiff_0 = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_CheckJobPlan_0      = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_FinishJob_0         = runtime.ForwardResponseMessage
 )

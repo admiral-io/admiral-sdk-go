@@ -64,8 +64,6 @@ func (m *Tenant) validate(all bool) error {
 
 	// no validation rules for Status
 
-	// no validation rules for Labels
-
 	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
 		case interface{ ValidateAll() error }:
@@ -122,6 +120,10 @@ func (m *Tenant) validate(all bool) error {
 				cause:  err,
 			}
 		}
+	}
+
+	if m.AvatarUrl != nil {
+		// no validation rules for AvatarUrl
 	}
 
 	if len(errors) > 0 {
@@ -454,7 +456,34 @@ func (m *UpdateTenantRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Labels
+	if all {
+		switch v := interface{}(m.GetTenant()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateTenantRequestValidationError{
+					field:  "Tenant",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateTenantRequestValidationError{
+					field:  "Tenant",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTenant()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateTenantRequestValidationError{
+				field:  "Tenant",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if all {
 		switch v := interface{}(m.GetUpdateMask()).(type) {
@@ -483,10 +512,6 @@ func (m *UpdateTenantRequest) validate(all bool) error {
 				cause:  err,
 			}
 		}
-	}
-
-	if m.DisplayName != nil {
-		// no validation rules for DisplayName
 	}
 
 	if len(errors) > 0 {

@@ -70,6 +70,35 @@ func (m *Invitation) validate(all bool) error {
 	// no validation rules for Status
 
 	if all {
+		switch v := interface{}(m.GetInvitedBy()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, InvitationValidationError{
+					field:  "InvitedBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, InvitationValidationError{
+					field:  "InvitedBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetInvitedBy()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return InvitationValidationError{
+				field:  "InvitedBy",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -127,8 +156,33 @@ func (m *Invitation) validate(all bool) error {
 		}
 	}
 
-	if m.InvitedBy != nil {
-		// no validation rules for InvitedBy
+	if all {
+		switch v := interface{}(m.GetAcceptedBy()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, InvitationValidationError{
+					field:  "AcceptedBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, InvitationValidationError{
+					field:  "AcceptedBy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAcceptedBy()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return InvitationValidationError{
+				field:  "AcceptedBy",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if m.AcceptedAt != nil {
@@ -162,10 +216,6 @@ func (m *Invitation) validate(all bool) error {
 			}
 		}
 
-	}
-
-	if m.AcceptedUserId != nil {
-		// no validation rules for AcceptedUserId
 	}
 
 	if m.RevokedAt != nil {
@@ -300,9 +350,34 @@ func (m *CreateInvitationRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Email
-
-	// no validation rules for Role
+	if all {
+		switch v := interface{}(m.GetInvitation()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateInvitationRequestValidationError{
+					field:  "Invitation",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateInvitationRequestValidationError{
+					field:  "Invitation",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetInvitation()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateInvitationRequestValidationError{
+				field:  "Invitation",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return CreateInvitationRequestMultiError(errors)

@@ -5,834 +5,740 @@
 package changesetv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// ChangeSetAPIName is the fully-qualified name of the ChangeSetAPI service.
 	ChangeSetAPIName = "admiral.api.changeset.v1.ChangeSetAPI"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// ChangeSetAPICreateChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// CreateChangeSet RPC.
-	ChangeSetAPICreateChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet"
-	// ChangeSetAPIEditChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// EditChangeSet RPC.
-	ChangeSetAPIEditChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/EditChangeSet"
-	// ChangeSetAPIGetChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's GetChangeSet
+	// ChangeSetAPICreateChangeSetProcedure is the procedure name of the ChangeSetAPI's CreateChangeSet
 	// RPC.
+	ChangeSetAPICreateChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/CreateChangeSet"
+	// ChangeSetAPIUpdateChangeSetProcedure is the procedure name of the ChangeSetAPI's UpdateChangeSet
+	// RPC.
+	ChangeSetAPIUpdateChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/UpdateChangeSet"
+	// ChangeSetAPIEditChangeSetProcedure is the procedure name of the ChangeSetAPI's EditChangeSet RPC.
+	ChangeSetAPIEditChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/EditChangeSet"
+	// ChangeSetAPIRebaseChangeSetProcedure is the procedure name of the ChangeSetAPI's RebaseChangeSet
+	// RPC.
+	ChangeSetAPIRebaseChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/RebaseChangeSet"
+	// ChangeSetAPIGetChangeSetProcedure is the procedure name of the ChangeSetAPI's GetChangeSet RPC.
 	ChangeSetAPIGetChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetChangeSet"
-	// ChangeSetAPIListChangeSetsProcedure is the fully-qualified name of the ChangeSetAPI's
-	// ListChangeSets RPC.
+	// ChangeSetAPIListChangeSetsProcedure is the procedure name of the ChangeSetAPI's ListChangeSets
+	// RPC.
 	ChangeSetAPIListChangeSetsProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ListChangeSets"
-	// ChangeSetAPIDiscardChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
+	// ChangeSetAPIDiscardChangeSetProcedure is the procedure name of the ChangeSetAPI's
 	// DiscardChangeSet RPC.
 	ChangeSetAPIDiscardChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/DiscardChangeSet"
-	// ChangeSetAPIGetComponentValuesProcedure is the fully-qualified name of the ChangeSetAPI's
+	// ChangeSetAPIGetComponentValuesProcedure is the procedure name of the ChangeSetAPI's
 	// GetComponentValues RPC.
 	ChangeSetAPIGetComponentValuesProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetComponentValues"
-	// ChangeSetAPIDiffChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// DiffChangeSet RPC.
+	// ChangeSetAPIDiffChangeSetProcedure is the procedure name of the ChangeSetAPI's DiffChangeSet RPC.
 	ChangeSetAPIDiffChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/DiffChangeSet"
-	// ChangeSetAPIGetRevisionProcedure is the fully-qualified name of the ChangeSetAPI's GetRevision
-	// RPC.
+	// ChangeSetAPIGetRevisionProcedure is the procedure name of the ChangeSetAPI's GetRevision RPC.
 	ChangeSetAPIGetRevisionProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetRevision"
-	// ChangeSetAPIListRevisionsProcedure is the fully-qualified name of the ChangeSetAPI's
-	// ListRevisions RPC.
+	// ChangeSetAPIListRevisionsProcedure is the procedure name of the ChangeSetAPI's ListRevisions RPC.
 	ChangeSetAPIListRevisionsProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ListRevisions"
-	// ChangeSetAPIPlanChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// PlanChangeSet RPC.
-	ChangeSetAPIPlanChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/PlanChangeSet"
-	// ChangeSetAPIGetPrepareProcedure is the fully-qualified name of the ChangeSetAPI's GetPrepare RPC.
+	// ChangeSetAPIGetPrepareProcedure is the procedure name of the ChangeSetAPI's GetPrepare RPC.
 	ChangeSetAPIGetPrepareProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPrepare"
-	// ChangeSetAPIGetArtifactProcedure is the fully-qualified name of the ChangeSetAPI's GetArtifact
-	// RPC.
+	// ChangeSetAPIGetArtifactProcedure is the procedure name of the ChangeSetAPI's GetArtifact RPC.
 	ChangeSetAPIGetArtifactProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetArtifact"
-	// ChangeSetAPIGetPlanProcedure is the fully-qualified name of the ChangeSetAPI's GetPlan RPC.
-	ChangeSetAPIGetPlanProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlan"
-	// ChangeSetAPIGetPlanDiffProcedure is the fully-qualified name of the ChangeSetAPI's GetPlanDiff
+	// ChangeSetAPIRevertChangeSetProcedure is the procedure name of the ChangeSetAPI's RevertChangeSet
 	// RPC.
-	ChangeSetAPIGetPlanDiffProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetPlanDiff"
-	// ChangeSetAPIApproveChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// ApproveChangeSet RPC.
-	ChangeSetAPIApproveChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ApproveChangeSet"
-	// ChangeSetAPIApplyChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// ApplyChangeSet RPC.
-	ChangeSetAPIApplyChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/ApplyChangeSet"
-	// ChangeSetAPIGetApplyProcedure is the fully-qualified name of the ChangeSetAPI's GetApply RPC.
-	ChangeSetAPIGetApplyProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/GetApply"
-	// ChangeSetAPIAcceptPartialApplyProcedure is the fully-qualified name of the ChangeSetAPI's
-	// AcceptPartialApply RPC.
-	ChangeSetAPIAcceptPartialApplyProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/AcceptPartialApply"
-	// ChangeSetAPIRevertChangeSetProcedure is the fully-qualified name of the ChangeSetAPI's
-	// RevertChangeSet RPC.
 	ChangeSetAPIRevertChangeSetProcedure = "/admiral.api.changeset.v1.ChangeSetAPI/RevertChangeSet"
+)
+
+var (
+	changeSetAPICreateChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("CreateChangeSet"),
+			Procedure:  ChangeSetAPICreateChangeSetProcedure,
+		}
+	})
+	changeSetAPIUpdateChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("UpdateChangeSet"),
+			Procedure:  ChangeSetAPIUpdateChangeSetProcedure,
+		}
+	})
+	changeSetAPIEditChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("EditChangeSet"),
+			Procedure:  ChangeSetAPIEditChangeSetProcedure,
+		}
+	})
+	changeSetAPIRebaseChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("RebaseChangeSet"),
+			Procedure:  ChangeSetAPIRebaseChangeSetProcedure,
+		}
+	})
+	changeSetAPIGetChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("GetChangeSet"),
+			Procedure:  ChangeSetAPIGetChangeSetProcedure,
+		}
+	})
+	changeSetAPIListChangeSetsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("ListChangeSets"),
+			Procedure:  ChangeSetAPIListChangeSetsProcedure,
+		}
+	})
+	changeSetAPIDiscardChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("DiscardChangeSet"),
+			Procedure:  ChangeSetAPIDiscardChangeSetProcedure,
+		}
+	})
+	changeSetAPIGetComponentValuesSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("GetComponentValues"),
+			Procedure:  ChangeSetAPIGetComponentValuesProcedure,
+		}
+	})
+	changeSetAPIDiffChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("DiffChangeSet"),
+			Procedure:  ChangeSetAPIDiffChangeSetProcedure,
+		}
+	})
+	changeSetAPIGetRevisionSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("GetRevision"),
+			Procedure:  ChangeSetAPIGetRevisionProcedure,
+		}
+	})
+	changeSetAPIListRevisionsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("ListRevisions"),
+			Procedure:  ChangeSetAPIListRevisionsProcedure,
+		}
+	})
+	changeSetAPIGetPrepareSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("GetPrepare"),
+			Procedure:  ChangeSetAPIGetPrepareProcedure,
+		}
+	})
+	changeSetAPIGetArtifactSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("GetArtifact"),
+			Procedure:  ChangeSetAPIGetArtifactProcedure,
+		}
+	})
+	changeSetAPIRevertChangeSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods().ByName("RevertChangeSet"),
+			Procedure:  ChangeSetAPIRevertChangeSetProcedure,
+		}
+	})
 )
 
 // ChangeSetAPIClient is a client for the admiral.api.changeset.v1.ChangeSetAPI service.
 type ChangeSetAPIClient interface {
-	// CreateChangeSet opens a draft against an environment. Edits given here
-	// cut revision 1 in the same request; with none, the draft has no revision
+	// CreateChangeSet opens a change set against an environment. Edits given here
+	// cut revision 1 in the same request; with none, it has no revision
 	// until its first edit.
 	//
 	// Scope: `changeset:write`
-	CreateChangeSet(context.Context, *connect.Request[v1.CreateChangeSetRequest]) (*connect.Response[v1.CreateChangeSetResponse], error)
-	// EditChangeSet applies the edits in order and cuts exactly one revision.
-	//
-	// FAILED_PRECONDITION when `if_revision` or an upload's `from_revision` is
-	// not the head (the message names the head), when the change set is not a
-	// draft, and when a pin names a revoked revision (the message carries the
-	// recorded reason). ALREADY_EXISTS when a component name is live or held
-	// by another draft (the message names which). A contract violation is
-	// accepted: it is stored on the revision and returned.
+	CreateChangeSet(context.Context, *v1.CreateChangeSetRequest) (*v1.CreateChangeSetResponse, error)
+	// UpdateChangeSet changes a change set's title and description. It cuts no
+	// revision and dismisses no approval: it describes the proposal, it is not
+	// part of it. FAILED_PRECONDITION when the change set is not open.
 	//
 	// Scope: `changeset:write`
-	EditChangeSet(context.Context, *connect.Request[v1.EditChangeSetRequest]) (*connect.Response[v1.EditChangeSetResponse], error)
+	UpdateChangeSet(context.Context, *v1.UpdateChangeSetRequest) (*v1.UpdateChangeSetResponse, error)
+	// EditChangeSet applies the edits in order and cuts exactly one revision.
+	//
+	// FAILED_PRECONDITION when `if_revision` is not the head (the message names
+	// the head), when the change set is not open or its apply is running or
+	// holding the environment, when a version is revoked (the message
+	// carries the recorded reason), and when a component would land on no
+	// agent assignment that may run it and serves its providers (the message
+	// names an agent that would, and its owner). ALREADY_EXISTS when a component name is
+	// live or held by another open change set (the message names which). A
+	// contract violation is accepted: it is stored on the revision and
+	// returned.
+	//
+	// Scope: `changeset:write`
+	EditChangeSet(context.Context, *v1.EditChangeSetRequest) (*v1.EditChangeSetResponse, error)
+	// RebaseChangeSet re-applies the change set onto its environment as it is
+	// now and cuts one revision with cause CAUSE_REBASE. A change set falls behind
+	// whenever its environment moves, and cannot apply until it is rebased.
+	//
+	// Every conflict needs a resolution, and resolving any dismisses every
+	// approval. Without one, an approval carries to the new revision's run when
+	// its plan does the same thing to every resource, as ApproveRun says.
+	//
+	// FAILED_PRECONDITION when it is not behind, when `if_revision` is not the
+	// head, when the change set is not open or its apply is running, and when a
+	// conflict has no resolution or a resolution matches no conflict (the
+	// message names each).
+	//
+	// Scope: `changeset:write`
+	RebaseChangeSet(context.Context, *v1.RebaseChangeSetRequest) (*v1.RebaseChangeSetResponse, error)
 	// GetChangeSet returns a change set and its head revision with entries.
 	//
 	// Scope: `changeset:read`
-	GetChangeSet(context.Context, *connect.Request[v1.GetChangeSetRequest]) (*connect.Response[v1.GetChangeSetResponse], error)
-	// ListChangeSets pages through one environment's change sets, oldest
+	GetChangeSet(context.Context, *v1.GetChangeSetRequest) (*v1.GetChangeSetResponse, error)
+	// ListChangeSets pages through one environment's change sets, newest
 	// first.
 	//
 	// Scope: `changeset:read`
-	ListChangeSets(context.Context, *connect.Request[v1.ListChangeSetsRequest]) (*connect.Response[v1.ListChangeSetsResponse], error)
-	// DiscardChangeSet abandons a draft and releases the component names it
-	// reserved. FAILED_PRECONDITION when it is already discarded.
+	ListChangeSets(context.Context, *v1.ListChangeSetsRequest) (*v1.ListChangeSetsResponse, error)
+	// DiscardChangeSet closes an open change set and releases the component
+	// names it reserved. FAILED_PRECONDITION when it is not open.
 	//
 	// Scope: `changeset:write`
-	DiscardChangeSet(context.Context, *connect.Request[v1.DiscardChangeSetRequest]) (*connect.Response[v1.DiscardChangeSetResponse], error)
+	DiscardChangeSet(context.Context, *v1.DiscardChangeSetRequest) (*v1.DiscardChangeSetResponse, error)
 	// GetComponentValues returns one component's values as the head revision
 	// leaves them, with the head's number, which an upload sends back as
-	// `from_revision`.
+	// `if_revision`. By default only the values set on it, which is what review
+	// and diff show; with `effective`, the whole tree the component will
+	// receive, each value labelled with where it came from.
 	//
 	// Scope: `changeset:read`
-	GetComponentValues(context.Context, *connect.Request[v1.GetComponentValuesRequest]) (*connect.Response[v1.GetComponentValuesResponse], error)
+	GetComponentValues(context.Context, *v1.GetComponentValuesRequest) (*v1.GetComponentValuesResponse, error)
 	// DiffChangeSet returns, per component the head revision touches, the
-	// action, the pin before and after, each changed path before and after,
+	// action, the version before and after, each changed path before and after,
 	// and the component's violations.
 	//
 	// Scope: `changeset:read`
-	DiffChangeSet(context.Context, *connect.Request[v1.DiffChangeSetRequest]) (*connect.Response[v1.DiffChangeSetResponse], error)
+	DiffChangeSet(context.Context, *v1.DiffChangeSetRequest) (*v1.DiffChangeSetResponse, error)
 	// GetRevision returns one revision with its entries and ops.
 	//
 	// Scope: `changeset:read`
-	GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error)
+	GetRevision(context.Context, *v1.GetRevisionRequest) (*v1.GetRevisionResponse, error)
 	// ListRevisions pages through a change set's revisions, oldest first,
 	// without their entries.
 	//
 	// Scope: `changeset:read`
-	ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error)
-	// PlanChangeSet asks for a plan of the head revision. The revision is
-	// prepared first: every component it touches is rendered into one
-	// content-addressed run artifact. The call queues that work and returns
-	// at once; GetPrepare reports its progress. Asking again for a revision
-	// already asked for returns the same prepare, except that a prepare which
-	// failed for an infrastructure reason is queued again.
-	//
-	// FAILED_PRECONDITION when the change set is not a draft, has no revision,
-	// or `if_revision` is not the head (the message names the head).
-	//
-	// Scope: `changeset:write`
-	PlanChangeSet(context.Context, *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error)
+	ListRevisions(context.Context, *v1.ListRevisionsRequest) (*v1.ListRevisionsResponse, error)
 	// GetPrepare returns the prepare of one revision: its status, findings,
 	// error and artifact digest. NOT_FOUND when that revision was never
 	// prepared.
 	//
 	// Scope: `changeset:read`
-	GetPrepare(context.Context, *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error)
-	// GetArtifact returns a prepared revision's run artifact. Every value
-	// under a Secret's `data` and `stringData` is replaced by `sha256:` and
-	// the first twelve hex characters of its digest, so a change stays
-	// visible and the value does not. FAILED_PRECONDITION when the revision
-	// is not prepared.
+	GetPrepare(context.Context, *v1.GetPrepareRequest) (*v1.GetPrepareResponse, error)
+	// GetArtifact returns a prepared revision's artifact, with every value the
+	// component marks sensitive replaced by `sha256:` and the first twelve hex
+	// characters of its digest, so a change stays visible and the value does
+	// not: a Kubernetes Secret's `data` and `stringData`, and a Terraform
+	// variable declared `sensitive`. FAILED_PRECONDITION when the revision is
+	// not prepared.
 	//
 	// Scope: `changeset:read`
-	GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error)
-	// GetPlan returns the plan of one prepared revision: the PLAN job's status
-	// and why it waits, the agent and cluster it runs against, and once done
-	// each component's changes. NOT_FOUND when the revision was not planned.
-	//
-	// Scope: `changeset:read`
-	GetPlan(context.Context, *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error)
-	// GetPlanDiff returns a finished plan's full diffs, Secret values masked.
-	// FAILED_PRECONDITION until the plan has succeeded.
-	//
-	// Scope: `changeset:read`
-	GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error)
-	// ApproveChangeSet approves one plan of a revision. Only a person approves,
-	// and not one who revised the change set, unless they are the only person
-	// able to approve; that self-approval needs a reason and is recorded.
-	//
-	// FAILED_PRECONDITION when `plan_digest` is not the revision's current plan.
-	//
-	// Scope: `changeset:write`
-	ApproveChangeSet(context.Context, *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error)
-	// ApplyChangeSet queues the apply of a revision's current plan. It takes the
-	// environment's lock. The agent re-plans first and stops if the cluster
-	// changed since the plan.
-	//
-	// FAILED_PRECONDITION when the plan is not current or did not succeed, an
-	// approval is required and missing, the change set was cut from an older
-	// generation of the environment (rebase needed), or another change set holds
-	// the environment.
-	//
-	// Scope: `changeset:write`
-	ApplyChangeSet(context.Context, *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error)
-	// GetApply returns a revision's apply. NOT_FOUND when it was never applied.
-	//
-	// Scope: `changeset:read`
-	GetApply(context.Context, *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error)
-	// AcceptPartialApply takes a partial apply as the environment's new state
-	// and releases the hold. It is recorded with its reason.
-	//
-	// Scope: `changeset:write`
-	AcceptPartialApply(context.Context, *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error)
+	GetArtifact(context.Context, *v1.GetArtifactRequest) (*v1.GetArtifactResponse, error)
 	// RevertChangeSet opens a new change set that returns every component the
 	// given change set's apply changed to its state before that apply. History
 	// moves forward: the revert is planned, approved and applied like any other
 	// change set, and may apply while the reverted apply holds the environment.
 	//
 	// Scope: `changeset:write`
-	RevertChangeSet(context.Context, *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error)
+	RevertChangeSet(context.Context, *v1.RevertChangeSetRequest) (*v1.RevertChangeSetResponse, error)
 }
 
 // NewChangeSetAPIClient constructs a client for the admiral.api.changeset.v1.ChangeSetAPI service.
-// By default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped
-// responses, and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewChangeSetAPIClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ChangeSetAPIClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	changeSetAPIMethods := v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods()
-	return &changeSetAPIClient{
-		createChangeSet: connect.NewClient[v1.CreateChangeSetRequest, v1.CreateChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPICreateChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("CreateChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		editChangeSet: connect.NewClient[v1.EditChangeSetRequest, v1.EditChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIEditChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("EditChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		getChangeSet: connect.NewClient[v1.GetChangeSetRequest, v1.GetChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		listChangeSets: connect.NewClient[v1.ListChangeSetsRequest, v1.ListChangeSetsResponse](
-			httpClient,
-			baseURL+ChangeSetAPIListChangeSetsProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("ListChangeSets")),
-			connect.WithClientOptions(opts...),
-		),
-		discardChangeSet: connect.NewClient[v1.DiscardChangeSetRequest, v1.DiscardChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIDiscardChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("DiscardChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		getComponentValues: connect.NewClient[v1.GetComponentValuesRequest, v1.GetComponentValuesResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetComponentValuesProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetComponentValues")),
-			connect.WithClientOptions(opts...),
-		),
-		diffChangeSet: connect.NewClient[v1.DiffChangeSetRequest, v1.DiffChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIDiffChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("DiffChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		getRevision: connect.NewClient[v1.GetRevisionRequest, v1.GetRevisionResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetRevisionProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetRevision")),
-			connect.WithClientOptions(opts...),
-		),
-		listRevisions: connect.NewClient[v1.ListRevisionsRequest, v1.ListRevisionsResponse](
-			httpClient,
-			baseURL+ChangeSetAPIListRevisionsProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("ListRevisions")),
-			connect.WithClientOptions(opts...),
-		),
-		planChangeSet: connect.NewClient[v1.PlanChangeSetRequest, v1.PlanChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIPlanChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("PlanChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		getPrepare: connect.NewClient[v1.GetPrepareRequest, v1.GetPrepareResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetPrepareProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetPrepare")),
-			connect.WithClientOptions(opts...),
-		),
-		getArtifact: connect.NewClient[v1.GetArtifactRequest, v1.GetArtifactResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetArtifactProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetArtifact")),
-			connect.WithClientOptions(opts...),
-		),
-		getPlan: connect.NewClient[v1.GetPlanRequest, v1.GetPlanResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetPlanProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetPlan")),
-			connect.WithClientOptions(opts...),
-		),
-		getPlanDiff: connect.NewClient[v1.GetPlanDiffRequest, v1.GetPlanDiffResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetPlanDiffProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetPlanDiff")),
-			connect.WithClientOptions(opts...),
-		),
-		approveChangeSet: connect.NewClient[v1.ApproveChangeSetRequest, v1.ApproveChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIApproveChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("ApproveChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		applyChangeSet: connect.NewClient[v1.ApplyChangeSetRequest, v1.ApplyChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIApplyChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("ApplyChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-		getApply: connect.NewClient[v1.GetApplyRequest, v1.GetApplyResponse](
-			httpClient,
-			baseURL+ChangeSetAPIGetApplyProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("GetApply")),
-			connect.WithClientOptions(opts...),
-		),
-		acceptPartialApply: connect.NewClient[v1.AcceptPartialApplyRequest, v1.AcceptPartialApplyResponse](
-			httpClient,
-			baseURL+ChangeSetAPIAcceptPartialApplyProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("AcceptPartialApply")),
-			connect.WithClientOptions(opts...),
-		),
-		revertChangeSet: connect.NewClient[v1.RevertChangeSetRequest, v1.RevertChangeSetResponse](
-			httpClient,
-			baseURL+ChangeSetAPIRevertChangeSetProcedure,
-			connect.WithSchema(changeSetAPIMethods.ByName("RevertChangeSet")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// changeSetAPIClient implements ChangeSetAPIClient.
-type changeSetAPIClient struct {
-	createChangeSet    *connect.Client[v1.CreateChangeSetRequest, v1.CreateChangeSetResponse]
-	editChangeSet      *connect.Client[v1.EditChangeSetRequest, v1.EditChangeSetResponse]
-	getChangeSet       *connect.Client[v1.GetChangeSetRequest, v1.GetChangeSetResponse]
-	listChangeSets     *connect.Client[v1.ListChangeSetsRequest, v1.ListChangeSetsResponse]
-	discardChangeSet   *connect.Client[v1.DiscardChangeSetRequest, v1.DiscardChangeSetResponse]
-	getComponentValues *connect.Client[v1.GetComponentValuesRequest, v1.GetComponentValuesResponse]
-	diffChangeSet      *connect.Client[v1.DiffChangeSetRequest, v1.DiffChangeSetResponse]
-	getRevision        *connect.Client[v1.GetRevisionRequest, v1.GetRevisionResponse]
-	listRevisions      *connect.Client[v1.ListRevisionsRequest, v1.ListRevisionsResponse]
-	planChangeSet      *connect.Client[v1.PlanChangeSetRequest, v1.PlanChangeSetResponse]
-	getPrepare         *connect.Client[v1.GetPrepareRequest, v1.GetPrepareResponse]
-	getArtifact        *connect.Client[v1.GetArtifactRequest, v1.GetArtifactResponse]
-	getPlan            *connect.Client[v1.GetPlanRequest, v1.GetPlanResponse]
-	getPlanDiff        *connect.Client[v1.GetPlanDiffRequest, v1.GetPlanDiffResponse]
-	approveChangeSet   *connect.Client[v1.ApproveChangeSetRequest, v1.ApproveChangeSetResponse]
-	applyChangeSet     *connect.Client[v1.ApplyChangeSetRequest, v1.ApplyChangeSetResponse]
-	getApply           *connect.Client[v1.GetApplyRequest, v1.GetApplyResponse]
-	acceptPartialApply *connect.Client[v1.AcceptPartialApplyRequest, v1.AcceptPartialApplyResponse]
-	revertChangeSet    *connect.Client[v1.RevertChangeSetRequest, v1.RevertChangeSetResponse]
-}
-
-// CreateChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet.
-func (c *changeSetAPIClient) CreateChangeSet(ctx context.Context, req *connect.Request[v1.CreateChangeSetRequest]) (*connect.Response[v1.CreateChangeSetResponse], error) {
-	return c.createChangeSet.CallUnary(ctx, req)
-}
-
-// EditChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet.
-func (c *changeSetAPIClient) EditChangeSet(ctx context.Context, req *connect.Request[v1.EditChangeSetRequest]) (*connect.Response[v1.EditChangeSetResponse], error) {
-	return c.editChangeSet.CallUnary(ctx, req)
-}
-
-// GetChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet.
-func (c *changeSetAPIClient) GetChangeSet(ctx context.Context, req *connect.Request[v1.GetChangeSetRequest]) (*connect.Response[v1.GetChangeSetResponse], error) {
-	return c.getChangeSet.CallUnary(ctx, req)
-}
-
-// ListChangeSets calls admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets.
-func (c *changeSetAPIClient) ListChangeSets(ctx context.Context, req *connect.Request[v1.ListChangeSetsRequest]) (*connect.Response[v1.ListChangeSetsResponse], error) {
-	return c.listChangeSets.CallUnary(ctx, req)
-}
-
-// DiscardChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet.
-func (c *changeSetAPIClient) DiscardChangeSet(ctx context.Context, req *connect.Request[v1.DiscardChangeSetRequest]) (*connect.Response[v1.DiscardChangeSetResponse], error) {
-	return c.discardChangeSet.CallUnary(ctx, req)
-}
-
-// GetComponentValues calls admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues.
-func (c *changeSetAPIClient) GetComponentValues(ctx context.Context, req *connect.Request[v1.GetComponentValuesRequest]) (*connect.Response[v1.GetComponentValuesResponse], error) {
-	return c.getComponentValues.CallUnary(ctx, req)
-}
-
-// DiffChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet.
-func (c *changeSetAPIClient) DiffChangeSet(ctx context.Context, req *connect.Request[v1.DiffChangeSetRequest]) (*connect.Response[v1.DiffChangeSetResponse], error) {
-	return c.diffChangeSet.CallUnary(ctx, req)
-}
-
-// GetRevision calls admiral.api.changeset.v1.ChangeSetAPI.GetRevision.
-func (c *changeSetAPIClient) GetRevision(ctx context.Context, req *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error) {
-	return c.getRevision.CallUnary(ctx, req)
-}
-
-// ListRevisions calls admiral.api.changeset.v1.ChangeSetAPI.ListRevisions.
-func (c *changeSetAPIClient) ListRevisions(ctx context.Context, req *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error) {
-	return c.listRevisions.CallUnary(ctx, req)
-}
-
-// PlanChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet.
-func (c *changeSetAPIClient) PlanChangeSet(ctx context.Context, req *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error) {
-	return c.planChangeSet.CallUnary(ctx, req)
-}
-
-// GetPrepare calls admiral.api.changeset.v1.ChangeSetAPI.GetPrepare.
-func (c *changeSetAPIClient) GetPrepare(ctx context.Context, req *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error) {
-	return c.getPrepare.CallUnary(ctx, req)
-}
-
-// GetArtifact calls admiral.api.changeset.v1.ChangeSetAPI.GetArtifact.
-func (c *changeSetAPIClient) GetArtifact(ctx context.Context, req *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error) {
-	return c.getArtifact.CallUnary(ctx, req)
-}
-
-// GetPlan calls admiral.api.changeset.v1.ChangeSetAPI.GetPlan.
-func (c *changeSetAPIClient) GetPlan(ctx context.Context, req *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error) {
-	return c.getPlan.CallUnary(ctx, req)
-}
-
-// GetPlanDiff calls admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff.
-func (c *changeSetAPIClient) GetPlanDiff(ctx context.Context, req *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error) {
-	return c.getPlanDiff.CallUnary(ctx, req)
-}
-
-// ApproveChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.ApproveChangeSet.
-func (c *changeSetAPIClient) ApproveChangeSet(ctx context.Context, req *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error) {
-	return c.approveChangeSet.CallUnary(ctx, req)
-}
-
-// ApplyChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.ApplyChangeSet.
-func (c *changeSetAPIClient) ApplyChangeSet(ctx context.Context, req *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error) {
-	return c.applyChangeSet.CallUnary(ctx, req)
-}
-
-// GetApply calls admiral.api.changeset.v1.ChangeSetAPI.GetApply.
-func (c *changeSetAPIClient) GetApply(ctx context.Context, req *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error) {
-	return c.getApply.CallUnary(ctx, req)
-}
-
-// AcceptPartialApply calls admiral.api.changeset.v1.ChangeSetAPI.AcceptPartialApply.
-func (c *changeSetAPIClient) AcceptPartialApply(ctx context.Context, req *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error) {
-	return c.acceptPartialApply.CallUnary(ctx, req)
-}
-
-// RevertChangeSet calls admiral.api.changeset.v1.ChangeSetAPI.RevertChangeSet.
-func (c *changeSetAPIClient) RevertChangeSet(ctx context.Context, req *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error) {
-	return c.revertChangeSet.CallUnary(ctx, req)
+// Multiple service clients may share a single connect.Client.
+func NewChangeSetAPIClient(client *connect.Client) ChangeSetAPIClient {
+	return &changeSetAPIClient{client: client}
 }
 
 // ChangeSetAPIHandler is an implementation of the admiral.api.changeset.v1.ChangeSetAPI service.
 type ChangeSetAPIHandler interface {
-	// CreateChangeSet opens a draft against an environment. Edits given here
-	// cut revision 1 in the same request; with none, the draft has no revision
+	// CreateChangeSet opens a change set against an environment. Edits given here
+	// cut revision 1 in the same request; with none, it has no revision
 	// until its first edit.
 	//
 	// Scope: `changeset:write`
-	CreateChangeSet(context.Context, *connect.Request[v1.CreateChangeSetRequest]) (*connect.Response[v1.CreateChangeSetResponse], error)
-	// EditChangeSet applies the edits in order and cuts exactly one revision.
-	//
-	// FAILED_PRECONDITION when `if_revision` or an upload's `from_revision` is
-	// not the head (the message names the head), when the change set is not a
-	// draft, and when a pin names a revoked revision (the message carries the
-	// recorded reason). ALREADY_EXISTS when a component name is live or held
-	// by another draft (the message names which). A contract violation is
-	// accepted: it is stored on the revision and returned.
+	CreateChangeSet(context.Context, *v1.CreateChangeSetRequest) (*v1.CreateChangeSetResponse, error)
+	// UpdateChangeSet changes a change set's title and description. It cuts no
+	// revision and dismisses no approval: it describes the proposal, it is not
+	// part of it. FAILED_PRECONDITION when the change set is not open.
 	//
 	// Scope: `changeset:write`
-	EditChangeSet(context.Context, *connect.Request[v1.EditChangeSetRequest]) (*connect.Response[v1.EditChangeSetResponse], error)
+	UpdateChangeSet(context.Context, *v1.UpdateChangeSetRequest) (*v1.UpdateChangeSetResponse, error)
+	// EditChangeSet applies the edits in order and cuts exactly one revision.
+	//
+	// FAILED_PRECONDITION when `if_revision` is not the head (the message names
+	// the head), when the change set is not open or its apply is running or
+	// holding the environment, when a version is revoked (the message
+	// carries the recorded reason), and when a component would land on no
+	// agent assignment that may run it and serves its providers (the message
+	// names an agent that would, and its owner). ALREADY_EXISTS when a component name is
+	// live or held by another open change set (the message names which). A
+	// contract violation is accepted: it is stored on the revision and
+	// returned.
+	//
+	// Scope: `changeset:write`
+	EditChangeSet(context.Context, *v1.EditChangeSetRequest) (*v1.EditChangeSetResponse, error)
+	// RebaseChangeSet re-applies the change set onto its environment as it is
+	// now and cuts one revision with cause CAUSE_REBASE. A change set falls behind
+	// whenever its environment moves, and cannot apply until it is rebased.
+	//
+	// Every conflict needs a resolution, and resolving any dismisses every
+	// approval. Without one, an approval carries to the new revision's run when
+	// its plan does the same thing to every resource, as ApproveRun says.
+	//
+	// FAILED_PRECONDITION when it is not behind, when `if_revision` is not the
+	// head, when the change set is not open or its apply is running, and when a
+	// conflict has no resolution or a resolution matches no conflict (the
+	// message names each).
+	//
+	// Scope: `changeset:write`
+	RebaseChangeSet(context.Context, *v1.RebaseChangeSetRequest) (*v1.RebaseChangeSetResponse, error)
 	// GetChangeSet returns a change set and its head revision with entries.
 	//
 	// Scope: `changeset:read`
-	GetChangeSet(context.Context, *connect.Request[v1.GetChangeSetRequest]) (*connect.Response[v1.GetChangeSetResponse], error)
-	// ListChangeSets pages through one environment's change sets, oldest
+	GetChangeSet(context.Context, *v1.GetChangeSetRequest) (*v1.GetChangeSetResponse, error)
+	// ListChangeSets pages through one environment's change sets, newest
 	// first.
 	//
 	// Scope: `changeset:read`
-	ListChangeSets(context.Context, *connect.Request[v1.ListChangeSetsRequest]) (*connect.Response[v1.ListChangeSetsResponse], error)
-	// DiscardChangeSet abandons a draft and releases the component names it
-	// reserved. FAILED_PRECONDITION when it is already discarded.
+	ListChangeSets(context.Context, *v1.ListChangeSetsRequest) (*v1.ListChangeSetsResponse, error)
+	// DiscardChangeSet closes an open change set and releases the component
+	// names it reserved. FAILED_PRECONDITION when it is not open.
 	//
 	// Scope: `changeset:write`
-	DiscardChangeSet(context.Context, *connect.Request[v1.DiscardChangeSetRequest]) (*connect.Response[v1.DiscardChangeSetResponse], error)
+	DiscardChangeSet(context.Context, *v1.DiscardChangeSetRequest) (*v1.DiscardChangeSetResponse, error)
 	// GetComponentValues returns one component's values as the head revision
 	// leaves them, with the head's number, which an upload sends back as
-	// `from_revision`.
+	// `if_revision`. By default only the values set on it, which is what review
+	// and diff show; with `effective`, the whole tree the component will
+	// receive, each value labelled with where it came from.
 	//
 	// Scope: `changeset:read`
-	GetComponentValues(context.Context, *connect.Request[v1.GetComponentValuesRequest]) (*connect.Response[v1.GetComponentValuesResponse], error)
+	GetComponentValues(context.Context, *v1.GetComponentValuesRequest) (*v1.GetComponentValuesResponse, error)
 	// DiffChangeSet returns, per component the head revision touches, the
-	// action, the pin before and after, each changed path before and after,
+	// action, the version before and after, each changed path before and after,
 	// and the component's violations.
 	//
 	// Scope: `changeset:read`
-	DiffChangeSet(context.Context, *connect.Request[v1.DiffChangeSetRequest]) (*connect.Response[v1.DiffChangeSetResponse], error)
+	DiffChangeSet(context.Context, *v1.DiffChangeSetRequest) (*v1.DiffChangeSetResponse, error)
 	// GetRevision returns one revision with its entries and ops.
 	//
 	// Scope: `changeset:read`
-	GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error)
+	GetRevision(context.Context, *v1.GetRevisionRequest) (*v1.GetRevisionResponse, error)
 	// ListRevisions pages through a change set's revisions, oldest first,
 	// without their entries.
 	//
 	// Scope: `changeset:read`
-	ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error)
-	// PlanChangeSet asks for a plan of the head revision. The revision is
-	// prepared first: every component it touches is rendered into one
-	// content-addressed run artifact. The call queues that work and returns
-	// at once; GetPrepare reports its progress. Asking again for a revision
-	// already asked for returns the same prepare, except that a prepare which
-	// failed for an infrastructure reason is queued again.
-	//
-	// FAILED_PRECONDITION when the change set is not a draft, has no revision,
-	// or `if_revision` is not the head (the message names the head).
-	//
-	// Scope: `changeset:write`
-	PlanChangeSet(context.Context, *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error)
+	ListRevisions(context.Context, *v1.ListRevisionsRequest) (*v1.ListRevisionsResponse, error)
 	// GetPrepare returns the prepare of one revision: its status, findings,
 	// error and artifact digest. NOT_FOUND when that revision was never
 	// prepared.
 	//
 	// Scope: `changeset:read`
-	GetPrepare(context.Context, *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error)
-	// GetArtifact returns a prepared revision's run artifact. Every value
-	// under a Secret's `data` and `stringData` is replaced by `sha256:` and
-	// the first twelve hex characters of its digest, so a change stays
-	// visible and the value does not. FAILED_PRECONDITION when the revision
-	// is not prepared.
+	GetPrepare(context.Context, *v1.GetPrepareRequest) (*v1.GetPrepareResponse, error)
+	// GetArtifact returns a prepared revision's artifact, with every value the
+	// component marks sensitive replaced by `sha256:` and the first twelve hex
+	// characters of its digest, so a change stays visible and the value does
+	// not: a Kubernetes Secret's `data` and `stringData`, and a Terraform
+	// variable declared `sensitive`. FAILED_PRECONDITION when the revision is
+	// not prepared.
 	//
 	// Scope: `changeset:read`
-	GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error)
-	// GetPlan returns the plan of one prepared revision: the PLAN job's status
-	// and why it waits, the agent and cluster it runs against, and once done
-	// each component's changes. NOT_FOUND when the revision was not planned.
-	//
-	// Scope: `changeset:read`
-	GetPlan(context.Context, *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error)
-	// GetPlanDiff returns a finished plan's full diffs, Secret values masked.
-	// FAILED_PRECONDITION until the plan has succeeded.
-	//
-	// Scope: `changeset:read`
-	GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error)
-	// ApproveChangeSet approves one plan of a revision. Only a person approves,
-	// and not one who revised the change set, unless they are the only person
-	// able to approve; that self-approval needs a reason and is recorded.
-	//
-	// FAILED_PRECONDITION when `plan_digest` is not the revision's current plan.
-	//
-	// Scope: `changeset:write`
-	ApproveChangeSet(context.Context, *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error)
-	// ApplyChangeSet queues the apply of a revision's current plan. It takes the
-	// environment's lock. The agent re-plans first and stops if the cluster
-	// changed since the plan.
-	//
-	// FAILED_PRECONDITION when the plan is not current or did not succeed, an
-	// approval is required and missing, the change set was cut from an older
-	// generation of the environment (rebase needed), or another change set holds
-	// the environment.
-	//
-	// Scope: `changeset:write`
-	ApplyChangeSet(context.Context, *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error)
-	// GetApply returns a revision's apply. NOT_FOUND when it was never applied.
-	//
-	// Scope: `changeset:read`
-	GetApply(context.Context, *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error)
-	// AcceptPartialApply takes a partial apply as the environment's new state
-	// and releases the hold. It is recorded with its reason.
-	//
-	// Scope: `changeset:write`
-	AcceptPartialApply(context.Context, *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error)
+	GetArtifact(context.Context, *v1.GetArtifactRequest) (*v1.GetArtifactResponse, error)
 	// RevertChangeSet opens a new change set that returns every component the
 	// given change set's apply changed to its state before that apply. History
 	// moves forward: the revert is planned, approved and applied like any other
 	// change set, and may apply while the reverted apply holds the environment.
 	//
 	// Scope: `changeset:write`
-	RevertChangeSet(context.Context, *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error)
+	RevertChangeSet(context.Context, *v1.RevertChangeSetRequest) (*v1.RevertChangeSetResponse, error)
 }
 
-// NewChangeSetAPIHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewChangeSetAPIHandler(svc ChangeSetAPIHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	changeSetAPIMethods := v1.File_admiral_api_changeset_v1_changeset_proto.Services().ByName("ChangeSetAPI").Methods()
-	changeSetAPICreateChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPICreateChangeSetProcedure,
-		svc.CreateChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("CreateChangeSet")),
-		connect.WithHandlerOptions(opts...),
+// RegisterChangeSetAPIHandler registers svc as the admiral.api.changeset.v1.ChangeSetAPI
+// implementation on server.
+func RegisterChangeSetAPIHandler(server *connect.Server, svc ChangeSetAPIHandler) {
+	adapter := changeSetAPIHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: changeSetAPICreateChangeSetSpec(), Handler: adapter.createChangeSet},
+		connect.Method{Spec: changeSetAPIUpdateChangeSetSpec(), Handler: adapter.updateChangeSet},
+		connect.Method{Spec: changeSetAPIEditChangeSetSpec(), Handler: adapter.editChangeSet},
+		connect.Method{Spec: changeSetAPIRebaseChangeSetSpec(), Handler: adapter.rebaseChangeSet},
+		connect.Method{Spec: changeSetAPIGetChangeSetSpec(), Handler: adapter.getChangeSet},
+		connect.Method{Spec: changeSetAPIListChangeSetsSpec(), Handler: adapter.listChangeSets},
+		connect.Method{Spec: changeSetAPIDiscardChangeSetSpec(), Handler: adapter.discardChangeSet},
+		connect.Method{Spec: changeSetAPIGetComponentValuesSpec(), Handler: adapter.getComponentValues},
+		connect.Method{Spec: changeSetAPIDiffChangeSetSpec(), Handler: adapter.diffChangeSet},
+		connect.Method{Spec: changeSetAPIGetRevisionSpec(), Handler: adapter.getRevision},
+		connect.Method{Spec: changeSetAPIListRevisionsSpec(), Handler: adapter.listRevisions},
+		connect.Method{Spec: changeSetAPIGetPrepareSpec(), Handler: adapter.getPrepare},
+		connect.Method{Spec: changeSetAPIGetArtifactSpec(), Handler: adapter.getArtifact},
+		connect.Method{Spec: changeSetAPIRevertChangeSetSpec(), Handler: adapter.revertChangeSet},
 	)
-	changeSetAPIEditChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIEditChangeSetProcedure,
-		svc.EditChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("EditChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetChangeSetProcedure,
-		svc.GetChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIListChangeSetsHandler := connect.NewUnaryHandler(
-		ChangeSetAPIListChangeSetsProcedure,
-		svc.ListChangeSets,
-		connect.WithSchema(changeSetAPIMethods.ByName("ListChangeSets")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIDiscardChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIDiscardChangeSetProcedure,
-		svc.DiscardChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("DiscardChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetComponentValuesHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetComponentValuesProcedure,
-		svc.GetComponentValues,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetComponentValues")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIDiffChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIDiffChangeSetProcedure,
-		svc.DiffChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("DiffChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetRevisionHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetRevisionProcedure,
-		svc.GetRevision,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetRevision")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIListRevisionsHandler := connect.NewUnaryHandler(
-		ChangeSetAPIListRevisionsProcedure,
-		svc.ListRevisions,
-		connect.WithSchema(changeSetAPIMethods.ByName("ListRevisions")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIPlanChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIPlanChangeSetProcedure,
-		svc.PlanChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("PlanChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetPrepareHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetPrepareProcedure,
-		svc.GetPrepare,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetPrepare")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetArtifactHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetArtifactProcedure,
-		svc.GetArtifact,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetArtifact")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetPlanHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetPlanProcedure,
-		svc.GetPlan,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetPlan")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetPlanDiffHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetPlanDiffProcedure,
-		svc.GetPlanDiff,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetPlanDiff")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIApproveChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIApproveChangeSetProcedure,
-		svc.ApproveChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("ApproveChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIApplyChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIApplyChangeSetProcedure,
-		svc.ApplyChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("ApplyChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIGetApplyHandler := connect.NewUnaryHandler(
-		ChangeSetAPIGetApplyProcedure,
-		svc.GetApply,
-		connect.WithSchema(changeSetAPIMethods.ByName("GetApply")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIAcceptPartialApplyHandler := connect.NewUnaryHandler(
-		ChangeSetAPIAcceptPartialApplyProcedure,
-		svc.AcceptPartialApply,
-		connect.WithSchema(changeSetAPIMethods.ByName("AcceptPartialApply")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changeSetAPIRevertChangeSetHandler := connect.NewUnaryHandler(
-		ChangeSetAPIRevertChangeSetProcedure,
-		svc.RevertChangeSet,
-		connect.WithSchema(changeSetAPIMethods.ByName("RevertChangeSet")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/admiral.api.changeset.v1.ChangeSetAPI/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case ChangeSetAPICreateChangeSetProcedure:
-			changeSetAPICreateChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIEditChangeSetProcedure:
-			changeSetAPIEditChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetChangeSetProcedure:
-			changeSetAPIGetChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIListChangeSetsProcedure:
-			changeSetAPIListChangeSetsHandler.ServeHTTP(w, r)
-		case ChangeSetAPIDiscardChangeSetProcedure:
-			changeSetAPIDiscardChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetComponentValuesProcedure:
-			changeSetAPIGetComponentValuesHandler.ServeHTTP(w, r)
-		case ChangeSetAPIDiffChangeSetProcedure:
-			changeSetAPIDiffChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetRevisionProcedure:
-			changeSetAPIGetRevisionHandler.ServeHTTP(w, r)
-		case ChangeSetAPIListRevisionsProcedure:
-			changeSetAPIListRevisionsHandler.ServeHTTP(w, r)
-		case ChangeSetAPIPlanChangeSetProcedure:
-			changeSetAPIPlanChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetPrepareProcedure:
-			changeSetAPIGetPrepareHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetArtifactProcedure:
-			changeSetAPIGetArtifactHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetPlanProcedure:
-			changeSetAPIGetPlanHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetPlanDiffProcedure:
-			changeSetAPIGetPlanDiffHandler.ServeHTTP(w, r)
-		case ChangeSetAPIApproveChangeSetProcedure:
-			changeSetAPIApproveChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIApplyChangeSetProcedure:
-			changeSetAPIApplyChangeSetHandler.ServeHTTP(w, r)
-		case ChangeSetAPIGetApplyProcedure:
-			changeSetAPIGetApplyHandler.ServeHTTP(w, r)
-		case ChangeSetAPIAcceptPartialApplyProcedure:
-			changeSetAPIAcceptPartialApplyHandler.ServeHTTP(w, r)
-		case ChangeSetAPIRevertChangeSetProcedure:
-			changeSetAPIRevertChangeSetHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedChangeSetAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedChangeSetAPIHandler struct{}
 
-func (UnimplementedChangeSetAPIHandler) CreateChangeSet(context.Context, *connect.Request[v1.CreateChangeSetRequest]) (*connect.Response[v1.CreateChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet is not implemented"))
+func (UnimplementedChangeSetAPIHandler) CreateChangeSet(context.Context, *v1.CreateChangeSetRequest) (*v1.CreateChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.CreateChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) EditChangeSet(context.Context, *connect.Request[v1.EditChangeSetRequest]) (*connect.Response[v1.EditChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet is not implemented"))
+func (UnimplementedChangeSetAPIHandler) UpdateChangeSet(context.Context, *v1.UpdateChangeSetRequest) (*v1.UpdateChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.UpdateChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetChangeSet(context.Context, *connect.Request[v1.GetChangeSetRequest]) (*connect.Response[v1.GetChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet is not implemented"))
+func (UnimplementedChangeSetAPIHandler) EditChangeSet(context.Context, *v1.EditChangeSetRequest) (*v1.EditChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.EditChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) ListChangeSets(context.Context, *connect.Request[v1.ListChangeSetsRequest]) (*connect.Response[v1.ListChangeSetsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets is not implemented"))
+func (UnimplementedChangeSetAPIHandler) RebaseChangeSet(context.Context, *v1.RebaseChangeSetRequest) (*v1.RebaseChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.RebaseChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) DiscardChangeSet(context.Context, *connect.Request[v1.DiscardChangeSetRequest]) (*connect.Response[v1.DiscardChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet is not implemented"))
+func (UnimplementedChangeSetAPIHandler) GetChangeSet(context.Context, *v1.GetChangeSetRequest) (*v1.GetChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.GetChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetComponentValues(context.Context, *connect.Request[v1.GetComponentValuesRequest]) (*connect.Response[v1.GetComponentValuesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues is not implemented"))
+func (UnimplementedChangeSetAPIHandler) ListChangeSets(context.Context, *v1.ListChangeSetsRequest) (*v1.ListChangeSetsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.ListChangeSets is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) DiffChangeSet(context.Context, *connect.Request[v1.DiffChangeSetRequest]) (*connect.Response[v1.DiffChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet is not implemented"))
+func (UnimplementedChangeSetAPIHandler) DiscardChangeSet(context.Context, *v1.DiscardChangeSetRequest) (*v1.DiscardChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.DiscardChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetRevision(context.Context, *connect.Request[v1.GetRevisionRequest]) (*connect.Response[v1.GetRevisionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetRevision is not implemented"))
+func (UnimplementedChangeSetAPIHandler) GetComponentValues(context.Context, *v1.GetComponentValuesRequest) (*v1.GetComponentValuesResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.GetComponentValues is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) ListRevisions(context.Context, *connect.Request[v1.ListRevisionsRequest]) (*connect.Response[v1.ListRevisionsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ListRevisions is not implemented"))
+func (UnimplementedChangeSetAPIHandler) DiffChangeSet(context.Context, *v1.DiffChangeSetRequest) (*v1.DiffChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.DiffChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) PlanChangeSet(context.Context, *connect.Request[v1.PlanChangeSetRequest]) (*connect.Response[v1.PlanChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.PlanChangeSet is not implemented"))
+func (UnimplementedChangeSetAPIHandler) GetRevision(context.Context, *v1.GetRevisionRequest) (*v1.GetRevisionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.GetRevision is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetPrepare(context.Context, *connect.Request[v1.GetPrepareRequest]) (*connect.Response[v1.GetPrepareResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPrepare is not implemented"))
+func (UnimplementedChangeSetAPIHandler) ListRevisions(context.Context, *v1.ListRevisionsRequest) (*v1.ListRevisionsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.ListRevisions is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetArtifact(context.Context, *connect.Request[v1.GetArtifactRequest]) (*connect.Response[v1.GetArtifactResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetArtifact is not implemented"))
+func (UnimplementedChangeSetAPIHandler) GetPrepare(context.Context, *v1.GetPrepareRequest) (*v1.GetPrepareResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.GetPrepare is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetPlan(context.Context, *connect.Request[v1.GetPlanRequest]) (*connect.Response[v1.GetPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPlan is not implemented"))
+func (UnimplementedChangeSetAPIHandler) GetArtifact(context.Context, *v1.GetArtifactRequest) (*v1.GetArtifactResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.GetArtifact is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) GetPlanDiff(context.Context, *connect.Request[v1.GetPlanDiffRequest]) (*connect.Response[v1.GetPlanDiffResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetPlanDiff is not implemented"))
+func (UnimplementedChangeSetAPIHandler) RevertChangeSet(context.Context, *v1.RevertChangeSetRequest) (*v1.RevertChangeSetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.changeset.v1.ChangeSetAPI.RevertChangeSet is not implemented")
 }
 
-func (UnimplementedChangeSetAPIHandler) ApproveChangeSet(context.Context, *connect.Request[v1.ApproveChangeSetRequest]) (*connect.Response[v1.ApproveChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ApproveChangeSet is not implemented"))
+type changeSetAPIClient struct {
+	client *connect.Client
 }
 
-func (UnimplementedChangeSetAPIHandler) ApplyChangeSet(context.Context, *connect.Request[v1.ApplyChangeSetRequest]) (*connect.Response[v1.ApplyChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.ApplyChangeSet is not implemented"))
+func (c *changeSetAPIClient) CreateChangeSet(ctx context.Context, req *v1.CreateChangeSetRequest) (*v1.CreateChangeSetResponse, error) {
+	var res v1.CreateChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPICreateChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-func (UnimplementedChangeSetAPIHandler) GetApply(context.Context, *connect.Request[v1.GetApplyRequest]) (*connect.Response[v1.GetApplyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.GetApply is not implemented"))
+func (c *changeSetAPIClient) UpdateChangeSet(ctx context.Context, req *v1.UpdateChangeSetRequest) (*v1.UpdateChangeSetResponse, error) {
+	var res v1.UpdateChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIUpdateChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-func (UnimplementedChangeSetAPIHandler) AcceptPartialApply(context.Context, *connect.Request[v1.AcceptPartialApplyRequest]) (*connect.Response[v1.AcceptPartialApplyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.AcceptPartialApply is not implemented"))
+func (c *changeSetAPIClient) EditChangeSet(ctx context.Context, req *v1.EditChangeSetRequest) (*v1.EditChangeSetResponse, error) {
+	var res v1.EditChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIEditChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-func (UnimplementedChangeSetAPIHandler) RevertChangeSet(context.Context, *connect.Request[v1.RevertChangeSetRequest]) (*connect.Response[v1.RevertChangeSetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("admiral.api.changeset.v1.ChangeSetAPI.RevertChangeSet is not implemented"))
+func (c *changeSetAPIClient) RebaseChangeSet(ctx context.Context, req *v1.RebaseChangeSetRequest) (*v1.RebaseChangeSetResponse, error) {
+	var res v1.RebaseChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIRebaseChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) GetChangeSet(ctx context.Context, req *v1.GetChangeSetRequest) (*v1.GetChangeSetResponse, error) {
+	var res v1.GetChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIGetChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) ListChangeSets(ctx context.Context, req *v1.ListChangeSetsRequest) (*v1.ListChangeSetsResponse, error) {
+	var res v1.ListChangeSetsResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIListChangeSetsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) DiscardChangeSet(ctx context.Context, req *v1.DiscardChangeSetRequest) (*v1.DiscardChangeSetResponse, error) {
+	var res v1.DiscardChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIDiscardChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) GetComponentValues(ctx context.Context, req *v1.GetComponentValuesRequest) (*v1.GetComponentValuesResponse, error) {
+	var res v1.GetComponentValuesResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIGetComponentValuesSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) DiffChangeSet(ctx context.Context, req *v1.DiffChangeSetRequest) (*v1.DiffChangeSetResponse, error) {
+	var res v1.DiffChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIDiffChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) GetRevision(ctx context.Context, req *v1.GetRevisionRequest) (*v1.GetRevisionResponse, error) {
+	var res v1.GetRevisionResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIGetRevisionSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) ListRevisions(ctx context.Context, req *v1.ListRevisionsRequest) (*v1.ListRevisionsResponse, error) {
+	var res v1.ListRevisionsResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIListRevisionsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) GetPrepare(ctx context.Context, req *v1.GetPrepareRequest) (*v1.GetPrepareResponse, error) {
+	var res v1.GetPrepareResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIGetPrepareSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) GetArtifact(ctx context.Context, req *v1.GetArtifactRequest) (*v1.GetArtifactResponse, error) {
+	var res v1.GetArtifactResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIGetArtifactSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *changeSetAPIClient) RevertChangeSet(ctx context.Context, req *v1.RevertChangeSetRequest) (*v1.RevertChangeSetResponse, error) {
+	var res v1.RevertChangeSetResponse
+	if err := c.client.CallUnary(ctx, changeSetAPIRevertChangeSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type changeSetAPIHandler struct{ svc ChangeSetAPIHandler }
+
+func (h changeSetAPIHandler) createChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) updateChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdateChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) editChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.EditChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.EditChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) rebaseChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RebaseChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RebaseChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) getChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) listChangeSets(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListChangeSetsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListChangeSets(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) discardChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DiscardChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DiscardChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) getComponentValues(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetComponentValuesRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetComponentValues(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) diffChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DiffChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DiffChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) getRevision(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetRevisionRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetRevision(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) listRevisions(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListRevisionsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListRevisions(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) getPrepare(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetPrepareRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetPrepare(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) getArtifact(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetArtifactRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetArtifact(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h changeSetAPIHandler) revertChangeSet(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RevertChangeSetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RevertChangeSet(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

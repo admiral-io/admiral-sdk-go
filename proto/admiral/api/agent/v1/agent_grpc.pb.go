@@ -19,11 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentAPI_CreateCluster_FullMethodName       = "/admiral.api.agent.v1.AgentAPI/CreateCluster"
-	AgentAPI_GetCluster_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/GetCluster"
-	AgentAPI_ListClusters_FullMethodName        = "/admiral.api.agent.v1.AgentAPI/ListClusters"
-	AgentAPI_SetClusterTrust_FullMethodName     = "/admiral.api.agent.v1.AgentAPI/SetClusterTrust"
-	AgentAPI_DeleteCluster_FullMethodName       = "/admiral.api.agent.v1.AgentAPI/DeleteCluster"
 	AgentAPI_CreateAgent_FullMethodName         = "/admiral.api.agent.v1.AgentAPI/CreateAgent"
 	AgentAPI_GetAgent_FullMethodName            = "/admiral.api.agent.v1.AgentAPI/GetAgent"
 	AgentAPI_ListAgents_FullMethodName          = "/admiral.api.agent.v1.AgentAPI/ListAgents"
@@ -33,93 +28,62 @@ const (
 	AgentAPI_GrantAgentUse_FullMethodName       = "/admiral.api.agent.v1.AgentAPI/GrantAgentUse"
 	AgentAPI_RevokeAgentUse_FullMethodName      = "/admiral.api.agent.v1.AgentAPI/RevokeAgentUse"
 	AgentAPI_ListAgentGrants_FullMethodName     = "/admiral.api.agent.v1.AgentAPI/ListAgentGrants"
-	AgentAPI_GetJob_FullMethodName              = "/admiral.api.agent.v1.AgentAPI/GetJob"
-	AgentAPI_ListJobs_FullMethodName            = "/admiral.api.agent.v1.AgentAPI/ListJobs"
-	AgentAPI_CancelJob_FullMethodName           = "/admiral.api.agent.v1.AgentAPI/CancelJob"
 )
 
 // AgentAPIClient is the client API for AgentAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AgentAPI manages what runs work in a customer's cluster: the clusters
-// Admiral trusts, the agents in them, who may use each agent, and the jobs the
-// platform hands them.
+// AgentAPI manages agents: what runs work in a customer's environment, how
+// each proves who it is, who may use it, and its enrollment keys.
 //
-// A cluster is trusted, not a token. Admiral holds its service-account token
-// issuer (a public URL it fetches keys from) or its public keys (uploaded), and
-// an agent is one namespace and service account in it. The agent proves who it
-// is with the short-lived token its own cluster issues; no long-lived secret
-// exists. A cluster without keys yet is PENDING until a person sets them or an
-// agent enrolls it with a single-use enrollment key.
-//
-// An environment deploys through the agent it selects, and may select only an
-// agent granted to the organization, a team, its application, or the
+// An environment deploys through the agents assigned to it, and may be assigned
+// only an agent granted to the organization, a team, its application, or the
 // environment itself.
 type AgentAPIClient interface {
-	// CreateCluster records a cluster to trust. Give its issuer URL when the
-	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
-	// to leave it PENDING for an agent to enroll.
-	//
-	// Scope: `agent:write`
-	CreateCluster(ctx context.Context, in *CreateClusterRequest, opts ...grpc.CallOption) (*CreateClusterResponse, error)
-	// GetCluster returns a cluster and the key ids it trusts.
-	//
-	// Scope: `agent:read`
-	GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*GetClusterResponse, error)
-	// ListClusters lists the tenant's clusters.
-	//
-	// Scope: `agent:read`
-	ListClusters(ctx context.Context, in *ListClustersRequest, opts ...grpc.CallOption) (*ListClustersResponse, error)
-	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, uploaded
-	// keys, or the keys an agent last reported.
-	//
-	// Scope: `agent:write`
-	SetClusterTrust(ctx context.Context, in *SetClusterTrustRequest, opts ...grpc.CallOption) (*SetClusterTrustResponse, error)
-	// DeleteCluster removes a cluster and its agents. Their leases end at once.
-	//
-	// Scope: `agent:write`
-	DeleteCluster(ctx context.Context, in *DeleteClusterRequest, opts ...grpc.CallOption) (*DeleteClusterResponse, error)
-	// CreateAgent records an agent: a namespace and service account in a
-	// cluster. With `enrollment_key` set, the response carries a single-use key
-	// the agent enrolls the cluster with.
+	// CreateAgent records an agent: what it runs, and the workload identity it
+	// signs in with. When its provider is PENDING for enrollment, the response
+	// carries a single-use key the agent enrolls the provider's keys with.
 	//
 	// Scope: `agent:write`
 	CreateAgent(ctx context.Context, in *CreateAgentRequest, opts ...grpc.CallOption) (*CreateAgentResponse, error)
-	// GetAgent returns an agent, what it last reported, and its ceiling.
+	// GetAgent returns an agent, what it last reported, and its settings.
 	//
 	// Scope: `agent:read`
 	GetAgent(ctx context.Context, in *GetAgentRequest, opts ...grpc.CallOption) (*GetAgentResponse, error)
-	// ListAgents lists agents, optionally in one cluster or usable by one
-	// application.
+	// ListAgents lists agents. Narrow it with `filter`, by provider or by what an
+	// agent may be assigned to.
 	//
 	// Scope: `agent:read`
 	ListAgents(ctx context.Context, in *ListAgentsRequest, opts ...grpc.CallOption) (*ListAgentsResponse, error)
-	// UpdateAgent changes an agent's name and ceiling. The ceiling is set here
-	// and only here; an agent never reports it.
+	// UpdateAgent changes an agent's name, settings, approval rule and allowed
+	// components. Settings are set here and only here; an agent never reports
+	// them.
 	//
 	// Scope: `agent:write`
 	UpdateAgent(ctx context.Context, in *UpdateAgentRequest, opts ...grpc.CallOption) (*UpdateAgentResponse, error)
-	// DeleteAgent removes an agent. Its leases end at once, and environments that
-	// selected it select none.
+	// DeleteAgent removes an agent. Its leases end at once. FAILED_PRECONDITION
+	// while any environment has it assigned (the message names them); remove
+	// those assignments first.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(ctx context.Context, in *DeleteAgentRequest, opts ...grpc.CallOption) (*DeleteAgentResponse, error)
-	// CreateEnrollmentKey issues a single-use key an agent enrolls its cluster
-	// with. It can do nothing else, expires within an hour, and is revoked the
+	// CreateEnrollmentKey issues a single-use key an agent enrolls its
+	// provider's keys with. It can do nothing else, expires within an hour, and is revoked the
 	// moment it is used.
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(ctx context.Context, in *CreateEnrollmentKeyRequest, opts ...grpc.CallOption) (*CreateEnrollmentKeyResponse, error)
 	// GrantAgentUse lets the organization, a team, an application's
-	// environments, or one environment select an agent. Only the agent's owner
-	// or a tenant admin may.
+	// environments, or one environment be assigned an agent. Only the agent's owner
+	// or a tenant admin may. Granting a target again replaces its profiles.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(ctx context.Context, in *GrantAgentUseRequest, opts ...grpc.CallOption) (*GrantAgentUseResponse, error)
-	// RevokeAgentUse withdraws a grant. Environments that selected the agent
-	// under it keep the selection until they change it, and their new jobs wait
-	// with AGENT_NOT_GRANTED.
+	// RevokeAgentUse withdraws the grant to a target, whatever its profiles.
+	// Environments assigned the agent
+	// under it keep the assignment until they change it, and their new jobs wait
+	// with WAIT_REASON_AGENT_NOT_GRANTED.
 	//
 	// Scope: `agent:write`
 	RevokeAgentUse(ctx context.Context, in *RevokeAgentUseRequest, opts ...grpc.CallOption) (*RevokeAgentUseResponse, error)
@@ -127,19 +91,6 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	ListAgentGrants(ctx context.Context, in *ListAgentGrantsRequest, opts ...grpc.CallOption) (*ListAgentGrantsResponse, error)
-	// GetJob returns a job, with why it is waiting when it is.
-	//
-	// Scope: `agent:read`
-	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
-	// ListJobs lists jobs for an agent or an environment, newest first.
-	//
-	// Scope: `agent:read`
-	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
-	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
-	// running one learns it on its next lease renewal.
-	//
-	// Scope: `agent:write`
-	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
 }
 
 type agentAPIClient struct {
@@ -148,56 +99,6 @@ type agentAPIClient struct {
 
 func NewAgentAPIClient(cc grpc.ClientConnInterface) AgentAPIClient {
 	return &agentAPIClient{cc}
-}
-
-func (c *agentAPIClient) CreateCluster(ctx context.Context, in *CreateClusterRequest, opts ...grpc.CallOption) (*CreateClusterResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateClusterResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_CreateCluster_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) GetCluster(ctx context.Context, in *GetClusterRequest, opts ...grpc.CallOption) (*GetClusterResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetClusterResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetCluster_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ListClusters(ctx context.Context, in *ListClustersRequest, opts ...grpc.CallOption) (*ListClustersResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListClustersResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListClusters_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) SetClusterTrust(ctx context.Context, in *SetClusterTrustRequest, opts ...grpc.CallOption) (*SetClusterTrustResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SetClusterTrustResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_SetClusterTrust_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) DeleteCluster(ctx context.Context, in *DeleteClusterRequest, opts ...grpc.CallOption) (*DeleteClusterResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteClusterResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_DeleteCluster_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *agentAPIClient) CreateAgent(ctx context.Context, in *CreateAgentRequest, opts ...grpc.CallOption) (*CreateAgentResponse, error) {
@@ -290,118 +191,60 @@ func (c *agentAPIClient) ListAgentGrants(ctx context.Context, in *ListAgentGrant
 	return out, nil
 }
 
-func (c *agentAPIClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetJobResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_GetJob_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListJobsResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_ListJobs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentAPIClient) CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CancelJobResponse)
-	err := c.cc.Invoke(ctx, AgentAPI_CancelJob_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AgentAPIServer is the server API for AgentAPI service.
 // All implementations should embed UnimplementedAgentAPIServer
 // for forward compatibility.
 //
-// AgentAPI manages what runs work in a customer's cluster: the clusters
-// Admiral trusts, the agents in them, who may use each agent, and the jobs the
-// platform hands them.
+// AgentAPI manages agents: what runs work in a customer's environment, how
+// each proves who it is, who may use it, and its enrollment keys.
 //
-// A cluster is trusted, not a token. Admiral holds its service-account token
-// issuer (a public URL it fetches keys from) or its public keys (uploaded), and
-// an agent is one namespace and service account in it. The agent proves who it
-// is with the short-lived token its own cluster issues; no long-lived secret
-// exists. A cluster without keys yet is PENDING until a person sets them or an
-// agent enrolls it with a single-use enrollment key.
-//
-// An environment deploys through the agent it selects, and may select only an
-// agent granted to the organization, a team, its application, or the
+// An environment deploys through the agents assigned to it, and may be assigned
+// only an agent granted to the organization, a team, its application, or the
 // environment itself.
 type AgentAPIServer interface {
-	// CreateCluster records a cluster to trust. Give its issuer URL when the
-	// issuer is public (GKE, EKS), its keys when not (kind, on-prem), or neither
-	// to leave it PENDING for an agent to enroll.
-	//
-	// Scope: `agent:write`
-	CreateCluster(context.Context, *CreateClusterRequest) (*CreateClusterResponse, error)
-	// GetCluster returns a cluster and the key ids it trusts.
-	//
-	// Scope: `agent:read`
-	GetCluster(context.Context, *GetClusterRequest) (*GetClusterResponse, error)
-	// ListClusters lists the tenant's clusters.
-	//
-	// Scope: `agent:read`
-	ListClusters(context.Context, *ListClustersRequest) (*ListClustersResponse, error)
-	// SetClusterTrust replaces how a cluster is trusted: an issuer URL, uploaded
-	// keys, or the keys an agent last reported.
-	//
-	// Scope: `agent:write`
-	SetClusterTrust(context.Context, *SetClusterTrustRequest) (*SetClusterTrustResponse, error)
-	// DeleteCluster removes a cluster and its agents. Their leases end at once.
-	//
-	// Scope: `agent:write`
-	DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error)
-	// CreateAgent records an agent: a namespace and service account in a
-	// cluster. With `enrollment_key` set, the response carries a single-use key
-	// the agent enrolls the cluster with.
+	// CreateAgent records an agent: what it runs, and the workload identity it
+	// signs in with. When its provider is PENDING for enrollment, the response
+	// carries a single-use key the agent enrolls the provider's keys with.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *CreateAgentRequest) (*CreateAgentResponse, error)
-	// GetAgent returns an agent, what it last reported, and its ceiling.
+	// GetAgent returns an agent, what it last reported, and its settings.
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *GetAgentRequest) (*GetAgentResponse, error)
-	// ListAgents lists agents, optionally in one cluster or usable by one
-	// application.
+	// ListAgents lists agents. Narrow it with `filter`, by provider or by what an
+	// agent may be assigned to.
 	//
 	// Scope: `agent:read`
 	ListAgents(context.Context, *ListAgentsRequest) (*ListAgentsResponse, error)
-	// UpdateAgent changes an agent's name and ceiling. The ceiling is set here
-	// and only here; an agent never reports it.
+	// UpdateAgent changes an agent's name, settings, approval rule and allowed
+	// components. Settings are set here and only here; an agent never reports
+	// them.
 	//
 	// Scope: `agent:write`
 	UpdateAgent(context.Context, *UpdateAgentRequest) (*UpdateAgentResponse, error)
-	// DeleteAgent removes an agent. Its leases end at once, and environments that
-	// selected it select none.
+	// DeleteAgent removes an agent. Its leases end at once. FAILED_PRECONDITION
+	// while any environment has it assigned (the message names them); remove
+	// those assignments first.
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *DeleteAgentRequest) (*DeleteAgentResponse, error)
-	// CreateEnrollmentKey issues a single-use key an agent enrolls its cluster
-	// with. It can do nothing else, expires within an hour, and is revoked the
+	// CreateEnrollmentKey issues a single-use key an agent enrolls its
+	// provider's keys with. It can do nothing else, expires within an hour, and is revoked the
 	// moment it is used.
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *CreateEnrollmentKeyRequest) (*CreateEnrollmentKeyResponse, error)
 	// GrantAgentUse lets the organization, a team, an application's
-	// environments, or one environment select an agent. Only the agent's owner
-	// or a tenant admin may.
+	// environments, or one environment be assigned an agent. Only the agent's owner
+	// or a tenant admin may. Granting a target again replaces its profiles.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *GrantAgentUseRequest) (*GrantAgentUseResponse, error)
-	// RevokeAgentUse withdraws a grant. Environments that selected the agent
-	// under it keep the selection until they change it, and their new jobs wait
-	// with AGENT_NOT_GRANTED.
+	// RevokeAgentUse withdraws the grant to a target, whatever its profiles.
+	// Environments assigned the agent
+	// under it keep the assignment until they change it, and their new jobs wait
+	// with WAIT_REASON_AGENT_NOT_GRANTED.
 	//
 	// Scope: `agent:write`
 	RevokeAgentUse(context.Context, *RevokeAgentUseRequest) (*RevokeAgentUseResponse, error)
@@ -409,19 +252,6 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:read`
 	ListAgentGrants(context.Context, *ListAgentGrantsRequest) (*ListAgentGrantsResponse, error)
-	// GetJob returns a job, with why it is waiting when it is.
-	//
-	// Scope: `agent:read`
-	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
-	// ListJobs lists jobs for an agent or an environment, newest first.
-	//
-	// Scope: `agent:read`
-	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
-	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
-	// running one learns it on its next lease renewal.
-	//
-	// Scope: `agent:write`
-	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
 }
 
 // UnimplementedAgentAPIServer should be embedded to have
@@ -431,21 +261,6 @@ type AgentAPIServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAgentAPIServer struct{}
 
-func (UnimplementedAgentAPIServer) CreateCluster(context.Context, *CreateClusterRequest) (*CreateClusterResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateCluster not implemented")
-}
-func (UnimplementedAgentAPIServer) GetCluster(context.Context, *GetClusterRequest) (*GetClusterResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetCluster not implemented")
-}
-func (UnimplementedAgentAPIServer) ListClusters(context.Context, *ListClustersRequest) (*ListClustersResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListClusters not implemented")
-}
-func (UnimplementedAgentAPIServer) SetClusterTrust(context.Context, *SetClusterTrustRequest) (*SetClusterTrustResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SetClusterTrust not implemented")
-}
-func (UnimplementedAgentAPIServer) DeleteCluster(context.Context, *DeleteClusterRequest) (*DeleteClusterResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeleteCluster not implemented")
-}
 func (UnimplementedAgentAPIServer) CreateAgent(context.Context, *CreateAgentRequest) (*CreateAgentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateAgent not implemented")
 }
@@ -473,15 +288,6 @@ func (UnimplementedAgentAPIServer) RevokeAgentUse(context.Context, *RevokeAgentU
 func (UnimplementedAgentAPIServer) ListAgentGrants(context.Context, *ListAgentGrantsRequest) (*ListAgentGrantsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAgentGrants not implemented")
 }
-func (UnimplementedAgentAPIServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetJob not implemented")
-}
-func (UnimplementedAgentAPIServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListJobs not implemented")
-}
-func (UnimplementedAgentAPIServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CancelJob not implemented")
-}
 func (UnimplementedAgentAPIServer) testEmbeddedByValue() {}
 
 // UnsafeAgentAPIServer may be embedded to opt out of forward compatibility for this service.
@@ -500,96 +306,6 @@ func RegisterAgentAPIServer(s grpc.ServiceRegistrar, srv AgentAPIServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AgentAPI_ServiceDesc, srv)
-}
-
-func _AgentAPI_CreateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateClusterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).CreateCluster(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_CreateCluster_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).CreateCluster(ctx, req.(*CreateClusterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_GetCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetClusterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).GetCluster(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_GetCluster_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetCluster(ctx, req.(*GetClusterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ListClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListClustersRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ListClusters(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ListClusters_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListClusters(ctx, req.(*ListClustersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_SetClusterTrust_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetClusterTrustRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).SetClusterTrust(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_SetClusterTrust_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).SetClusterTrust(ctx, req.(*SetClusterTrustRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_DeleteCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteClusterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).DeleteCluster(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_DeleteCluster_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).DeleteCluster(ctx, req.(*DeleteClusterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _AgentAPI_CreateAgent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -754,60 +470,6 @@ func _AgentAPI_ListAgentGrants_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentAPI_GetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetJobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).GetJob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_GetJob_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).GetJob(ctx, req.(*GetJobRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListJobsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).ListJobs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_ListJobs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).ListJobs(ctx, req.(*ListJobsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentAPI_CancelJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CancelJobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentAPIServer).CancelJob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentAPI_CancelJob_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentAPIServer).CancelJob(ctx, req.(*CancelJobRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AgentAPI_ServiceDesc is the grpc.ServiceDesc for AgentAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -815,26 +477,6 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "admiral.api.agent.v1.AgentAPI",
 	HandlerType: (*AgentAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateCluster",
-			Handler:    _AgentAPI_CreateCluster_Handler,
-		},
-		{
-			MethodName: "GetCluster",
-			Handler:    _AgentAPI_GetCluster_Handler,
-		},
-		{
-			MethodName: "ListClusters",
-			Handler:    _AgentAPI_ListClusters_Handler,
-		},
-		{
-			MethodName: "SetClusterTrust",
-			Handler:    _AgentAPI_SetClusterTrust_Handler,
-		},
-		{
-			MethodName: "DeleteCluster",
-			Handler:    _AgentAPI_DeleteCluster_Handler,
-		},
 		{
 			MethodName: "CreateAgent",
 			Handler:    _AgentAPI_CreateAgent_Handler,
@@ -871,17 +513,319 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListAgentGrants",
 			Handler:    _AgentAPI_ListAgentGrants_Handler,
 		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "admiral/api/agent/v1/agent.proto",
+}
+
+const (
+	WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_FullMethodName  = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/CreateWorkloadIdentityProvider"
+	WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_FullMethodName     = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/GetWorkloadIdentityProvider"
+	WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_FullMethodName   = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/ListWorkloadIdentityProviders"
+	WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_FullMethodName = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/SetWorkloadIdentityProviderKeys"
+	WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_FullMethodName  = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/DeleteWorkloadIdentityProvider"
+)
+
+// WorkloadIdentityProviderAPIClient is the client API for WorkloadIdentityProviderAPI service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// WorkloadIdentityProviderAPI manages the token issuers Admiral trusts for
+// agents to prove who they are, such as a Kubernetes cluster's
+// service-account issuer.
+//
+// A provider is an issuer Admiral trusts, not a token: a public URL Admiral
+// fetches keys from, or its public keys (uploaded). An agent authenticates
+// with the short-lived token its provider issues; no long-lived secret
+// exists. A provider without keys yet is PENDING until a person sets them or
+// an agent enrolls it with a single-use enrollment key.
+type WorkloadIdentityProviderAPIClient interface {
+	// CreateWorkloadIdentityProvider records an issuer to trust: GitHub
+	// Actions, Google, an AWS account, or a Kubernetes cluster. Give a
+	// `jwks_uri` when its keys are public (GKE, EKS, GitHub, Google, AWS), the
+	// keys themselves when not, or neither to leave it PENDING for an agent to
+	// enroll (kind, minikube, on-prem).
+	//
+	// Scope: `agent:write`
+	CreateWorkloadIdentityProvider(ctx context.Context, in *CreateWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*CreateWorkloadIdentityProviderResponse, error)
+	// GetWorkloadIdentityProvider returns a provider and the key ids it trusts.
+	//
+	// Scope: `agent:read`
+	GetWorkloadIdentityProvider(ctx context.Context, in *GetWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*GetWorkloadIdentityProviderResponse, error)
+	// ListWorkloadIdentityProviders lists the tenant's providers.
+	//
+	// Scope: `agent:read`
+	ListWorkloadIdentityProviders(ctx context.Context, in *ListWorkloadIdentityProvidersRequest, opts ...grpc.CallOption) (*ListWorkloadIdentityProvidersResponse, error)
+	// SetWorkloadIdentityProviderKeys replaces where a provider's keys come
+	// from, or accepts the keys an agent last reported.
+	//
+	// Scope: `agent:write`
+	SetWorkloadIdentityProviderKeys(ctx context.Context, in *SetWorkloadIdentityProviderKeysRequest, opts ...grpc.CallOption) (*SetWorkloadIdentityProviderKeysResponse, error)
+	// DeleteWorkloadIdentityProvider removes a provider and the agents that authenticate
+	// through it. Their leases end at once.
+	//
+	// Scope: `agent:write`
+	DeleteWorkloadIdentityProvider(ctx context.Context, in *DeleteWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*DeleteWorkloadIdentityProviderResponse, error)
+}
+
+type workloadIdentityProviderAPIClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewWorkloadIdentityProviderAPIClient(cc grpc.ClientConnInterface) WorkloadIdentityProviderAPIClient {
+	return &workloadIdentityProviderAPIClient{cc}
+}
+
+func (c *workloadIdentityProviderAPIClient) CreateWorkloadIdentityProvider(ctx context.Context, in *CreateWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*CreateWorkloadIdentityProviderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateWorkloadIdentityProviderResponse)
+	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadIdentityProviderAPIClient) GetWorkloadIdentityProvider(ctx context.Context, in *GetWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*GetWorkloadIdentityProviderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetWorkloadIdentityProviderResponse)
+	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadIdentityProviderAPIClient) ListWorkloadIdentityProviders(ctx context.Context, in *ListWorkloadIdentityProvidersRequest, opts ...grpc.CallOption) (*ListWorkloadIdentityProvidersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListWorkloadIdentityProvidersResponse)
+	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadIdentityProviderAPIClient) SetWorkloadIdentityProviderKeys(ctx context.Context, in *SetWorkloadIdentityProviderKeysRequest, opts ...grpc.CallOption) (*SetWorkloadIdentityProviderKeysResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetWorkloadIdentityProviderKeysResponse)
+	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *workloadIdentityProviderAPIClient) DeleteWorkloadIdentityProvider(ctx context.Context, in *DeleteWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*DeleteWorkloadIdentityProviderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteWorkloadIdentityProviderResponse)
+	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// WorkloadIdentityProviderAPIServer is the server API for WorkloadIdentityProviderAPI service.
+// All implementations should embed UnimplementedWorkloadIdentityProviderAPIServer
+// for forward compatibility.
+//
+// WorkloadIdentityProviderAPI manages the token issuers Admiral trusts for
+// agents to prove who they are, such as a Kubernetes cluster's
+// service-account issuer.
+//
+// A provider is an issuer Admiral trusts, not a token: a public URL Admiral
+// fetches keys from, or its public keys (uploaded). An agent authenticates
+// with the short-lived token its provider issues; no long-lived secret
+// exists. A provider without keys yet is PENDING until a person sets them or
+// an agent enrolls it with a single-use enrollment key.
+type WorkloadIdentityProviderAPIServer interface {
+	// CreateWorkloadIdentityProvider records an issuer to trust: GitHub
+	// Actions, Google, an AWS account, or a Kubernetes cluster. Give a
+	// `jwks_uri` when its keys are public (GKE, EKS, GitHub, Google, AWS), the
+	// keys themselves when not, or neither to leave it PENDING for an agent to
+	// enroll (kind, minikube, on-prem).
+	//
+	// Scope: `agent:write`
+	CreateWorkloadIdentityProvider(context.Context, *CreateWorkloadIdentityProviderRequest) (*CreateWorkloadIdentityProviderResponse, error)
+	// GetWorkloadIdentityProvider returns a provider and the key ids it trusts.
+	//
+	// Scope: `agent:read`
+	GetWorkloadIdentityProvider(context.Context, *GetWorkloadIdentityProviderRequest) (*GetWorkloadIdentityProviderResponse, error)
+	// ListWorkloadIdentityProviders lists the tenant's providers.
+	//
+	// Scope: `agent:read`
+	ListWorkloadIdentityProviders(context.Context, *ListWorkloadIdentityProvidersRequest) (*ListWorkloadIdentityProvidersResponse, error)
+	// SetWorkloadIdentityProviderKeys replaces where a provider's keys come
+	// from, or accepts the keys an agent last reported.
+	//
+	// Scope: `agent:write`
+	SetWorkloadIdentityProviderKeys(context.Context, *SetWorkloadIdentityProviderKeysRequest) (*SetWorkloadIdentityProviderKeysResponse, error)
+	// DeleteWorkloadIdentityProvider removes a provider and the agents that authenticate
+	// through it. Their leases end at once.
+	//
+	// Scope: `agent:write`
+	DeleteWorkloadIdentityProvider(context.Context, *DeleteWorkloadIdentityProviderRequest) (*DeleteWorkloadIdentityProviderResponse, error)
+}
+
+// UnimplementedWorkloadIdentityProviderAPIServer should be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedWorkloadIdentityProviderAPIServer struct{}
+
+func (UnimplementedWorkloadIdentityProviderAPIServer) CreateWorkloadIdentityProvider(context.Context, *CreateWorkloadIdentityProviderRequest) (*CreateWorkloadIdentityProviderResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateWorkloadIdentityProvider not implemented")
+}
+func (UnimplementedWorkloadIdentityProviderAPIServer) GetWorkloadIdentityProvider(context.Context, *GetWorkloadIdentityProviderRequest) (*GetWorkloadIdentityProviderResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetWorkloadIdentityProvider not implemented")
+}
+func (UnimplementedWorkloadIdentityProviderAPIServer) ListWorkloadIdentityProviders(context.Context, *ListWorkloadIdentityProvidersRequest) (*ListWorkloadIdentityProvidersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListWorkloadIdentityProviders not implemented")
+}
+func (UnimplementedWorkloadIdentityProviderAPIServer) SetWorkloadIdentityProviderKeys(context.Context, *SetWorkloadIdentityProviderKeysRequest) (*SetWorkloadIdentityProviderKeysResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetWorkloadIdentityProviderKeys not implemented")
+}
+func (UnimplementedWorkloadIdentityProviderAPIServer) DeleteWorkloadIdentityProvider(context.Context, *DeleteWorkloadIdentityProviderRequest) (*DeleteWorkloadIdentityProviderResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteWorkloadIdentityProvider not implemented")
+}
+func (UnimplementedWorkloadIdentityProviderAPIServer) testEmbeddedByValue() {}
+
+// UnsafeWorkloadIdentityProviderAPIServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to WorkloadIdentityProviderAPIServer will
+// result in compilation errors.
+type UnsafeWorkloadIdentityProviderAPIServer interface {
+	mustEmbedUnimplementedWorkloadIdentityProviderAPIServer()
+}
+
+func RegisterWorkloadIdentityProviderAPIServer(s grpc.ServiceRegistrar, srv WorkloadIdentityProviderAPIServer) {
+	// If the following call panics, it indicates UnimplementedWorkloadIdentityProviderAPIServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&WorkloadIdentityProviderAPI_ServiceDesc, srv)
+}
+
+func _WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateWorkloadIdentityProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadIdentityProviderAPIServer).CreateWorkloadIdentityProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadIdentityProviderAPIServer).CreateWorkloadIdentityProvider(ctx, req.(*CreateWorkloadIdentityProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWorkloadIdentityProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadIdentityProviderAPIServer).GetWorkloadIdentityProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadIdentityProviderAPIServer).GetWorkloadIdentityProvider(ctx, req.(*GetWorkloadIdentityProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListWorkloadIdentityProvidersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadIdentityProviderAPIServer).ListWorkloadIdentityProviders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadIdentityProviderAPIServer).ListWorkloadIdentityProviders(ctx, req.(*ListWorkloadIdentityProvidersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetWorkloadIdentityProviderKeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadIdentityProviderAPIServer).SetWorkloadIdentityProviderKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadIdentityProviderAPIServer).SetWorkloadIdentityProviderKeys(ctx, req.(*SetWorkloadIdentityProviderKeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteWorkloadIdentityProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkloadIdentityProviderAPIServer).DeleteWorkloadIdentityProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkloadIdentityProviderAPIServer).DeleteWorkloadIdentityProvider(ctx, req.(*DeleteWorkloadIdentityProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// WorkloadIdentityProviderAPI_ServiceDesc is the grpc.ServiceDesc for WorkloadIdentityProviderAPI service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var WorkloadIdentityProviderAPI_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "admiral.api.agent.v1.WorkloadIdentityProviderAPI",
+	HandlerType: (*WorkloadIdentityProviderAPIServer)(nil),
+	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetJob",
-			Handler:    _AgentAPI_GetJob_Handler,
+			MethodName: "CreateWorkloadIdentityProvider",
+			Handler:    _WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_Handler,
 		},
 		{
-			MethodName: "ListJobs",
-			Handler:    _AgentAPI_ListJobs_Handler,
+			MethodName: "GetWorkloadIdentityProvider",
+			Handler:    _WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_Handler,
 		},
 		{
-			MethodName: "CancelJob",
-			Handler:    _AgentAPI_CancelJob_Handler,
+			MethodName: "ListWorkloadIdentityProviders",
+			Handler:    _WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_Handler,
+		},
+		{
+			MethodName: "SetWorkloadIdentityProviderKeys",
+			Handler:    _WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_Handler,
+		},
+		{
+			MethodName: "DeleteWorkloadIdentityProvider",
+			Handler:    _WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -889,15 +833,266 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	AgentRuntimeAPI_Enroll_FullMethodName          = "/admiral.api.agent.v1.AgentRuntimeAPI/Enroll"
-	AgentRuntimeAPI_ReportStatus_FullMethodName    = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportStatus"
-	AgentRuntimeAPI_ClaimJob_FullMethodName        = "/admiral.api.agent.v1.AgentRuntimeAPI/ClaimJob"
-	AgentRuntimeAPI_StartJob_FullMethodName        = "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob"
-	AgentRuntimeAPI_RenewLease_FullMethodName      = "/admiral.api.agent.v1.AgentRuntimeAPI/RenewLease"
-	AgentRuntimeAPI_GetJobArtifact_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
-	AgentRuntimeAPI_UploadPlanDiff_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadPlanDiff"
-	AgentRuntimeAPI_CheckApplyPlan_FullMethodName  = "/admiral.api.agent.v1.AgentRuntimeAPI/CheckApplyPlan"
-	AgentRuntimeAPI_ReportJobResult_FullMethodName = "/admiral.api.agent.v1.AgentRuntimeAPI/ReportJobResult"
+	JobAPI_GetJob_FullMethodName    = "/admiral.api.agent.v1.JobAPI/GetJob"
+	JobAPI_GetJobLog_FullMethodName = "/admiral.api.agent.v1.JobAPI/GetJobLog"
+	JobAPI_ListJobs_FullMethodName  = "/admiral.api.agent.v1.JobAPI/ListJobs"
+	JobAPI_CancelJob_FullMethodName = "/admiral.api.agent.v1.JobAPI/CancelJob"
+)
+
+// JobAPIClient is the client API for JobAPI service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// JobAPI reads and cancels the jobs the platform hands agents.
+type JobAPIClient interface {
+	// GetJob returns a job, with why it is waiting when it is.
+	//
+	// Scope: `agent:read`
+	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
+	// GetJobLog returns a job's output from `offset`: the whole log from 0,
+	// or what is new since the last read, which is how a console follows a
+	// running job. `complete` is set once the job has finished and nothing
+	// more will be written.
+	//
+	// Scope: `agent:read`
+	GetJobLog(ctx context.Context, in *GetJobLogRequest, opts ...grpc.CallOption) (*GetJobLogResponse, error)
+	// ListJobs lists jobs for an agent or an environment, newest first.
+	//
+	// Scope: `agent:read`
+	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
+	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
+	// running one learns it on its next lease renewal.
+	//
+	// Scope: `agent:write`
+	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
+}
+
+type jobAPIClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewJobAPIClient(cc grpc.ClientConnInterface) JobAPIClient {
+	return &jobAPIClient{cc}
+}
+
+func (c *jobAPIClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetJobResponse)
+	err := c.cc.Invoke(ctx, JobAPI_GetJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jobAPIClient) GetJobLog(ctx context.Context, in *GetJobLogRequest, opts ...grpc.CallOption) (*GetJobLogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetJobLogResponse)
+	err := c.cc.Invoke(ctx, JobAPI_GetJobLog_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jobAPIClient) ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListJobsResponse)
+	err := c.cc.Invoke(ctx, JobAPI_ListJobs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jobAPIClient) CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CancelJobResponse)
+	err := c.cc.Invoke(ctx, JobAPI_CancelJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// JobAPIServer is the server API for JobAPI service.
+// All implementations should embed UnimplementedJobAPIServer
+// for forward compatibility.
+//
+// JobAPI reads and cancels the jobs the platform hands agents.
+type JobAPIServer interface {
+	// GetJob returns a job, with why it is waiting when it is.
+	//
+	// Scope: `agent:read`
+	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
+	// GetJobLog returns a job's output from `offset`: the whole log from 0,
+	// or what is new since the last read, which is how a console follows a
+	// running job. `complete` is set once the job has finished and nothing
+	// more will be written.
+	//
+	// Scope: `agent:read`
+	GetJobLog(context.Context, *GetJobLogRequest) (*GetJobLogResponse, error)
+	// ListJobs lists jobs for an agent or an environment, newest first.
+	//
+	// Scope: `agent:read`
+	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	// CancelJob asks for a job to stop. A queued job is cancelled at once; a
+	// running one learns it on its next lease renewal.
+	//
+	// Scope: `agent:write`
+	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
+}
+
+// UnimplementedJobAPIServer should be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedJobAPIServer struct{}
+
+func (UnimplementedJobAPIServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetJob not implemented")
+}
+func (UnimplementedJobAPIServer) GetJobLog(context.Context, *GetJobLogRequest) (*GetJobLogResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetJobLog not implemented")
+}
+func (UnimplementedJobAPIServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListJobs not implemented")
+}
+func (UnimplementedJobAPIServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CancelJob not implemented")
+}
+func (UnimplementedJobAPIServer) testEmbeddedByValue() {}
+
+// UnsafeJobAPIServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to JobAPIServer will
+// result in compilation errors.
+type UnsafeJobAPIServer interface {
+	mustEmbedUnimplementedJobAPIServer()
+}
+
+func RegisterJobAPIServer(s grpc.ServiceRegistrar, srv JobAPIServer) {
+	// If the following call panics, it indicates UnimplementedJobAPIServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&JobAPI_ServiceDesc, srv)
+}
+
+func _JobAPI_GetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobAPIServer).GetJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: JobAPI_GetJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobAPIServer).GetJob(ctx, req.(*GetJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JobAPI_GetJobLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobAPIServer).GetJobLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: JobAPI_GetJobLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobAPIServer).GetJobLog(ctx, req.(*GetJobLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JobAPI_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListJobsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobAPIServer).ListJobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: JobAPI_ListJobs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobAPIServer).ListJobs(ctx, req.(*ListJobsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JobAPI_CancelJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobAPIServer).CancelJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: JobAPI_CancelJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobAPIServer).CancelJob(ctx, req.(*CancelJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// JobAPI_ServiceDesc is the grpc.ServiceDesc for JobAPI service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var JobAPI_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "admiral.api.agent.v1.JobAPI",
+	HandlerType: (*JobAPIServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetJob",
+			Handler:    _JobAPI_GetJob_Handler,
+		},
+		{
+			MethodName: "GetJobLog",
+			Handler:    _JobAPI_GetJobLog_Handler,
+		},
+		{
+			MethodName: "ListJobs",
+			Handler:    _JobAPI_ListJobs_Handler,
+		},
+		{
+			MethodName: "CancelJob",
+			Handler:    _JobAPI_CancelJob_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "admiral/api/agent/v1/agent.proto",
+}
+
+const (
+	AgentRuntimeAPI_Enroll_FullMethodName            = "/admiral.api.agent.v1.AgentRuntimeAPI/Enroll"
+	AgentRuntimeAPI_Heartbeat_FullMethodName         = "/admiral.api.agent.v1.AgentRuntimeAPI/Heartbeat"
+	AgentRuntimeAPI_ClaimJob_FullMethodName          = "/admiral.api.agent.v1.AgentRuntimeAPI/ClaimJob"
+	AgentRuntimeAPI_StartJob_FullMethodName          = "/admiral.api.agent.v1.AgentRuntimeAPI/StartJob"
+	AgentRuntimeAPI_RenewJob_FullMethodName          = "/admiral.api.agent.v1.AgentRuntimeAPI/RenewJob"
+	AgentRuntimeAPI_AppendJobLog_FullMethodName      = "/admiral.api.agent.v1.AgentRuntimeAPI/AppendJobLog"
+	AgentRuntimeAPI_GetJobArtifact_FullMethodName    = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobArtifact"
+	AgentRuntimeAPI_UploadJobPlanDiff_FullMethodName = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanDiff"
+	AgentRuntimeAPI_CheckJobPlan_FullMethodName      = "/admiral.api.agent.v1.AgentRuntimeAPI/CheckJobPlan"
+	AgentRuntimeAPI_FinishJob_FullMethodName         = "/admiral.api.agent.v1.AgentRuntimeAPI/FinishJob"
 )
 
 // AgentRuntimeAPIClient is the client API for AgentRuntimeAPI service.
@@ -909,24 +1104,28 @@ const (
 // the public OpenAPI document. The caller is always
 // an agent, identified by its token; no request names an agent.
 //
-// Work is claimed as an offer, started before anything touches the cluster,
-// held by renewing a lease, and reported once per attempt. Every call after
+// Work is claimed as an offer, started before anything touches the target,
+// held by renewing a lease, and finished once per attempt. Every call after
 // the claim carries the attempt and its lease token; a call from an attempt
 // that is not the current one, or whose lease lapsed, changes nothing.
 type AgentRuntimeAPIClient interface {
-	// Enroll sets a PENDING cluster's keys from inside it: the keys the cluster
-	// serves at /openid/v1/jwks, and a service-account token they verify. The
-	// caller authenticates with an enrollment key, which this spends.
+	// Enroll sets a PENDING provider's keys from inside it: the keys its issuer
+	// serves, and a token they verify. The token's issuer becomes the
+	// provider's. The caller authenticates with an enrollment key, which this
+	// spends.
 	//
 	// Scope: `agent:enroll`
 	Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error)
-	// ReportStatus records what the agent runs and what its cluster is: version,
-	// Kubernetes version and API groups (which prepare renders against), what its
-	// RBAC allows, and the cluster's current keys. Keys that differ from the
-	// trusted ones are recorded for an admin, never applied.
+	// Heartbeat is the agent checking in about itself, not about what it
+	// deployed: its version, what it runs against (for Kubernetes, the version
+	// and API groups prepare renders against, and what its RBAC allows), and
+	// its issuer's current keys, and the profiles it defines with what each
+	// serves. Keys that differ from the trusted ones are
+	// recorded for an admin, never applied. The response says when to check in
+	// next.
 	//
-	// Scope: `agent:status`
-	ReportStatus(ctx context.Context, in *ReportStatusRequest, opts ...grpc.CallOption) (*ReportStatusResponse, error)
+	// Scope: `agent:heartbeat`
+	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
 	// ClaimJob waits up to `wait_seconds` for work and returns an offer, or none.
 	// A retry with the same `claim_request_id` returns the same offer, so a lost
 	// response costs nothing. An offer not started within its TTL goes back to
@@ -935,42 +1134,53 @@ type AgentRuntimeAPIClient interface {
 	// Scope: `agent:exec`
 	ClaimJob(ctx context.Context, in *ClaimJobRequest, opts ...grpc.CallOption) (*ClaimJobResponse, error)
 	// StartJob turns an offer into a lease. Call it before touching the
-	// cluster: an attempt that expires after starting is treated as having
+	// target: an attempt that expires after starting is treated as having
 	// changed it.
 	//
 	// FAILED_PRECONDITION when the offer lapsed or is not this attempt's.
 	//
 	// Scope: `agent:exec`
 	StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (*StartJobResponse, error)
-	// RenewLease extends a started attempt's lease and says whether to cancel.
+	// RenewJob extends a started attempt's lease and says whether to cancel.
 	// A refusal means the lease is gone: stop.
 	//
 	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's.
 	//
 	// Scope: `agent:exec`
-	RenewLease(ctx context.Context, in *RenewLeaseRequest, opts ...grpc.CallOption) (*RenewLeaseResponse, error)
-	// GetJobArtifact returns the job's run artifact, unmasked, to the attempt
+	RenewJob(ctx context.Context, in *RenewJobRequest, opts ...grpc.CallOption) (*RenewJobResponse, error)
+	// AppendJobLog adds a chunk of the attempt's output at `offset`. Chunks
+	// arrive in order; a chunk resent at an offset already written changes
+	// nothing, so a retry is safe. The agent masks every value it holds as
+	// secret before it sends a line. A job's log is capped; past the cap the
+	// server keeps the start and the end and marks what it dropped.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's, or
+	// `offset` is past the end written so far (the message names the end).
+	//
+	// Scope: `agent:exec`
+	AppendJobLog(ctx context.Context, in *AppendJobLogRequest, opts ...grpc.CallOption) (*AppendJobLogResponse, error)
+	// GetJobArtifact returns the job's artifact, unmasked, to the attempt
 	// holding the lease.
 	//
 	// Scope: `agent:exec`
 	GetJobArtifact(ctx context.Context, in *GetJobArtifactRequest, opts ...grpc.CallOption) (*GetJobArtifactResponse, error)
-	// UploadPlanDiff stores a PLAN attempt's full diffs, to the attempt
-	// holding the lease, and returns their digest for the report to name.
+	// UploadJobPlanDiff stores a PLAN attempt's full diffs, to the attempt
+	// holding the lease, and returns their digest for FinishJob's result to name.
 	//
 	// Scope: `agent:exec`
-	UploadPlanDiff(ctx context.Context, in *UploadPlanDiffRequest, opts ...grpc.CallOption) (*UploadPlanDiffResponse, error)
-	// CheckApplyPlan compares an APPLY attempt's fresh plan with the plan it
-	// applies. `proceed` false means the cluster changed since that plan: stop
+	UploadJobPlanDiff(ctx context.Context, in *UploadJobPlanDiffRequest, opts ...grpc.CallOption) (*UploadJobPlanDiffResponse, error)
+	// CheckJobPlan compares an APPLY attempt's fresh plan with the plan it
+	// applies. `proceed` false means the target changed since that plan: stop
 	// before changing anything and report FAILED.
 	//
 	// Scope: `agent:exec`
-	CheckApplyPlan(ctx context.Context, in *CheckApplyPlanRequest, opts ...grpc.CallOption) (*CheckApplyPlanResponse, error)
-	// ReportJobResult ends an attempt. Repeating a report with the same
-	// `report_id` returns the first answer. A report from an attempt that lost
+	CheckJobPlan(ctx context.Context, in *CheckJobPlanRequest, opts ...grpc.CallOption) (*CheckJobPlanResponse, error)
+	// FinishJob ends an attempt. Repeating it with the same
+	// `finish_request_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
 	//
 	// Scope: `agent:exec`
-	ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error)
+	FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*FinishJobResponse, error)
 }
 
 type agentRuntimeAPIClient struct {
@@ -991,10 +1201,10 @@ func (c *agentRuntimeAPIClient) Enroll(ctx context.Context, in *EnrollRequest, o
 	return out, nil
 }
 
-func (c *agentRuntimeAPIClient) ReportStatus(ctx context.Context, in *ReportStatusRequest, opts ...grpc.CallOption) (*ReportStatusResponse, error) {
+func (c *agentRuntimeAPIClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportStatusResponse)
-	err := c.cc.Invoke(ctx, AgentRuntimeAPI_ReportStatus_FullMethodName, in, out, cOpts...)
+	out := new(HeartbeatResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_Heartbeat_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1021,10 +1231,20 @@ func (c *agentRuntimeAPIClient) StartJob(ctx context.Context, in *StartJobReques
 	return out, nil
 }
 
-func (c *agentRuntimeAPIClient) RenewLease(ctx context.Context, in *RenewLeaseRequest, opts ...grpc.CallOption) (*RenewLeaseResponse, error) {
+func (c *agentRuntimeAPIClient) RenewJob(ctx context.Context, in *RenewJobRequest, opts ...grpc.CallOption) (*RenewJobResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RenewLeaseResponse)
-	err := c.cc.Invoke(ctx, AgentRuntimeAPI_RenewLease_FullMethodName, in, out, cOpts...)
+	out := new(RenewJobResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_RenewJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentRuntimeAPIClient) AppendJobLog(ctx context.Context, in *AppendJobLogRequest, opts ...grpc.CallOption) (*AppendJobLogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AppendJobLogResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_AppendJobLog_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1041,30 +1261,30 @@ func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, in *GetJobAr
 	return out, nil
 }
 
-func (c *agentRuntimeAPIClient) UploadPlanDiff(ctx context.Context, in *UploadPlanDiffRequest, opts ...grpc.CallOption) (*UploadPlanDiffResponse, error) {
+func (c *agentRuntimeAPIClient) UploadJobPlanDiff(ctx context.Context, in *UploadJobPlanDiffRequest, opts ...grpc.CallOption) (*UploadJobPlanDiffResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UploadPlanDiffResponse)
-	err := c.cc.Invoke(ctx, AgentRuntimeAPI_UploadPlanDiff_FullMethodName, in, out, cOpts...)
+	out := new(UploadJobPlanDiffResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_UploadJobPlanDiff_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentRuntimeAPIClient) CheckApplyPlan(ctx context.Context, in *CheckApplyPlanRequest, opts ...grpc.CallOption) (*CheckApplyPlanResponse, error) {
+func (c *agentRuntimeAPIClient) CheckJobPlan(ctx context.Context, in *CheckJobPlanRequest, opts ...grpc.CallOption) (*CheckJobPlanResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CheckApplyPlanResponse)
-	err := c.cc.Invoke(ctx, AgentRuntimeAPI_CheckApplyPlan_FullMethodName, in, out, cOpts...)
+	out := new(CheckJobPlanResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_CheckJobPlan_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentRuntimeAPIClient) ReportJobResult(ctx context.Context, in *ReportJobResultRequest, opts ...grpc.CallOption) (*ReportJobResultResponse, error) {
+func (c *agentRuntimeAPIClient) FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*FinishJobResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ReportJobResultResponse)
-	err := c.cc.Invoke(ctx, AgentRuntimeAPI_ReportJobResult_FullMethodName, in, out, cOpts...)
+	out := new(FinishJobResponse)
+	err := c.cc.Invoke(ctx, AgentRuntimeAPI_FinishJob_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1080,24 +1300,28 @@ func (c *agentRuntimeAPIClient) ReportJobResult(ctx context.Context, in *ReportJ
 // the public OpenAPI document. The caller is always
 // an agent, identified by its token; no request names an agent.
 //
-// Work is claimed as an offer, started before anything touches the cluster,
-// held by renewing a lease, and reported once per attempt. Every call after
+// Work is claimed as an offer, started before anything touches the target,
+// held by renewing a lease, and finished once per attempt. Every call after
 // the claim carries the attempt and its lease token; a call from an attempt
 // that is not the current one, or whose lease lapsed, changes nothing.
 type AgentRuntimeAPIServer interface {
-	// Enroll sets a PENDING cluster's keys from inside it: the keys the cluster
-	// serves at /openid/v1/jwks, and a service-account token they verify. The
-	// caller authenticates with an enrollment key, which this spends.
+	// Enroll sets a PENDING provider's keys from inside it: the keys its issuer
+	// serves, and a token they verify. The token's issuer becomes the
+	// provider's. The caller authenticates with an enrollment key, which this
+	// spends.
 	//
 	// Scope: `agent:enroll`
 	Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error)
-	// ReportStatus records what the agent runs and what its cluster is: version,
-	// Kubernetes version and API groups (which prepare renders against), what its
-	// RBAC allows, and the cluster's current keys. Keys that differ from the
-	// trusted ones are recorded for an admin, never applied.
+	// Heartbeat is the agent checking in about itself, not about what it
+	// deployed: its version, what it runs against (for Kubernetes, the version
+	// and API groups prepare renders against, and what its RBAC allows), and
+	// its issuer's current keys, and the profiles it defines with what each
+	// serves. Keys that differ from the trusted ones are
+	// recorded for an admin, never applied. The response says when to check in
+	// next.
 	//
-	// Scope: `agent:status`
-	ReportStatus(context.Context, *ReportStatusRequest) (*ReportStatusResponse, error)
+	// Scope: `agent:heartbeat`
+	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
 	// ClaimJob waits up to `wait_seconds` for work and returns an offer, or none.
 	// A retry with the same `claim_request_id` returns the same offer, so a lost
 	// response costs nothing. An offer not started within its TTL goes back to
@@ -1106,42 +1330,53 @@ type AgentRuntimeAPIServer interface {
 	// Scope: `agent:exec`
 	ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error)
 	// StartJob turns an offer into a lease. Call it before touching the
-	// cluster: an attempt that expires after starting is treated as having
+	// target: an attempt that expires after starting is treated as having
 	// changed it.
 	//
 	// FAILED_PRECONDITION when the offer lapsed or is not this attempt's.
 	//
 	// Scope: `agent:exec`
 	StartJob(context.Context, *StartJobRequest) (*StartJobResponse, error)
-	// RenewLease extends a started attempt's lease and says whether to cancel.
+	// RenewJob extends a started attempt's lease and says whether to cancel.
 	// A refusal means the lease is gone: stop.
 	//
 	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's.
 	//
 	// Scope: `agent:exec`
-	RenewLease(context.Context, *RenewLeaseRequest) (*RenewLeaseResponse, error)
-	// GetJobArtifact returns the job's run artifact, unmasked, to the attempt
+	RenewJob(context.Context, *RenewJobRequest) (*RenewJobResponse, error)
+	// AppendJobLog adds a chunk of the attempt's output at `offset`. Chunks
+	// arrive in order; a chunk resent at an offset already written changes
+	// nothing, so a retry is safe. The agent masks every value it holds as
+	// secret before it sends a line. A job's log is capped; past the cap the
+	// server keeps the start and the end and marks what it dropped.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's, or
+	// `offset` is past the end written so far (the message names the end).
+	//
+	// Scope: `agent:exec`
+	AppendJobLog(context.Context, *AppendJobLogRequest) (*AppendJobLogResponse, error)
+	// GetJobArtifact returns the job's artifact, unmasked, to the attempt
 	// holding the lease.
 	//
 	// Scope: `agent:exec`
 	GetJobArtifact(context.Context, *GetJobArtifactRequest) (*GetJobArtifactResponse, error)
-	// UploadPlanDiff stores a PLAN attempt's full diffs, to the attempt
-	// holding the lease, and returns their digest for the report to name.
+	// UploadJobPlanDiff stores a PLAN attempt's full diffs, to the attempt
+	// holding the lease, and returns their digest for FinishJob's result to name.
 	//
 	// Scope: `agent:exec`
-	UploadPlanDiff(context.Context, *UploadPlanDiffRequest) (*UploadPlanDiffResponse, error)
-	// CheckApplyPlan compares an APPLY attempt's fresh plan with the plan it
-	// applies. `proceed` false means the cluster changed since that plan: stop
+	UploadJobPlanDiff(context.Context, *UploadJobPlanDiffRequest) (*UploadJobPlanDiffResponse, error)
+	// CheckJobPlan compares an APPLY attempt's fresh plan with the plan it
+	// applies. `proceed` false means the target changed since that plan: stop
 	// before changing anything and report FAILED.
 	//
 	// Scope: `agent:exec`
-	CheckApplyPlan(context.Context, *CheckApplyPlanRequest) (*CheckApplyPlanResponse, error)
-	// ReportJobResult ends an attempt. Repeating a report with the same
-	// `report_id` returns the first answer. A report from an attempt that lost
+	CheckJobPlan(context.Context, *CheckJobPlanRequest) (*CheckJobPlanResponse, error)
+	// FinishJob ends an attempt. Repeating it with the same
+	// `finish_request_id` returns the first answer. A report from an attempt that lost
 	// its lease is kept as evidence and changes no state.
 	//
 	// Scope: `agent:exec`
-	ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error)
+	FinishJob(context.Context, *FinishJobRequest) (*FinishJobResponse, error)
 }
 
 // UnimplementedAgentRuntimeAPIServer should be embedded to have
@@ -1154,8 +1389,8 @@ type UnimplementedAgentRuntimeAPIServer struct{}
 func (UnimplementedAgentRuntimeAPIServer) Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Enroll not implemented")
 }
-func (UnimplementedAgentRuntimeAPIServer) ReportStatus(context.Context, *ReportStatusRequest) (*ReportStatusResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportStatus not implemented")
+func (UnimplementedAgentRuntimeAPIServer) Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Heartbeat not implemented")
 }
 func (UnimplementedAgentRuntimeAPIServer) ClaimJob(context.Context, *ClaimJobRequest) (*ClaimJobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ClaimJob not implemented")
@@ -1163,20 +1398,23 @@ func (UnimplementedAgentRuntimeAPIServer) ClaimJob(context.Context, *ClaimJobReq
 func (UnimplementedAgentRuntimeAPIServer) StartJob(context.Context, *StartJobRequest) (*StartJobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method StartJob not implemented")
 }
-func (UnimplementedAgentRuntimeAPIServer) RenewLease(context.Context, *RenewLeaseRequest) (*RenewLeaseResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RenewLease not implemented")
+func (UnimplementedAgentRuntimeAPIServer) RenewJob(context.Context, *RenewJobRequest) (*RenewJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenewJob not implemented")
+}
+func (UnimplementedAgentRuntimeAPIServer) AppendJobLog(context.Context, *AppendJobLogRequest) (*AppendJobLogResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AppendJobLog not implemented")
 }
 func (UnimplementedAgentRuntimeAPIServer) GetJobArtifact(context.Context, *GetJobArtifactRequest) (*GetJobArtifactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetJobArtifact not implemented")
 }
-func (UnimplementedAgentRuntimeAPIServer) UploadPlanDiff(context.Context, *UploadPlanDiffRequest) (*UploadPlanDiffResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UploadPlanDiff not implemented")
+func (UnimplementedAgentRuntimeAPIServer) UploadJobPlanDiff(context.Context, *UploadJobPlanDiffRequest) (*UploadJobPlanDiffResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UploadJobPlanDiff not implemented")
 }
-func (UnimplementedAgentRuntimeAPIServer) CheckApplyPlan(context.Context, *CheckApplyPlanRequest) (*CheckApplyPlanResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CheckApplyPlan not implemented")
+func (UnimplementedAgentRuntimeAPIServer) CheckJobPlan(context.Context, *CheckJobPlanRequest) (*CheckJobPlanResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckJobPlan not implemented")
 }
-func (UnimplementedAgentRuntimeAPIServer) ReportJobResult(context.Context, *ReportJobResultRequest) (*ReportJobResultResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ReportJobResult not implemented")
+func (UnimplementedAgentRuntimeAPIServer) FinishJob(context.Context, *FinishJobRequest) (*FinishJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FinishJob not implemented")
 }
 func (UnimplementedAgentRuntimeAPIServer) testEmbeddedByValue() {}
 
@@ -1216,20 +1454,20 @@ func _AgentRuntimeAPI_Enroll_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentRuntimeAPI_ReportStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportStatusRequest)
+func _AgentRuntimeAPI_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HeartbeatRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentRuntimeAPIServer).ReportStatus(ctx, in)
+		return srv.(AgentRuntimeAPIServer).Heartbeat(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentRuntimeAPI_ReportStatus_FullMethodName,
+		FullMethod: AgentRuntimeAPI_Heartbeat_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentRuntimeAPIServer).ReportStatus(ctx, req.(*ReportStatusRequest))
+		return srv.(AgentRuntimeAPIServer).Heartbeat(ctx, req.(*HeartbeatRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1270,20 +1508,38 @@ func _AgentRuntimeAPI_StartJob_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentRuntimeAPI_RenewLease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RenewLeaseRequest)
+func _AgentRuntimeAPI_RenewJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenewJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentRuntimeAPIServer).RenewLease(ctx, in)
+		return srv.(AgentRuntimeAPIServer).RenewJob(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentRuntimeAPI_RenewLease_FullMethodName,
+		FullMethod: AgentRuntimeAPI_RenewJob_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentRuntimeAPIServer).RenewLease(ctx, req.(*RenewLeaseRequest))
+		return srv.(AgentRuntimeAPIServer).RenewJob(ctx, req.(*RenewJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentRuntimeAPI_AppendJobLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AppendJobLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentRuntimeAPIServer).AppendJobLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentRuntimeAPI_AppendJobLog_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentRuntimeAPIServer).AppendJobLog(ctx, req.(*AppendJobLogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1306,56 +1562,56 @@ func _AgentRuntimeAPI_GetJobArtifact_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentRuntimeAPI_UploadPlanDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UploadPlanDiffRequest)
+func _AgentRuntimeAPI_UploadJobPlanDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadJobPlanDiffRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentRuntimeAPIServer).UploadPlanDiff(ctx, in)
+		return srv.(AgentRuntimeAPIServer).UploadJobPlanDiff(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentRuntimeAPI_UploadPlanDiff_FullMethodName,
+		FullMethod: AgentRuntimeAPI_UploadJobPlanDiff_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentRuntimeAPIServer).UploadPlanDiff(ctx, req.(*UploadPlanDiffRequest))
+		return srv.(AgentRuntimeAPIServer).UploadJobPlanDiff(ctx, req.(*UploadJobPlanDiffRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentRuntimeAPI_CheckApplyPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckApplyPlanRequest)
+func _AgentRuntimeAPI_CheckJobPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckJobPlanRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentRuntimeAPIServer).CheckApplyPlan(ctx, in)
+		return srv.(AgentRuntimeAPIServer).CheckJobPlan(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentRuntimeAPI_CheckApplyPlan_FullMethodName,
+		FullMethod: AgentRuntimeAPI_CheckJobPlan_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentRuntimeAPIServer).CheckApplyPlan(ctx, req.(*CheckApplyPlanRequest))
+		return srv.(AgentRuntimeAPIServer).CheckJobPlan(ctx, req.(*CheckJobPlanRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentRuntimeAPI_ReportJobResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReportJobResultRequest)
+func _AgentRuntimeAPI_FinishJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FinishJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentRuntimeAPIServer).ReportJobResult(ctx, in)
+		return srv.(AgentRuntimeAPIServer).FinishJob(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AgentRuntimeAPI_ReportJobResult_FullMethodName,
+		FullMethod: AgentRuntimeAPI_FinishJob_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentRuntimeAPIServer).ReportJobResult(ctx, req.(*ReportJobResultRequest))
+		return srv.(AgentRuntimeAPIServer).FinishJob(ctx, req.(*FinishJobRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1372,8 +1628,8 @@ var AgentRuntimeAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentRuntimeAPI_Enroll_Handler,
 		},
 		{
-			MethodName: "ReportStatus",
-			Handler:    _AgentRuntimeAPI_ReportStatus_Handler,
+			MethodName: "Heartbeat",
+			Handler:    _AgentRuntimeAPI_Heartbeat_Handler,
 		},
 		{
 			MethodName: "ClaimJob",
@@ -1384,24 +1640,28 @@ var AgentRuntimeAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentRuntimeAPI_StartJob_Handler,
 		},
 		{
-			MethodName: "RenewLease",
-			Handler:    _AgentRuntimeAPI_RenewLease_Handler,
+			MethodName: "RenewJob",
+			Handler:    _AgentRuntimeAPI_RenewJob_Handler,
+		},
+		{
+			MethodName: "AppendJobLog",
+			Handler:    _AgentRuntimeAPI_AppendJobLog_Handler,
 		},
 		{
 			MethodName: "GetJobArtifact",
 			Handler:    _AgentRuntimeAPI_GetJobArtifact_Handler,
 		},
 		{
-			MethodName: "UploadPlanDiff",
-			Handler:    _AgentRuntimeAPI_UploadPlanDiff_Handler,
+			MethodName: "UploadJobPlanDiff",
+			Handler:    _AgentRuntimeAPI_UploadJobPlanDiff_Handler,
 		},
 		{
-			MethodName: "CheckApplyPlan",
-			Handler:    _AgentRuntimeAPI_CheckApplyPlan_Handler,
+			MethodName: "CheckJobPlan",
+			Handler:    _AgentRuntimeAPI_CheckJobPlan_Handler,
 		},
 		{
-			MethodName: "ReportJobResult",
-			Handler:    _AgentRuntimeAPI_ReportJobResult_Handler,
+			MethodName: "FinishJob",
+			Handler:    _AgentRuntimeAPI_FinishJob_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

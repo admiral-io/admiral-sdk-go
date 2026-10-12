@@ -19,94 +19,92 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RunAPI_CreateRun_FullMethodName     = "/admiral.api.run.v1.RunAPI/CreateRun"
-	RunAPI_GetRun_FullMethodName        = "/admiral.api.run.v1.RunAPI/GetRun"
-	RunAPI_ListRuns_FullMethodName      = "/admiral.api.run.v1.RunAPI/ListRuns"
-	RunAPI_CancelRun_FullMethodName     = "/admiral.api.run.v1.RunAPI/CancelRun"
-	RunAPI_GetRevision_FullMethodName   = "/admiral.api.run.v1.RunAPI/GetRevision"
-	RunAPI_ListRevisions_FullMethodName = "/admiral.api.run.v1.RunAPI/ListRevisions"
-	RunAPI_RetryRevision_FullMethodName = "/admiral.api.run.v1.RunAPI/RetryRevision"
-	RunAPI_ApplyRun_FullMethodName      = "/admiral.api.run.v1.RunAPI/ApplyRun"
+	RunAPI_CreateRun_FullMethodName      = "/admiral.api.run.v1.RunAPI/CreateRun"
+	RunAPI_GetRun_FullMethodName         = "/admiral.api.run.v1.RunAPI/GetRun"
+	RunAPI_ListRuns_FullMethodName       = "/admiral.api.run.v1.RunAPI/ListRuns"
+	RunAPI_ApproveRun_FullMethodName     = "/admiral.api.run.v1.RunAPI/ApproveRun"
+	RunAPI_ApplyRun_FullMethodName       = "/admiral.api.run.v1.RunAPI/ApplyRun"
+	RunAPI_AcceptRun_FullMethodName      = "/admiral.api.run.v1.RunAPI/AcceptRun"
+	RunAPI_CancelRun_FullMethodName      = "/admiral.api.run.v1.RunAPI/CancelRun"
+	RunAPI_GetRunPlanDiff_FullMethodName = "/admiral.api.run.v1.RunAPI/GetRunPlanDiff"
 )
 
 // RunAPIClient is the client API for RunAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// RunAPI manages runs and their component revisions.
+// RunAPI plans and applies. A run belongs to an environment and has one plan
+// phase and, when its plan is approved and applied, one apply phase.
 //
-// A run represents a single execution against an application+environment.
-// When triggered, Admiral resolves all components for the
-// application+environment combination (applying overrides), builds a
-// dependency graph, and renders each component into an immutable revision.
+// A run's source is either a change set revision, which proposes a change,
+// or what the environment desires, the configuration each component was last
+// applied with. A desired run checks for drift (refresh-only, never applied)
+// or reapplies it (a full plan of the chosen components, then apply).
 //
-// Infrastructure revisions follow a plan -> apply lifecycle, executed by a
-// terraform-semantic engine (Terraform or OpenTofu) on the component's
-// assigned TERRAFORM agent. Workload revisions (Helm, Kustomize, manifests)
-// are applied to the target cluster by the component's KUBERNETES agent. The
-// run engine executes the dependency graph in order: independent components
-// run in parallel, dependent components wait for their upstream to succeed.
-//
-// To roll back to a prior known-good state, create a new run with
-// `source_run_id` set to a previous successful run. This re-plans and
-// re-applies the prior configuration against the current infrastructure
-// state, going through the same plan/approve/apply cycle.
+// When the environment moves, an open change set falls behind and its
+// planned run cannot apply; the run of its rebased revision supersedes it.
+// Every plan is a new run, so a change set's runs are the history of how it
+// reached what was approved.
 type RunAPIClient interface {
-	// CreateRun triggers a new run for an application+environment.
+	// CreateRun starts a run. For a change set revision it prepares the
+	// revision if needed, then plans it. For what is desired it checks for
+	// drift or plans a reapply.
 	//
-	// The server resolves all components (with environment overrides applied),
-	// builds the dependency DAG, and begins rendering and executing revisions.
-	//
-	// Concurrency: only one run can be active per application+environment
-	// at a time. If a run is already in an active state (PENDING, QUEUED,
-	// PLANNING, PLANNED, or APPLYING), the new run is queued and will start
-	// automatically when the current run completes or is canceled.
+	// FAILED_PRECONDITION when the revision is not its change set's head, or
+	// the change set is not open.
 	//
 	// Scope: `run:write`
 	CreateRun(ctx context.Context, in *CreateRunRequest, opts ...grpc.CallOption) (*CreateRunResponse, error)
-	// GetRun retrieves a run by ID, including its composite status derived
-	// from all component revisions.
+	// GetRun returns a run: where it is, its plan and apply phases, and its
+	// approvals.
 	//
 	// Scope: `run:read`
 	GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error)
-	// ListRuns returns a paginated list of runs.
-	//
-	// Common filter fields: `application_id`, `environment_id`, `status`.
-	// Use to view run history for an environment.
+	// ListRuns lists runs, newest first. Without a `kind` in the filter it
+	// lists change set runs.
 	//
 	// Scope: `run:read`
 	ListRuns(ctx context.Context, in *ListRunsRequest, opts ...grpc.CallOption) (*ListRunsResponse, error)
-	// CancelRun cancels an in-progress run. Stops pending and queued
-	// revisions from proceeding and prevents the queue from advancing; the run
-	// status becomes CANCELED. APPLYING runs cannot be canceled because
-	// terraform/apply cannot be interrupted mid-execution; the call is
-	// rejected with FAILED_PRECONDITION. Wait for the in-flight phase to
-	// complete before cancellation. Revisions already SUCCEEDED remain
-	// applied.
+	// ApproveRun approves a run's plan. Only a person approves, and not one who
+	// revised the change set: the author never counts toward an approval rule,
+	// and an environment that needs no approval needs none of this. An
+	// approval carries to a later run of the same revision, or of a revision a
+	// rebase cut without resolving a conflict, when its plan gives every
+	// resource the same action and the same new value for each attribute the
+	// apply changes.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the run's plan, or the run
+	// is not PLANNED.
 	//
 	// Scope: `run:write`
-	CancelRun(ctx context.Context, in *CancelRunRequest, opts ...grpc.CallOption) (*CancelRunResponse, error)
-	// GetRevision retrieves a single component revision within a run.
+	ApproveRun(ctx context.Context, in *ApproveRunRequest, opts ...grpc.CallOption) (*ApproveRunResponse, error)
+	// ApplyRun applies a run's plan. It takes the environment's lock. The agent
+	// checks the plan is still current before it changes anything.
 	//
-	// Scope: `run:read`
-	GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error)
-	// ListRevisions returns all component revisions for a run.
-	//
-	// Scope: `run:read`
-	ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error)
-	// RetryRevision retries a failed component revision. A new execution
-	// attempt is made using the same rendered artifacts. The retry count
-	// is incremented. Only applicable to revisions in FAILED status.
-	//
-	// Scope: `run:write`
-	RetryRevision(ctx context.Context, in *RetryRevisionRequest, opts ...grpc.CallOption) (*RetryRevisionResponse, error)
-	// ApplyRun transitions a run from plan phase to apply phase. Revisions
-	// currently in PLANNED status get an APPLY job dispatched to their
-	// assigned TERRAFORM agent. This is the single authorization gate per changeset;
-	// downstream layers auto-continue plan->apply without re-prompting.
+	// FAILED_PRECONDITION when the run is not PLANNED, an approval in
+	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
+	// drift check.
 	//
 	// Scope: `run:write`
 	ApplyRun(ctx context.Context, in *ApplyRunRequest, opts ...grpc.CallOption) (*ApplyRunResponse, error)
+	// AcceptRun takes a PARTIAL run's apply as the environment's new state and
+	// releases the hold. It is recorded with its reason, and a change set run's
+	// change set becomes APPLIED.
+	//
+	// Scope: `run:write`
+	AcceptRun(ctx context.Context, in *AcceptRunRequest, opts ...grpc.CallOption) (*AcceptRunResponse, error)
+	// CancelRun stops a run that is preparing, queued, planning or applying.
+	// An apply already changing the environment stops at the next component
+	// and ends PARTIAL.
+	//
+	// Scope: `run:write`
+	CancelRun(ctx context.Context, in *CancelRunRequest, opts ...grpc.CallOption) (*CancelRunResponse, error)
+	// GetRunPlanDiff returns a finished plan's full diffs, with every value
+	// the component marks sensitive masked: a Kubernetes Secret's `data` and
+	// `stringData`, a Terraform value declared `sensitive`. FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `run:read`
+	GetRunPlanDiff(ctx context.Context, in *GetRunPlanDiffRequest, opts ...grpc.CallOption) (*GetRunPlanDiffResponse, error)
 }
 
 type runAPIClient struct {
@@ -147,40 +145,10 @@ func (c *runAPIClient) ListRuns(ctx context.Context, in *ListRunsRequest, opts .
 	return out, nil
 }
 
-func (c *runAPIClient) CancelRun(ctx context.Context, in *CancelRunRequest, opts ...grpc.CallOption) (*CancelRunResponse, error) {
+func (c *runAPIClient) ApproveRun(ctx context.Context, in *ApproveRunRequest, opts ...grpc.CallOption) (*ApproveRunResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CancelRunResponse)
-	err := c.cc.Invoke(ctx, RunAPI_CancelRun_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *runAPIClient) GetRevision(ctx context.Context, in *GetRevisionRequest, opts ...grpc.CallOption) (*GetRevisionResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetRevisionResponse)
-	err := c.cc.Invoke(ctx, RunAPI_GetRevision_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *runAPIClient) ListRevisions(ctx context.Context, in *ListRevisionsRequest, opts ...grpc.CallOption) (*ListRevisionsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListRevisionsResponse)
-	err := c.cc.Invoke(ctx, RunAPI_ListRevisions_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *runAPIClient) RetryRevision(ctx context.Context, in *RetryRevisionRequest, opts ...grpc.CallOption) (*RetryRevisionResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RetryRevisionResponse)
-	err := c.cc.Invoke(ctx, RunAPI_RetryRevision_FullMethodName, in, out, cOpts...)
+	out := new(ApproveRunResponse)
+	err := c.cc.Invoke(ctx, RunAPI_ApproveRun_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -197,84 +165,112 @@ func (c *runAPIClient) ApplyRun(ctx context.Context, in *ApplyRunRequest, opts .
 	return out, nil
 }
 
+func (c *runAPIClient) AcceptRun(ctx context.Context, in *AcceptRunRequest, opts ...grpc.CallOption) (*AcceptRunResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AcceptRunResponse)
+	err := c.cc.Invoke(ctx, RunAPI_AcceptRun_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runAPIClient) CancelRun(ctx context.Context, in *CancelRunRequest, opts ...grpc.CallOption) (*CancelRunResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CancelRunResponse)
+	err := c.cc.Invoke(ctx, RunAPI_CancelRun_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runAPIClient) GetRunPlanDiff(ctx context.Context, in *GetRunPlanDiffRequest, opts ...grpc.CallOption) (*GetRunPlanDiffResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRunPlanDiffResponse)
+	err := c.cc.Invoke(ctx, RunAPI_GetRunPlanDiff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RunAPIServer is the server API for RunAPI service.
 // All implementations should embed UnimplementedRunAPIServer
 // for forward compatibility.
 //
-// RunAPI manages runs and their component revisions.
+// RunAPI plans and applies. A run belongs to an environment and has one plan
+// phase and, when its plan is approved and applied, one apply phase.
 //
-// A run represents a single execution against an application+environment.
-// When triggered, Admiral resolves all components for the
-// application+environment combination (applying overrides), builds a
-// dependency graph, and renders each component into an immutable revision.
+// A run's source is either a change set revision, which proposes a change,
+// or what the environment desires, the configuration each component was last
+// applied with. A desired run checks for drift (refresh-only, never applied)
+// or reapplies it (a full plan of the chosen components, then apply).
 //
-// Infrastructure revisions follow a plan -> apply lifecycle, executed by a
-// terraform-semantic engine (Terraform or OpenTofu) on the component's
-// assigned TERRAFORM agent. Workload revisions (Helm, Kustomize, manifests)
-// are applied to the target cluster by the component's KUBERNETES agent. The
-// run engine executes the dependency graph in order: independent components
-// run in parallel, dependent components wait for their upstream to succeed.
-//
-// To roll back to a prior known-good state, create a new run with
-// `source_run_id` set to a previous successful run. This re-plans and
-// re-applies the prior configuration against the current infrastructure
-// state, going through the same plan/approve/apply cycle.
+// When the environment moves, an open change set falls behind and its
+// planned run cannot apply; the run of its rebased revision supersedes it.
+// Every plan is a new run, so a change set's runs are the history of how it
+// reached what was approved.
 type RunAPIServer interface {
-	// CreateRun triggers a new run for an application+environment.
+	// CreateRun starts a run. For a change set revision it prepares the
+	// revision if needed, then plans it. For what is desired it checks for
+	// drift or plans a reapply.
 	//
-	// The server resolves all components (with environment overrides applied),
-	// builds the dependency DAG, and begins rendering and executing revisions.
-	//
-	// Concurrency: only one run can be active per application+environment
-	// at a time. If a run is already in an active state (PENDING, QUEUED,
-	// PLANNING, PLANNED, or APPLYING), the new run is queued and will start
-	// automatically when the current run completes or is canceled.
+	// FAILED_PRECONDITION when the revision is not its change set's head, or
+	// the change set is not open.
 	//
 	// Scope: `run:write`
 	CreateRun(context.Context, *CreateRunRequest) (*CreateRunResponse, error)
-	// GetRun retrieves a run by ID, including its composite status derived
-	// from all component revisions.
+	// GetRun returns a run: where it is, its plan and apply phases, and its
+	// approvals.
 	//
 	// Scope: `run:read`
 	GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error)
-	// ListRuns returns a paginated list of runs.
-	//
-	// Common filter fields: `application_id`, `environment_id`, `status`.
-	// Use to view run history for an environment.
+	// ListRuns lists runs, newest first. Without a `kind` in the filter it
+	// lists change set runs.
 	//
 	// Scope: `run:read`
 	ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error)
-	// CancelRun cancels an in-progress run. Stops pending and queued
-	// revisions from proceeding and prevents the queue from advancing; the run
-	// status becomes CANCELED. APPLYING runs cannot be canceled because
-	// terraform/apply cannot be interrupted mid-execution; the call is
-	// rejected with FAILED_PRECONDITION. Wait for the in-flight phase to
-	// complete before cancellation. Revisions already SUCCEEDED remain
-	// applied.
+	// ApproveRun approves a run's plan. Only a person approves, and not one who
+	// revised the change set: the author never counts toward an approval rule,
+	// and an environment that needs no approval needs none of this. An
+	// approval carries to a later run of the same revision, or of a revision a
+	// rebase cut without resolving a conflict, when its plan gives every
+	// resource the same action and the same new value for each attribute the
+	// apply changes.
+	//
+	// FAILED_PRECONDITION when `plan_digest` is not the run's plan, or the run
+	// is not PLANNED.
 	//
 	// Scope: `run:write`
-	CancelRun(context.Context, *CancelRunRequest) (*CancelRunResponse, error)
-	// GetRevision retrieves a single component revision within a run.
+	ApproveRun(context.Context, *ApproveRunRequest) (*ApproveRunResponse, error)
+	// ApplyRun applies a run's plan. It takes the environment's lock. The agent
+	// checks the plan is still current before it changes anything.
 	//
-	// Scope: `run:read`
-	GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error)
-	// ListRevisions returns all component revisions for a run.
-	//
-	// Scope: `run:read`
-	ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error)
-	// RetryRevision retries a failed component revision. A new execution
-	// attempt is made using the same rendered artifacts. The retry count
-	// is incremented. Only applicable to revisions in FAILED status.
-	//
-	// Scope: `run:write`
-	RetryRevision(context.Context, *RetryRevisionRequest) (*RetryRevisionResponse, error)
-	// ApplyRun transitions a run from plan phase to apply phase. Revisions
-	// currently in PLANNED status get an APPLY job dispatched to their
-	// assigned TERRAFORM agent. This is the single authorization gate per changeset;
-	// downstream layers auto-continue plan->apply without re-prompting.
+	// FAILED_PRECONDITION when the run is not PLANNED, an approval in
+	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
+	// drift check.
 	//
 	// Scope: `run:write`
 	ApplyRun(context.Context, *ApplyRunRequest) (*ApplyRunResponse, error)
+	// AcceptRun takes a PARTIAL run's apply as the environment's new state and
+	// releases the hold. It is recorded with its reason, and a change set run's
+	// change set becomes APPLIED.
+	//
+	// Scope: `run:write`
+	AcceptRun(context.Context, *AcceptRunRequest) (*AcceptRunResponse, error)
+	// CancelRun stops a run that is preparing, queued, planning or applying.
+	// An apply already changing the environment stops at the next component
+	// and ends PARTIAL.
+	//
+	// Scope: `run:write`
+	CancelRun(context.Context, *CancelRunRequest) (*CancelRunResponse, error)
+	// GetRunPlanDiff returns a finished plan's full diffs, with every value
+	// the component marks sensitive masked: a Kubernetes Secret's `data` and
+	// `stringData`, a Terraform value declared `sensitive`. FAILED_PRECONDITION until the plan has succeeded.
+	//
+	// Scope: `run:read`
+	GetRunPlanDiff(context.Context, *GetRunPlanDiffRequest) (*GetRunPlanDiffResponse, error)
 }
 
 // UnimplementedRunAPIServer should be embedded to have
@@ -293,20 +289,20 @@ func (UnimplementedRunAPIServer) GetRun(context.Context, *GetRunRequest) (*GetRu
 func (UnimplementedRunAPIServer) ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListRuns not implemented")
 }
-func (UnimplementedRunAPIServer) CancelRun(context.Context, *CancelRunRequest) (*CancelRunResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CancelRun not implemented")
-}
-func (UnimplementedRunAPIServer) GetRevision(context.Context, *GetRevisionRequest) (*GetRevisionResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetRevision not implemented")
-}
-func (UnimplementedRunAPIServer) ListRevisions(context.Context, *ListRevisionsRequest) (*ListRevisionsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListRevisions not implemented")
-}
-func (UnimplementedRunAPIServer) RetryRevision(context.Context, *RetryRevisionRequest) (*RetryRevisionResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RetryRevision not implemented")
+func (UnimplementedRunAPIServer) ApproveRun(context.Context, *ApproveRunRequest) (*ApproveRunResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ApproveRun not implemented")
 }
 func (UnimplementedRunAPIServer) ApplyRun(context.Context, *ApplyRunRequest) (*ApplyRunResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ApplyRun not implemented")
+}
+func (UnimplementedRunAPIServer) AcceptRun(context.Context, *AcceptRunRequest) (*AcceptRunResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcceptRun not implemented")
+}
+func (UnimplementedRunAPIServer) CancelRun(context.Context, *CancelRunRequest) (*CancelRunResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CancelRun not implemented")
+}
+func (UnimplementedRunAPIServer) GetRunPlanDiff(context.Context, *GetRunPlanDiffRequest) (*GetRunPlanDiffResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRunPlanDiff not implemented")
 }
 func (UnimplementedRunAPIServer) testEmbeddedByValue() {}
 
@@ -382,74 +378,20 @@ func _RunAPI_ListRuns_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RunAPI_CancelRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CancelRunRequest)
+func _RunAPI_ApproveRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApproveRunRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RunAPIServer).CancelRun(ctx, in)
+		return srv.(RunAPIServer).ApproveRun(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RunAPI_CancelRun_FullMethodName,
+		FullMethod: RunAPI_ApproveRun_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RunAPIServer).CancelRun(ctx, req.(*CancelRunRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RunAPI_GetRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRevisionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RunAPIServer).GetRevision(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: RunAPI_GetRevision_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RunAPIServer).GetRevision(ctx, req.(*GetRevisionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RunAPI_ListRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListRevisionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RunAPIServer).ListRevisions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: RunAPI_ListRevisions_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RunAPIServer).ListRevisions(ctx, req.(*ListRevisionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RunAPI_RetryRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RetryRevisionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RunAPIServer).RetryRevision(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: RunAPI_RetryRevision_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RunAPIServer).RetryRevision(ctx, req.(*RetryRevisionRequest))
+		return srv.(RunAPIServer).ApproveRun(ctx, req.(*ApproveRunRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -468,6 +410,60 @@ func _RunAPI_ApplyRun_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RunAPIServer).ApplyRun(ctx, req.(*ApplyRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RunAPI_AcceptRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptRunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunAPIServer).AcceptRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RunAPI_AcceptRun_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunAPIServer).AcceptRun(ctx, req.(*AcceptRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RunAPI_CancelRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelRunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunAPIServer).CancelRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RunAPI_CancelRun_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunAPIServer).CancelRun(ctx, req.(*CancelRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RunAPI_GetRunPlanDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRunPlanDiffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunAPIServer).GetRunPlanDiff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RunAPI_GetRunPlanDiff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunAPIServer).GetRunPlanDiff(ctx, req.(*GetRunPlanDiffRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -492,24 +488,24 @@ var RunAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RunAPI_ListRuns_Handler,
 		},
 		{
-			MethodName: "CancelRun",
-			Handler:    _RunAPI_CancelRun_Handler,
-		},
-		{
-			MethodName: "GetRevision",
-			Handler:    _RunAPI_GetRevision_Handler,
-		},
-		{
-			MethodName: "ListRevisions",
-			Handler:    _RunAPI_ListRevisions_Handler,
-		},
-		{
-			MethodName: "RetryRevision",
-			Handler:    _RunAPI_RetryRevision_Handler,
+			MethodName: "ApproveRun",
+			Handler:    _RunAPI_ApproveRun_Handler,
 		},
 		{
 			MethodName: "ApplyRun",
 			Handler:    _RunAPI_ApplyRun_Handler,
+		},
+		{
+			MethodName: "AcceptRun",
+			Handler:    _RunAPI_AcceptRun_Handler,
+		},
+		{
+			MethodName: "CancelRun",
+			Handler:    _RunAPI_CancelRun_Handler,
+		},
+		{
+			MethodName: "GetRunPlanDiff",
+			Handler:    _RunAPI_GetRunPlanDiff_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

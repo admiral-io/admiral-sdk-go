@@ -181,8 +181,6 @@ func local_request_EnvironmentAPI_UpdateEnvironment_0(ctx context.Context, marsh
 	return msg, metadata, err
 }
 
-var filter_EnvironmentAPI_DeleteEnvironment_0 = &utilities.DoubleArray{Encoding: map[string]int{"environment_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-
 func request_EnvironmentAPI_DeleteEnvironment_0(ctx context.Context, marshaler runtime.Marshaler, client EnvironmentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq DeleteEnvironmentRequest
@@ -196,12 +194,6 @@ func request_EnvironmentAPI_DeleteEnvironment_0(ctx context.Context, marshaler r
 	protoReq.EnvironmentId, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_DeleteEnvironment_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -224,82 +216,22 @@ func local_request_EnvironmentAPI_DeleteEnvironment_0(ctx context.Context, marsh
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
 	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_DeleteEnvironment_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
 	msg, err := server.DeleteEnvironment(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-var filter_EnvironmentAPI_ListEnvironmentVariables_0 = &utilities.DoubleArray{Encoding: map[string]int{"environment_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-
-func request_EnvironmentAPI_ListEnvironmentVariables_0(ctx context.Context, marshaler runtime.Marshaler, client EnvironmentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ListEnvironmentVariablesRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["environment_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "environment_id")
-	}
-	protoReq.EnvironmentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_ListEnvironmentVariables_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if req.Body != nil {
-		_, _ = io.Copy(io.Discard, req.Body)
-	}
-	msg, err := client.ListEnvironmentVariables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_EnvironmentAPI_ListEnvironmentVariables_0(ctx context.Context, marshaler runtime.Marshaler, server EnvironmentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq ListEnvironmentVariablesRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["environment_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "environment_id")
-	}
-	protoReq.EnvironmentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_ListEnvironmentVariables_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.ListEnvironmentVariables(ctx, &protoReq)
-	return msg, metadata, err
-}
+var filter_EnvironmentAPI_ListEnvironmentComponents_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
 func request_EnvironmentAPI_ListEnvironmentComponents_0(ctx context.Context, marshaler runtime.Marshaler, client EnvironmentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ListEnvironmentComponentsRequest
 		metadata runtime.ServerMetadata
-		err      error
 	)
-	val, ok := pathParams["environment_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "environment_id")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	protoReq.EnvironmentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_ListEnvironmentComponents_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
@@ -312,6 +244,23 @@ func local_request_EnvironmentAPI_ListEnvironmentComponents_0(ctx context.Contex
 	var (
 		protoReq ListEnvironmentComponentsRequest
 		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_ListEnvironmentComponents_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListEnvironmentComponents(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_EnvironmentAPI_GetEnvironmentComponentValues_0 = &utilities.DoubleArray{Encoding: map[string]int{"environment_id": 0, "component": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+
+func request_EnvironmentAPI_GetEnvironmentComponentValues_0(ctx context.Context, marshaler runtime.Marshaler, client EnvironmentAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetEnvironmentComponentValuesRequest
+		metadata runtime.ServerMetadata
 		err      error
 	)
 	val, ok := pathParams["environment_id"]
@@ -322,7 +271,56 @@ func local_request_EnvironmentAPI_ListEnvironmentComponents_0(ctx context.Contex
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
 	}
-	msg, err := server.ListEnvironmentComponents(ctx, &protoReq)
+	val, ok = pathParams["component"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component")
+	}
+	protoReq.Component, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_GetEnvironmentComponentValues_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.GetEnvironmentComponentValues(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_EnvironmentAPI_GetEnvironmentComponentValues_0(ctx context.Context, marshaler runtime.Marshaler, server EnvironmentAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetEnvironmentComponentValuesRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["environment_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "environment_id")
+	}
+	protoReq.EnvironmentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "environment_id", err)
+	}
+	val, ok = pathParams["component"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "component")
+	}
+	protoReq.Component, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "component", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EnvironmentAPI_GetEnvironmentComponentValues_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.GetEnvironmentComponentValues(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -432,33 +430,13 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 		forward_EnvironmentAPI_DeleteEnvironment_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_EnvironmentAPI_ListEnvironmentVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentVariables", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/variables"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_EnvironmentAPI_ListEnvironmentVariables_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_EnvironmentAPI_ListEnvironmentVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodGet, pattern_EnvironmentAPI_ListEnvironmentComponents_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/components"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/v1/environment-components"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -471,6 +449,26 @@ func RegisterEnvironmentAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 		forward_EnvironmentAPI_ListEnvironmentComponents_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_EnvironmentAPI_GetEnvironmentComponentValues_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/GetEnvironmentComponentValues", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/components/{component}/values"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_EnvironmentAPI_GetEnvironmentComponentValues_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_EnvironmentAPI_GetEnvironmentComponentValues_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -597,28 +595,11 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_EnvironmentAPI_DeleteEnvironment_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_EnvironmentAPI_ListEnvironmentVariables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentVariables", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/variables"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_EnvironmentAPI_ListEnvironmentVariables_0(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_EnvironmentAPI_ListEnvironmentVariables_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodGet, pattern_EnvironmentAPI_ListEnvironmentComponents_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/components"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/ListEnvironmentComponents", runtime.WithHTTPPathPattern("/v1/environment-components"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -631,25 +612,42 @@ func RegisterEnvironmentAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_EnvironmentAPI_ListEnvironmentComponents_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_EnvironmentAPI_GetEnvironmentComponentValues_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.environment.v1.EnvironmentAPI/GetEnvironmentComponentValues", runtime.WithHTTPPathPattern("/v1/environments/{environment_id}/components/{component}/values"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_EnvironmentAPI_GetEnvironmentComponentValues_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_EnvironmentAPI_GetEnvironmentComponentValues_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_EnvironmentAPI_CreateEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environments"}, ""))
-	pattern_EnvironmentAPI_GetEnvironment_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment_id"}, ""))
-	pattern_EnvironmentAPI_ListEnvironments_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environments"}, ""))
-	pattern_EnvironmentAPI_UpdateEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment.id"}, ""))
-	pattern_EnvironmentAPI_DeleteEnvironment_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment_id"}, ""))
-	pattern_EnvironmentAPI_ListEnvironmentVariables_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "environments", "environment_id", "variables"}, ""))
-	pattern_EnvironmentAPI_ListEnvironmentComponents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "environments", "environment_id", "components"}, ""))
+	pattern_EnvironmentAPI_CreateEnvironment_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environments"}, ""))
+	pattern_EnvironmentAPI_GetEnvironment_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment_id"}, ""))
+	pattern_EnvironmentAPI_ListEnvironments_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environments"}, ""))
+	pattern_EnvironmentAPI_UpdateEnvironment_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment.id"}, ""))
+	pattern_EnvironmentAPI_DeleteEnvironment_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "environments", "environment_id"}, ""))
+	pattern_EnvironmentAPI_ListEnvironmentComponents_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "environment-components"}, ""))
+	pattern_EnvironmentAPI_GetEnvironmentComponentValues_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"v1", "environments", "environment_id", "components", "component", "values"}, ""))
 )
 
 var (
-	forward_EnvironmentAPI_CreateEnvironment_0         = runtime.ForwardResponseMessage
-	forward_EnvironmentAPI_GetEnvironment_0            = runtime.ForwardResponseMessage
-	forward_EnvironmentAPI_ListEnvironments_0          = runtime.ForwardResponseMessage
-	forward_EnvironmentAPI_UpdateEnvironment_0         = runtime.ForwardResponseMessage
-	forward_EnvironmentAPI_DeleteEnvironment_0         = runtime.ForwardResponseMessage
-	forward_EnvironmentAPI_ListEnvironmentVariables_0  = runtime.ForwardResponseMessage
-	forward_EnvironmentAPI_ListEnvironmentComponents_0 = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_CreateEnvironment_0             = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_GetEnvironment_0                = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_ListEnvironments_0              = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_UpdateEnvironment_0             = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_DeleteEnvironment_0             = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_ListEnvironmentComponents_0     = runtime.ForwardResponseMessage
+	forward_EnvironmentAPI_GetEnvironmentComponentValues_0 = runtime.ForwardResponseMessage
 )

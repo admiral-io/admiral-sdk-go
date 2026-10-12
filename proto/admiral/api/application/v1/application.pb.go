@@ -28,11 +28,10 @@ const (
 )
 
 // Application represents a deployable unit within a tenant. An application
-// groups manifests, dependencies, and environment configuration into a single
-// entity that Admiral orchestrates across environments.
+// groups environments.
 type Application struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Unique identifier for the application (UUID).
+	// Unique identifier for the application.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// URL-safe, human-readable identifier (e.g., "inventory-api"). Unique within
 	// the tenant. Lowercase alphanumeric and hyphens only, must start with a
@@ -133,17 +132,11 @@ func (x *Application) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreateApplicationRequest contains the parameters for creating a new application.
+// CreateApplicationRequest creates an application in the caller's tenant.
 type CreateApplicationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// URL-safe, human-readable identifier (e.g., "inventory-api"). Unique within
-	// the tenant. Lowercase alphanumeric and hyphens only, must start with a
-	// letter and end with an alphanumeric character (1-63 chars).
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Optional longer-form description of the application's purpose.
-	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	// Arbitrary key-value labels for organizing and filtering applications.
-	Labels        map[string]string `protobuf:"bytes,3,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// The application to create. Server-populated fields are ignored.
+	Application   *Application `protobuf:"bytes,4,opt,name=application,proto3" json:"application,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,23 +171,9 @@ func (*CreateApplicationRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_application_v1_application_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateApplicationRequest) GetName() string {
+func (x *CreateApplicationRequest) GetApplication() *Application {
 	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *CreateApplicationRequest) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *CreateApplicationRequest) GetLabels() map[string]string {
-	if x != nil {
-		return x.Labels
+		return x.Application
 	}
 	return nil
 }
@@ -248,7 +227,7 @@ func (x *CreateApplicationResponse) GetApplication() *Application {
 // GetApplicationRequest identifies an application to retrieve.
 type GetApplicationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the application (UUID).
+	// The unique identifier of the application.
 	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -571,11 +550,8 @@ func (x *UpdateApplicationResponse) GetApplication() *Application {
 // DeleteApplicationRequest identifies an application to delete.
 type DeleteApplicationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The unique identifier of the application to delete (UUID).
+	// The unique identifier of the application to delete.
 	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	// When true, bypass the children-exist check and cascade-delete all
-	// environments and their runs (metadata records only).
-	Force         bool `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -615,13 +591,6 @@ func (x *DeleteApplicationRequest) GetApplicationId() string {
 		return x.ApplicationId
 	}
 	return ""
-}
-
-func (x *DeleteApplicationRequest) GetForce() bool {
-	if x != nil {
-		return x.Force
-	}
-	return false
 }
 
 // DeleteApplicationResponse is empty on success.
@@ -665,9 +634,9 @@ var File_admiral_api_application_v1_application_proto protoreflect.FileDescripto
 
 const file_admiral_api_application_v1_application_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/application/v1/application.proto\x12\x1aadmiral.api.application.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xfd\x03\n" +
-	"\vApplication\x12\x1e\n" +
-	"\x02id\x18\x01 \x01(\tB\x0e\xe0A\x03\xbaH\b\xd8\x01\x01r\x03\xb0\x01\x01R\x02id\x12@\n" +
+	",admiral/api/application/v1/application.proto\x12\x1aadmiral.api.application.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x04\n" +
+	"\vApplication\x12,\n" +
+	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^app-[0-9a-z]+$R\x02id\x12@\n" +
 	"\x04name\x18\x02 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12d\n" +
 	"\x06labels\x18\x04 \x03(\v23.admiral.api.application.v1.Application.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12?\n" +
@@ -679,18 +648,13 @@ const file_admiral_api_application_v1_application_proto_rawDesc = "" +
 	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb9\x02\n" +
-	"\x18CreateApplicationRequest\x12C\n" +
-	"\x04name\x18\x01 \x01(\tB/\xe0A\x02\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
-	"\vdescription\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12q\n" +
-	"\x06labels\x18\x03 \x03(\v2@.admiral.api.application.v1.CreateApplicationRequest.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x1a9\n" +
-	"\vLabelsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"f\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x9d\x01\n" +
+	"\x18CreateApplicationRequest\x12T\n" +
+	"\vapplication\x18\x04 \x01(\v2'.admiral.api.application.v1.ApplicationB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\vapplicationJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x04nameR\vdescriptionR\x06labels\"f\n" +
 	"\x19CreateApplicationResponse\x12I\n" +
-	"\vapplication\x18\x01 \x01(\v2'.admiral.api.application.v1.ApplicationR\vapplication\"K\n" +
-	"\x15GetApplicationRequest\x122\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\"c\n" +
+	"\vapplication\x18\x01 \x01(\v2'.admiral.api.application.v1.ApplicationR\vapplication\"Y\n" +
+	"\x15GetApplicationRequest\x12@\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^app-[0-9a-z]+$R\rapplicationId\"c\n" +
 	"\x16GetApplicationResponse\x12I\n" +
 	"\vapplication\x18\x01 \x01(\v2'.admiral.api.application.v1.ApplicationR\vapplication\"\x82\x01\n" +
 	"\x17ListApplicationsRequest\x12 \n" +
@@ -706,10 +670,9 @@ const file_admiral_api_application_v1_application_proto_rawDesc = "" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"f\n" +
 	"\x19UpdateApplicationResponse\x12I\n" +
-	"\vapplication\x18\x01 \x01(\v2'.admiral.api.application.v1.ApplicationR\vapplication\"d\n" +
-	"\x18DeleteApplicationRequest\x122\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\v\xe0A\x02\xbaH\x05r\x03\xb0\x01\x01R\rapplicationId\x12\x14\n" +
-	"\x05force\x18\x02 \x01(\bR\x05force\"\x1b\n" +
+	"\vapplication\x18\x01 \x01(\v2'.admiral.api.application.v1.ApplicationR\vapplication\"i\n" +
+	"\x18DeleteApplicationRequest\x12@\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^app-[0-9a-z]+$R\rapplicationIdJ\x04\b\x02\x10\x03R\x05force\"\x1b\n" +
 	"\x19DeleteApplicationResponse2\xdd\b\n" +
 	"\x0eApplicationAPI\x12\xd4\x01\n" +
 	"\x11CreateApplication\x124.admiral.api.application.v1.CreateApplicationRequest\x1a5.admiral.api.application.v1.CreateApplicationResponse\"R\xbaG%\n" +
@@ -743,7 +706,7 @@ func file_admiral_api_application_v1_application_proto_rawDescGZIP() []byte {
 	return file_admiral_api_application_v1_application_proto_rawDescData
 }
 
-var file_admiral_api_application_v1_application_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_admiral_api_application_v1_application_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_admiral_api_application_v1_application_proto_goTypes = []any{
 	(*Application)(nil),               // 0: admiral.api.application.v1.Application
 	(*CreateApplicationRequest)(nil),  // 1: admiral.api.application.v1.CreateApplicationRequest
@@ -757,22 +720,21 @@ var file_admiral_api_application_v1_application_proto_goTypes = []any{
 	(*DeleteApplicationRequest)(nil),  // 9: admiral.api.application.v1.DeleteApplicationRequest
 	(*DeleteApplicationResponse)(nil), // 10: admiral.api.application.v1.DeleteApplicationResponse
 	nil,                               // 11: admiral.api.application.v1.Application.LabelsEntry
-	nil,                               // 12: admiral.api.application.v1.CreateApplicationRequest.LabelsEntry
-	(*v1.ActorRef)(nil),               // 13: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),     // 14: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),     // 15: google.protobuf.FieldMask
+	(*v1.ActorRef)(nil),               // 12: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),     // 13: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),     // 14: google.protobuf.FieldMask
 }
 var file_admiral_api_application_v1_application_proto_depIdxs = []int32{
 	11, // 0: admiral.api.application.v1.Application.labels:type_name -> admiral.api.application.v1.Application.LabelsEntry
-	13, // 1: admiral.api.application.v1.Application.created_by:type_name -> admiral.common.v1.ActorRef
-	14, // 2: admiral.api.application.v1.Application.created_at:type_name -> google.protobuf.Timestamp
-	14, // 3: admiral.api.application.v1.Application.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 4: admiral.api.application.v1.CreateApplicationRequest.labels:type_name -> admiral.api.application.v1.CreateApplicationRequest.LabelsEntry
+	12, // 1: admiral.api.application.v1.Application.created_by:type_name -> admiral.common.v1.ActorRef
+	13, // 2: admiral.api.application.v1.Application.created_at:type_name -> google.protobuf.Timestamp
+	13, // 3: admiral.api.application.v1.Application.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: admiral.api.application.v1.CreateApplicationRequest.application:type_name -> admiral.api.application.v1.Application
 	0,  // 5: admiral.api.application.v1.CreateApplicationResponse.application:type_name -> admiral.api.application.v1.Application
 	0,  // 6: admiral.api.application.v1.GetApplicationResponse.application:type_name -> admiral.api.application.v1.Application
 	0,  // 7: admiral.api.application.v1.ListApplicationsResponse.applications:type_name -> admiral.api.application.v1.Application
 	0,  // 8: admiral.api.application.v1.UpdateApplicationRequest.application:type_name -> admiral.api.application.v1.Application
-	15, // 9: admiral.api.application.v1.UpdateApplicationRequest.update_mask:type_name -> google.protobuf.FieldMask
+	14, // 9: admiral.api.application.v1.UpdateApplicationRequest.update_mask:type_name -> google.protobuf.FieldMask
 	0,  // 10: admiral.api.application.v1.UpdateApplicationResponse.application:type_name -> admiral.api.application.v1.Application
 	1,  // 11: admiral.api.application.v1.ApplicationAPI.CreateApplication:input_type -> admiral.api.application.v1.CreateApplicationRequest
 	3,  // 12: admiral.api.application.v1.ApplicationAPI.GetApplication:input_type -> admiral.api.application.v1.GetApplicationRequest
@@ -802,7 +764,7 @@ func file_admiral_api_application_v1_application_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_application_v1_application_proto_rawDesc), len(file_admiral_api_application_v1_application_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

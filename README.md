@@ -35,7 +35,10 @@ func main() {
 
 	// Access services via accessors
 	// c.Agent().MethodName(ctx, req)
+	// c.WorkloadIdentityProvider().MethodName(ctx, req)
+	// c.Job().MethodName(ctx, req)
 	// c.AgentRuntime().MethodName(ctx, req)
+	// c.ApiKey().MethodName(ctx, req)
 	// c.Application().MethodName(ctx, req)
 	// c.ChangeSet().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
@@ -54,7 +57,10 @@ func main() {
 | Service | Accessor | Import |
 |---------|----------|--------|
 | AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
+| WorkloadIdentityProviderAPI | `WorkloadIdentityProvider()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
+| JobAPI | `Job()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | AgentRuntimeAPI | `AgentRuntime()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
+| ApiKeyAPI | `ApiKey()` | `go.admiral.io/sdk/proto/admiral/api/apikey/v1` |
 | ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/api/application/v1` |
 | ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/api/changeset/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/api/credential/v1` |
