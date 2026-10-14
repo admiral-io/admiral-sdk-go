@@ -370,7 +370,7 @@ const file_admiral_api_tenant_v1_tenant_proto_rawDesc = "" +
 	"\n" +
 	"\"admiral/api/tenant/v1/tenant.proto\x12\x15admiral.api.tenant.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe6\x03\n" +
 	"\x06Tenant\x12,\n" +
-	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^ten-[0-9a-z]+$R\x02id\x12\x17\n" +
+	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^tnt-[0-9a-z]+$R\x02id\x12\x17\n" +
 	"\x04slug\x18\x02 \x01(\tB\x03\xe0A\x03R\x04slug\x12+\n" +
 	"\fdisplay_name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\vdisplayName\x12A\n" +
 	"\x06status\x18\x04 \x01(\x0e2$.admiral.api.tenant.v1.Tenant.StatusB\x03\xe0A\x03R\x06status\x12'\n" +
