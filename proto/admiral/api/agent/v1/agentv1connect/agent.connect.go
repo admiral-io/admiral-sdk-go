@@ -14,9 +14,6 @@ import (
 const (
 	// AgentAPIName is the fully-qualified name of the AgentAPI service.
 	AgentAPIName = "admiral.api.agent.v1.AgentAPI"
-	// WorkloadIdentityProviderAPIName is the fully-qualified name of the WorkloadIdentityProviderAPI
-	// service.
-	WorkloadIdentityProviderAPIName = "admiral.api.agent.v1.WorkloadIdentityProviderAPI"
 	// JobAPIName is the fully-qualified name of the JobAPI service.
 	JobAPIName = "admiral.api.agent.v1.JobAPI"
 	// AgentRuntimeAPIName is the fully-qualified name of the AgentRuntimeAPI service.
@@ -50,21 +47,6 @@ const (
 	AgentAPIRevokeAgentUseProcedure = "/admiral.api.agent.v1.AgentAPI/RevokeAgentUse"
 	// AgentAPIListAgentGrantsProcedure is the procedure name of the AgentAPI's ListAgentGrants RPC.
 	AgentAPIListAgentGrantsProcedure = "/admiral.api.agent.v1.AgentAPI/ListAgentGrants"
-	// WorkloadIdentityProviderAPICreateWorkloadIdentityProviderProcedure is the procedure name of the
-	// WorkloadIdentityProviderAPI's CreateWorkloadIdentityProvider RPC.
-	WorkloadIdentityProviderAPICreateWorkloadIdentityProviderProcedure = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/CreateWorkloadIdentityProvider"
-	// WorkloadIdentityProviderAPIGetWorkloadIdentityProviderProcedure is the procedure name of the
-	// WorkloadIdentityProviderAPI's GetWorkloadIdentityProvider RPC.
-	WorkloadIdentityProviderAPIGetWorkloadIdentityProviderProcedure = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/GetWorkloadIdentityProvider"
-	// WorkloadIdentityProviderAPIListWorkloadIdentityProvidersProcedure is the procedure name of the
-	// WorkloadIdentityProviderAPI's ListWorkloadIdentityProviders RPC.
-	WorkloadIdentityProviderAPIListWorkloadIdentityProvidersProcedure = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/ListWorkloadIdentityProviders"
-	// WorkloadIdentityProviderAPISetWorkloadIdentityProviderKeysProcedure is the procedure name of the
-	// WorkloadIdentityProviderAPI's SetWorkloadIdentityProviderKeys RPC.
-	WorkloadIdentityProviderAPISetWorkloadIdentityProviderKeysProcedure = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/SetWorkloadIdentityProviderKeys"
-	// WorkloadIdentityProviderAPIDeleteWorkloadIdentityProviderProcedure is the procedure name of the
-	// WorkloadIdentityProviderAPI's DeleteWorkloadIdentityProvider RPC.
-	WorkloadIdentityProviderAPIDeleteWorkloadIdentityProviderProcedure = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/DeleteWorkloadIdentityProvider"
 	// JobAPIGetJobProcedure is the procedure name of the JobAPI's GetJob RPC.
 	JobAPIGetJobProcedure = "/admiral.api.agent.v1.JobAPI/GetJob"
 	// JobAPIGetJobLogProcedure is the procedure name of the JobAPI's GetJobLog RPC.
@@ -167,9 +149,9 @@ var (
 
 // AgentAPIClient is a client for the admiral.api.agent.v1.AgentAPI service.
 type AgentAPIClient interface {
-	// CreateAgent records an agent: what it runs, and the workload identity it
-	// signs in with. When its provider is PENDING for enrollment, the response
-	// carries a single-use key the agent enrolls the provider's keys with.
+	// CreateAgent records an agent and the service account it runs as, and
+	// returns the single-use key it enrolls with. Nothing about where it runs is
+	// named here: its issuer and subject are learned when it enrolls.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *v1.CreateAgentRequest) (*v1.CreateAgentResponse, error)
@@ -177,7 +159,7 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *v1.GetAgentRequest) (*v1.GetAgentResponse, error)
-	// ListAgents lists agents. Narrow it with `filter`, by provider or by what an
+	// ListAgents lists agents. Narrow it with `filter`, by kind or by what an
 	// agent may be assigned to.
 	//
 	// Scope: `agent:read`
@@ -194,9 +176,10 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *v1.DeleteAgentRequest) (*v1.DeleteAgentResponse, error)
-	// CreateEnrollmentKey issues a single-use key an agent enrolls its
-	// provider's keys with. It can do nothing else, expires within an hour, and is revoked the
-	// moment it is used.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls with, for one
+	// that has not enrolled or must enroll again (reinstalled under another
+	// Kubernetes service account, say). It can do nothing else, expires within
+	// an hour, and is revoked the moment it is used.
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *v1.CreateEnrollmentKeyRequest) (*v1.CreateEnrollmentKeyResponse, error)
@@ -227,9 +210,9 @@ func NewAgentAPIClient(client *connect.Client) AgentAPIClient {
 
 // AgentAPIHandler is an implementation of the admiral.api.agent.v1.AgentAPI service.
 type AgentAPIHandler interface {
-	// CreateAgent records an agent: what it runs, and the workload identity it
-	// signs in with. When its provider is PENDING for enrollment, the response
-	// carries a single-use key the agent enrolls the provider's keys with.
+	// CreateAgent records an agent and the service account it runs as, and
+	// returns the single-use key it enrolls with. Nothing about where it runs is
+	// named here: its issuer and subject are learned when it enrolls.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *v1.CreateAgentRequest) (*v1.CreateAgentResponse, error)
@@ -237,7 +220,7 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *v1.GetAgentRequest) (*v1.GetAgentResponse, error)
-	// ListAgents lists agents. Narrow it with `filter`, by provider or by what an
+	// ListAgents lists agents. Narrow it with `filter`, by kind or by what an
 	// agent may be assigned to.
 	//
 	// Scope: `agent:read`
@@ -254,9 +237,10 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *v1.DeleteAgentRequest) (*v1.DeleteAgentResponse, error)
-	// CreateEnrollmentKey issues a single-use key an agent enrolls its
-	// provider's keys with. It can do nothing else, expires within an hour, and is revoked the
-	// moment it is used.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls with, for one
+	// that has not enrolled or must enroll again (reinstalled under another
+	// Kubernetes service account, say). It can do nothing else, expires within
+	// an hour, and is revoked the moment it is used.
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *v1.CreateEnrollmentKeyRequest) (*v1.CreateEnrollmentKeyResponse, error)
@@ -515,257 +499,6 @@ func (h agentAPIHandler) listAgentGrants(ctx context.Context, _ connect.Spec, st
 		return err
 	}
 	res, err := h.svc.ListAgentGrants(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-var (
-	workloadIdentityProviderAPICreateWorkloadIdentityProviderSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("WorkloadIdentityProviderAPI").Methods().ByName("CreateWorkloadIdentityProvider"),
-			Procedure:  WorkloadIdentityProviderAPICreateWorkloadIdentityProviderProcedure,
-		}
-	})
-	workloadIdentityProviderAPIGetWorkloadIdentityProviderSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("WorkloadIdentityProviderAPI").Methods().ByName("GetWorkloadIdentityProvider"),
-			Procedure:  WorkloadIdentityProviderAPIGetWorkloadIdentityProviderProcedure,
-		}
-	})
-	workloadIdentityProviderAPIListWorkloadIdentityProvidersSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("WorkloadIdentityProviderAPI").Methods().ByName("ListWorkloadIdentityProviders"),
-			Procedure:  WorkloadIdentityProviderAPIListWorkloadIdentityProvidersProcedure,
-		}
-	})
-	workloadIdentityProviderAPISetWorkloadIdentityProviderKeysSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("WorkloadIdentityProviderAPI").Methods().ByName("SetWorkloadIdentityProviderKeys"),
-			Procedure:  WorkloadIdentityProviderAPISetWorkloadIdentityProviderKeysProcedure,
-		}
-	})
-	workloadIdentityProviderAPIDeleteWorkloadIdentityProviderSpec = sync.OnceValue(func() connect.Spec {
-		return connect.Spec{
-			StreamType: connect.StreamTypeUnary,
-			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("WorkloadIdentityProviderAPI").Methods().ByName("DeleteWorkloadIdentityProvider"),
-			Procedure:  WorkloadIdentityProviderAPIDeleteWorkloadIdentityProviderProcedure,
-		}
-	})
-)
-
-// WorkloadIdentityProviderAPIClient is a client for the
-// admiral.api.agent.v1.WorkloadIdentityProviderAPI service.
-type WorkloadIdentityProviderAPIClient interface {
-	// CreateWorkloadIdentityProvider records an issuer to trust: GitHub
-	// Actions, Google, an AWS account, or a Kubernetes cluster. Give a
-	// `jwks_uri` when its keys are public (GKE, EKS, GitHub, Google, AWS), the
-	// keys themselves when not, or neither to leave it PENDING for an agent to
-	// enroll (kind, minikube, on-prem).
-	//
-	// Scope: `agent:write`
-	CreateWorkloadIdentityProvider(context.Context, *v1.CreateWorkloadIdentityProviderRequest) (*v1.CreateWorkloadIdentityProviderResponse, error)
-	// GetWorkloadIdentityProvider returns a provider and the key ids it trusts.
-	//
-	// Scope: `agent:read`
-	GetWorkloadIdentityProvider(context.Context, *v1.GetWorkloadIdentityProviderRequest) (*v1.GetWorkloadIdentityProviderResponse, error)
-	// ListWorkloadIdentityProviders lists the tenant's providers.
-	//
-	// Scope: `agent:read`
-	ListWorkloadIdentityProviders(context.Context, *v1.ListWorkloadIdentityProvidersRequest) (*v1.ListWorkloadIdentityProvidersResponse, error)
-	// SetWorkloadIdentityProviderKeys replaces where a provider's keys come
-	// from, or accepts the keys an agent last reported.
-	//
-	// Scope: `agent:write`
-	SetWorkloadIdentityProviderKeys(context.Context, *v1.SetWorkloadIdentityProviderKeysRequest) (*v1.SetWorkloadIdentityProviderKeysResponse, error)
-	// DeleteWorkloadIdentityProvider removes a provider and the agents that authenticate
-	// through it. Their leases end at once.
-	//
-	// Scope: `agent:write`
-	DeleteWorkloadIdentityProvider(context.Context, *v1.DeleteWorkloadIdentityProviderRequest) (*v1.DeleteWorkloadIdentityProviderResponse, error)
-}
-
-// NewWorkloadIdentityProviderAPIClient constructs a client for the
-// admiral.api.agent.v1.WorkloadIdentityProviderAPI service. Multiple service clients may share a
-// single connect.Client.
-func NewWorkloadIdentityProviderAPIClient(client *connect.Client) WorkloadIdentityProviderAPIClient {
-	return &workloadIdentityProviderAPIClient{client: client}
-}
-
-// WorkloadIdentityProviderAPIHandler is an implementation of the
-// admiral.api.agent.v1.WorkloadIdentityProviderAPI service.
-type WorkloadIdentityProviderAPIHandler interface {
-	// CreateWorkloadIdentityProvider records an issuer to trust: GitHub
-	// Actions, Google, an AWS account, or a Kubernetes cluster. Give a
-	// `jwks_uri` when its keys are public (GKE, EKS, GitHub, Google, AWS), the
-	// keys themselves when not, or neither to leave it PENDING for an agent to
-	// enroll (kind, minikube, on-prem).
-	//
-	// Scope: `agent:write`
-	CreateWorkloadIdentityProvider(context.Context, *v1.CreateWorkloadIdentityProviderRequest) (*v1.CreateWorkloadIdentityProviderResponse, error)
-	// GetWorkloadIdentityProvider returns a provider and the key ids it trusts.
-	//
-	// Scope: `agent:read`
-	GetWorkloadIdentityProvider(context.Context, *v1.GetWorkloadIdentityProviderRequest) (*v1.GetWorkloadIdentityProviderResponse, error)
-	// ListWorkloadIdentityProviders lists the tenant's providers.
-	//
-	// Scope: `agent:read`
-	ListWorkloadIdentityProviders(context.Context, *v1.ListWorkloadIdentityProvidersRequest) (*v1.ListWorkloadIdentityProvidersResponse, error)
-	// SetWorkloadIdentityProviderKeys replaces where a provider's keys come
-	// from, or accepts the keys an agent last reported.
-	//
-	// Scope: `agent:write`
-	SetWorkloadIdentityProviderKeys(context.Context, *v1.SetWorkloadIdentityProviderKeysRequest) (*v1.SetWorkloadIdentityProviderKeysResponse, error)
-	// DeleteWorkloadIdentityProvider removes a provider and the agents that authenticate
-	// through it. Their leases end at once.
-	//
-	// Scope: `agent:write`
-	DeleteWorkloadIdentityProvider(context.Context, *v1.DeleteWorkloadIdentityProviderRequest) (*v1.DeleteWorkloadIdentityProviderResponse, error)
-}
-
-// RegisterWorkloadIdentityProviderAPIHandler registers svc as the
-// admiral.api.agent.v1.WorkloadIdentityProviderAPI implementation on server.
-func RegisterWorkloadIdentityProviderAPIHandler(server *connect.Server, svc WorkloadIdentityProviderAPIHandler) {
-	adapter := workloadIdentityProviderAPIHandler{svc: svc}
-	server.Register(
-		connect.Method{Spec: workloadIdentityProviderAPICreateWorkloadIdentityProviderSpec(), Handler: adapter.createWorkloadIdentityProvider},
-		connect.Method{Spec: workloadIdentityProviderAPIGetWorkloadIdentityProviderSpec(), Handler: adapter.getWorkloadIdentityProvider},
-		connect.Method{Spec: workloadIdentityProviderAPIListWorkloadIdentityProvidersSpec(), Handler: adapter.listWorkloadIdentityProviders},
-		connect.Method{Spec: workloadIdentityProviderAPISetWorkloadIdentityProviderKeysSpec(), Handler: adapter.setWorkloadIdentityProviderKeys},
-		connect.Method{Spec: workloadIdentityProviderAPIDeleteWorkloadIdentityProviderSpec(), Handler: adapter.deleteWorkloadIdentityProvider},
-	)
-}
-
-// UnimplementedWorkloadIdentityProviderAPIHandler returns CodeUnimplemented from all methods.
-type UnimplementedWorkloadIdentityProviderAPIHandler struct{}
-
-func (UnimplementedWorkloadIdentityProviderAPIHandler) CreateWorkloadIdentityProvider(context.Context, *v1.CreateWorkloadIdentityProviderRequest) (*v1.CreateWorkloadIdentityProviderResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.WorkloadIdentityProviderAPI.CreateWorkloadIdentityProvider is not implemented")
-}
-
-func (UnimplementedWorkloadIdentityProviderAPIHandler) GetWorkloadIdentityProvider(context.Context, *v1.GetWorkloadIdentityProviderRequest) (*v1.GetWorkloadIdentityProviderResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.WorkloadIdentityProviderAPI.GetWorkloadIdentityProvider is not implemented")
-}
-
-func (UnimplementedWorkloadIdentityProviderAPIHandler) ListWorkloadIdentityProviders(context.Context, *v1.ListWorkloadIdentityProvidersRequest) (*v1.ListWorkloadIdentityProvidersResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.WorkloadIdentityProviderAPI.ListWorkloadIdentityProviders is not implemented")
-}
-
-func (UnimplementedWorkloadIdentityProviderAPIHandler) SetWorkloadIdentityProviderKeys(context.Context, *v1.SetWorkloadIdentityProviderKeysRequest) (*v1.SetWorkloadIdentityProviderKeysResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.WorkloadIdentityProviderAPI.SetWorkloadIdentityProviderKeys is not implemented")
-}
-
-func (UnimplementedWorkloadIdentityProviderAPIHandler) DeleteWorkloadIdentityProvider(context.Context, *v1.DeleteWorkloadIdentityProviderRequest) (*v1.DeleteWorkloadIdentityProviderResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.WorkloadIdentityProviderAPI.DeleteWorkloadIdentityProvider is not implemented")
-}
-
-type workloadIdentityProviderAPIClient struct {
-	client *connect.Client
-}
-
-func (c *workloadIdentityProviderAPIClient) CreateWorkloadIdentityProvider(ctx context.Context, req *v1.CreateWorkloadIdentityProviderRequest) (*v1.CreateWorkloadIdentityProviderResponse, error) {
-	var res v1.CreateWorkloadIdentityProviderResponse
-	if err := c.client.CallUnary(ctx, workloadIdentityProviderAPICreateWorkloadIdentityProviderSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) GetWorkloadIdentityProvider(ctx context.Context, req *v1.GetWorkloadIdentityProviderRequest) (*v1.GetWorkloadIdentityProviderResponse, error) {
-	var res v1.GetWorkloadIdentityProviderResponse
-	if err := c.client.CallUnary(ctx, workloadIdentityProviderAPIGetWorkloadIdentityProviderSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) ListWorkloadIdentityProviders(ctx context.Context, req *v1.ListWorkloadIdentityProvidersRequest) (*v1.ListWorkloadIdentityProvidersResponse, error) {
-	var res v1.ListWorkloadIdentityProvidersResponse
-	if err := c.client.CallUnary(ctx, workloadIdentityProviderAPIListWorkloadIdentityProvidersSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) SetWorkloadIdentityProviderKeys(ctx context.Context, req *v1.SetWorkloadIdentityProviderKeysRequest) (*v1.SetWorkloadIdentityProviderKeysResponse, error) {
-	var res v1.SetWorkloadIdentityProviderKeysResponse
-	if err := c.client.CallUnary(ctx, workloadIdentityProviderAPISetWorkloadIdentityProviderKeysSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) DeleteWorkloadIdentityProvider(ctx context.Context, req *v1.DeleteWorkloadIdentityProviderRequest) (*v1.DeleteWorkloadIdentityProviderResponse, error) {
-	var res v1.DeleteWorkloadIdentityProviderResponse
-	if err := c.client.CallUnary(ctx, workloadIdentityProviderAPIDeleteWorkloadIdentityProviderSpec(), req, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-type workloadIdentityProviderAPIHandler struct {
-	svc WorkloadIdentityProviderAPIHandler
-}
-
-func (h workloadIdentityProviderAPIHandler) createWorkloadIdentityProvider(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req v1.CreateWorkloadIdentityProviderRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.CreateWorkloadIdentityProvider(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h workloadIdentityProviderAPIHandler) getWorkloadIdentityProvider(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req v1.GetWorkloadIdentityProviderRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.GetWorkloadIdentityProvider(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h workloadIdentityProviderAPIHandler) listWorkloadIdentityProviders(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req v1.ListWorkloadIdentityProvidersRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.ListWorkloadIdentityProviders(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h workloadIdentityProviderAPIHandler) setWorkloadIdentityProviderKeys(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req v1.SetWorkloadIdentityProviderKeysRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.SetWorkloadIdentityProviderKeys(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return stream.Send(res)
-}
-
-func (h workloadIdentityProviderAPIHandler) deleteWorkloadIdentityProvider(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req v1.DeleteWorkloadIdentityProviderRequest
-	if err := stream.Receive(&req); err != nil {
-		return err
-	}
-	res, err := h.svc.DeleteWorkloadIdentityProvider(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -1048,10 +781,13 @@ var (
 
 // AgentRuntimeAPIClient is a client for the admiral.api.agent.v1.AgentRuntimeAPI service.
 type AgentRuntimeAPIClient interface {
-	// Enroll sets a PENDING provider's keys from inside it: the keys its issuer
-	// serves, and a token they verify. The token's issuer becomes the
-	// provider's. The caller authenticates with an enrollment key, which this
-	// spends.
+	// Enroll ties the agent's service account to an issuer and records its
+	// subject. The agent sends its issuer's keys and a token they verify. When
+	// the token also verifies against the keys of an issuer the tenant already
+	// holds, the service account trusts that one; otherwise the sent keys become
+	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
+	// token's subject is recorded and fixed until the agent enrolls again. The
+	// caller authenticates with an enrollment key, which this spends.
 	//
 	// Scope: `agent:enroll`
 	Enroll(context.Context, *v1.EnrollRequest) (*v1.EnrollResponse, error)
@@ -1130,10 +866,13 @@ func NewAgentRuntimeAPIClient(client *connect.Client) AgentRuntimeAPIClient {
 
 // AgentRuntimeAPIHandler is an implementation of the admiral.api.agent.v1.AgentRuntimeAPI service.
 type AgentRuntimeAPIHandler interface {
-	// Enroll sets a PENDING provider's keys from inside it: the keys its issuer
-	// serves, and a token they verify. The token's issuer becomes the
-	// provider's. The caller authenticates with an enrollment key, which this
-	// spends.
+	// Enroll ties the agent's service account to an issuer and records its
+	// subject. The agent sends its issuer's keys and a token they verify. When
+	// the token also verifies against the keys of an issuer the tenant already
+	// holds, the service account trusts that one; otherwise the sent keys become
+	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
+	// token's subject is recorded and fixed until the agent enrolls again. The
+	// caller authenticates with an enrollment key, which this spends.
 	//
 	// Scope: `agent:enroll`
 	Enroll(context.Context, *v1.EnrollRequest) (*v1.EnrollResponse, error)

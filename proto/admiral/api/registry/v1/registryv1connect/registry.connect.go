@@ -27,8 +27,9 @@ const (
 	// RegistryAPIPublishComponentProcedure is the procedure name of the RegistryAPI's PublishComponent
 	// RPC.
 	RegistryAPIPublishComponentProcedure = "/admiral.api.registry.v1.RegistryAPI/PublishComponent"
-	// RegistryAPIPullComponentProcedure is the procedure name of the RegistryAPI's PullComponent RPC.
-	RegistryAPIPullComponentProcedure = "/admiral.api.registry.v1.RegistryAPI/PullComponent"
+	// RegistryAPIImportComponentProcedure is the procedure name of the RegistryAPI's ImportComponent
+	// RPC.
+	RegistryAPIImportComponentProcedure = "/admiral.api.registry.v1.RegistryAPI/ImportComponent"
 	// RegistryAPIListComponentsProcedure is the procedure name of the RegistryAPI's ListComponents RPC.
 	RegistryAPIListComponentsProcedure = "/admiral.api.registry.v1.RegistryAPI/ListComponents"
 	// RegistryAPIGetComponentProcedure is the procedure name of the RegistryAPI's GetComponent RPC.
@@ -63,11 +64,11 @@ var (
 			Procedure:  RegistryAPIPublishComponentProcedure,
 		}
 	})
-	registryAPIPullComponentSpec = sync.OnceValue(func() connect.Spec {
+	registryAPIImportComponentSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType: connect.StreamTypeUnary,
-			Schema:     v1.File_admiral_api_registry_v1_registry_proto.Services().ByName("RegistryAPI").Methods().ByName("PullComponent"),
-			Procedure:  RegistryAPIPullComponentProcedure,
+			Schema:     v1.File_admiral_api_registry_v1_registry_proto.Services().ByName("RegistryAPI").Methods().ByName("ImportComponent"),
+			Procedure:  RegistryAPIImportComponentProcedure,
 		}
 	})
 	registryAPIListComponentsSpec = sync.OnceValue(func() connect.Spec {
@@ -162,7 +163,7 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *v1.PublishComponentRequest) (*v1.PublishComponentResponse, error)
-	// PullComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the tenant does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
@@ -172,7 +173,7 @@ type RegistryAPIClient interface {
 	// with `unchanged` set.
 	//
 	// Scope: `component:publish`
-	PullComponent(context.Context, *v1.PullComponentRequest) (*v1.PullComponentResponse, error)
+	ImportComponent(context.Context, *v1.ImportComponentRequest) (*v1.ImportComponentResponse, error)
 	// ListComponents pages through the registry.
 	//
 	// Scope: `component:read`
@@ -257,7 +258,7 @@ type RegistryAPIHandler interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *v1.PublishComponentRequest) (*v1.PublishComponentResponse, error)
-	// PullComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the tenant does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
@@ -267,7 +268,7 @@ type RegistryAPIHandler interface {
 	// with `unchanged` set.
 	//
 	// Scope: `component:publish`
-	PullComponent(context.Context, *v1.PullComponentRequest) (*v1.PullComponentResponse, error)
+	ImportComponent(context.Context, *v1.ImportComponentRequest) (*v1.ImportComponentResponse, error)
 	// ListComponents pages through the registry.
 	//
 	// Scope: `component:read`
@@ -332,7 +333,7 @@ func RegisterRegistryAPIHandler(server *connect.Server, svc RegistryAPIHandler) 
 	adapter := registryAPIHandler{svc: svc}
 	server.Register(
 		connect.Method{Spec: registryAPIPublishComponentSpec(), Handler: adapter.publishComponent},
-		connect.Method{Spec: registryAPIPullComponentSpec(), Handler: adapter.pullComponent},
+		connect.Method{Spec: registryAPIImportComponentSpec(), Handler: adapter.importComponent},
 		connect.Method{Spec: registryAPIListComponentsSpec(), Handler: adapter.listComponents},
 		connect.Method{Spec: registryAPIGetComponentSpec(), Handler: adapter.getComponent},
 		connect.Method{Spec: registryAPIUpdateComponentSpec(), Handler: adapter.updateComponent},
@@ -353,8 +354,8 @@ func (UnimplementedRegistryAPIHandler) PublishComponent(context.Context, *v1.Pub
 	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.registry.v1.RegistryAPI.PublishComponent is not implemented")
 }
 
-func (UnimplementedRegistryAPIHandler) PullComponent(context.Context, *v1.PullComponentRequest) (*v1.PullComponentResponse, error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.registry.v1.RegistryAPI.PullComponent is not implemented")
+func (UnimplementedRegistryAPIHandler) ImportComponent(context.Context, *v1.ImportComponentRequest) (*v1.ImportComponentResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.registry.v1.RegistryAPI.ImportComponent is not implemented")
 }
 
 func (UnimplementedRegistryAPIHandler) ListComponents(context.Context, *v1.ListComponentsRequest) (*v1.ListComponentsResponse, error) {
@@ -409,9 +410,9 @@ func (c *registryAPIClient) PublishComponent(ctx context.Context, req *v1.Publis
 	return &res, nil
 }
 
-func (c *registryAPIClient) PullComponent(ctx context.Context, req *v1.PullComponentRequest) (*v1.PullComponentResponse, error) {
-	var res v1.PullComponentResponse
-	if err := c.client.CallUnary(ctx, registryAPIPullComponentSpec(), req, &res); err != nil {
+func (c *registryAPIClient) ImportComponent(ctx context.Context, req *v1.ImportComponentRequest) (*v1.ImportComponentResponse, error) {
+	var res v1.ImportComponentResponse
+	if err := c.client.CallUnary(ctx, registryAPIImportComponentSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -511,12 +512,12 @@ func (h registryAPIHandler) publishComponent(ctx context.Context, _ connect.Spec
 	return stream.Send(res)
 }
 
-func (h registryAPIHandler) pullComponent(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
-	var req v1.PullComponentRequest
+func (h registryAPIHandler) importComponent(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ImportComponentRequest
 	if err := stream.Receive(&req); err != nil {
 		return err
 	}
-	res, err := h.svc.PullComponent(ctx, &req)
+	res, err := h.svc.ImportComponent(ctx, &req)
 	if err != nil {
 		return err
 	}

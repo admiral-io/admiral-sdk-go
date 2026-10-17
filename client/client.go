@@ -18,6 +18,7 @@ import (
 	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
+	serviceaccountv1 "go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
@@ -32,7 +33,6 @@ type Client struct {
 	authToken      string
 	tokenValidator TokenValidator
 	agent agentv1.AgentAPIClient
-	workloadIdentityProvider agentv1.WorkloadIdentityProviderAPIClient
 	job agentv1.JobAPIClient
 	agentRuntime agentv1.AgentRuntimeAPIClient
 	apiKey apikeyv1.ApiKeyAPIClient
@@ -44,6 +44,8 @@ type Client struct {
 	invitation invitationv1.InvitationAPIClient
 	registry registryv1.RegistryAPIClient
 	run runv1.RunAPIClient
+	serviceAccount serviceaccountv1.ServiceAccountAPIClient
+	issuer serviceaccountv1.IssuerAPIClient
 	tenant tenantv1.TenantAPIClient
 	user userv1.UserAPIClient
 }
@@ -89,7 +91,6 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		authToken:      cfg.AuthToken,
 		tokenValidator: cfg.TokenValidator,
 		agent: agentv1.NewAgentAPIClient(conn),
-		workloadIdentityProvider: agentv1.NewWorkloadIdentityProviderAPIClient(conn),
 		job: agentv1.NewJobAPIClient(conn),
 		agentRuntime: agentv1.NewAgentRuntimeAPIClient(conn),
 		apiKey: apikeyv1.NewApiKeyAPIClient(conn),
@@ -101,6 +102,8 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		invitation: invitationv1.NewInvitationAPIClient(conn),
 		registry: registryv1.NewRegistryAPIClient(conn),
 		run: runv1.NewRunAPIClient(conn),
+		serviceAccount: serviceaccountv1.NewServiceAccountAPIClient(conn),
+		issuer: serviceaccountv1.NewIssuerAPIClient(conn),
 		tenant: tenantv1.NewTenantAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
 	}, nil
@@ -109,11 +112,6 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 // Agent returns the AgentAPI client.
 func (c *Client) Agent() agentv1.AgentAPIClient {
 	return c.agent
-}
-
-// WorkloadIdentityProvider returns the WorkloadIdentityProviderAPI client.
-func (c *Client) WorkloadIdentityProvider() agentv1.WorkloadIdentityProviderAPIClient {
-	return c.workloadIdentityProvider
 }
 
 // Job returns the JobAPI client.
@@ -169,6 +167,16 @@ func (c *Client) Registry() registryv1.RegistryAPIClient {
 // Run returns the RunAPI client.
 func (c *Client) Run() runv1.RunAPIClient {
 	return c.run
+}
+
+// ServiceAccount returns the ServiceAccountAPI client.
+func (c *Client) ServiceAccount() serviceaccountv1.ServiceAccountAPIClient {
+	return c.serviceAccount
+}
+
+// Issuer returns the IssuerAPI client.
+func (c *Client) Issuer() serviceaccountv1.IssuerAPIClient {
+	return c.issuer
 }
 
 // Tenant returns the TenantAPI client.

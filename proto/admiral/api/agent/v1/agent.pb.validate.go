@@ -35,434 +35,6 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on WorkloadIdentityProvider with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *WorkloadIdentityProvider) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on WorkloadIdentityProvider with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// WorkloadIdentityProviderMultiError, or nil if none found.
-func (m *WorkloadIdentityProvider) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *WorkloadIdentityProvider) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Id
-
-	// no validation rules for Name
-
-	// no validation rules for Status
-
-	// no validation rules for Issuer
-
-	if all {
-		switch v := interface{}(m.GetKeys()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "Keys",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "Keys",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetKeys()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return WorkloadIdentityProviderValidationError{
-				field:  "Keys",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetKeysUpdatedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "KeysUpdatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "KeysUpdatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetKeysUpdatedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return WorkloadIdentityProviderValidationError{
-				field:  "KeysUpdatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetPendingKeysAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "PendingKeysAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "PendingKeysAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetPendingKeysAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return WorkloadIdentityProviderValidationError{
-				field:  "PendingKeysAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetCreatedBy()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "CreatedBy",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "CreatedBy",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCreatedBy()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return WorkloadIdentityProviderValidationError{
-				field:  "CreatedBy",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetCreatedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "CreatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, WorkloadIdentityProviderValidationError{
-					field:  "CreatedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return WorkloadIdentityProviderValidationError{
-				field:  "CreatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return WorkloadIdentityProviderMultiError(errors)
-	}
-
-	return nil
-}
-
-// WorkloadIdentityProviderMultiError is an error wrapping multiple validation
-// errors returned by WorkloadIdentityProvider.ValidateAll() if the designated
-// constraints aren't met.
-type WorkloadIdentityProviderMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m WorkloadIdentityProviderMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m WorkloadIdentityProviderMultiError) AllErrors() []error { return m }
-
-// WorkloadIdentityProviderValidationError is the validation error returned by
-// WorkloadIdentityProvider.Validate if the designated constraints aren't met.
-type WorkloadIdentityProviderValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e WorkloadIdentityProviderValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e WorkloadIdentityProviderValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e WorkloadIdentityProviderValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e WorkloadIdentityProviderValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e WorkloadIdentityProviderValidationError) ErrorName() string {
-	return "WorkloadIdentityProviderValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e WorkloadIdentityProviderValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sWorkloadIdentityProvider.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = WorkloadIdentityProviderValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = WorkloadIdentityProviderValidationError{}
-
-// Validate checks the field values on WorkloadIdentityProviderKeys with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *WorkloadIdentityProviderKeys) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on WorkloadIdentityProviderKeys with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// WorkloadIdentityProviderKeysMultiError, or nil if none found.
-func (m *WorkloadIdentityProviderKeys) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *WorkloadIdentityProviderKeys) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	switch v := m.Source.(type) {
-	case *WorkloadIdentityProviderKeys_JwksUri:
-		if v == nil {
-			err := WorkloadIdentityProviderKeysValidationError{
-				field:  "Source",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-		// no validation rules for JwksUri
-	case *WorkloadIdentityProviderKeys_Jwks:
-		if v == nil {
-			err := WorkloadIdentityProviderKeysValidationError{
-				field:  "Source",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-		// no validation rules for Jwks
-	case *WorkloadIdentityProviderKeys_Enrollment_:
-		if v == nil {
-			err := WorkloadIdentityProviderKeysValidationError{
-				field:  "Source",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetEnrollment()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, WorkloadIdentityProviderKeysValidationError{
-						field:  "Enrollment",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, WorkloadIdentityProviderKeysValidationError{
-						field:  "Enrollment",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetEnrollment()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return WorkloadIdentityProviderKeysValidationError{
-					field:  "Enrollment",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	default:
-		_ = v // ensures v is used
-	}
-
-	if len(errors) > 0 {
-		return WorkloadIdentityProviderKeysMultiError(errors)
-	}
-
-	return nil
-}
-
-// WorkloadIdentityProviderKeysMultiError is an error wrapping multiple
-// validation errors returned by WorkloadIdentityProviderKeys.ValidateAll() if
-// the designated constraints aren't met.
-type WorkloadIdentityProviderKeysMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m WorkloadIdentityProviderKeysMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m WorkloadIdentityProviderKeysMultiError) AllErrors() []error { return m }
-
-// WorkloadIdentityProviderKeysValidationError is the validation error returned
-// by WorkloadIdentityProviderKeys.Validate if the designated constraints
-// aren't met.
-type WorkloadIdentityProviderKeysValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e WorkloadIdentityProviderKeysValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e WorkloadIdentityProviderKeysValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e WorkloadIdentityProviderKeysValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e WorkloadIdentityProviderKeysValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e WorkloadIdentityProviderKeysValidationError) ErrorName() string {
-	return "WorkloadIdentityProviderKeysValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e WorkloadIdentityProviderKeysValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sWorkloadIdentityProviderKeys.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = WorkloadIdentityProviderKeysValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = WorkloadIdentityProviderKeysValidationError{}
-
 // Validate checks the field values on Agent with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -580,35 +152,6 @@ func (m *Agent) validate(all bool) error {
 	// no validation rules for Kind
 
 	if all {
-		switch v := interface{}(m.GetIdentity()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, AgentValidationError{
-					field:  "Identity",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, AgentValidationError{
-					field:  "Identity",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetIdentity()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return AgentValidationError{
-				field:  "Identity",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
 		switch v := interface{}(m.GetSettings()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -665,6 +208,8 @@ func (m *Agent) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for ServiceAccountId
 
 	if len(errors) > 0 {
 		return AgentMultiError(errors)
@@ -743,256 +288,6 @@ var _ interface {
 	ErrorName() string
 } = AgentValidationError{}
 
-// Validate checks the field values on AgentIdentity with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *AgentIdentity) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on AgentIdentity with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in AgentIdentityMultiError, or
-// nil if none found.
-func (m *AgentIdentity) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *AgentIdentity) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	switch v := m.Method.(type) {
-	case *AgentIdentity_Workload:
-		if v == nil {
-			err := AgentIdentityValidationError{
-				field:  "Method",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetWorkload()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, AgentIdentityValidationError{
-						field:  "Workload",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, AgentIdentityValidationError{
-						field:  "Workload",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetWorkload()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return AgentIdentityValidationError{
-					field:  "Workload",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	default:
-		_ = v // ensures v is used
-	}
-
-	if len(errors) > 0 {
-		return AgentIdentityMultiError(errors)
-	}
-
-	return nil
-}
-
-// AgentIdentityMultiError is an error wrapping multiple validation errors
-// returned by AgentIdentity.ValidateAll() if the designated constraints
-// aren't met.
-type AgentIdentityMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m AgentIdentityMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m AgentIdentityMultiError) AllErrors() []error { return m }
-
-// AgentIdentityValidationError is the validation error returned by
-// AgentIdentity.Validate if the designated constraints aren't met.
-type AgentIdentityValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e AgentIdentityValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e AgentIdentityValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e AgentIdentityValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e AgentIdentityValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e AgentIdentityValidationError) ErrorName() string { return "AgentIdentityValidationError" }
-
-// Error satisfies the builtin error interface
-func (e AgentIdentityValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sAgentIdentity.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = AgentIdentityValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = AgentIdentityValidationError{}
-
-// Validate checks the field values on WorkloadIdentity with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *WorkloadIdentity) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on WorkloadIdentity with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// WorkloadIdentityMultiError, or nil if none found.
-func (m *WorkloadIdentity) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *WorkloadIdentity) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for ProviderId
-
-	// no validation rules for Subject
-
-	if len(errors) > 0 {
-		return WorkloadIdentityMultiError(errors)
-	}
-
-	return nil
-}
-
-// WorkloadIdentityMultiError is an error wrapping multiple validation errors
-// returned by WorkloadIdentity.ValidateAll() if the designated constraints
-// aren't met.
-type WorkloadIdentityMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m WorkloadIdentityMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m WorkloadIdentityMultiError) AllErrors() []error { return m }
-
-// WorkloadIdentityValidationError is the validation error returned by
-// WorkloadIdentity.Validate if the designated constraints aren't met.
-type WorkloadIdentityValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e WorkloadIdentityValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e WorkloadIdentityValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e WorkloadIdentityValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e WorkloadIdentityValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e WorkloadIdentityValidationError) ErrorName() string { return "WorkloadIdentityValidationError" }
-
-// Error satisfies the builtin error interface
-func (e WorkloadIdentityValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sWorkloadIdentity.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = WorkloadIdentityValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = WorkloadIdentityValidationError{}
-
 // Validate checks the field values on AgentSettings with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1057,7 +352,7 @@ func (m *AgentSettings) validate(all bool) error {
 			}
 		}
 
-	case *AgentSettings_Terraform:
+	case *AgentSettings_Infra:
 		if v == nil {
 			err := AgentSettingsValidationError{
 				field:  "Kind",
@@ -1070,11 +365,11 @@ func (m *AgentSettings) validate(all bool) error {
 		}
 
 		if all {
-			switch v := interface{}(m.GetTerraform()).(type) {
+			switch v := interface{}(m.GetInfra()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, AgentSettingsValidationError{
-						field:  "Terraform",
+						field:  "Infra",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -1082,16 +377,16 @@ func (m *AgentSettings) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, AgentSettingsValidationError{
-						field:  "Terraform",
+						field:  "Infra",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetInfra()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return AgentSettingsValidationError{
-					field:  "Terraform",
+					field:  "Infra",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -1284,22 +579,22 @@ var _ interface {
 	ErrorName() string
 } = KubernetesAgentSettingsValidationError{}
 
-// Validate checks the field values on TerraformAgentSettings with the rules
+// Validate checks the field values on InfraAgentSettings with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *TerraformAgentSettings) Validate() error {
+func (m *InfraAgentSettings) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on TerraformAgentSettings with the rules
+// ValidateAll checks the field values on InfraAgentSettings with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// TerraformAgentSettingsMultiError, or nil if none found.
-func (m *TerraformAgentSettings) ValidateAll() error {
+// InfraAgentSettingsMultiError, or nil if none found.
+func (m *InfraAgentSettings) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *TerraformAgentSettings) validate(all bool) error {
+func (m *InfraAgentSettings) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1313,7 +608,7 @@ func (m *TerraformAgentSettings) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, TerraformAgentSettingsValidationError{
+					errors = append(errors, InfraAgentSettingsValidationError{
 						field:  fmt.Sprintf("Engines[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -1321,7 +616,7 @@ func (m *TerraformAgentSettings) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, TerraformAgentSettingsValidationError{
+					errors = append(errors, InfraAgentSettingsValidationError{
 						field:  fmt.Sprintf("Engines[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -1330,7 +625,7 @@ func (m *TerraformAgentSettings) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return TerraformAgentSettingsValidationError{
+				return InfraAgentSettingsValidationError{
 					field:  fmt.Sprintf("Engines[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1341,19 +636,19 @@ func (m *TerraformAgentSettings) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return TerraformAgentSettingsMultiError(errors)
+		return InfraAgentSettingsMultiError(errors)
 	}
 
 	return nil
 }
 
-// TerraformAgentSettingsMultiError is an error wrapping multiple validation
-// errors returned by TerraformAgentSettings.ValidateAll() if the designated
-// constraints aren't met.
-type TerraformAgentSettingsMultiError []error
+// InfraAgentSettingsMultiError is an error wrapping multiple validation errors
+// returned by InfraAgentSettings.ValidateAll() if the designated constraints
+// aren't met.
+type InfraAgentSettingsMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m TerraformAgentSettingsMultiError) Error() string {
+func (m InfraAgentSettingsMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1362,11 +657,11 @@ func (m TerraformAgentSettingsMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m TerraformAgentSettingsMultiError) AllErrors() []error { return m }
+func (m InfraAgentSettingsMultiError) AllErrors() []error { return m }
 
-// TerraformAgentSettingsValidationError is the validation error returned by
-// TerraformAgentSettings.Validate if the designated constraints aren't met.
-type TerraformAgentSettingsValidationError struct {
+// InfraAgentSettingsValidationError is the validation error returned by
+// InfraAgentSettings.Validate if the designated constraints aren't met.
+type InfraAgentSettingsValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1374,24 +669,24 @@ type TerraformAgentSettingsValidationError struct {
 }
 
 // Field function returns field value.
-func (e TerraformAgentSettingsValidationError) Field() string { return e.field }
+func (e InfraAgentSettingsValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e TerraformAgentSettingsValidationError) Reason() string { return e.reason }
+func (e InfraAgentSettingsValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e TerraformAgentSettingsValidationError) Cause() error { return e.cause }
+func (e InfraAgentSettingsValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e TerraformAgentSettingsValidationError) Key() bool { return e.key }
+func (e InfraAgentSettingsValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e TerraformAgentSettingsValidationError) ErrorName() string {
-	return "TerraformAgentSettingsValidationError"
+func (e InfraAgentSettingsValidationError) ErrorName() string {
+	return "InfraAgentSettingsValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e TerraformAgentSettingsValidationError) Error() string {
+func (e InfraAgentSettingsValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1403,14 +698,14 @@ func (e TerraformAgentSettingsValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sTerraformAgentSettings.%s: %s%s",
+		"invalid %sInfraAgentSettings.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = TerraformAgentSettingsValidationError{}
+var _ error = InfraAgentSettingsValidationError{}
 
 var _ interface {
 	Field() string
@@ -1418,24 +713,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = TerraformAgentSettingsValidationError{}
+} = InfraAgentSettingsValidationError{}
 
-// Validate checks the field values on TerraformEngineSupport with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *TerraformEngineSupport) Validate() error {
+// Validate checks the field values on EngineSupport with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *EngineSupport) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on TerraformEngineSupport with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// TerraformEngineSupportMultiError, or nil if none found.
-func (m *TerraformEngineSupport) ValidateAll() error {
+// ValidateAll checks the field values on EngineSupport with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in EngineSupportMultiError, or
+// nil if none found.
+func (m *EngineSupport) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *TerraformEngineSupport) validate(all bool) error {
+func (m *EngineSupport) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1447,19 +742,19 @@ func (m *TerraformEngineSupport) validate(all bool) error {
 	// no validation rules for Versions
 
 	if len(errors) > 0 {
-		return TerraformEngineSupportMultiError(errors)
+		return EngineSupportMultiError(errors)
 	}
 
 	return nil
 }
 
-// TerraformEngineSupportMultiError is an error wrapping multiple validation
-// errors returned by TerraformEngineSupport.ValidateAll() if the designated
-// constraints aren't met.
-type TerraformEngineSupportMultiError []error
+// EngineSupportMultiError is an error wrapping multiple validation errors
+// returned by EngineSupport.ValidateAll() if the designated constraints
+// aren't met.
+type EngineSupportMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m TerraformEngineSupportMultiError) Error() string {
+func (m EngineSupportMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1468,11 +763,11 @@ func (m TerraformEngineSupportMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m TerraformEngineSupportMultiError) AllErrors() []error { return m }
+func (m EngineSupportMultiError) AllErrors() []error { return m }
 
-// TerraformEngineSupportValidationError is the validation error returned by
-// TerraformEngineSupport.Validate if the designated constraints aren't met.
-type TerraformEngineSupportValidationError struct {
+// EngineSupportValidationError is the validation error returned by
+// EngineSupport.Validate if the designated constraints aren't met.
+type EngineSupportValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1480,24 +775,22 @@ type TerraformEngineSupportValidationError struct {
 }
 
 // Field function returns field value.
-func (e TerraformEngineSupportValidationError) Field() string { return e.field }
+func (e EngineSupportValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e TerraformEngineSupportValidationError) Reason() string { return e.reason }
+func (e EngineSupportValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e TerraformEngineSupportValidationError) Cause() error { return e.cause }
+func (e EngineSupportValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e TerraformEngineSupportValidationError) Key() bool { return e.key }
+func (e EngineSupportValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e TerraformEngineSupportValidationError) ErrorName() string {
-	return "TerraformEngineSupportValidationError"
-}
+func (e EngineSupportValidationError) ErrorName() string { return "EngineSupportValidationError" }
 
 // Error satisfies the builtin error interface
-func (e TerraformEngineSupportValidationError) Error() string {
+func (e EngineSupportValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1509,14 +802,14 @@ func (e TerraformEngineSupportValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sTerraformEngineSupport.%s: %s%s",
+		"invalid %sEngineSupport.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = TerraformEngineSupportValidationError{}
+var _ error = EngineSupportValidationError{}
 
 var _ interface {
 	Field() string
@@ -1524,7 +817,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = TerraformEngineSupportValidationError{}
+} = EngineSupportValidationError{}
 
 // Validate checks the field values on KubernetesReport with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -3848,1311 +3141,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OfferValidationError{}
-
-// Validate checks the field values on CreateWorkloadIdentityProviderRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *CreateWorkloadIdentityProviderRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on CreateWorkloadIdentityProviderRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// CreateWorkloadIdentityProviderRequestMultiError, or nil if none found.
-func (m *CreateWorkloadIdentityProviderRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *CreateWorkloadIdentityProviderRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if all {
-		switch v := interface{}(m.GetWorkloadIdentityProvider()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateWorkloadIdentityProviderRequestValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateWorkloadIdentityProviderRequestValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWorkloadIdentityProvider()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateWorkloadIdentityProviderRequestValidationError{
-				field:  "WorkloadIdentityProvider",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return CreateWorkloadIdentityProviderRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// CreateWorkloadIdentityProviderRequestMultiError is an error wrapping
-// multiple validation errors returned by
-// CreateWorkloadIdentityProviderRequest.ValidateAll() if the designated
-// constraints aren't met.
-type CreateWorkloadIdentityProviderRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m CreateWorkloadIdentityProviderRequestMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m CreateWorkloadIdentityProviderRequestMultiError) AllErrors() []error { return m }
-
-// CreateWorkloadIdentityProviderRequestValidationError is the validation error
-// returned by CreateWorkloadIdentityProviderRequest.Validate if the
-// designated constraints aren't met.
-type CreateWorkloadIdentityProviderRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e CreateWorkloadIdentityProviderRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e CreateWorkloadIdentityProviderRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e CreateWorkloadIdentityProviderRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e CreateWorkloadIdentityProviderRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e CreateWorkloadIdentityProviderRequestValidationError) ErrorName() string {
-	return "CreateWorkloadIdentityProviderRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e CreateWorkloadIdentityProviderRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sCreateWorkloadIdentityProviderRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = CreateWorkloadIdentityProviderRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = CreateWorkloadIdentityProviderRequestValidationError{}
-
-// Validate checks the field values on CreateWorkloadIdentityProviderResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *CreateWorkloadIdentityProviderResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on
-// CreateWorkloadIdentityProviderResponse with the rules defined in the proto
-// definition for this message. If any rules are violated, the result is a
-// list of violation errors wrapped in
-// CreateWorkloadIdentityProviderResponseMultiError, or nil if none found.
-func (m *CreateWorkloadIdentityProviderResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *CreateWorkloadIdentityProviderResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if all {
-		switch v := interface{}(m.GetWorkloadIdentityProvider()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateWorkloadIdentityProviderResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateWorkloadIdentityProviderResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWorkloadIdentityProvider()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateWorkloadIdentityProviderResponseValidationError{
-				field:  "WorkloadIdentityProvider",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return CreateWorkloadIdentityProviderResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// CreateWorkloadIdentityProviderResponseMultiError is an error wrapping
-// multiple validation errors returned by
-// CreateWorkloadIdentityProviderResponse.ValidateAll() if the designated
-// constraints aren't met.
-type CreateWorkloadIdentityProviderResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m CreateWorkloadIdentityProviderResponseMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m CreateWorkloadIdentityProviderResponseMultiError) AllErrors() []error { return m }
-
-// CreateWorkloadIdentityProviderResponseValidationError is the validation
-// error returned by CreateWorkloadIdentityProviderResponse.Validate if the
-// designated constraints aren't met.
-type CreateWorkloadIdentityProviderResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e CreateWorkloadIdentityProviderResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e CreateWorkloadIdentityProviderResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e CreateWorkloadIdentityProviderResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e CreateWorkloadIdentityProviderResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e CreateWorkloadIdentityProviderResponseValidationError) ErrorName() string {
-	return "CreateWorkloadIdentityProviderResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e CreateWorkloadIdentityProviderResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sCreateWorkloadIdentityProviderResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = CreateWorkloadIdentityProviderResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = CreateWorkloadIdentityProviderResponseValidationError{}
-
-// Validate checks the field values on GetWorkloadIdentityProviderRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *GetWorkloadIdentityProviderRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetWorkloadIdentityProviderRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// GetWorkloadIdentityProviderRequestMultiError, or nil if none found.
-func (m *GetWorkloadIdentityProviderRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetWorkloadIdentityProviderRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for ProviderId
-
-	if len(errors) > 0 {
-		return GetWorkloadIdentityProviderRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetWorkloadIdentityProviderRequestMultiError is an error wrapping multiple
-// validation errors returned by
-// GetWorkloadIdentityProviderRequest.ValidateAll() if the designated
-// constraints aren't met.
-type GetWorkloadIdentityProviderRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetWorkloadIdentityProviderRequestMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetWorkloadIdentityProviderRequestMultiError) AllErrors() []error { return m }
-
-// GetWorkloadIdentityProviderRequestValidationError is the validation error
-// returned by GetWorkloadIdentityProviderRequest.Validate if the designated
-// constraints aren't met.
-type GetWorkloadIdentityProviderRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetWorkloadIdentityProviderRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetWorkloadIdentityProviderRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetWorkloadIdentityProviderRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetWorkloadIdentityProviderRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetWorkloadIdentityProviderRequestValidationError) ErrorName() string {
-	return "GetWorkloadIdentityProviderRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetWorkloadIdentityProviderRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetWorkloadIdentityProviderRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetWorkloadIdentityProviderRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetWorkloadIdentityProviderRequestValidationError{}
-
-// Validate checks the field values on GetWorkloadIdentityProviderResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, the first error encountered is returned, or nil if there are
-// no violations.
-func (m *GetWorkloadIdentityProviderResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetWorkloadIdentityProviderResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// GetWorkloadIdentityProviderResponseMultiError, or nil if none found.
-func (m *GetWorkloadIdentityProviderResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetWorkloadIdentityProviderResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if all {
-		switch v := interface{}(m.GetWorkloadIdentityProvider()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetWorkloadIdentityProviderResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetWorkloadIdentityProviderResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWorkloadIdentityProvider()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetWorkloadIdentityProviderResponseValidationError{
-				field:  "WorkloadIdentityProvider",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return GetWorkloadIdentityProviderResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetWorkloadIdentityProviderResponseMultiError is an error wrapping multiple
-// validation errors returned by
-// GetWorkloadIdentityProviderResponse.ValidateAll() if the designated
-// constraints aren't met.
-type GetWorkloadIdentityProviderResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetWorkloadIdentityProviderResponseMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetWorkloadIdentityProviderResponseMultiError) AllErrors() []error { return m }
-
-// GetWorkloadIdentityProviderResponseValidationError is the validation error
-// returned by GetWorkloadIdentityProviderResponse.Validate if the designated
-// constraints aren't met.
-type GetWorkloadIdentityProviderResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetWorkloadIdentityProviderResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetWorkloadIdentityProviderResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetWorkloadIdentityProviderResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetWorkloadIdentityProviderResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetWorkloadIdentityProviderResponseValidationError) ErrorName() string {
-	return "GetWorkloadIdentityProviderResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetWorkloadIdentityProviderResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetWorkloadIdentityProviderResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetWorkloadIdentityProviderResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetWorkloadIdentityProviderResponseValidationError{}
-
-// Validate checks the field values on ListWorkloadIdentityProvidersRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *ListWorkloadIdentityProvidersRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListWorkloadIdentityProvidersRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// ListWorkloadIdentityProvidersRequestMultiError, or nil if none found.
-func (m *ListWorkloadIdentityProvidersRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListWorkloadIdentityProvidersRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Filter
-
-	// no validation rules for PageSize
-
-	// no validation rules for PageToken
-
-	if len(errors) > 0 {
-		return ListWorkloadIdentityProvidersRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListWorkloadIdentityProvidersRequestMultiError is an error wrapping multiple
-// validation errors returned by
-// ListWorkloadIdentityProvidersRequest.ValidateAll() if the designated
-// constraints aren't met.
-type ListWorkloadIdentityProvidersRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListWorkloadIdentityProvidersRequestMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListWorkloadIdentityProvidersRequestMultiError) AllErrors() []error { return m }
-
-// ListWorkloadIdentityProvidersRequestValidationError is the validation error
-// returned by ListWorkloadIdentityProvidersRequest.Validate if the designated
-// constraints aren't met.
-type ListWorkloadIdentityProvidersRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListWorkloadIdentityProvidersRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListWorkloadIdentityProvidersRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListWorkloadIdentityProvidersRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListWorkloadIdentityProvidersRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListWorkloadIdentityProvidersRequestValidationError) ErrorName() string {
-	return "ListWorkloadIdentityProvidersRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ListWorkloadIdentityProvidersRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListWorkloadIdentityProvidersRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListWorkloadIdentityProvidersRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListWorkloadIdentityProvidersRequestValidationError{}
-
-// Validate checks the field values on ListWorkloadIdentityProvidersResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *ListWorkloadIdentityProvidersResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListWorkloadIdentityProvidersResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// ListWorkloadIdentityProvidersResponseMultiError, or nil if none found.
-func (m *ListWorkloadIdentityProvidersResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListWorkloadIdentityProvidersResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	for idx, item := range m.GetWorkloadIdentityProviders() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ListWorkloadIdentityProvidersResponseValidationError{
-						field:  fmt.Sprintf("WorkloadIdentityProviders[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, ListWorkloadIdentityProvidersResponseValidationError{
-						field:  fmt.Sprintf("WorkloadIdentityProviders[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ListWorkloadIdentityProvidersResponseValidationError{
-					field:  fmt.Sprintf("WorkloadIdentityProviders[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
-	// no validation rules for NextPageToken
-
-	if len(errors) > 0 {
-		return ListWorkloadIdentityProvidersResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListWorkloadIdentityProvidersResponseMultiError is an error wrapping
-// multiple validation errors returned by
-// ListWorkloadIdentityProvidersResponse.ValidateAll() if the designated
-// constraints aren't met.
-type ListWorkloadIdentityProvidersResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListWorkloadIdentityProvidersResponseMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListWorkloadIdentityProvidersResponseMultiError) AllErrors() []error { return m }
-
-// ListWorkloadIdentityProvidersResponseValidationError is the validation error
-// returned by ListWorkloadIdentityProvidersResponse.Validate if the
-// designated constraints aren't met.
-type ListWorkloadIdentityProvidersResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListWorkloadIdentityProvidersResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListWorkloadIdentityProvidersResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListWorkloadIdentityProvidersResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListWorkloadIdentityProvidersResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListWorkloadIdentityProvidersResponseValidationError) ErrorName() string {
-	return "ListWorkloadIdentityProvidersResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ListWorkloadIdentityProvidersResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListWorkloadIdentityProvidersResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListWorkloadIdentityProvidersResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListWorkloadIdentityProvidersResponseValidationError{}
-
-// Validate checks the field values on SetWorkloadIdentityProviderKeysRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *SetWorkloadIdentityProviderKeysRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on
-// SetWorkloadIdentityProviderKeysRequest with the rules defined in the proto
-// definition for this message. If any rules are violated, the result is a
-// list of violation errors wrapped in
-// SetWorkloadIdentityProviderKeysRequestMultiError, or nil if none found.
-func (m *SetWorkloadIdentityProviderKeysRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *SetWorkloadIdentityProviderKeysRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for ProviderId
-
-	switch v := m.Change.(type) {
-	case *SetWorkloadIdentityProviderKeysRequest_Keys:
-		if v == nil {
-			err := SetWorkloadIdentityProviderKeysRequestValidationError{
-				field:  "Change",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetKeys()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SetWorkloadIdentityProviderKeysRequestValidationError{
-						field:  "Keys",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SetWorkloadIdentityProviderKeysRequestValidationError{
-						field:  "Keys",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetKeys()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SetWorkloadIdentityProviderKeysRequestValidationError{
-					field:  "Keys",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	case *SetWorkloadIdentityProviderKeysRequest_AcceptPending_:
-		if v == nil {
-			err := SetWorkloadIdentityProviderKeysRequestValidationError{
-				field:  "Change",
-				reason: "oneof value cannot be a typed-nil",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
-		}
-
-		if all {
-			switch v := interface{}(m.GetAcceptPending()).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SetWorkloadIdentityProviderKeysRequestValidationError{
-						field:  "AcceptPending",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, SetWorkloadIdentityProviderKeysRequestValidationError{
-						field:  "AcceptPending",
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(m.GetAcceptPending()).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return SetWorkloadIdentityProviderKeysRequestValidationError{
-					field:  "AcceptPending",
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	default:
-		_ = v // ensures v is used
-	}
-
-	if len(errors) > 0 {
-		return SetWorkloadIdentityProviderKeysRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// SetWorkloadIdentityProviderKeysRequestMultiError is an error wrapping
-// multiple validation errors returned by
-// SetWorkloadIdentityProviderKeysRequest.ValidateAll() if the designated
-// constraints aren't met.
-type SetWorkloadIdentityProviderKeysRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m SetWorkloadIdentityProviderKeysRequestMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m SetWorkloadIdentityProviderKeysRequestMultiError) AllErrors() []error { return m }
-
-// SetWorkloadIdentityProviderKeysRequestValidationError is the validation
-// error returned by SetWorkloadIdentityProviderKeysRequest.Validate if the
-// designated constraints aren't met.
-type SetWorkloadIdentityProviderKeysRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e SetWorkloadIdentityProviderKeysRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e SetWorkloadIdentityProviderKeysRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e SetWorkloadIdentityProviderKeysRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e SetWorkloadIdentityProviderKeysRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e SetWorkloadIdentityProviderKeysRequestValidationError) ErrorName() string {
-	return "SetWorkloadIdentityProviderKeysRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e SetWorkloadIdentityProviderKeysRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sSetWorkloadIdentityProviderKeysRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = SetWorkloadIdentityProviderKeysRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = SetWorkloadIdentityProviderKeysRequestValidationError{}
-
-// Validate checks the field values on SetWorkloadIdentityProviderKeysResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *SetWorkloadIdentityProviderKeysResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on
-// SetWorkloadIdentityProviderKeysResponse with the rules defined in the proto
-// definition for this message. If any rules are violated, the result is a
-// list of violation errors wrapped in
-// SetWorkloadIdentityProviderKeysResponseMultiError, or nil if none found.
-func (m *SetWorkloadIdentityProviderKeysResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *SetWorkloadIdentityProviderKeysResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if all {
-		switch v := interface{}(m.GetWorkloadIdentityProvider()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, SetWorkloadIdentityProviderKeysResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, SetWorkloadIdentityProviderKeysResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWorkloadIdentityProvider()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return SetWorkloadIdentityProviderKeysResponseValidationError{
-				field:  "WorkloadIdentityProvider",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return SetWorkloadIdentityProviderKeysResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// SetWorkloadIdentityProviderKeysResponseMultiError is an error wrapping
-// multiple validation errors returned by
-// SetWorkloadIdentityProviderKeysResponse.ValidateAll() if the designated
-// constraints aren't met.
-type SetWorkloadIdentityProviderKeysResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m SetWorkloadIdentityProviderKeysResponseMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m SetWorkloadIdentityProviderKeysResponseMultiError) AllErrors() []error { return m }
-
-// SetWorkloadIdentityProviderKeysResponseValidationError is the validation
-// error returned by SetWorkloadIdentityProviderKeysResponse.Validate if the
-// designated constraints aren't met.
-type SetWorkloadIdentityProviderKeysResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e SetWorkloadIdentityProviderKeysResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e SetWorkloadIdentityProviderKeysResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e SetWorkloadIdentityProviderKeysResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e SetWorkloadIdentityProviderKeysResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e SetWorkloadIdentityProviderKeysResponseValidationError) ErrorName() string {
-	return "SetWorkloadIdentityProviderKeysResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e SetWorkloadIdentityProviderKeysResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sSetWorkloadIdentityProviderKeysResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = SetWorkloadIdentityProviderKeysResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = SetWorkloadIdentityProviderKeysResponseValidationError{}
-
-// Validate checks the field values on DeleteWorkloadIdentityProviderRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *DeleteWorkloadIdentityProviderRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on DeleteWorkloadIdentityProviderRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the result is a list of violation errors wrapped in
-// DeleteWorkloadIdentityProviderRequestMultiError, or nil if none found.
-func (m *DeleteWorkloadIdentityProviderRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *DeleteWorkloadIdentityProviderRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for ProviderId
-
-	if len(errors) > 0 {
-		return DeleteWorkloadIdentityProviderRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// DeleteWorkloadIdentityProviderRequestMultiError is an error wrapping
-// multiple validation errors returned by
-// DeleteWorkloadIdentityProviderRequest.ValidateAll() if the designated
-// constraints aren't met.
-type DeleteWorkloadIdentityProviderRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m DeleteWorkloadIdentityProviderRequestMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m DeleteWorkloadIdentityProviderRequestMultiError) AllErrors() []error { return m }
-
-// DeleteWorkloadIdentityProviderRequestValidationError is the validation error
-// returned by DeleteWorkloadIdentityProviderRequest.Validate if the
-// designated constraints aren't met.
-type DeleteWorkloadIdentityProviderRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteWorkloadIdentityProviderRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteWorkloadIdentityProviderRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteWorkloadIdentityProviderRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteWorkloadIdentityProviderRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteWorkloadIdentityProviderRequestValidationError) ErrorName() string {
-	return "DeleteWorkloadIdentityProviderRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteWorkloadIdentityProviderRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteWorkloadIdentityProviderRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteWorkloadIdentityProviderRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteWorkloadIdentityProviderRequestValidationError{}
-
-// Validate checks the field values on DeleteWorkloadIdentityProviderResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *DeleteWorkloadIdentityProviderResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on
-// DeleteWorkloadIdentityProviderResponse with the rules defined in the proto
-// definition for this message. If any rules are violated, the result is a
-// list of violation errors wrapped in
-// DeleteWorkloadIdentityProviderResponseMultiError, or nil if none found.
-func (m *DeleteWorkloadIdentityProviderResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *DeleteWorkloadIdentityProviderResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return DeleteWorkloadIdentityProviderResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// DeleteWorkloadIdentityProviderResponseMultiError is an error wrapping
-// multiple validation errors returned by
-// DeleteWorkloadIdentityProviderResponse.ValidateAll() if the designated
-// constraints aren't met.
-type DeleteWorkloadIdentityProviderResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m DeleteWorkloadIdentityProviderResponseMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m DeleteWorkloadIdentityProviderResponseMultiError) AllErrors() []error { return m }
-
-// DeleteWorkloadIdentityProviderResponseValidationError is the validation
-// error returned by DeleteWorkloadIdentityProviderResponse.Validate if the
-// designated constraints aren't met.
-type DeleteWorkloadIdentityProviderResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteWorkloadIdentityProviderResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteWorkloadIdentityProviderResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteWorkloadIdentityProviderResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteWorkloadIdentityProviderResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteWorkloadIdentityProviderResponseValidationError) ErrorName() string {
-	return "DeleteWorkloadIdentityProviderResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteWorkloadIdentityProviderResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteWorkloadIdentityProviderResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteWorkloadIdentityProviderResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteWorkloadIdentityProviderResponseValidationError{}
 
 // Validate checks the field values on CreateAgentRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -8665,35 +6653,6 @@ func (m *EnrollResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetWorkloadIdentityProvider()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, EnrollResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, EnrollResponseValidationError{
-					field:  "WorkloadIdentityProvider",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWorkloadIdentityProvider()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return EnrollResponseValidationError{
-				field:  "WorkloadIdentityProvider",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
 		switch v := interface{}(m.GetAgent()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -8716,6 +6675,64 @@ func (m *EnrollResponse) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return EnrollResponseValidationError{
 				field:  "Agent",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetServiceAccount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnrollResponseValidationError{
+					field:  "ServiceAccount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnrollResponseValidationError{
+					field:  "ServiceAccount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetServiceAccount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnrollResponseValidationError{
+				field:  "ServiceAccount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetIssuer()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnrollResponseValidationError{
+					field:  "Issuer",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnrollResponseValidationError{
+					field:  "Issuer",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetIssuer()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnrollResponseValidationError{
+				field:  "Issuer",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -11587,112 +9604,6 @@ var _ interface {
 	ErrorName() string
 } = GetJobLogResponseValidationError{}
 
-// Validate checks the field values on WorkloadIdentityProviderKeys_Enrollment
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, the first error encountered is returned, or nil if
-// there are no violations.
-func (m *WorkloadIdentityProviderKeys_Enrollment) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on
-// WorkloadIdentityProviderKeys_Enrollment with the rules defined in the proto
-// definition for this message. If any rules are violated, the result is a
-// list of violation errors wrapped in
-// WorkloadIdentityProviderKeys_EnrollmentMultiError, or nil if none found.
-func (m *WorkloadIdentityProviderKeys_Enrollment) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *WorkloadIdentityProviderKeys_Enrollment) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return WorkloadIdentityProviderKeys_EnrollmentMultiError(errors)
-	}
-
-	return nil
-}
-
-// WorkloadIdentityProviderKeys_EnrollmentMultiError is an error wrapping
-// multiple validation errors returned by
-// WorkloadIdentityProviderKeys_Enrollment.ValidateAll() if the designated
-// constraints aren't met.
-type WorkloadIdentityProviderKeys_EnrollmentMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m WorkloadIdentityProviderKeys_EnrollmentMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m WorkloadIdentityProviderKeys_EnrollmentMultiError) AllErrors() []error { return m }
-
-// WorkloadIdentityProviderKeys_EnrollmentValidationError is the validation
-// error returned by WorkloadIdentityProviderKeys_Enrollment.Validate if the
-// designated constraints aren't met.
-type WorkloadIdentityProviderKeys_EnrollmentValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e WorkloadIdentityProviderKeys_EnrollmentValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e WorkloadIdentityProviderKeys_EnrollmentValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e WorkloadIdentityProviderKeys_EnrollmentValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e WorkloadIdentityProviderKeys_EnrollmentValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e WorkloadIdentityProviderKeys_EnrollmentValidationError) ErrorName() string {
-	return "WorkloadIdentityProviderKeys_EnrollmentValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e WorkloadIdentityProviderKeys_EnrollmentValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sWorkloadIdentityProviderKeys_Enrollment.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = WorkloadIdentityProviderKeys_EnrollmentValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = WorkloadIdentityProviderKeys_EnrollmentValidationError{}
-
 // Validate checks the field values on AgentGrant_Organization with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -11794,117 +9705,3 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AgentGrant_OrganizationValidationError{}
-
-// Validate checks the field values on
-// SetWorkloadIdentityProviderKeysRequest_AcceptPending with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *SetWorkloadIdentityProviderKeysRequest_AcceptPending) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on
-// SetWorkloadIdentityProviderKeysRequest_AcceptPending with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in
-// SetWorkloadIdentityProviderKeysRequest_AcceptPendingMultiError, or nil if
-// none found.
-func (m *SetWorkloadIdentityProviderKeysRequest_AcceptPending) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *SetWorkloadIdentityProviderKeysRequest_AcceptPending) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return SetWorkloadIdentityProviderKeysRequest_AcceptPendingMultiError(errors)
-	}
-
-	return nil
-}
-
-// SetWorkloadIdentityProviderKeysRequest_AcceptPendingMultiError is an error
-// wrapping multiple validation errors returned by
-// SetWorkloadIdentityProviderKeysRequest_AcceptPending.ValidateAll() if the
-// designated constraints aren't met.
-type SetWorkloadIdentityProviderKeysRequest_AcceptPendingMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m SetWorkloadIdentityProviderKeysRequest_AcceptPendingMultiError) Error() string {
-	msgs := make([]string, 0, len(m))
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m SetWorkloadIdentityProviderKeysRequest_AcceptPendingMultiError) AllErrors() []error { return m }
-
-// SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError is the
-// validation error returned by
-// SetWorkloadIdentityProviderKeysRequest_AcceptPending.Validate if the
-// designated constraints aren't met.
-type SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError) Field() string {
-	return e.field
-}
-
-// Reason function returns reason value.
-func (e SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError) Reason() string {
-	return e.reason
-}
-
-// Cause function returns cause value.
-func (e SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError) Cause() error {
-	return e.cause
-}
-
-// Key function returns key value.
-func (e SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError) ErrorName() string {
-	return "SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sSetWorkloadIdentityProviderKeysRequest_AcceptPending.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = SetWorkloadIdentityProviderKeysRequest_AcceptPendingValidationError{}

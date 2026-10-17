@@ -10,10 +10,10 @@ import (
 const (
 	// TokenPrefixPAT is the prefix for Personal Access Tokens.
 	TokenPrefixPAT = "admp_"
-	// TokenPrefixSAT is the prefix for Service/Agent Tokens.
+	// TokenPrefixSAT is the prefix for a service account's API key.
 	TokenPrefixSAT = "adms_"
-	// TokenPrefixSession is the prefix for Session Tokens.
-	TokenPrefixSession = "adme_"
+	// TokenPrefixEnrollment is the prefix for an agent's single-use enrollment key.
+	TokenPrefixEnrollment = "adme_"
 
 	// TokenLength is the total length of an Admiral opaque token.
 	TokenLength = 54
@@ -28,7 +28,7 @@ const base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 var (
 	ErrInvalidTokenFormat = errors.New("invalid token format")
 
-	validPrefixes = []string{TokenPrefixPAT, TokenPrefixSAT, TokenPrefixSession}
+	validPrefixes = []string{TokenPrefixPAT, TokenPrefixSAT, TokenPrefixEnrollment}
 )
 
 // TokenValidator validates an auth token before use.

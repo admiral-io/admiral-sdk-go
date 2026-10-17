@@ -41,30 +41,32 @@ const (
 
 // Scope name constants.
 const (
-	AgentEnroll      = "agent:enroll"
-	AgentExec        = "agent:exec"
-	AgentHeartbeat   = "agent:heartbeat"
-	AgentRead        = "agent:read"
-	AgentWrite       = "agent:write"
-	ApikeyRead       = "apikey:read"
-	ApikeyWrite      = "apikey:write"
-	AppRead          = "app:read"
-	AppWrite         = "app:write"
-	ChangesetRead    = "changeset:read"
-	ChangesetWrite   = "changeset:write"
-	ComponentPublish = "component:publish"
-	ComponentRead    = "component:read"
-	ComponentWrite   = "component:write"
-	CredentialRead   = "credential:read"
-	CredentialWrite  = "credential:write"
-	EnvRead          = "env:read"
-	EnvWrite         = "env:write"
-	RunRead          = "run:read"
-	RunWrite         = "run:write"
-	TenantRead       = "tenant:read"
-	TenantWrite      = "tenant:write"
-	UserRead         = "user:read"
-	UserWrite        = "user:write"
+	AgentEnroll         = "agent:enroll"
+	AgentExec           = "agent:exec"
+	AgentHeartbeat      = "agent:heartbeat"
+	AgentRead           = "agent:read"
+	AgentWrite          = "agent:write"
+	ApikeyRead          = "apikey:read"
+	ApikeyWrite         = "apikey:write"
+	AppRead             = "app:read"
+	AppWrite            = "app:write"
+	ChangesetRead       = "changeset:read"
+	ChangesetWrite      = "changeset:write"
+	ComponentPublish    = "component:publish"
+	ComponentRead       = "component:read"
+	ComponentWrite      = "component:write"
+	CredentialRead      = "credential:read"
+	CredentialWrite     = "credential:write"
+	EnvRead             = "env:read"
+	EnvWrite            = "env:write"
+	RunRead             = "run:read"
+	RunWrite            = "run:write"
+	ServiceaccountRead  = "serviceaccount:read"
+	ServiceaccountWrite = "serviceaccount:write"
+	TenantRead          = "tenant:read"
+	TenantWrite         = "tenant:write"
+	UserRead            = "user:read"
+	UserWrite           = "user:write"
 )
 
 // Group is one scope prefix and what it covers, for anything that shows
@@ -77,16 +79,17 @@ type Group struct {
 // Groups maps a scope prefix to its group. Every scope's prefix has an
 // entry; GroupOf finds it.
 var Groups = map[string]Group{
-	"agent":      {Name: "agent", Description: "Workload identity providers, the agents that authenticate through them, who may use each, and the jobs they run."},
-	"apikey":     {Name: "apikey", Description: "Your own API keys."},
-	"app":        {Name: "app", Description: "Applications."},
-	"changeset":  {Name: "changeset", Description: "Change sets, their revisions, and the component values they propose."},
-	"component":  {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
-	"credential": {Name: "credential", Description: "Credentials for external systems."},
-	"env":        {Name: "env", Description: "Deployment environments and the components in them."},
-	"run":        {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
-	"tenant":     {Name: "tenant", Description: "Your tenant."},
-	"user":       {Name: "user", Description: "Members of your tenant."},
+	"agent":          {Name: "agent", Description: "Agents, who may use each, and the jobs they run."},
+	"apikey":         {Name: "apikey", Description: "Your own API keys."},
+	"app":            {Name: "app", Description: "Applications."},
+	"changeset":      {Name: "changeset", Description: "Change sets, their revisions, and the component values they propose."},
+	"component":      {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
+	"credential":     {Name: "credential", Description: "Credentials for external systems."},
+	"env":            {Name: "env", Description: "Deployment environments and the components in them."},
+	"run":            {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
+	"serviceaccount": {Name: "serviceaccount", Description: "Service accounts, and the issuers they accept tokens from."},
+	"tenant":         {Name: "tenant", Description: "Your tenant."},
+	"user":           {Name: "user", Description: "Members of your tenant."},
 }
 
 // GroupOf is the group a scope name falls under: everything before the
@@ -121,7 +124,7 @@ type Scope struct {
 var Catalog = map[string]Scope{
 	AgentEnroll: {
 		Name:         AgentEnroll,
-		Description:  "Enroll a cluster, once, from inside it. Held only by a single-use enrollment key.",
+		Description:  "Enroll an agent, once, from where it runs. Held only by a single-use enrollment key.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentExec: {
@@ -136,12 +139,12 @@ var Catalog = map[string]Scope{
 	},
 	AgentRead: {
 		Name:         AgentRead,
-		Description:  "Read workload identity providers, agents, who may use them, and their jobs.",
+		Description:  "Read agents, who may use them, and their jobs.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	AgentWrite: {
 		Name:         AgentWrite,
-		Description:  "Register workload identity providers; create, update and delete agents; issue enrollment keys; grant use; cancel jobs.",
+		Description:  "Create, update and delete agents; issue enrollment keys; grant use; cancel jobs.",
 		Implies:      []string{AgentRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
@@ -228,6 +231,17 @@ var Catalog = map[string]Scope{
 		Implies:      []string{RunRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
+	ServiceaccountRead: {
+		Name:         ServiceaccountRead,
+		Description:  "Read service accounts and issuers.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ServiceaccountWrite: {
+		Name:         ServiceaccountWrite,
+		Description:  "Register issuers, change their keys, and delete them.",
+		Implies:      []string{ServiceaccountRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
 	TenantRead: {
 		Name:         TenantRead,
 		Description:  "Read the caller's own tenant -- name, slug, status and logo.",
@@ -255,17 +269,18 @@ var Catalog = map[string]Scope{
 // impliesClosure precomputes the transitive closure of each scope's
 // implies edges (excluding the scope itself).
 var impliesClosure = map[string][]string{
-	AgentWrite:       []string{AgentRead},
-	ApikeyWrite:      []string{ApikeyRead},
-	AppWrite:         []string{AppRead},
-	ChangesetWrite:   []string{ChangesetRead},
-	ComponentPublish: []string{ComponentRead},
-	ComponentWrite:   []string{ComponentPublish, ComponentRead},
-	CredentialWrite:  []string{CredentialRead},
-	EnvWrite:         []string{EnvRead},
-	RunWrite:         []string{RunRead},
-	TenantWrite:      []string{TenantRead},
-	UserWrite:        []string{UserRead},
+	AgentWrite:          []string{AgentRead},
+	ApikeyWrite:         []string{ApikeyRead},
+	AppWrite:            []string{AppRead},
+	ChangesetWrite:      []string{ChangesetRead},
+	ComponentPublish:    []string{ComponentRead},
+	ComponentWrite:      []string{ComponentPublish, ComponentRead},
+	CredentialWrite:     []string{CredentialRead},
+	EnvWrite:            []string{EnvRead},
+	RunWrite:            []string{RunRead},
+	ServiceaccountWrite: []string{ServiceaccountRead},
+	TenantWrite:         []string{TenantRead},
+	UserWrite:           []string{UserRead},
 }
 
 // SATProfiles maps an agent kind (lowercased AgentKind enum value) to the

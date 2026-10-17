@@ -2145,22 +2145,22 @@ var _ interface {
 	ErrorName() string
 } = PublishComponentResponseValidationError{}
 
-// Validate checks the field values on PullSource with the rules defined in the
-// proto definition for this message. If any rules are violated, the first
+// Validate checks the field values on ImportSource with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
-func (m *PullSource) Validate() error {
+func (m *ImportSource) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullSource with the rules defined in
-// the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in PullSourceMultiError, or
+// ValidateAll checks the field values on ImportSource with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ImportSourceMultiError, or
 // nil if none found.
-func (m *PullSource) ValidateAll() error {
+func (m *ImportSource) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullSource) validate(all bool) error {
+func (m *ImportSource) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2168,9 +2168,9 @@ func (m *PullSource) validate(all bool) error {
 	var errors []error
 
 	switch v := m.Source.(type) {
-	case *PullSource_OciChart:
+	case *ImportSource_OciChart:
 		if v == nil {
-			err := PullSourceValidationError{
+			err := ImportSourceValidationError{
 				field:  "Source",
 				reason: "oneof value cannot be a typed-nil",
 			}
@@ -2184,7 +2184,7 @@ func (m *PullSource) validate(all bool) error {
 			switch v := interface{}(m.GetOciChart()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "OciChart",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2192,7 +2192,7 @@ func (m *PullSource) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "OciChart",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2201,7 +2201,7 @@ func (m *PullSource) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(m.GetOciChart()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return PullSourceValidationError{
+				return ImportSourceValidationError{
 					field:  "OciChart",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2209,9 +2209,9 @@ func (m *PullSource) validate(all bool) error {
 			}
 		}
 
-	case *PullSource_HelmChart_:
+	case *ImportSource_HelmChart_:
 		if v == nil {
-			err := PullSourceValidationError{
+			err := ImportSourceValidationError{
 				field:  "Source",
 				reason: "oneof value cannot be a typed-nil",
 			}
@@ -2225,7 +2225,7 @@ func (m *PullSource) validate(all bool) error {
 			switch v := interface{}(m.GetHelmChart()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "HelmChart",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2233,7 +2233,7 @@ func (m *PullSource) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "HelmChart",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2242,7 +2242,7 @@ func (m *PullSource) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(m.GetHelmChart()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return PullSourceValidationError{
+				return ImportSourceValidationError{
 					field:  "HelmChart",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2250,9 +2250,9 @@ func (m *PullSource) validate(all bool) error {
 			}
 		}
 
-	case *PullSource_RegistryModule_:
+	case *ImportSource_RegistryModule_:
 		if v == nil {
-			err := PullSourceValidationError{
+			err := ImportSourceValidationError{
 				field:  "Source",
 				reason: "oneof value cannot be a typed-nil",
 			}
@@ -2266,7 +2266,7 @@ func (m *PullSource) validate(all bool) error {
 			switch v := interface{}(m.GetRegistryModule()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "RegistryModule",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2274,7 +2274,7 @@ func (m *PullSource) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "RegistryModule",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2283,7 +2283,7 @@ func (m *PullSource) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(m.GetRegistryModule()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return PullSourceValidationError{
+				return ImportSourceValidationError{
 					field:  "RegistryModule",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2291,9 +2291,9 @@ func (m *PullSource) validate(all bool) error {
 			}
 		}
 
-	case *PullSource_GitTree_:
+	case *ImportSource_GitTree_:
 		if v == nil {
-			err := PullSourceValidationError{
+			err := ImportSourceValidationError{
 				field:  "Source",
 				reason: "oneof value cannot be a typed-nil",
 			}
@@ -2307,7 +2307,7 @@ func (m *PullSource) validate(all bool) error {
 			switch v := interface{}(m.GetGitTree()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "GitTree",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2315,7 +2315,7 @@ func (m *PullSource) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "GitTree",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2324,7 +2324,7 @@ func (m *PullSource) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(m.GetGitTree()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return PullSourceValidationError{
+				return ImportSourceValidationError{
 					field:  "GitTree",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2332,9 +2332,9 @@ func (m *PullSource) validate(all bool) error {
 			}
 		}
 
-	case *PullSource_Archive_:
+	case *ImportSource_Archive_:
 		if v == nil {
-			err := PullSourceValidationError{
+			err := ImportSourceValidationError{
 				field:  "Source",
 				reason: "oneof value cannot be a typed-nil",
 			}
@@ -2348,7 +2348,7 @@ func (m *PullSource) validate(all bool) error {
 			switch v := interface{}(m.GetArchive()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "Archive",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2356,7 +2356,7 @@ func (m *PullSource) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, PullSourceValidationError{
+					errors = append(errors, ImportSourceValidationError{
 						field:  "Archive",
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -2365,7 +2365,7 @@ func (m *PullSource) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(m.GetArchive()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return PullSourceValidationError{
+				return ImportSourceValidationError{
 					field:  "Archive",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2378,18 +2378,18 @@ func (m *PullSource) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return PullSourceMultiError(errors)
+		return ImportSourceMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullSourceMultiError is an error wrapping multiple validation errors
-// returned by PullSource.ValidateAll() if the designated constraints aren't met.
-type PullSourceMultiError []error
+// ImportSourceMultiError is an error wrapping multiple validation errors
+// returned by ImportSource.ValidateAll() if the designated constraints aren't met.
+type ImportSourceMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullSourceMultiError) Error() string {
+func (m ImportSourceMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2398,11 +2398,11 @@ func (m PullSourceMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullSourceMultiError) AllErrors() []error { return m }
+func (m ImportSourceMultiError) AllErrors() []error { return m }
 
-// PullSourceValidationError is the validation error returned by
-// PullSource.Validate if the designated constraints aren't met.
-type PullSourceValidationError struct {
+// ImportSourceValidationError is the validation error returned by
+// ImportSource.Validate if the designated constraints aren't met.
+type ImportSourceValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2410,22 +2410,22 @@ type PullSourceValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullSourceValidationError) Field() string { return e.field }
+func (e ImportSourceValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullSourceValidationError) Reason() string { return e.reason }
+func (e ImportSourceValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullSourceValidationError) Cause() error { return e.cause }
+func (e ImportSourceValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullSourceValidationError) Key() bool { return e.key }
+func (e ImportSourceValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullSourceValidationError) ErrorName() string { return "PullSourceValidationError" }
+func (e ImportSourceValidationError) ErrorName() string { return "ImportSourceValidationError" }
 
 // Error satisfies the builtin error interface
-func (e PullSourceValidationError) Error() string {
+func (e ImportSourceValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2437,14 +2437,14 @@ func (e PullSourceValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullSource.%s: %s%s",
+		"invalid %sImportSource.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullSourceValidationError{}
+var _ error = ImportSourceValidationError{}
 
 var _ interface {
 	Field() string
@@ -2452,24 +2452,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullSourceValidationError{}
+} = ImportSourceValidationError{}
 
-// Validate checks the field values on PullComponentRequest with the rules
+// Validate checks the field values on ImportComponentRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullComponentRequest) Validate() error {
+func (m *ImportComponentRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullComponentRequest with the rules
+// ValidateAll checks the field values on ImportComponentRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullComponentRequestMultiError, or nil if none found.
-func (m *PullComponentRequest) ValidateAll() error {
+// ImportComponentRequestMultiError, or nil if none found.
+func (m *ImportComponentRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullComponentRequest) validate(all bool) error {
+func (m *ImportComponentRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2482,7 +2482,7 @@ func (m *PullComponentRequest) validate(all bool) error {
 		switch v := interface{}(m.GetSource()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, PullComponentRequestValidationError{
+				errors = append(errors, ImportComponentRequestValidationError{
 					field:  "Source",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2490,7 +2490,7 @@ func (m *PullComponentRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, PullComponentRequestValidationError{
+				errors = append(errors, ImportComponentRequestValidationError{
 					field:  "Source",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2499,7 +2499,7 @@ func (m *PullComponentRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetSource()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return PullComponentRequestValidationError{
+			return ImportComponentRequestValidationError{
 				field:  "Source",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -2514,19 +2514,19 @@ func (m *PullComponentRequest) validate(all bool) error {
 	// no validation rules for BaselineValuesJson
 
 	if len(errors) > 0 {
-		return PullComponentRequestMultiError(errors)
+		return ImportComponentRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullComponentRequestMultiError is an error wrapping multiple validation
-// errors returned by PullComponentRequest.ValidateAll() if the designated
+// ImportComponentRequestMultiError is an error wrapping multiple validation
+// errors returned by ImportComponentRequest.ValidateAll() if the designated
 // constraints aren't met.
-type PullComponentRequestMultiError []error
+type ImportComponentRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullComponentRequestMultiError) Error() string {
+func (m ImportComponentRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2535,11 +2535,11 @@ func (m PullComponentRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullComponentRequestMultiError) AllErrors() []error { return m }
+func (m ImportComponentRequestMultiError) AllErrors() []error { return m }
 
-// PullComponentRequestValidationError is the validation error returned by
-// PullComponentRequest.Validate if the designated constraints aren't met.
-type PullComponentRequestValidationError struct {
+// ImportComponentRequestValidationError is the validation error returned by
+// ImportComponentRequest.Validate if the designated constraints aren't met.
+type ImportComponentRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2547,24 +2547,24 @@ type PullComponentRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullComponentRequestValidationError) Field() string { return e.field }
+func (e ImportComponentRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullComponentRequestValidationError) Reason() string { return e.reason }
+func (e ImportComponentRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullComponentRequestValidationError) Cause() error { return e.cause }
+func (e ImportComponentRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullComponentRequestValidationError) Key() bool { return e.key }
+func (e ImportComponentRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullComponentRequestValidationError) ErrorName() string {
-	return "PullComponentRequestValidationError"
+func (e ImportComponentRequestValidationError) ErrorName() string {
+	return "ImportComponentRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullComponentRequestValidationError) Error() string {
+func (e ImportComponentRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2576,14 +2576,14 @@ func (e PullComponentRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullComponentRequest.%s: %s%s",
+		"invalid %sImportComponentRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullComponentRequestValidationError{}
+var _ error = ImportComponentRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2591,24 +2591,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullComponentRequestValidationError{}
+} = ImportComponentRequestValidationError{}
 
-// Validate checks the field values on PullComponentResponse with the rules
+// Validate checks the field values on ImportComponentResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullComponentResponse) Validate() error {
+func (m *ImportComponentResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullComponentResponse with the rules
-// defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on ImportComponentResponse with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullComponentResponseMultiError, or nil if none found.
-func (m *PullComponentResponse) ValidateAll() error {
+// ImportComponentResponseMultiError, or nil if none found.
+func (m *ImportComponentResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullComponentResponse) validate(all bool) error {
+func (m *ImportComponentResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -2619,7 +2619,7 @@ func (m *PullComponentResponse) validate(all bool) error {
 		switch v := interface{}(m.GetComponent()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, PullComponentResponseValidationError{
+				errors = append(errors, ImportComponentResponseValidationError{
 					field:  "Component",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2627,7 +2627,7 @@ func (m *PullComponentResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, PullComponentResponseValidationError{
+				errors = append(errors, ImportComponentResponseValidationError{
 					field:  "Component",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2636,7 +2636,7 @@ func (m *PullComponentResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetComponent()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return PullComponentResponseValidationError{
+			return ImportComponentResponseValidationError{
 				field:  "Component",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -2648,7 +2648,7 @@ func (m *PullComponentResponse) validate(all bool) error {
 		switch v := interface{}(m.GetVersion()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, PullComponentResponseValidationError{
+				errors = append(errors, ImportComponentResponseValidationError{
 					field:  "Version",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2656,7 +2656,7 @@ func (m *PullComponentResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, PullComponentResponseValidationError{
+				errors = append(errors, ImportComponentResponseValidationError{
 					field:  "Version",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -2665,7 +2665,7 @@ func (m *PullComponentResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetVersion()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return PullComponentResponseValidationError{
+			return ImportComponentResponseValidationError{
 				field:  "Version",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -2676,19 +2676,19 @@ func (m *PullComponentResponse) validate(all bool) error {
 	// no validation rules for Unchanged
 
 	if len(errors) > 0 {
-		return PullComponentResponseMultiError(errors)
+		return ImportComponentResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullComponentResponseMultiError is an error wrapping multiple validation
-// errors returned by PullComponentResponse.ValidateAll() if the designated
+// ImportComponentResponseMultiError is an error wrapping multiple validation
+// errors returned by ImportComponentResponse.ValidateAll() if the designated
 // constraints aren't met.
-type PullComponentResponseMultiError []error
+type ImportComponentResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullComponentResponseMultiError) Error() string {
+func (m ImportComponentResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -2697,11 +2697,11 @@ func (m PullComponentResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullComponentResponseMultiError) AllErrors() []error { return m }
+func (m ImportComponentResponseMultiError) AllErrors() []error { return m }
 
-// PullComponentResponseValidationError is the validation error returned by
-// PullComponentResponse.Validate if the designated constraints aren't met.
-type PullComponentResponseValidationError struct {
+// ImportComponentResponseValidationError is the validation error returned by
+// ImportComponentResponse.Validate if the designated constraints aren't met.
+type ImportComponentResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2709,24 +2709,24 @@ type PullComponentResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullComponentResponseValidationError) Field() string { return e.field }
+func (e ImportComponentResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullComponentResponseValidationError) Reason() string { return e.reason }
+func (e ImportComponentResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullComponentResponseValidationError) Cause() error { return e.cause }
+func (e ImportComponentResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullComponentResponseValidationError) Key() bool { return e.key }
+func (e ImportComponentResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullComponentResponseValidationError) ErrorName() string {
-	return "PullComponentResponseValidationError"
+func (e ImportComponentResponseValidationError) ErrorName() string {
+	return "ImportComponentResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullComponentResponseValidationError) Error() string {
+func (e ImportComponentResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2738,14 +2738,14 @@ func (e PullComponentResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullComponentResponse.%s: %s%s",
+		"invalid %sImportComponentResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullComponentResponseValidationError{}
+var _ error = ImportComponentResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -2753,7 +2753,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullComponentResponseValidationError{}
+} = ImportComponentResponseValidationError{}
 
 // Validate checks the field values on ListComponentsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -5141,22 +5141,22 @@ var _ interface {
 	ErrorName() string
 } = DeleteTagResponseValidationError{}
 
-// Validate checks the field values on PullSource_OCIChart with the rules
+// Validate checks the field values on ImportSource_OCIChart with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullSource_OCIChart) Validate() error {
+func (m *ImportSource_OCIChart) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullSource_OCIChart with the rules
+// ValidateAll checks the field values on ImportSource_OCIChart with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullSource_OCIChartMultiError, or nil if none found.
-func (m *PullSource_OCIChart) ValidateAll() error {
+// ImportSource_OCIChartMultiError, or nil if none found.
+func (m *ImportSource_OCIChart) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullSource_OCIChart) validate(all bool) error {
+func (m *ImportSource_OCIChart) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -5168,19 +5168,19 @@ func (m *PullSource_OCIChart) validate(all bool) error {
 	// no validation rules for Version
 
 	if len(errors) > 0 {
-		return PullSource_OCIChartMultiError(errors)
+		return ImportSource_OCIChartMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullSource_OCIChartMultiError is an error wrapping multiple validation
-// errors returned by PullSource_OCIChart.ValidateAll() if the designated
+// ImportSource_OCIChartMultiError is an error wrapping multiple validation
+// errors returned by ImportSource_OCIChart.ValidateAll() if the designated
 // constraints aren't met.
-type PullSource_OCIChartMultiError []error
+type ImportSource_OCIChartMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullSource_OCIChartMultiError) Error() string {
+func (m ImportSource_OCIChartMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5189,11 +5189,11 @@ func (m PullSource_OCIChartMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullSource_OCIChartMultiError) AllErrors() []error { return m }
+func (m ImportSource_OCIChartMultiError) AllErrors() []error { return m }
 
-// PullSource_OCIChartValidationError is the validation error returned by
-// PullSource_OCIChart.Validate if the designated constraints aren't met.
-type PullSource_OCIChartValidationError struct {
+// ImportSource_OCIChartValidationError is the validation error returned by
+// ImportSource_OCIChart.Validate if the designated constraints aren't met.
+type ImportSource_OCIChartValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5201,24 +5201,24 @@ type PullSource_OCIChartValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullSource_OCIChartValidationError) Field() string { return e.field }
+func (e ImportSource_OCIChartValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullSource_OCIChartValidationError) Reason() string { return e.reason }
+func (e ImportSource_OCIChartValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullSource_OCIChartValidationError) Cause() error { return e.cause }
+func (e ImportSource_OCIChartValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullSource_OCIChartValidationError) Key() bool { return e.key }
+func (e ImportSource_OCIChartValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullSource_OCIChartValidationError) ErrorName() string {
-	return "PullSource_OCIChartValidationError"
+func (e ImportSource_OCIChartValidationError) ErrorName() string {
+	return "ImportSource_OCIChartValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullSource_OCIChartValidationError) Error() string {
+func (e ImportSource_OCIChartValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5230,14 +5230,14 @@ func (e PullSource_OCIChartValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullSource_OCIChart.%s: %s%s",
+		"invalid %sImportSource_OCIChart.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullSource_OCIChartValidationError{}
+var _ error = ImportSource_OCIChartValidationError{}
 
 var _ interface {
 	Field() string
@@ -5245,24 +5245,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullSource_OCIChartValidationError{}
+} = ImportSource_OCIChartValidationError{}
 
-// Validate checks the field values on PullSource_HelmChart with the rules
+// Validate checks the field values on ImportSource_HelmChart with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullSource_HelmChart) Validate() error {
+func (m *ImportSource_HelmChart) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullSource_HelmChart with the rules
+// ValidateAll checks the field values on ImportSource_HelmChart with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullSource_HelmChartMultiError, or nil if none found.
-func (m *PullSource_HelmChart) ValidateAll() error {
+// ImportSource_HelmChartMultiError, or nil if none found.
+func (m *ImportSource_HelmChart) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullSource_HelmChart) validate(all bool) error {
+func (m *ImportSource_HelmChart) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -5276,19 +5276,19 @@ func (m *PullSource_HelmChart) validate(all bool) error {
 	// no validation rules for Version
 
 	if len(errors) > 0 {
-		return PullSource_HelmChartMultiError(errors)
+		return ImportSource_HelmChartMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullSource_HelmChartMultiError is an error wrapping multiple validation
-// errors returned by PullSource_HelmChart.ValidateAll() if the designated
+// ImportSource_HelmChartMultiError is an error wrapping multiple validation
+// errors returned by ImportSource_HelmChart.ValidateAll() if the designated
 // constraints aren't met.
-type PullSource_HelmChartMultiError []error
+type ImportSource_HelmChartMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullSource_HelmChartMultiError) Error() string {
+func (m ImportSource_HelmChartMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5297,11 +5297,11 @@ func (m PullSource_HelmChartMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullSource_HelmChartMultiError) AllErrors() []error { return m }
+func (m ImportSource_HelmChartMultiError) AllErrors() []error { return m }
 
-// PullSource_HelmChartValidationError is the validation error returned by
-// PullSource_HelmChart.Validate if the designated constraints aren't met.
-type PullSource_HelmChartValidationError struct {
+// ImportSource_HelmChartValidationError is the validation error returned by
+// ImportSource_HelmChart.Validate if the designated constraints aren't met.
+type ImportSource_HelmChartValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5309,24 +5309,24 @@ type PullSource_HelmChartValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullSource_HelmChartValidationError) Field() string { return e.field }
+func (e ImportSource_HelmChartValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullSource_HelmChartValidationError) Reason() string { return e.reason }
+func (e ImportSource_HelmChartValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullSource_HelmChartValidationError) Cause() error { return e.cause }
+func (e ImportSource_HelmChartValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullSource_HelmChartValidationError) Key() bool { return e.key }
+func (e ImportSource_HelmChartValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullSource_HelmChartValidationError) ErrorName() string {
-	return "PullSource_HelmChartValidationError"
+func (e ImportSource_HelmChartValidationError) ErrorName() string {
+	return "ImportSource_HelmChartValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullSource_HelmChartValidationError) Error() string {
+func (e ImportSource_HelmChartValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5338,14 +5338,14 @@ func (e PullSource_HelmChartValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullSource_HelmChart.%s: %s%s",
+		"invalid %sImportSource_HelmChart.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullSource_HelmChartValidationError{}
+var _ error = ImportSource_HelmChartValidationError{}
 
 var _ interface {
 	Field() string
@@ -5353,24 +5353,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullSource_HelmChartValidationError{}
+} = ImportSource_HelmChartValidationError{}
 
-// Validate checks the field values on PullSource_RegistryModule with the rules
-// defined in the proto definition for this message. If any rules are
+// Validate checks the field values on ImportSource_RegistryModule with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullSource_RegistryModule) Validate() error {
+func (m *ImportSource_RegistryModule) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullSource_RegistryModule with the
+// ValidateAll checks the field values on ImportSource_RegistryModule with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullSource_RegistryModuleMultiError, or nil if none found.
-func (m *PullSource_RegistryModule) ValidateAll() error {
+// ImportSource_RegistryModuleMultiError, or nil if none found.
+func (m *ImportSource_RegistryModule) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullSource_RegistryModule) validate(all bool) error {
+func (m *ImportSource_RegistryModule) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -5382,19 +5382,19 @@ func (m *PullSource_RegistryModule) validate(all bool) error {
 	// no validation rules for Version
 
 	if len(errors) > 0 {
-		return PullSource_RegistryModuleMultiError(errors)
+		return ImportSource_RegistryModuleMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullSource_RegistryModuleMultiError is an error wrapping multiple validation
-// errors returned by PullSource_RegistryModule.ValidateAll() if the
-// designated constraints aren't met.
-type PullSource_RegistryModuleMultiError []error
+// ImportSource_RegistryModuleMultiError is an error wrapping multiple
+// validation errors returned by ImportSource_RegistryModule.ValidateAll() if
+// the designated constraints aren't met.
+type ImportSource_RegistryModuleMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullSource_RegistryModuleMultiError) Error() string {
+func (m ImportSource_RegistryModuleMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5403,11 +5403,12 @@ func (m PullSource_RegistryModuleMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullSource_RegistryModuleMultiError) AllErrors() []error { return m }
+func (m ImportSource_RegistryModuleMultiError) AllErrors() []error { return m }
 
-// PullSource_RegistryModuleValidationError is the validation error returned by
-// PullSource_RegistryModule.Validate if the designated constraints aren't met.
-type PullSource_RegistryModuleValidationError struct {
+// ImportSource_RegistryModuleValidationError is the validation error returned
+// by ImportSource_RegistryModule.Validate if the designated constraints
+// aren't met.
+type ImportSource_RegistryModuleValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5415,24 +5416,24 @@ type PullSource_RegistryModuleValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullSource_RegistryModuleValidationError) Field() string { return e.field }
+func (e ImportSource_RegistryModuleValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullSource_RegistryModuleValidationError) Reason() string { return e.reason }
+func (e ImportSource_RegistryModuleValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullSource_RegistryModuleValidationError) Cause() error { return e.cause }
+func (e ImportSource_RegistryModuleValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullSource_RegistryModuleValidationError) Key() bool { return e.key }
+func (e ImportSource_RegistryModuleValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullSource_RegistryModuleValidationError) ErrorName() string {
-	return "PullSource_RegistryModuleValidationError"
+func (e ImportSource_RegistryModuleValidationError) ErrorName() string {
+	return "ImportSource_RegistryModuleValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullSource_RegistryModuleValidationError) Error() string {
+func (e ImportSource_RegistryModuleValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5444,14 +5445,14 @@ func (e PullSource_RegistryModuleValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullSource_RegistryModule.%s: %s%s",
+		"invalid %sImportSource_RegistryModule.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullSource_RegistryModuleValidationError{}
+var _ error = ImportSource_RegistryModuleValidationError{}
 
 var _ interface {
 	Field() string
@@ -5459,24 +5460,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullSource_RegistryModuleValidationError{}
+} = ImportSource_RegistryModuleValidationError{}
 
-// Validate checks the field values on PullSource_GitTree with the rules
+// Validate checks the field values on ImportSource_GitTree with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullSource_GitTree) Validate() error {
+func (m *ImportSource_GitTree) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullSource_GitTree with the rules
+// ValidateAll checks the field values on ImportSource_GitTree with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullSource_GitTreeMultiError, or nil if none found.
-func (m *PullSource_GitTree) ValidateAll() error {
+// ImportSource_GitTreeMultiError, or nil if none found.
+func (m *ImportSource_GitTree) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullSource_GitTree) validate(all bool) error {
+func (m *ImportSource_GitTree) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -5490,19 +5491,19 @@ func (m *PullSource_GitTree) validate(all bool) error {
 	// no validation rules for Path
 
 	if len(errors) > 0 {
-		return PullSource_GitTreeMultiError(errors)
+		return ImportSource_GitTreeMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullSource_GitTreeMultiError is an error wrapping multiple validation errors
-// returned by PullSource_GitTree.ValidateAll() if the designated constraints
-// aren't met.
-type PullSource_GitTreeMultiError []error
+// ImportSource_GitTreeMultiError is an error wrapping multiple validation
+// errors returned by ImportSource_GitTree.ValidateAll() if the designated
+// constraints aren't met.
+type ImportSource_GitTreeMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullSource_GitTreeMultiError) Error() string {
+func (m ImportSource_GitTreeMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5511,11 +5512,11 @@ func (m PullSource_GitTreeMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullSource_GitTreeMultiError) AllErrors() []error { return m }
+func (m ImportSource_GitTreeMultiError) AllErrors() []error { return m }
 
-// PullSource_GitTreeValidationError is the validation error returned by
-// PullSource_GitTree.Validate if the designated constraints aren't met.
-type PullSource_GitTreeValidationError struct {
+// ImportSource_GitTreeValidationError is the validation error returned by
+// ImportSource_GitTree.Validate if the designated constraints aren't met.
+type ImportSource_GitTreeValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5523,24 +5524,24 @@ type PullSource_GitTreeValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullSource_GitTreeValidationError) Field() string { return e.field }
+func (e ImportSource_GitTreeValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullSource_GitTreeValidationError) Reason() string { return e.reason }
+func (e ImportSource_GitTreeValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullSource_GitTreeValidationError) Cause() error { return e.cause }
+func (e ImportSource_GitTreeValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullSource_GitTreeValidationError) Key() bool { return e.key }
+func (e ImportSource_GitTreeValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullSource_GitTreeValidationError) ErrorName() string {
-	return "PullSource_GitTreeValidationError"
+func (e ImportSource_GitTreeValidationError) ErrorName() string {
+	return "ImportSource_GitTreeValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullSource_GitTreeValidationError) Error() string {
+func (e ImportSource_GitTreeValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5552,14 +5553,14 @@ func (e PullSource_GitTreeValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullSource_GitTree.%s: %s%s",
+		"invalid %sImportSource_GitTree.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullSource_GitTreeValidationError{}
+var _ error = ImportSource_GitTreeValidationError{}
 
 var _ interface {
 	Field() string
@@ -5567,24 +5568,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullSource_GitTreeValidationError{}
+} = ImportSource_GitTreeValidationError{}
 
-// Validate checks the field values on PullSource_Archive with the rules
+// Validate checks the field values on ImportSource_Archive with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *PullSource_Archive) Validate() error {
+func (m *ImportSource_Archive) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on PullSource_Archive with the rules
+// ValidateAll checks the field values on ImportSource_Archive with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// PullSource_ArchiveMultiError, or nil if none found.
-func (m *PullSource_Archive) ValidateAll() error {
+// ImportSource_ArchiveMultiError, or nil if none found.
+func (m *ImportSource_Archive) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *PullSource_Archive) validate(all bool) error {
+func (m *ImportSource_Archive) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -5594,19 +5595,19 @@ func (m *PullSource_Archive) validate(all bool) error {
 	// no validation rules for Url
 
 	if len(errors) > 0 {
-		return PullSource_ArchiveMultiError(errors)
+		return ImportSource_ArchiveMultiError(errors)
 	}
 
 	return nil
 }
 
-// PullSource_ArchiveMultiError is an error wrapping multiple validation errors
-// returned by PullSource_Archive.ValidateAll() if the designated constraints
-// aren't met.
-type PullSource_ArchiveMultiError []error
+// ImportSource_ArchiveMultiError is an error wrapping multiple validation
+// errors returned by ImportSource_Archive.ValidateAll() if the designated
+// constraints aren't met.
+type ImportSource_ArchiveMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m PullSource_ArchiveMultiError) Error() string {
+func (m ImportSource_ArchiveMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5615,11 +5616,11 @@ func (m PullSource_ArchiveMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m PullSource_ArchiveMultiError) AllErrors() []error { return m }
+func (m ImportSource_ArchiveMultiError) AllErrors() []error { return m }
 
-// PullSource_ArchiveValidationError is the validation error returned by
-// PullSource_Archive.Validate if the designated constraints aren't met.
-type PullSource_ArchiveValidationError struct {
+// ImportSource_ArchiveValidationError is the validation error returned by
+// ImportSource_Archive.Validate if the designated constraints aren't met.
+type ImportSource_ArchiveValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5627,24 +5628,24 @@ type PullSource_ArchiveValidationError struct {
 }
 
 // Field function returns field value.
-func (e PullSource_ArchiveValidationError) Field() string { return e.field }
+func (e ImportSource_ArchiveValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PullSource_ArchiveValidationError) Reason() string { return e.reason }
+func (e ImportSource_ArchiveValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PullSource_ArchiveValidationError) Cause() error { return e.cause }
+func (e ImportSource_ArchiveValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PullSource_ArchiveValidationError) Key() bool { return e.key }
+func (e ImportSource_ArchiveValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PullSource_ArchiveValidationError) ErrorName() string {
-	return "PullSource_ArchiveValidationError"
+func (e ImportSource_ArchiveValidationError) ErrorName() string {
+	return "ImportSource_ArchiveValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e PullSource_ArchiveValidationError) Error() string {
+func (e ImportSource_ArchiveValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5656,14 +5657,14 @@ func (e PullSource_ArchiveValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPullSource_Archive.%s: %s%s",
+		"invalid %sImportSource_Archive.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PullSource_ArchiveValidationError{}
+var _ error = ImportSource_ArchiveValidationError{}
 
 var _ interface {
 	Field() string
@@ -5671,4 +5672,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PullSource_ArchiveValidationError{}
+} = ImportSource_ArchiveValidationError{}

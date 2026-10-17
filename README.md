@@ -35,7 +35,6 @@ func main() {
 
 	// Access services via accessors
 	// c.Agent().MethodName(ctx, req)
-	// c.WorkloadIdentityProvider().MethodName(ctx, req)
 	// c.Job().MethodName(ctx, req)
 	// c.AgentRuntime().MethodName(ctx, req)
 	// c.ApiKey().MethodName(ctx, req)
@@ -47,6 +46,8 @@ func main() {
 	// c.Invitation().MethodName(ctx, req)
 	// c.Registry().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
+	// c.ServiceAccount().MethodName(ctx, req)
+	// c.Issuer().MethodName(ctx, req)
 	// c.Tenant().MethodName(ctx, req)
 	// c.User().MethodName(ctx, req)
 }
@@ -57,7 +58,6 @@ func main() {
 | Service | Accessor | Import |
 |---------|----------|--------|
 | AgentAPI | `Agent()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
-| WorkloadIdentityProviderAPI | `WorkloadIdentityProvider()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | JobAPI | `Job()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | AgentRuntimeAPI | `AgentRuntime()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | ApiKeyAPI | `ApiKey()` | `go.admiral.io/sdk/proto/admiral/api/apikey/v1` |
@@ -69,6 +69,8 @@ func main() {
 | InvitationAPI | `Invitation()` | `go.admiral.io/sdk/proto/admiral/api/invitation/v1` |
 | RegistryAPI | `Registry()` | `go.admiral.io/sdk/proto/admiral/api/registry/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |
+| ServiceAccountAPI | `ServiceAccount()` | `go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1` |
+| IssuerAPI | `Issuer()` | `go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1` |
 | TenantAPI | `Tenant()` | `go.admiral.io/sdk/proto/admiral/api/tenant/v1` |
 | UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/api/user/v1` |
 

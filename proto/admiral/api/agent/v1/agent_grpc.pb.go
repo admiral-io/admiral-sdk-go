@@ -34,16 +34,17 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// AgentAPI manages agents: what runs work in a customer's environment, how
-// each proves who it is, who may use it, and its enrollment keys.
+// AgentAPI manages agents: what runs work in a customer's environment, who
+// may use it, and its enrollment keys. Each agent runs as a service account
+// (admiral.*.serviceaccount.v1), made with it.
 //
 // An environment deploys through the agents assigned to it, and may be assigned
 // only an agent granted to the organization, a team, its application, or the
 // environment itself.
 type AgentAPIClient interface {
-	// CreateAgent records an agent: what it runs, and the workload identity it
-	// signs in with. When its provider is PENDING for enrollment, the response
-	// carries a single-use key the agent enrolls the provider's keys with.
+	// CreateAgent records an agent and the service account it runs as, and
+	// returns the single-use key it enrolls with. Nothing about where it runs is
+	// named here: its issuer and subject are learned when it enrolls.
 	//
 	// Scope: `agent:write`
 	CreateAgent(ctx context.Context, in *CreateAgentRequest, opts ...grpc.CallOption) (*CreateAgentResponse, error)
@@ -51,7 +52,7 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:read`
 	GetAgent(ctx context.Context, in *GetAgentRequest, opts ...grpc.CallOption) (*GetAgentResponse, error)
-	// ListAgents lists agents. Narrow it with `filter`, by provider or by what an
+	// ListAgents lists agents. Narrow it with `filter`, by kind or by what an
 	// agent may be assigned to.
 	//
 	// Scope: `agent:read`
@@ -68,9 +69,10 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	DeleteAgent(ctx context.Context, in *DeleteAgentRequest, opts ...grpc.CallOption) (*DeleteAgentResponse, error)
-	// CreateEnrollmentKey issues a single-use key an agent enrolls its
-	// provider's keys with. It can do nothing else, expires within an hour, and is revoked the
-	// moment it is used.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls with, for one
+	// that has not enrolled or must enroll again (reinstalled under another
+	// Kubernetes service account, say). It can do nothing else, expires within
+	// an hour, and is revoked the moment it is used.
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(ctx context.Context, in *CreateEnrollmentKeyRequest, opts ...grpc.CallOption) (*CreateEnrollmentKeyResponse, error)
@@ -195,16 +197,17 @@ func (c *agentAPIClient) ListAgentGrants(ctx context.Context, in *ListAgentGrant
 // All implementations should embed UnimplementedAgentAPIServer
 // for forward compatibility.
 //
-// AgentAPI manages agents: what runs work in a customer's environment, how
-// each proves who it is, who may use it, and its enrollment keys.
+// AgentAPI manages agents: what runs work in a customer's environment, who
+// may use it, and its enrollment keys. Each agent runs as a service account
+// (admiral.*.serviceaccount.v1), made with it.
 //
 // An environment deploys through the agents assigned to it, and may be assigned
 // only an agent granted to the organization, a team, its application, or the
 // environment itself.
 type AgentAPIServer interface {
-	// CreateAgent records an agent: what it runs, and the workload identity it
-	// signs in with. When its provider is PENDING for enrollment, the response
-	// carries a single-use key the agent enrolls the provider's keys with.
+	// CreateAgent records an agent and the service account it runs as, and
+	// returns the single-use key it enrolls with. Nothing about where it runs is
+	// named here: its issuer and subject are learned when it enrolls.
 	//
 	// Scope: `agent:write`
 	CreateAgent(context.Context, *CreateAgentRequest) (*CreateAgentResponse, error)
@@ -212,7 +215,7 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:read`
 	GetAgent(context.Context, *GetAgentRequest) (*GetAgentResponse, error)
-	// ListAgents lists agents. Narrow it with `filter`, by provider or by what an
+	// ListAgents lists agents. Narrow it with `filter`, by kind or by what an
 	// agent may be assigned to.
 	//
 	// Scope: `agent:read`
@@ -229,9 +232,10 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:write`
 	DeleteAgent(context.Context, *DeleteAgentRequest) (*DeleteAgentResponse, error)
-	// CreateEnrollmentKey issues a single-use key an agent enrolls its
-	// provider's keys with. It can do nothing else, expires within an hour, and is revoked the
-	// moment it is used.
+	// CreateEnrollmentKey issues a single-use key an agent enrolls with, for one
+	// that has not enrolled or must enroll again (reinstalled under another
+	// Kubernetes service account, say). It can do nothing else, expires within
+	// an hour, and is revoked the moment it is used.
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *CreateEnrollmentKeyRequest) (*CreateEnrollmentKeyResponse, error)
@@ -519,320 +523,6 @@ var AgentAPI_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_FullMethodName  = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/CreateWorkloadIdentityProvider"
-	WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_FullMethodName     = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/GetWorkloadIdentityProvider"
-	WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_FullMethodName   = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/ListWorkloadIdentityProviders"
-	WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_FullMethodName = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/SetWorkloadIdentityProviderKeys"
-	WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_FullMethodName  = "/admiral.api.agent.v1.WorkloadIdentityProviderAPI/DeleteWorkloadIdentityProvider"
-)
-
-// WorkloadIdentityProviderAPIClient is the client API for WorkloadIdentityProviderAPI service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// WorkloadIdentityProviderAPI manages the token issuers Admiral trusts for
-// agents to prove who they are, such as a Kubernetes cluster's
-// service-account issuer.
-//
-// A provider is an issuer Admiral trusts, not a token: a public URL Admiral
-// fetches keys from, or its public keys (uploaded). An agent authenticates
-// with the short-lived token its provider issues; no long-lived secret
-// exists. A provider without keys yet is PENDING until a person sets them or
-// an agent enrolls it with a single-use enrollment key.
-type WorkloadIdentityProviderAPIClient interface {
-	// CreateWorkloadIdentityProvider records an issuer to trust: GitHub
-	// Actions, Google, an AWS account, or a Kubernetes cluster. Give a
-	// `jwks_uri` when its keys are public (GKE, EKS, GitHub, Google, AWS), the
-	// keys themselves when not, or neither to leave it PENDING for an agent to
-	// enroll (kind, minikube, on-prem).
-	//
-	// Scope: `agent:write`
-	CreateWorkloadIdentityProvider(ctx context.Context, in *CreateWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*CreateWorkloadIdentityProviderResponse, error)
-	// GetWorkloadIdentityProvider returns a provider and the key ids it trusts.
-	//
-	// Scope: `agent:read`
-	GetWorkloadIdentityProvider(ctx context.Context, in *GetWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*GetWorkloadIdentityProviderResponse, error)
-	// ListWorkloadIdentityProviders lists the tenant's providers.
-	//
-	// Scope: `agent:read`
-	ListWorkloadIdentityProviders(ctx context.Context, in *ListWorkloadIdentityProvidersRequest, opts ...grpc.CallOption) (*ListWorkloadIdentityProvidersResponse, error)
-	// SetWorkloadIdentityProviderKeys replaces where a provider's keys come
-	// from, or accepts the keys an agent last reported.
-	//
-	// Scope: `agent:write`
-	SetWorkloadIdentityProviderKeys(ctx context.Context, in *SetWorkloadIdentityProviderKeysRequest, opts ...grpc.CallOption) (*SetWorkloadIdentityProviderKeysResponse, error)
-	// DeleteWorkloadIdentityProvider removes a provider and the agents that authenticate
-	// through it. Their leases end at once.
-	//
-	// Scope: `agent:write`
-	DeleteWorkloadIdentityProvider(ctx context.Context, in *DeleteWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*DeleteWorkloadIdentityProviderResponse, error)
-}
-
-type workloadIdentityProviderAPIClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewWorkloadIdentityProviderAPIClient(cc grpc.ClientConnInterface) WorkloadIdentityProviderAPIClient {
-	return &workloadIdentityProviderAPIClient{cc}
-}
-
-func (c *workloadIdentityProviderAPIClient) CreateWorkloadIdentityProvider(ctx context.Context, in *CreateWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*CreateWorkloadIdentityProviderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateWorkloadIdentityProviderResponse)
-	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) GetWorkloadIdentityProvider(ctx context.Context, in *GetWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*GetWorkloadIdentityProviderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetWorkloadIdentityProviderResponse)
-	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) ListWorkloadIdentityProviders(ctx context.Context, in *ListWorkloadIdentityProvidersRequest, opts ...grpc.CallOption) (*ListWorkloadIdentityProvidersResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListWorkloadIdentityProvidersResponse)
-	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) SetWorkloadIdentityProviderKeys(ctx context.Context, in *SetWorkloadIdentityProviderKeysRequest, opts ...grpc.CallOption) (*SetWorkloadIdentityProviderKeysResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SetWorkloadIdentityProviderKeysResponse)
-	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *workloadIdentityProviderAPIClient) DeleteWorkloadIdentityProvider(ctx context.Context, in *DeleteWorkloadIdentityProviderRequest, opts ...grpc.CallOption) (*DeleteWorkloadIdentityProviderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteWorkloadIdentityProviderResponse)
-	err := c.cc.Invoke(ctx, WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// WorkloadIdentityProviderAPIServer is the server API for WorkloadIdentityProviderAPI service.
-// All implementations should embed UnimplementedWorkloadIdentityProviderAPIServer
-// for forward compatibility.
-//
-// WorkloadIdentityProviderAPI manages the token issuers Admiral trusts for
-// agents to prove who they are, such as a Kubernetes cluster's
-// service-account issuer.
-//
-// A provider is an issuer Admiral trusts, not a token: a public URL Admiral
-// fetches keys from, or its public keys (uploaded). An agent authenticates
-// with the short-lived token its provider issues; no long-lived secret
-// exists. A provider without keys yet is PENDING until a person sets them or
-// an agent enrolls it with a single-use enrollment key.
-type WorkloadIdentityProviderAPIServer interface {
-	// CreateWorkloadIdentityProvider records an issuer to trust: GitHub
-	// Actions, Google, an AWS account, or a Kubernetes cluster. Give a
-	// `jwks_uri` when its keys are public (GKE, EKS, GitHub, Google, AWS), the
-	// keys themselves when not, or neither to leave it PENDING for an agent to
-	// enroll (kind, minikube, on-prem).
-	//
-	// Scope: `agent:write`
-	CreateWorkloadIdentityProvider(context.Context, *CreateWorkloadIdentityProviderRequest) (*CreateWorkloadIdentityProviderResponse, error)
-	// GetWorkloadIdentityProvider returns a provider and the key ids it trusts.
-	//
-	// Scope: `agent:read`
-	GetWorkloadIdentityProvider(context.Context, *GetWorkloadIdentityProviderRequest) (*GetWorkloadIdentityProviderResponse, error)
-	// ListWorkloadIdentityProviders lists the tenant's providers.
-	//
-	// Scope: `agent:read`
-	ListWorkloadIdentityProviders(context.Context, *ListWorkloadIdentityProvidersRequest) (*ListWorkloadIdentityProvidersResponse, error)
-	// SetWorkloadIdentityProviderKeys replaces where a provider's keys come
-	// from, or accepts the keys an agent last reported.
-	//
-	// Scope: `agent:write`
-	SetWorkloadIdentityProviderKeys(context.Context, *SetWorkloadIdentityProviderKeysRequest) (*SetWorkloadIdentityProviderKeysResponse, error)
-	// DeleteWorkloadIdentityProvider removes a provider and the agents that authenticate
-	// through it. Their leases end at once.
-	//
-	// Scope: `agent:write`
-	DeleteWorkloadIdentityProvider(context.Context, *DeleteWorkloadIdentityProviderRequest) (*DeleteWorkloadIdentityProviderResponse, error)
-}
-
-// UnimplementedWorkloadIdentityProviderAPIServer should be embedded to have
-// forward compatible implementations.
-//
-// NOTE: this should be embedded by value instead of pointer to avoid a nil
-// pointer dereference when methods are called.
-type UnimplementedWorkloadIdentityProviderAPIServer struct{}
-
-func (UnimplementedWorkloadIdentityProviderAPIServer) CreateWorkloadIdentityProvider(context.Context, *CreateWorkloadIdentityProviderRequest) (*CreateWorkloadIdentityProviderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateWorkloadIdentityProvider not implemented")
-}
-func (UnimplementedWorkloadIdentityProviderAPIServer) GetWorkloadIdentityProvider(context.Context, *GetWorkloadIdentityProviderRequest) (*GetWorkloadIdentityProviderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetWorkloadIdentityProvider not implemented")
-}
-func (UnimplementedWorkloadIdentityProviderAPIServer) ListWorkloadIdentityProviders(context.Context, *ListWorkloadIdentityProvidersRequest) (*ListWorkloadIdentityProvidersResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListWorkloadIdentityProviders not implemented")
-}
-func (UnimplementedWorkloadIdentityProviderAPIServer) SetWorkloadIdentityProviderKeys(context.Context, *SetWorkloadIdentityProviderKeysRequest) (*SetWorkloadIdentityProviderKeysResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SetWorkloadIdentityProviderKeys not implemented")
-}
-func (UnimplementedWorkloadIdentityProviderAPIServer) DeleteWorkloadIdentityProvider(context.Context, *DeleteWorkloadIdentityProviderRequest) (*DeleteWorkloadIdentityProviderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeleteWorkloadIdentityProvider not implemented")
-}
-func (UnimplementedWorkloadIdentityProviderAPIServer) testEmbeddedByValue() {}
-
-// UnsafeWorkloadIdentityProviderAPIServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to WorkloadIdentityProviderAPIServer will
-// result in compilation errors.
-type UnsafeWorkloadIdentityProviderAPIServer interface {
-	mustEmbedUnimplementedWorkloadIdentityProviderAPIServer()
-}
-
-func RegisterWorkloadIdentityProviderAPIServer(s grpc.ServiceRegistrar, srv WorkloadIdentityProviderAPIServer) {
-	// If the following call panics, it indicates UnimplementedWorkloadIdentityProviderAPIServer was
-	// embedded by pointer and is nil.  This will cause panics if an
-	// unimplemented method is ever invoked, so we test this at initialization
-	// time to prevent it from happening at runtime later due to I/O.
-	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
-		t.testEmbeddedByValue()
-	}
-	s.RegisterService(&WorkloadIdentityProviderAPI_ServiceDesc, srv)
-}
-
-func _WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateWorkloadIdentityProviderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkloadIdentityProviderAPIServer).CreateWorkloadIdentityProvider(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkloadIdentityProviderAPIServer).CreateWorkloadIdentityProvider(ctx, req.(*CreateWorkloadIdentityProviderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWorkloadIdentityProviderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkloadIdentityProviderAPIServer).GetWorkloadIdentityProvider(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkloadIdentityProviderAPIServer).GetWorkloadIdentityProvider(ctx, req.(*GetWorkloadIdentityProviderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListWorkloadIdentityProvidersRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkloadIdentityProviderAPIServer).ListWorkloadIdentityProviders(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkloadIdentityProviderAPIServer).ListWorkloadIdentityProviders(ctx, req.(*ListWorkloadIdentityProvidersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetWorkloadIdentityProviderKeysRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkloadIdentityProviderAPIServer).SetWorkloadIdentityProviderKeys(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkloadIdentityProviderAPIServer).SetWorkloadIdentityProviderKeys(ctx, req.(*SetWorkloadIdentityProviderKeysRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteWorkloadIdentityProviderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkloadIdentityProviderAPIServer).DeleteWorkloadIdentityProvider(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkloadIdentityProviderAPIServer).DeleteWorkloadIdentityProvider(ctx, req.(*DeleteWorkloadIdentityProviderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// WorkloadIdentityProviderAPI_ServiceDesc is the grpc.ServiceDesc for WorkloadIdentityProviderAPI service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var WorkloadIdentityProviderAPI_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "admiral.api.agent.v1.WorkloadIdentityProviderAPI",
-	HandlerType: (*WorkloadIdentityProviderAPIServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateWorkloadIdentityProvider",
-			Handler:    _WorkloadIdentityProviderAPI_CreateWorkloadIdentityProvider_Handler,
-		},
-		{
-			MethodName: "GetWorkloadIdentityProvider",
-			Handler:    _WorkloadIdentityProviderAPI_GetWorkloadIdentityProvider_Handler,
-		},
-		{
-			MethodName: "ListWorkloadIdentityProviders",
-			Handler:    _WorkloadIdentityProviderAPI_ListWorkloadIdentityProviders_Handler,
-		},
-		{
-			MethodName: "SetWorkloadIdentityProviderKeys",
-			Handler:    _WorkloadIdentityProviderAPI_SetWorkloadIdentityProviderKeys_Handler,
-		},
-		{
-			MethodName: "DeleteWorkloadIdentityProvider",
-			Handler:    _WorkloadIdentityProviderAPI_DeleteWorkloadIdentityProvider_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "admiral/api/agent/v1/agent.proto",
-}
-
-const (
 	JobAPI_GetJob_FullMethodName    = "/admiral.api.agent.v1.JobAPI/GetJob"
 	JobAPI_GetJobLog_FullMethodName = "/admiral.api.agent.v1.JobAPI/GetJobLog"
 	JobAPI_ListJobs_FullMethodName  = "/admiral.api.agent.v1.JobAPI/ListJobs"
@@ -1109,10 +799,13 @@ const (
 // the claim carries the attempt and its lease token; a call from an attempt
 // that is not the current one, or whose lease lapsed, changes nothing.
 type AgentRuntimeAPIClient interface {
-	// Enroll sets a PENDING provider's keys from inside it: the keys its issuer
-	// serves, and a token they verify. The token's issuer becomes the
-	// provider's. The caller authenticates with an enrollment key, which this
-	// spends.
+	// Enroll ties the agent's service account to an issuer and records its
+	// subject. The agent sends its issuer's keys and a token they verify. When
+	// the token also verifies against the keys of an issuer the tenant already
+	// holds, the service account trusts that one; otherwise the sent keys become
+	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
+	// token's subject is recorded and fixed until the agent enrolls again. The
+	// caller authenticates with an enrollment key, which this spends.
 	//
 	// Scope: `agent:enroll`
 	Enroll(ctx context.Context, in *EnrollRequest, opts ...grpc.CallOption) (*EnrollResponse, error)
@@ -1305,10 +998,13 @@ func (c *agentRuntimeAPIClient) FinishJob(ctx context.Context, in *FinishJobRequ
 // the claim carries the attempt and its lease token; a call from an attempt
 // that is not the current one, or whose lease lapsed, changes nothing.
 type AgentRuntimeAPIServer interface {
-	// Enroll sets a PENDING provider's keys from inside it: the keys its issuer
-	// serves, and a token they verify. The token's issuer becomes the
-	// provider's. The caller authenticates with an enrollment key, which this
-	// spends.
+	// Enroll ties the agent's service account to an issuer and records its
+	// subject. The agent sends its issuer's keys and a token they verify. When
+	// the token also verifies against the keys of an issuer the tenant already
+	// holds, the service account trusts that one; otherwise the sent keys become
+	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
+	// token's subject is recorded and fixed until the agent enrolls again. The
+	// caller authenticates with an enrollment key, which this spends.
 	//
 	// Scope: `agent:enroll`
 	Enroll(context.Context, *EnrollRequest) (*EnrollResponse, error)

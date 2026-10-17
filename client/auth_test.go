@@ -50,8 +50,8 @@ func TestValidateAuthToken(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "valid session token",
-			token:   createTestToken(TokenPrefixSession),
+			name:    "valid enrollment key",
+			token:   createTestToken(TokenPrefixEnrollment),
 			wantErr: false,
 		},
 		{
@@ -212,8 +212,8 @@ func TestTokenConstants(t *testing.T) {
 	if len(TokenPrefixSAT) != 5 {
 		t.Errorf("TokenPrefixSAT length = %d, want 5", len(TokenPrefixSAT))
 	}
-	if len(TokenPrefixSession) != 5 {
-		t.Errorf("TokenPrefixSession length = %d, want 5", len(TokenPrefixSession))
+	if len(TokenPrefixEnrollment) != 5 {
+		t.Errorf("TokenPrefixEnrollment length = %d, want 5", len(TokenPrefixEnrollment))
 	}
 	// 5 (prefix) + 43 (base64url of 32 bytes) + 6 (checksum) = 54
 	if TokenLength != 54 {

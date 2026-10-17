@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	RegistryAPI_PublishComponent_FullMethodName   = "/admiral.api.registry.v1.RegistryAPI/PublishComponent"
-	RegistryAPI_PullComponent_FullMethodName      = "/admiral.api.registry.v1.RegistryAPI/PullComponent"
+	RegistryAPI_ImportComponent_FullMethodName    = "/admiral.api.registry.v1.RegistryAPI/ImportComponent"
 	RegistryAPI_ListComponents_FullMethodName     = "/admiral.api.registry.v1.RegistryAPI/ListComponents"
 	RegistryAPI_GetComponent_FullMethodName       = "/admiral.api.registry.v1.RegistryAPI/GetComponent"
 	RegistryAPI_UpdateComponent_FullMethodName    = "/admiral.api.registry.v1.RegistryAPI/UpdateComponent"
@@ -77,7 +77,7 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(ctx context.Context, in *PublishComponentRequest, opts ...grpc.CallOption) (*PublishComponentResponse, error)
-	// PullComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the tenant does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
@@ -87,7 +87,7 @@ type RegistryAPIClient interface {
 	// with `unchanged` set.
 	//
 	// Scope: `component:publish`
-	PullComponent(ctx context.Context, in *PullComponentRequest, opts ...grpc.CallOption) (*PullComponentResponse, error)
+	ImportComponent(ctx context.Context, in *ImportComponentRequest, opts ...grpc.CallOption) (*ImportComponentResponse, error)
 	// ListComponents pages through the registry.
 	//
 	// Scope: `component:read`
@@ -164,10 +164,10 @@ func (c *registryAPIClient) PublishComponent(ctx context.Context, in *PublishCom
 	return out, nil
 }
 
-func (c *registryAPIClient) PullComponent(ctx context.Context, in *PullComponentRequest, opts ...grpc.CallOption) (*PullComponentResponse, error) {
+func (c *registryAPIClient) ImportComponent(ctx context.Context, in *ImportComponentRequest, opts ...grpc.CallOption) (*ImportComponentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PullComponentResponse)
-	err := c.cc.Invoke(ctx, RegistryAPI_PullComponent_FullMethodName, in, out, cOpts...)
+	out := new(ImportComponentResponse)
+	err := c.cc.Invoke(ctx, RegistryAPI_ImportComponent_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ type RegistryAPIServer interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *PublishComponentRequest) (*PublishComponentResponse, error)
-	// PullComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the tenant does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
@@ -328,7 +328,7 @@ type RegistryAPIServer interface {
 	// with `unchanged` set.
 	//
 	// Scope: `component:publish`
-	PullComponent(context.Context, *PullComponentRequest) (*PullComponentResponse, error)
+	ImportComponent(context.Context, *ImportComponentRequest) (*ImportComponentResponse, error)
 	// ListComponents pages through the registry.
 	//
 	// Scope: `component:read`
@@ -397,8 +397,8 @@ type UnimplementedRegistryAPIServer struct{}
 func (UnimplementedRegistryAPIServer) PublishComponent(context.Context, *PublishComponentRequest) (*PublishComponentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PublishComponent not implemented")
 }
-func (UnimplementedRegistryAPIServer) PullComponent(context.Context, *PullComponentRequest) (*PullComponentResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method PullComponent not implemented")
+func (UnimplementedRegistryAPIServer) ImportComponent(context.Context, *ImportComponentRequest) (*ImportComponentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ImportComponent not implemented")
 }
 func (UnimplementedRegistryAPIServer) ListComponents(context.Context, *ListComponentsRequest) (*ListComponentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListComponents not implemented")
@@ -468,20 +468,20 @@ func _RegistryAPI_PublishComponent_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RegistryAPI_PullComponent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PullComponentRequest)
+func _RegistryAPI_ImportComponent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportComponentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RegistryAPIServer).PullComponent(ctx, in)
+		return srv.(RegistryAPIServer).ImportComponent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RegistryAPI_PullComponent_FullMethodName,
+		FullMethod: RegistryAPI_ImportComponent_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RegistryAPIServer).PullComponent(ctx, req.(*PullComponentRequest))
+		return srv.(RegistryAPIServer).ImportComponent(ctx, req.(*ImportComponentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -678,8 +678,8 @@ var RegistryAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RegistryAPI_PublishComponent_Handler,
 		},
 		{
-			MethodName: "PullComponent",
-			Handler:    _RegistryAPI_PullComponent_Handler,
+			MethodName: "ImportComponent",
+			Handler:    _RegistryAPI_ImportComponent_Handler,
 		},
 		{
 			MethodName: "ListComponents",

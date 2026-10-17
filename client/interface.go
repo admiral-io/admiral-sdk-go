@@ -11,6 +11,7 @@ import (
 	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
+	serviceaccountv1 "go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
@@ -19,8 +20,6 @@ import (
 type AdmiralClient interface {
 	// Agent returns the AgentAPI client.
 	Agent() agentv1.AgentAPIClient
-	// WorkloadIdentityProvider returns the WorkloadIdentityProviderAPI client.
-	WorkloadIdentityProvider() agentv1.WorkloadIdentityProviderAPIClient
 	// Job returns the JobAPI client.
 	Job() agentv1.JobAPIClient
 	// AgentRuntime returns the AgentRuntimeAPI client.
@@ -43,6 +42,10 @@ type AdmiralClient interface {
 	Registry() registryv1.RegistryAPIClient
 	// Run returns the RunAPI client.
 	Run() runv1.RunAPIClient
+	// ServiceAccount returns the ServiceAccountAPI client.
+	ServiceAccount() serviceaccountv1.ServiceAccountAPIClient
+	// Issuer returns the IssuerAPI client.
+	Issuer() serviceaccountv1.IssuerAPIClient
 	// Tenant returns the TenantAPI client.
 	Tenant() tenantv1.TenantAPIClient
 	// User returns the UserAPI client.
