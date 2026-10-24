@@ -10,12 +10,13 @@ import (
 	v1 "buf.build/gen/go/admiral/common/protocolbuffers/go/admiral/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "github.com/google/gnostic/openapiv3"
-	v12 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
-	v11 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
+	v11 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
+	v12 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -71,7 +72,19 @@ type Environment struct {
 	Hold *Hold `protobuf:"bytes,20,opt,name=hold,proto3" json:"hold,omitempty"`
 	// The apply that produced the current generation. Absent until the first
 	// apply changes the environment.
-	LastApply     *LastApply `protobuf:"bytes,21,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
+	LastApply *LastApply `protobuf:"bytes,21,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
+	// Where its Terraform components' state lives. Admiral writes it into every
+	// run at a location it derives per component, and a component may replace
+	// it. Absent means hosted state. Fixed once a Terraform component in the
+	// environment has applied.
+	InfraBackend *v11.InfraBackend `protobuf:"bytes,22,opt,name=infra_backend,json=infraBackend,proto3" json:"infra_backend,omitempty"`
+	// The engine and exact version its Terraform components run. A component
+	// whose `required_version` is exact runs this engine at that version
+	// instead, and does not block a change here. Setting it is refused when a
+	// component's range refuses it, when it is below a version a component last
+	// applied with, or when a placed agent cannot run it; the refusal names
+	// every such component. Each component moves to it at its next plan.
+	InfraEngine   *v12.InfraEngineVersion `protobuf:"bytes,23,opt,name=infra_engine,json=infraEngine,proto3" json:"infra_engine,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -197,6 +210,20 @@ func (x *Environment) GetLastApply() *LastApply {
 	return nil
 }
 
+func (x *Environment) GetInfraBackend() *v11.InfraBackend {
+	if x != nil {
+		return x.InfraBackend
+	}
+	return nil
+}
+
+func (x *Environment) GetInfraEngine() *v12.InfraEngineVersion {
+	if x != nil {
+		return x.InfraEngine
+	}
+	return nil
+}
+
 // AgentAssignment binds an agent to an environment, with the settings for
 // how this environment uses it.
 type AgentAssignment struct {
@@ -209,14 +236,6 @@ type AgentAssignment struct {
 	// one; send it back unchanged when updating the list, or the assignment is
 	// treated as new and components placed on the old one are refused.
 	Id string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
-	// The agent profiles a plan and an apply get: named sets of environment
-	// variables, with an optional identity to assume, that the agent's owner
-	// defines in the agent's own config, such as a read-only and an edit
-	// Cloudflare token. Admiral holds the names, never the values. Empty means
-	// the agent's `default` profile. A profile must be one the agent reports
-	// and its grants cover for this environment.
-	PlanProfile  string `protobuf:"bytes,6,opt,name=plan_profile,json=planProfile,proto3" json:"plan_profile,omitempty"`
-	ApplyProfile string `protobuf:"bytes,7,opt,name=apply_profile,json=applyProfile,proto3" json:"apply_profile,omitempty"`
 	// Settings for the agent's kind.
 	//
 	// Types that are valid to be assigned to Settings:
@@ -267,20 +286,6 @@ func (x *AgentAssignment) GetAgentId() string {
 func (x *AgentAssignment) GetId() string {
 	if x != nil {
 		return x.Id
-	}
-	return ""
-}
-
-func (x *AgentAssignment) GetPlanProfile() string {
-	if x != nil {
-		return x.PlanProfile
-	}
-	return ""
-}
-
-func (x *AgentAssignment) GetApplyProfile() string {
-	if x != nil {
-		return x.ApplyProfile
 	}
 	return ""
 }
@@ -902,7 +907,8 @@ type UpdateEnvironmentRequest struct {
 	Environment *Environment `protobuf:"bytes,1,opt,name=environment,proto3" json:"environment,omitempty"`
 	// The set of fields to update. Optional; if omitted, all populated fields
 	// are updated. Pass `*` for full replacement. Supported fields: `name`,
-	// `description`, `labels`, `agents`, `approval`.
+	// `description`, `labels`, `agents`, `approval`, `infra_backend`,
+	// `infra_engine`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1081,6 +1087,68 @@ func (*DeleteEnvironmentResponse) Descriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{15}
 }
 
+// EnvironmentComponentOutput is one output of a live component.
+type EnvironmentComponentOutput struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// Null when sensitive: the value is sealed and never returned.
+	Value         *structpb.Value `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Sensitive     bool            `protobuf:"varint,3,opt,name=sensitive,proto3" json:"sensitive,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnvironmentComponentOutput) Reset() {
+	*x = EnvironmentComponentOutput{}
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnvironmentComponentOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnvironmentComponentOutput) ProtoMessage() {}
+
+func (x *EnvironmentComponentOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnvironmentComponentOutput.ProtoReflect.Descriptor instead.
+func (*EnvironmentComponentOutput) Descriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *EnvironmentComponentOutput) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *EnvironmentComponentOutput) GetValue() *structpb.Value {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *EnvironmentComponentOutput) GetSensitive() bool {
+	if x != nil {
+		return x.Sensitive
+	}
+	return false
+}
+
 // EnvironmentComponent is one component live in an environment: the version
 // it runs and the apply that last changed it.
 type EnvironmentComponent struct {
@@ -1090,18 +1158,24 @@ type EnvironmentComponent struct {
 	// The environment it is live in.
 	EnvironmentId string `protobuf:"bytes,12,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	// What its version is: Terraform, Helm or manifests.
-	Kind v11.ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.api.registry.v1.ComponentKind" json:"kind,omitempty"`
+	Kind v12.ComponentKind `protobuf:"varint,5,opt,name=kind,proto3,enum=admiral.api.registry.v1.ComponentKind" json:"kind,omitempty"`
 	// The registry version it runs.
-	Version *v12.VersionRef `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
+	Version *v11.VersionRef `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
 	// The apply that last changed this component.
-	LastApply     *LastApply `protobuf:"bytes,11,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
+	LastApply *LastApply `protobuf:"bytes,11,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
+	// Its outputs from the last successful apply. A sensitive output's value
+	// is null.
+	Outputs []*EnvironmentComponentOutput `protobuf:"bytes,13,rep,name=outputs,proto3" json:"outputs,omitempty"`
+	// The Terraform engine version it last applied with. The environment's
+	// engine version may not go below it.
+	AppliedEngine *v12.InfraEngineVersion `protobuf:"bytes,14,opt,name=applied_engine,json=appliedEngine,proto3" json:"applied_engine,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *EnvironmentComponent) Reset() {
 	*x = EnvironmentComponent{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1113,7 +1187,7 @@ func (x *EnvironmentComponent) String() string {
 func (*EnvironmentComponent) ProtoMessage() {}
 
 func (x *EnvironmentComponent) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[16]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1126,7 +1200,7 @@ func (x *EnvironmentComponent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnvironmentComponent.ProtoReflect.Descriptor instead.
 func (*EnvironmentComponent) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{16}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *EnvironmentComponent) GetName() string {
@@ -1143,14 +1217,14 @@ func (x *EnvironmentComponent) GetEnvironmentId() string {
 	return ""
 }
 
-func (x *EnvironmentComponent) GetKind() v11.ComponentKind {
+func (x *EnvironmentComponent) GetKind() v12.ComponentKind {
 	if x != nil {
 		return x.Kind
 	}
-	return v11.ComponentKind(0)
+	return v12.ComponentKind(0)
 }
 
-func (x *EnvironmentComponent) GetVersion() *v12.VersionRef {
+func (x *EnvironmentComponent) GetVersion() *v11.VersionRef {
 	if x != nil {
 		return x.Version
 	}
@@ -1160,6 +1234,20 @@ func (x *EnvironmentComponent) GetVersion() *v12.VersionRef {
 func (x *EnvironmentComponent) GetLastApply() *LastApply {
 	if x != nil {
 		return x.LastApply
+	}
+	return nil
+}
+
+func (x *EnvironmentComponent) GetOutputs() []*EnvironmentComponentOutput {
+	if x != nil {
+		return x.Outputs
+	}
+	return nil
+}
+
+func (x *EnvironmentComponent) GetAppliedEngine() *v12.InfraEngineVersion {
+	if x != nil {
+		return x.AppliedEngine
 	}
 	return nil
 }
@@ -1191,7 +1279,7 @@ type ListEnvironmentComponentsRequest struct {
 
 func (x *ListEnvironmentComponentsRequest) Reset() {
 	*x = ListEnvironmentComponentsRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1203,7 +1291,7 @@ func (x *ListEnvironmentComponentsRequest) String() string {
 func (*ListEnvironmentComponentsRequest) ProtoMessage() {}
 
 func (x *ListEnvironmentComponentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[17]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1216,7 +1304,7 @@ func (x *ListEnvironmentComponentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEnvironmentComponentsRequest.ProtoReflect.Descriptor instead.
 func (*ListEnvironmentComponentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{17}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListEnvironmentComponentsRequest) GetEnvironmentId() string {
@@ -1263,7 +1351,7 @@ type ListEnvironmentComponentsResponse struct {
 
 func (x *ListEnvironmentComponentsResponse) Reset() {
 	*x = ListEnvironmentComponentsResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[18]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1275,7 +1363,7 @@ func (x *ListEnvironmentComponentsResponse) String() string {
 func (*ListEnvironmentComponentsResponse) ProtoMessage() {}
 
 func (x *ListEnvironmentComponentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[18]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1288,7 +1376,7 @@ func (x *ListEnvironmentComponentsResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ListEnvironmentComponentsResponse.ProtoReflect.Descriptor instead.
 func (*ListEnvironmentComponentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{18}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListEnvironmentComponentsResponse) GetComponents() []*EnvironmentComponent {
@@ -1325,7 +1413,7 @@ type GetEnvironmentComponentValuesRequest struct {
 
 func (x *GetEnvironmentComponentValuesRequest) Reset() {
 	*x = GetEnvironmentComponentValuesRequest{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[19]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1337,7 +1425,7 @@ func (x *GetEnvironmentComponentValuesRequest) String() string {
 func (*GetEnvironmentComponentValuesRequest) ProtoMessage() {}
 
 func (x *GetEnvironmentComponentValuesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[19]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1350,7 +1438,7 @@ func (x *GetEnvironmentComponentValuesRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use GetEnvironmentComponentValuesRequest.ProtoReflect.Descriptor instead.
 func (*GetEnvironmentComponentValuesRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{19}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetEnvironmentComponentValuesRequest) GetEnvironmentId() string {
@@ -1380,7 +1468,7 @@ type GetEnvironmentComponentValuesResponse struct {
 	// A JSON object.
 	TreeJson string `protobuf:"bytes,1,opt,name=tree_json,json=treeJson,proto3" json:"tree_json,omitempty"`
 	// With `effective`, where each leaf came from; empty otherwise.
-	Sources []*v12.ValueSource `protobuf:"bytes,2,rep,name=sources,proto3" json:"sources,omitempty"`
+	Sources []*v11.ValueSource `protobuf:"bytes,2,rep,name=sources,proto3" json:"sources,omitempty"`
 	// The apply that last changed it.
 	LastApply     *LastApply `protobuf:"bytes,3,opt,name=last_apply,json=lastApply,proto3" json:"last_apply,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1389,7 +1477,7 @@ type GetEnvironmentComponentValuesResponse struct {
 
 func (x *GetEnvironmentComponentValuesResponse) Reset() {
 	*x = GetEnvironmentComponentValuesResponse{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[20]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1401,7 +1489,7 @@ func (x *GetEnvironmentComponentValuesResponse) String() string {
 func (*GetEnvironmentComponentValuesResponse) ProtoMessage() {}
 
 func (x *GetEnvironmentComponentValuesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[20]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1414,7 +1502,7 @@ func (x *GetEnvironmentComponentValuesResponse) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use GetEnvironmentComponentValuesResponse.ProtoReflect.Descriptor instead.
 func (*GetEnvironmentComponentValuesResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{20}
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetEnvironmentComponentValuesResponse) GetTreeJson() string {
@@ -1424,7 +1512,7 @@ func (x *GetEnvironmentComponentValuesResponse) GetTreeJson() string {
 	return ""
 }
 
-func (x *GetEnvironmentComponentValuesResponse) GetSources() []*v12.ValueSource {
+func (x *GetEnvironmentComponentValuesResponse) GetSources() []*v11.ValueSource {
 	if x != nil {
 		return x.Sources
 	}
@@ -1449,7 +1537,7 @@ type ApprovalRule_GroupApproval struct {
 
 func (x *ApprovalRule_GroupApproval) Reset() {
 	*x = ApprovalRule_GroupApproval{}
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[22]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1461,7 +1549,7 @@ func (x *ApprovalRule_GroupApproval) String() string {
 func (*ApprovalRule_GroupApproval) ProtoMessage() {}
 
 func (x *ApprovalRule_GroupApproval) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[22]
+	mi := &file_admiral_api_environment_v1_environment_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1495,7 +1583,7 @@ var File_admiral_api_environment_v1_environment_proto protoreflect.FileDescripto
 
 const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a(admiral/api/changeset/v1/changeset.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8e\b\n" +
+	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a(admiral/api/changeset/v1/changeset.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xab\t\n" +
 	"\vEnvironment\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\x02id\x12C\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^app-[0-9a-z]+$R\rapplicationId\x12@\n" +
@@ -1516,22 +1604,22 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"generation\x129\n" +
 	"\x04hold\x18\x14 \x01(\v2 .admiral.api.environment.v1.HoldB\x03\xe0A\x03R\x04hold\x12I\n" +
 	"\n" +
-	"last_apply\x18\x15 \x01(\v2%.admiral.api.environment.v1.LastApplyB\x03\xe0A\x03R\tlastApply\x1a9\n" +
+	"last_apply\x18\x15 \x01(\v2%.admiral.api.environment.v1.LastApplyB\x03\xe0A\x03R\tlastApply\x12K\n" +
+	"\rinfra_backend\x18\x16 \x01(\v2&.admiral.api.changeset.v1.InfraBackendR\finfraBackend\x12N\n" +
+	"\finfra_engine\x18\x17 \x01(\v2+.admiral.api.registry.v1.InfraEngineVersionR\vinfraEngine\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\b\x10\tJ\x04\b\t\x10\n" +
 	"J\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x13has_pending_changesR\x10last_deployed_atR\n" +
-	"kubernetesR\x11approval_requiredR\x15held_by_change_set_idR\x05prune\"\x9c\x03\n" +
+	"kubernetesR\x11approval_requiredR\x15held_by_change_set_idR\x05prune\"\x9f\x02\n" +
 	"\x0fAgentAssignment\x124\n" +
 	"\bagent_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^agt-[0-9a-z]+$R\aagentId\x12)\n" +
 	"\x02id\x18\x03 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^asg-[0-9a-z]+$R\x02id\x12P\n" +
-	"\fplan_profile\x18\x06 \x01(\tB-\xbaH*r(\x18?2$^([a-z]([a-z0-9-]{0,61}[a-z0-9])?)?$R\vplanProfile\x12R\n" +
-	"\rapply_profile\x18\a \x01(\tB-\xbaH*r(\x18?2$^([a-z]([a-z0-9-]{0,61}[a-z0-9])?)?$R\fapplyProfile\x12P\n" +
 	"\n" +
 	"kubernetes\x18\x02 \x01(\v2..admiral.api.environment.v1.KubernetesSettingsH\x00R\n" +
 	"kubernetesB\n" +
 	"\n" +
-	"\bsettingsJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06R\x06targetR\x10cloud_identities\"\xe0\x01\n" +
+	"\bsettingsJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06J\x04\b\x06\x10\aJ\x04\b\a\x10\bR\x06targetR\x10cloud_identitiesR\fplan_profileR\rapply_profile\"\xe0\x01\n" +
 	"\x12KubernetesSettings\x12]\n" +
 	"\x11default_namespace\x18\x01 \x01(\tB0\xbaH-r+\x18?2'^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)?$R\x10defaultNamespace\x120\n" +
 	"\x11create_namespaces\x18\x02 \x01(\bH\x00R\x10createNamespaces\x88\x01\x01\x12\x19\n" +
@@ -1581,7 +1669,11 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"i\n" +
 	"\x18DeleteEnvironmentRequest\x12@\n" +
 	"\x0eenvironment_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^env-[0-9a-z]+$R\renvironmentIdJ\x04\b\x02\x10\x03R\x05force\"\x1b\n" +
-	"\x19DeleteEnvironmentResponse\"\x88\x03\n" +
+	"\x19DeleteEnvironmentResponse\"|\n" +
+	"\x1aEnvironmentComponentOutput\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12,\n" +
+	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value\x12\x1c\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xae\x04\n" +
 	"\x14EnvironmentComponent\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12C\n" +
 	"\x0eenvironment_id\x18\f \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\renvironmentId\x12:\n" +
@@ -1589,7 +1681,9 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\aversion\x18\n" +
 	" \x01(\v2$.admiral.api.changeset.v1.VersionRefR\aversion\x12D\n" +
 	"\n" +
-	"last_apply\x18\v \x01(\v2%.admiral.api.environment.v1.LastApplyR\tlastApplyJ\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
+	"last_apply\x18\v \x01(\v2%.admiral.api.environment.v1.LastApplyR\tlastApply\x12P\n" +
+	"\aoutputs\x18\r \x03(\v26.admiral.api.environment.v1.EnvironmentComponentOutputR\aoutputs\x12R\n" +
+	"\x0eapplied_engine\x18\x0e \x01(\v2+.admiral.api.registry.v1.InfraEngineVersionR\rappliedEngineJ\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
 	"R\x03refR\x10last_revision_idR\x14last_revision_statusR\x10last_deployed_at\"\xe8\x01\n" +
 	" ListEnvironmentComponentsRequest\x12B\n" +
 	"\x0eenvironment_id\x18\x05 \x01(\tB\x16\xbaH\x13r\x112\x0f^env-[0-9a-z]+$H\x00R\renvironmentId\x88\x01\x01\x12 \n" +
@@ -1653,7 +1747,7 @@ func file_admiral_api_environment_v1_environment_proto_rawDescGZIP() []byte {
 	return file_admiral_api_environment_v1_environment_proto_rawDescData
 }
 
-var file_admiral_api_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_admiral_api_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_admiral_api_environment_v1_environment_proto_goTypes = []any{
 	(*Environment)(nil),                           // 0: admiral.api.environment.v1.Environment
 	(*AgentAssignment)(nil),                       // 1: admiral.api.environment.v1.AgentAssignment
@@ -1671,65 +1765,74 @@ var file_admiral_api_environment_v1_environment_proto_goTypes = []any{
 	(*UpdateEnvironmentResponse)(nil),             // 13: admiral.api.environment.v1.UpdateEnvironmentResponse
 	(*DeleteEnvironmentRequest)(nil),              // 14: admiral.api.environment.v1.DeleteEnvironmentRequest
 	(*DeleteEnvironmentResponse)(nil),             // 15: admiral.api.environment.v1.DeleteEnvironmentResponse
-	(*EnvironmentComponent)(nil),                  // 16: admiral.api.environment.v1.EnvironmentComponent
-	(*ListEnvironmentComponentsRequest)(nil),      // 17: admiral.api.environment.v1.ListEnvironmentComponentsRequest
-	(*ListEnvironmentComponentsResponse)(nil),     // 18: admiral.api.environment.v1.ListEnvironmentComponentsResponse
-	(*GetEnvironmentComponentValuesRequest)(nil),  // 19: admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
-	(*GetEnvironmentComponentValuesResponse)(nil), // 20: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
-	nil,                                // 21: admiral.api.environment.v1.Environment.LabelsEntry
-	(*ApprovalRule_GroupApproval)(nil), // 22: admiral.api.environment.v1.ApprovalRule.GroupApproval
-	(*v1.ActorRef)(nil),                // 23: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),      // 24: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),      // 25: google.protobuf.FieldMask
-	(v11.ComponentKind)(0),             // 26: admiral.api.registry.v1.ComponentKind
-	(*v12.VersionRef)(nil),             // 27: admiral.api.changeset.v1.VersionRef
-	(*v12.ValueSource)(nil),            // 28: admiral.api.changeset.v1.ValueSource
+	(*EnvironmentComponentOutput)(nil),            // 16: admiral.api.environment.v1.EnvironmentComponentOutput
+	(*EnvironmentComponent)(nil),                  // 17: admiral.api.environment.v1.EnvironmentComponent
+	(*ListEnvironmentComponentsRequest)(nil),      // 18: admiral.api.environment.v1.ListEnvironmentComponentsRequest
+	(*ListEnvironmentComponentsResponse)(nil),     // 19: admiral.api.environment.v1.ListEnvironmentComponentsResponse
+	(*GetEnvironmentComponentValuesRequest)(nil),  // 20: admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
+	(*GetEnvironmentComponentValuesResponse)(nil), // 21: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
+	nil,                                // 22: admiral.api.environment.v1.Environment.LabelsEntry
+	(*ApprovalRule_GroupApproval)(nil), // 23: admiral.api.environment.v1.ApprovalRule.GroupApproval
+	(*v1.ActorRef)(nil),                // 24: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),      // 25: google.protobuf.Timestamp
+	(*v11.InfraBackend)(nil),           // 26: admiral.api.changeset.v1.InfraBackend
+	(*v12.InfraEngineVersion)(nil),     // 27: admiral.api.registry.v1.InfraEngineVersion
+	(*fieldmaskpb.FieldMask)(nil),      // 28: google.protobuf.FieldMask
+	(*structpb.Value)(nil),             // 29: google.protobuf.Value
+	(v12.ComponentKind)(0),             // 30: admiral.api.registry.v1.ComponentKind
+	(*v11.VersionRef)(nil),             // 31: admiral.api.changeset.v1.VersionRef
+	(*v11.ValueSource)(nil),            // 32: admiral.api.changeset.v1.ValueSource
 }
 var file_admiral_api_environment_v1_environment_proto_depIdxs = []int32{
-	21, // 0: admiral.api.environment.v1.Environment.labels:type_name -> admiral.api.environment.v1.Environment.LabelsEntry
-	23, // 1: admiral.api.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
-	24, // 2: admiral.api.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
-	24, // 3: admiral.api.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
+	22, // 0: admiral.api.environment.v1.Environment.labels:type_name -> admiral.api.environment.v1.Environment.LabelsEntry
+	24, // 1: admiral.api.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
+	25, // 2: admiral.api.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
+	25, // 3: admiral.api.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
 	1,  // 4: admiral.api.environment.v1.Environment.agents:type_name -> admiral.api.environment.v1.AgentAssignment
 	3,  // 5: admiral.api.environment.v1.Environment.approval:type_name -> admiral.api.environment.v1.ApprovalRule
 	4,  // 6: admiral.api.environment.v1.Environment.hold:type_name -> admiral.api.environment.v1.Hold
 	5,  // 7: admiral.api.environment.v1.Environment.last_apply:type_name -> admiral.api.environment.v1.LastApply
-	2,  // 8: admiral.api.environment.v1.AgentAssignment.kubernetes:type_name -> admiral.api.environment.v1.KubernetesSettings
-	22, // 9: admiral.api.environment.v1.ApprovalRule.groups:type_name -> admiral.api.environment.v1.ApprovalRule.GroupApproval
-	24, // 10: admiral.api.environment.v1.Hold.held_at:type_name -> google.protobuf.Timestamp
-	24, // 11: admiral.api.environment.v1.LastApply.applied_at:type_name -> google.protobuf.Timestamp
-	0,  // 12: admiral.api.environment.v1.CreateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
-	0,  // 13: admiral.api.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	0,  // 14: admiral.api.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	0,  // 15: admiral.api.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.api.environment.v1.Environment
-	0,  // 16: admiral.api.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
-	25, // 17: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	0,  // 18: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	26, // 19: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
-	27, // 20: admiral.api.environment.v1.EnvironmentComponent.version:type_name -> admiral.api.changeset.v1.VersionRef
-	5,  // 21: admiral.api.environment.v1.EnvironmentComponent.last_apply:type_name -> admiral.api.environment.v1.LastApply
-	16, // 22: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent
-	28, // 23: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.sources:type_name -> admiral.api.changeset.v1.ValueSource
-	5,  // 24: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.last_apply:type_name -> admiral.api.environment.v1.LastApply
-	6,  // 25: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.api.environment.v1.CreateEnvironmentRequest
-	8,  // 26: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.api.environment.v1.GetEnvironmentRequest
-	10, // 27: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.api.environment.v1.ListEnvironmentsRequest
-	12, // 28: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.api.environment.v1.UpdateEnvironmentRequest
-	14, // 29: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.api.environment.v1.DeleteEnvironmentRequest
-	17, // 30: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.api.environment.v1.ListEnvironmentComponentsRequest
-	19, // 31: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:input_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
-	7,  // 32: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.api.environment.v1.CreateEnvironmentResponse
-	9,  // 33: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.api.environment.v1.GetEnvironmentResponse
-	11, // 34: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.api.environment.v1.ListEnvironmentsResponse
-	13, // 35: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.api.environment.v1.UpdateEnvironmentResponse
-	15, // 36: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.api.environment.v1.DeleteEnvironmentResponse
-	18, // 37: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.api.environment.v1.ListEnvironmentComponentsResponse
-	20, // 38: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:output_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
-	32, // [32:39] is the sub-list for method output_type
-	25, // [25:32] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	26, // 8: admiral.api.environment.v1.Environment.infra_backend:type_name -> admiral.api.changeset.v1.InfraBackend
+	27, // 9: admiral.api.environment.v1.Environment.infra_engine:type_name -> admiral.api.registry.v1.InfraEngineVersion
+	2,  // 10: admiral.api.environment.v1.AgentAssignment.kubernetes:type_name -> admiral.api.environment.v1.KubernetesSettings
+	23, // 11: admiral.api.environment.v1.ApprovalRule.groups:type_name -> admiral.api.environment.v1.ApprovalRule.GroupApproval
+	25, // 12: admiral.api.environment.v1.Hold.held_at:type_name -> google.protobuf.Timestamp
+	25, // 13: admiral.api.environment.v1.LastApply.applied_at:type_name -> google.protobuf.Timestamp
+	0,  // 14: admiral.api.environment.v1.CreateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
+	0,  // 15: admiral.api.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	0,  // 16: admiral.api.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	0,  // 17: admiral.api.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.api.environment.v1.Environment
+	0,  // 18: admiral.api.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
+	28, // 19: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	0,  // 20: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	29, // 21: admiral.api.environment.v1.EnvironmentComponentOutput.value:type_name -> google.protobuf.Value
+	30, // 22: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
+	31, // 23: admiral.api.environment.v1.EnvironmentComponent.version:type_name -> admiral.api.changeset.v1.VersionRef
+	5,  // 24: admiral.api.environment.v1.EnvironmentComponent.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	16, // 25: admiral.api.environment.v1.EnvironmentComponent.outputs:type_name -> admiral.api.environment.v1.EnvironmentComponentOutput
+	27, // 26: admiral.api.environment.v1.EnvironmentComponent.applied_engine:type_name -> admiral.api.registry.v1.InfraEngineVersion
+	17, // 27: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent
+	32, // 28: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.sources:type_name -> admiral.api.changeset.v1.ValueSource
+	5,  // 29: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	6,  // 30: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.api.environment.v1.CreateEnvironmentRequest
+	8,  // 31: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.api.environment.v1.GetEnvironmentRequest
+	10, // 32: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.api.environment.v1.ListEnvironmentsRequest
+	12, // 33: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.api.environment.v1.UpdateEnvironmentRequest
+	14, // 34: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.api.environment.v1.DeleteEnvironmentRequest
+	18, // 35: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.api.environment.v1.ListEnvironmentComponentsRequest
+	20, // 36: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:input_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
+	7,  // 37: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.api.environment.v1.CreateEnvironmentResponse
+	9,  // 38: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.api.environment.v1.GetEnvironmentResponse
+	11, // 39: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.api.environment.v1.ListEnvironmentsResponse
+	13, // 40: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.api.environment.v1.UpdateEnvironmentResponse
+	15, // 41: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.api.environment.v1.DeleteEnvironmentResponse
+	19, // 42: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.api.environment.v1.ListEnvironmentComponentsResponse
+	21, // 43: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:output_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
+	37, // [37:44] is the sub-list for method output_type
+	30, // [30:37] is the sub-list for method input_type
+	30, // [30:30] is the sub-list for extension type_name
+	30, // [30:30] is the sub-list for extension extendee
+	0,  // [0:30] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_environment_v1_environment_proto_init() }
@@ -1742,14 +1845,14 @@ func file_admiral_api_environment_v1_environment_proto_init() {
 	}
 	file_admiral_api_environment_v1_environment_proto_msgTypes[2].OneofWrappers = []any{}
 	file_admiral_api_environment_v1_environment_proto_msgTypes[10].OneofWrappers = []any{}
-	file_admiral_api_environment_v1_environment_proto_msgTypes[17].OneofWrappers = []any{}
+	file_admiral_api_environment_v1_environment_proto_msgTypes[18].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_environment_v1_environment_proto_rawDesc), len(file_admiral_api_environment_v1_environment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

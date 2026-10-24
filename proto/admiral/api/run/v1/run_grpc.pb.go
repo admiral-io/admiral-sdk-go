@@ -79,7 +79,10 @@ type RunAPIClient interface {
 	// Scope: `run:write`
 	ApproveRun(ctx context.Context, in *ApproveRunRequest, opts ...grpc.CallOption) (*ApproveRunResponse, error)
 	// ApplyRun applies a run's plan. It takes the environment's lock. The agent
-	// checks the plan is still current before it changes anything.
+	// checks the plan is still current before it changes anything. For
+	// Kubernetes it plans again. For Terraform it applies the saved plan file,
+	// checked by digest, and the engine refuses a saved plan once the state has
+	// moved.
 	//
 	// FAILED_PRECONDITION when the run is not PLANNED, an approval in
 	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
@@ -99,9 +102,12 @@ type RunAPIClient interface {
 	//
 	// Scope: `run:write`
 	CancelRun(ctx context.Context, in *CancelRunRequest, opts ...grpc.CallOption) (*CancelRunResponse, error)
-	// GetRunPlanDiff returns a finished plan's full diffs, with every value
-	// the component marks sensitive masked: a Kubernetes Secret's `data` and
-	// `stringData`, a Terraform value declared `sensitive`. FAILED_PRECONDITION until the plan has succeeded.
+	// GetRunPlanDiff returns a finished plan's full diffs, output changes,
+	// drift and errors. The agent redacts every value the component marks
+	// sensitive before it uploads: a Kubernetes Secret's `data` and
+	// `stringData`, a Terraform value declared `sensitive`. A failed plan's
+	// diff holds its errors, every one it found. FAILED_PRECONDITION until the
+	// plan has finished.
 	//
 	// Scope: `run:read`
 	GetRunPlanDiff(ctx context.Context, in *GetRunPlanDiffRequest, opts ...grpc.CallOption) (*GetRunPlanDiffResponse, error)
@@ -245,7 +251,10 @@ type RunAPIServer interface {
 	// Scope: `run:write`
 	ApproveRun(context.Context, *ApproveRunRequest) (*ApproveRunResponse, error)
 	// ApplyRun applies a run's plan. It takes the environment's lock. The agent
-	// checks the plan is still current before it changes anything.
+	// checks the plan is still current before it changes anything. For
+	// Kubernetes it plans again. For Terraform it applies the saved plan file,
+	// checked by digest, and the engine refuses a saved plan once the state has
+	// moved.
 	//
 	// FAILED_PRECONDITION when the run is not PLANNED, an approval in
 	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
@@ -265,9 +274,12 @@ type RunAPIServer interface {
 	//
 	// Scope: `run:write`
 	CancelRun(context.Context, *CancelRunRequest) (*CancelRunResponse, error)
-	// GetRunPlanDiff returns a finished plan's full diffs, with every value
-	// the component marks sensitive masked: a Kubernetes Secret's `data` and
-	// `stringData`, a Terraform value declared `sensitive`. FAILED_PRECONDITION until the plan has succeeded.
+	// GetRunPlanDiff returns a finished plan's full diffs, output changes,
+	// drift and errors. The agent redacts every value the component marks
+	// sensitive before it uploads: a Kubernetes Secret's `data` and
+	// `stringData`, a Terraform value declared `sensitive`. A failed plan's
+	// diff holds its errors, every one it found. FAILED_PRECONDITION until the
+	// plan has finished.
 	//
 	// Scope: `run:read`
 	GetRunPlanDiff(context.Context, *GetRunPlanDiffRequest) (*GetRunPlanDiffResponse, error)

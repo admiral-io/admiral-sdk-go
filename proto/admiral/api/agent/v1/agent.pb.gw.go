@@ -886,6 +886,96 @@ func local_request_AgentRuntimeAPI_UploadJobPlanDiff_0(ctx context.Context, mars
 	return msg, metadata, err
 }
 
+func request_AgentRuntimeAPI_UploadJobPlanFile_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq UploadJobPlanFileRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.UploadJobPlanFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AgentRuntimeAPI_UploadJobPlanFile_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq UploadJobPlanFileRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.UploadJobPlanFile(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_AgentRuntimeAPI_GetJobPlanFile_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetJobPlanFileRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.GetJobPlanFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AgentRuntimeAPI_GetJobPlanFile_0(ctx context.Context, marshaler runtime.Marshaler, server AgentRuntimeAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetJobPlanFileRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["attempt.job_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "attempt.job_id")
+	}
+	err = runtime.PopulateFieldFromPath(&protoReq, "attempt.job_id", val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "attempt.job_id", err)
+	}
+	msg, err := server.GetJobPlanFile(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_AgentRuntimeAPI_CheckJobPlan_0(ctx context.Context, marshaler runtime.Marshaler, client AgentRuntimeAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq CheckJobPlanRequest
@@ -1421,6 +1511,46 @@ func RegisterAgentRuntimeAPIHandlerServer(ctx context.Context, mux *runtime.Serv
 			return
 		}
 		forward_AgentRuntimeAPI_UploadJobPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_UploadJobPlanFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanFile", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/plan-file"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AgentRuntimeAPI_UploadJobPlanFile_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AgentRuntimeAPI_UploadJobPlanFile_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_GetJobPlanFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobPlanFile", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/plan-file/read"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AgentRuntimeAPI_GetJobPlanFile_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AgentRuntimeAPI_GetJobPlanFile_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_CheckJobPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1975,6 +2105,40 @@ func RegisterAgentRuntimeAPIHandlerClient(ctx context.Context, mux *runtime.Serv
 		}
 		forward_AgentRuntimeAPI_UploadJobPlanDiff_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_UploadJobPlanFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanFile", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/plan-file"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AgentRuntimeAPI_UploadJobPlanFile_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AgentRuntimeAPI_UploadJobPlanFile_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_GetJobPlanFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobPlanFile", runtime.WithHTTPPathPattern("/v1/agent/jobs/{attempt.job_id}/plan-file/read"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AgentRuntimeAPI_GetJobPlanFile_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AgentRuntimeAPI_GetJobPlanFile_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_AgentRuntimeAPI_CheckJobPlan_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2021,6 +2185,8 @@ var (
 	pattern_AgentRuntimeAPI_AppendJobLog_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "log"}, ""))
 	pattern_AgentRuntimeAPI_GetJobArtifact_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "artifact"}, ""))
 	pattern_AgentRuntimeAPI_UploadJobPlanDiff_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "plan-diff"}, ""))
+	pattern_AgentRuntimeAPI_UploadJobPlanFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "plan-file"}, ""))
+	pattern_AgentRuntimeAPI_GetJobPlanFile_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"v1", "agent", "jobs", "attempt.job_id", "plan-file", "read"}, ""))
 	pattern_AgentRuntimeAPI_CheckJobPlan_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "check-plan"}, ""))
 	pattern_AgentRuntimeAPI_FinishJob_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "agent", "jobs", "attempt.job_id", "finish"}, ""))
 )
@@ -2034,6 +2200,8 @@ var (
 	forward_AgentRuntimeAPI_AppendJobLog_0      = runtime.ForwardResponseMessage
 	forward_AgentRuntimeAPI_GetJobArtifact_0    = runtime.ForwardResponseMessage
 	forward_AgentRuntimeAPI_UploadJobPlanDiff_0 = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_UploadJobPlanFile_0 = runtime.ForwardResponseMessage
+	forward_AgentRuntimeAPI_GetJobPlanFile_0    = runtime.ForwardResponseMessage
 	forward_AgentRuntimeAPI_CheckJobPlan_0      = runtime.ForwardResponseMessage
 	forward_AgentRuntimeAPI_FinishJob_0         = runtime.ForwardResponseMessage
 )

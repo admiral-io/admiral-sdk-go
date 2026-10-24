@@ -26,12 +26,18 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// ServiceAccountAPICreateServiceAccountProcedure is the procedure name of the ServiceAccountAPI's
+	// CreateServiceAccount RPC.
+	ServiceAccountAPICreateServiceAccountProcedure = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/CreateServiceAccount"
 	// ServiceAccountAPIGetServiceAccountProcedure is the procedure name of the ServiceAccountAPI's
 	// GetServiceAccount RPC.
 	ServiceAccountAPIGetServiceAccountProcedure = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/GetServiceAccount"
 	// ServiceAccountAPIListServiceAccountsProcedure is the procedure name of the ServiceAccountAPI's
 	// ListServiceAccounts RPC.
 	ServiceAccountAPIListServiceAccountsProcedure = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/ListServiceAccounts"
+	// ServiceAccountAPIDeleteServiceAccountProcedure is the procedure name of the ServiceAccountAPI's
+	// DeleteServiceAccount RPC.
+	ServiceAccountAPIDeleteServiceAccountProcedure = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/DeleteServiceAccount"
 	// IssuerAPICreateIssuerProcedure is the procedure name of the IssuerAPI's CreateIssuer RPC.
 	IssuerAPICreateIssuerProcedure = "/admiral.api.serviceaccount.v1.IssuerAPI/CreateIssuer"
 	// IssuerAPIGetIssuerProcedure is the procedure name of the IssuerAPI's GetIssuer RPC.
@@ -45,6 +51,13 @@ const (
 )
 
 var (
+	serviceAccountAPICreateServiceAccountSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_serviceaccount_v1_serviceaccount_proto.Services().ByName("ServiceAccountAPI").Methods().ByName("CreateServiceAccount"),
+			Procedure:  ServiceAccountAPICreateServiceAccountProcedure,
+		}
+	})
 	serviceAccountAPIGetServiceAccountSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType: connect.StreamTypeUnary,
@@ -59,11 +72,27 @@ var (
 			Procedure:  ServiceAccountAPIListServiceAccountsProcedure,
 		}
 	})
+	serviceAccountAPIDeleteServiceAccountSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_serviceaccount_v1_serviceaccount_proto.Services().ByName("ServiceAccountAPI").Methods().ByName("DeleteServiceAccount"),
+			Procedure:  ServiceAccountAPIDeleteServiceAccountProcedure,
+		}
+	})
 )
 
 // ServiceAccountAPIClient is a client for the admiral.api.serviceaccount.v1.ServiceAccountAPI
 // service.
 type ServiceAccountAPIClient interface {
+	// CreateServiceAccount makes a service account that runs no agent, which
+	// signs in with a token from `issuer_id` carrying `subject`. For GitHub
+	// Actions the subject names the repository and the ref or environment, so
+	// a run from anywhere else cannot sign in as it. ALREADY_EXISTS when
+	// another service account has the name, or trusts the same issuer and
+	// subject.
+	//
+	// Scope: `serviceaccount:write`
+	CreateServiceAccount(context.Context, *v1.CreateServiceAccountRequest) (*v1.CreateServiceAccountResponse, error)
 	// GetServiceAccount returns a service account, and the issuer and subject
 	// it signs in with once known.
 	//
@@ -74,6 +103,12 @@ type ServiceAccountAPIClient interface {
 	//
 	// Scope: `serviceaccount:read`
 	ListServiceAccounts(context.Context, *v1.ListServiceAccountsRequest) (*v1.ListServiceAccountsResponse, error)
+	// DeleteServiceAccount removes a service account that runs no agent, and
+	// the roles it holds. FAILED_PRECONDITION for an agent's, which goes with
+	// its agent.
+	//
+	// Scope: `serviceaccount:write`
+	DeleteServiceAccount(context.Context, *v1.DeleteServiceAccountRequest) (*v1.DeleteServiceAccountResponse, error)
 }
 
 // NewServiceAccountAPIClient constructs a client for the
@@ -86,6 +121,15 @@ func NewServiceAccountAPIClient(client *connect.Client) ServiceAccountAPIClient 
 // ServiceAccountAPIHandler is an implementation of the
 // admiral.api.serviceaccount.v1.ServiceAccountAPI service.
 type ServiceAccountAPIHandler interface {
+	// CreateServiceAccount makes a service account that runs no agent, which
+	// signs in with a token from `issuer_id` carrying `subject`. For GitHub
+	// Actions the subject names the repository and the ref or environment, so
+	// a run from anywhere else cannot sign in as it. ALREADY_EXISTS when
+	// another service account has the name, or trusts the same issuer and
+	// subject.
+	//
+	// Scope: `serviceaccount:write`
+	CreateServiceAccount(context.Context, *v1.CreateServiceAccountRequest) (*v1.CreateServiceAccountResponse, error)
 	// GetServiceAccount returns a service account, and the issuer and subject
 	// it signs in with once known.
 	//
@@ -96,6 +140,12 @@ type ServiceAccountAPIHandler interface {
 	//
 	// Scope: `serviceaccount:read`
 	ListServiceAccounts(context.Context, *v1.ListServiceAccountsRequest) (*v1.ListServiceAccountsResponse, error)
+	// DeleteServiceAccount removes a service account that runs no agent, and
+	// the roles it holds. FAILED_PRECONDITION for an agent's, which goes with
+	// its agent.
+	//
+	// Scope: `serviceaccount:write`
+	DeleteServiceAccount(context.Context, *v1.DeleteServiceAccountRequest) (*v1.DeleteServiceAccountResponse, error)
 }
 
 // RegisterServiceAccountAPIHandler registers svc as the
@@ -103,13 +153,19 @@ type ServiceAccountAPIHandler interface {
 func RegisterServiceAccountAPIHandler(server *connect.Server, svc ServiceAccountAPIHandler) {
 	adapter := serviceAccountAPIHandler{svc: svc}
 	server.Register(
+		connect.Method{Spec: serviceAccountAPICreateServiceAccountSpec(), Handler: adapter.createServiceAccount},
 		connect.Method{Spec: serviceAccountAPIGetServiceAccountSpec(), Handler: adapter.getServiceAccount},
 		connect.Method{Spec: serviceAccountAPIListServiceAccountsSpec(), Handler: adapter.listServiceAccounts},
+		connect.Method{Spec: serviceAccountAPIDeleteServiceAccountSpec(), Handler: adapter.deleteServiceAccount},
 	)
 }
 
 // UnimplementedServiceAccountAPIHandler returns CodeUnimplemented from all methods.
 type UnimplementedServiceAccountAPIHandler struct{}
+
+func (UnimplementedServiceAccountAPIHandler) CreateServiceAccount(context.Context, *v1.CreateServiceAccountRequest) (*v1.CreateServiceAccountResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.serviceaccount.v1.ServiceAccountAPI.CreateServiceAccount is not implemented")
+}
 
 func (UnimplementedServiceAccountAPIHandler) GetServiceAccount(context.Context, *v1.GetServiceAccountRequest) (*v1.GetServiceAccountResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.serviceaccount.v1.ServiceAccountAPI.GetServiceAccount is not implemented")
@@ -119,8 +175,20 @@ func (UnimplementedServiceAccountAPIHandler) ListServiceAccounts(context.Context
 	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.serviceaccount.v1.ServiceAccountAPI.ListServiceAccounts is not implemented")
 }
 
+func (UnimplementedServiceAccountAPIHandler) DeleteServiceAccount(context.Context, *v1.DeleteServiceAccountRequest) (*v1.DeleteServiceAccountResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.serviceaccount.v1.ServiceAccountAPI.DeleteServiceAccount is not implemented")
+}
+
 type serviceAccountAPIClient struct {
 	client *connect.Client
+}
+
+func (c *serviceAccountAPIClient) CreateServiceAccount(ctx context.Context, req *v1.CreateServiceAccountRequest) (*v1.CreateServiceAccountResponse, error) {
+	var res v1.CreateServiceAccountResponse
+	if err := c.client.CallUnary(ctx, serviceAccountAPICreateServiceAccountSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 func (c *serviceAccountAPIClient) GetServiceAccount(ctx context.Context, req *v1.GetServiceAccountRequest) (*v1.GetServiceAccountResponse, error) {
@@ -139,7 +207,27 @@ func (c *serviceAccountAPIClient) ListServiceAccounts(ctx context.Context, req *
 	return &res, nil
 }
 
+func (c *serviceAccountAPIClient) DeleteServiceAccount(ctx context.Context, req *v1.DeleteServiceAccountRequest) (*v1.DeleteServiceAccountResponse, error) {
+	var res v1.DeleteServiceAccountResponse
+	if err := c.client.CallUnary(ctx, serviceAccountAPIDeleteServiceAccountSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 type serviceAccountAPIHandler struct{ svc ServiceAccountAPIHandler }
+
+func (h serviceAccountAPIHandler) createServiceAccount(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateServiceAccountRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateServiceAccount(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
 
 func (h serviceAccountAPIHandler) getServiceAccount(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
 	var req v1.GetServiceAccountRequest
@@ -159,6 +247,18 @@ func (h serviceAccountAPIHandler) listServiceAccounts(ctx context.Context, _ con
 		return err
 	}
 	res, err := h.svc.ListServiceAccounts(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h serviceAccountAPIHandler) deleteServiceAccount(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteServiceAccountRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteServiceAccount(ctx, &req)
 	if err != nil {
 		return err
 	}

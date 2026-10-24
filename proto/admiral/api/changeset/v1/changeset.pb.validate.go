@@ -1683,6 +1683,47 @@ func (m *ComponentSettings) validate(all bool) error {
 			}
 		}
 
+	case *ComponentSettings_Terraform:
+		if v == nil {
+			err := ComponentSettingsValidationError{
+				field:  "Kind",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetTerraform()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ComponentSettingsValidationError{
+						field:  "Terraform",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ComponentSettingsValidationError{
+						field:  "Terraform",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetTerraform()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ComponentSettingsValidationError{
+					field:  "Terraform",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
 	default:
 		_ = v // ensures v is used
 	}
@@ -1766,6 +1807,267 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ComponentSettingsValidationError{}
+
+// Validate checks the field values on TerraformComponentSettings with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TerraformComponentSettings) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TerraformComponentSettings with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TerraformComponentSettingsMultiError, or nil if none found.
+func (m *TerraformComponentSettings) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TerraformComponentSettings) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetBackend()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, TerraformComponentSettingsValidationError{
+					field:  "Backend",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, TerraformComponentSettingsValidationError{
+					field:  "Backend",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetBackend()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TerraformComponentSettingsValidationError{
+				field:  "Backend",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return TerraformComponentSettingsMultiError(errors)
+	}
+
+	return nil
+}
+
+// TerraformComponentSettingsMultiError is an error wrapping multiple
+// validation errors returned by TerraformComponentSettings.ValidateAll() if
+// the designated constraints aren't met.
+type TerraformComponentSettingsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TerraformComponentSettingsMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TerraformComponentSettingsMultiError) AllErrors() []error { return m }
+
+// TerraformComponentSettingsValidationError is the validation error returned
+// by TerraformComponentSettings.Validate if the designated constraints aren't met.
+type TerraformComponentSettingsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TerraformComponentSettingsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TerraformComponentSettingsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TerraformComponentSettingsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TerraformComponentSettingsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TerraformComponentSettingsValidationError) ErrorName() string {
+	return "TerraformComponentSettingsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TerraformComponentSettingsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTerraformComponentSettings.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TerraformComponentSettingsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TerraformComponentSettingsValidationError{}
+
+// Validate checks the field values on InfraBackend with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *InfraBackend) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InfraBackend with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in InfraBackendMultiError, or
+// nil if none found.
+func (m *InfraBackend) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InfraBackend) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Type
+
+	if all {
+		switch v := interface{}(m.GetConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, InfraBackendValidationError{
+					field:  "Config",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, InfraBackendValidationError{
+					field:  "Config",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return InfraBackendValidationError{
+				field:  "Config",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return InfraBackendMultiError(errors)
+	}
+
+	return nil
+}
+
+// InfraBackendMultiError is an error wrapping multiple validation errors
+// returned by InfraBackend.ValidateAll() if the designated constraints aren't met.
+type InfraBackendMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InfraBackendMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InfraBackendMultiError) AllErrors() []error { return m }
+
+// InfraBackendValidationError is the validation error returned by
+// InfraBackend.Validate if the designated constraints aren't met.
+type InfraBackendValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InfraBackendValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InfraBackendValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InfraBackendValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InfraBackendValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InfraBackendValidationError) ErrorName() string { return "InfraBackendValidationError" }
+
+// Error satisfies the builtin error interface
+func (e InfraBackendValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInfraBackend.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InfraBackendValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InfraBackendValidationError{}
 
 // Validate checks the field values on KubernetesComponentSettings with the
 // rules defined in the proto definition for this message. If any rules are

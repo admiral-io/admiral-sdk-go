@@ -281,6 +281,64 @@ func (m *Environment) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetInfraBackend()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnvironmentValidationError{
+					field:  "InfraBackend",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnvironmentValidationError{
+					field:  "InfraBackend",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetInfraBackend()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnvironmentValidationError{
+				field:  "InfraBackend",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetInfraEngine()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnvironmentValidationError{
+					field:  "InfraEngine",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnvironmentValidationError{
+					field:  "InfraEngine",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetInfraEngine()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnvironmentValidationError{
+				field:  "InfraEngine",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return EnvironmentMultiError(errors)
 	}
@@ -383,10 +441,6 @@ func (m *AgentAssignment) validate(all bool) error {
 	// no validation rules for AgentId
 
 	// no validation rules for Id
-
-	// no validation rules for PlanProfile
-
-	// no validation rules for ApplyProfile
 
 	switch v := m.Settings.(type) {
 	case *AgentAssignment_Kubernetes:
@@ -2266,6 +2320,141 @@ var _ interface {
 	ErrorName() string
 } = DeleteEnvironmentResponseValidationError{}
 
+// Validate checks the field values on EnvironmentComponentOutput with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *EnvironmentComponentOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on EnvironmentComponentOutput with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// EnvironmentComponentOutputMultiError, or nil if none found.
+func (m *EnvironmentComponentOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EnvironmentComponentOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	if all {
+		switch v := interface{}(m.GetValue()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnvironmentComponentOutputValidationError{
+					field:  "Value",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnvironmentComponentOutputValidationError{
+					field:  "Value",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetValue()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnvironmentComponentOutputValidationError{
+				field:  "Value",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Sensitive
+
+	if len(errors) > 0 {
+		return EnvironmentComponentOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// EnvironmentComponentOutputMultiError is an error wrapping multiple
+// validation errors returned by EnvironmentComponentOutput.ValidateAll() if
+// the designated constraints aren't met.
+type EnvironmentComponentOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EnvironmentComponentOutputMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EnvironmentComponentOutputMultiError) AllErrors() []error { return m }
+
+// EnvironmentComponentOutputValidationError is the validation error returned
+// by EnvironmentComponentOutput.Validate if the designated constraints aren't met.
+type EnvironmentComponentOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EnvironmentComponentOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EnvironmentComponentOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EnvironmentComponentOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EnvironmentComponentOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EnvironmentComponentOutputValidationError) ErrorName() string {
+	return "EnvironmentComponentOutputValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EnvironmentComponentOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEnvironmentComponentOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EnvironmentComponentOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EnvironmentComponentOutputValidationError{}
+
 // Validate checks the field values on EnvironmentComponent with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -2346,6 +2535,69 @@ func (m *EnvironmentComponent) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return EnvironmentComponentValidationError{
 				field:  "LastApply",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetOutputs() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EnvironmentComponentValidationError{
+						field:  fmt.Sprintf("Outputs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EnvironmentComponentValidationError{
+						field:  fmt.Sprintf("Outputs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EnvironmentComponentValidationError{
+					field:  fmt.Sprintf("Outputs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetAppliedEngine()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EnvironmentComponentValidationError{
+					field:  "AppliedEngine",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EnvironmentComponentValidationError{
+					field:  "AppliedEngine",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAppliedEngine()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EnvironmentComponentValidationError{
+				field:  "AppliedEngine",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

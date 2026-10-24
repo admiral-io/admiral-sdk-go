@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ServiceAccountAPI_GetServiceAccount_FullMethodName   = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/GetServiceAccount"
-	ServiceAccountAPI_ListServiceAccounts_FullMethodName = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/ListServiceAccounts"
+	ServiceAccountAPI_CreateServiceAccount_FullMethodName = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/CreateServiceAccount"
+	ServiceAccountAPI_GetServiceAccount_FullMethodName    = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/GetServiceAccount"
+	ServiceAccountAPI_ListServiceAccounts_FullMethodName  = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/ListServiceAccounts"
+	ServiceAccountAPI_DeleteServiceAccount_FullMethodName = "/admiral.api.serviceaccount.v1.ServiceAccountAPI/DeleteServiceAccount"
 )
 
 // ServiceAccountAPIClient is the client API for ServiceAccountAPI service.
@@ -30,8 +32,18 @@ const (
 // ServiceAccountAPI reads the organization's service accounts. A service
 // account is a non-human principal: it holds roles, and signs in with an
 // `adms_` key or with a token from an issuer it trusts. Every agent runs as
-// one, made with the agent.
+// one, made with the agent; one that runs no agent, such as CI's, is made
+// with CreateServiceAccount.
 type ServiceAccountAPIClient interface {
+	// CreateServiceAccount makes a service account that runs no agent, which
+	// signs in with a token from `issuer_id` carrying `subject`. For GitHub
+	// Actions the subject names the repository and the ref or environment, so
+	// a run from anywhere else cannot sign in as it. ALREADY_EXISTS when
+	// another service account has the name, or trusts the same issuer and
+	// subject.
+	//
+	// Scope: `serviceaccount:write`
+	CreateServiceAccount(ctx context.Context, in *CreateServiceAccountRequest, opts ...grpc.CallOption) (*CreateServiceAccountResponse, error)
 	// GetServiceAccount returns a service account, and the issuer and subject
 	// it signs in with once known.
 	//
@@ -42,6 +54,12 @@ type ServiceAccountAPIClient interface {
 	//
 	// Scope: `serviceaccount:read`
 	ListServiceAccounts(ctx context.Context, in *ListServiceAccountsRequest, opts ...grpc.CallOption) (*ListServiceAccountsResponse, error)
+	// DeleteServiceAccount removes a service account that runs no agent, and
+	// the roles it holds. FAILED_PRECONDITION for an agent's, which goes with
+	// its agent.
+	//
+	// Scope: `serviceaccount:write`
+	DeleteServiceAccount(ctx context.Context, in *DeleteServiceAccountRequest, opts ...grpc.CallOption) (*DeleteServiceAccountResponse, error)
 }
 
 type serviceAccountAPIClient struct {
@@ -50,6 +68,16 @@ type serviceAccountAPIClient struct {
 
 func NewServiceAccountAPIClient(cc grpc.ClientConnInterface) ServiceAccountAPIClient {
 	return &serviceAccountAPIClient{cc}
+}
+
+func (c *serviceAccountAPIClient) CreateServiceAccount(ctx context.Context, in *CreateServiceAccountRequest, opts ...grpc.CallOption) (*CreateServiceAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateServiceAccountResponse)
+	err := c.cc.Invoke(ctx, ServiceAccountAPI_CreateServiceAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *serviceAccountAPIClient) GetServiceAccount(ctx context.Context, in *GetServiceAccountRequest, opts ...grpc.CallOption) (*GetServiceAccountResponse, error) {
@@ -72,6 +100,16 @@ func (c *serviceAccountAPIClient) ListServiceAccounts(ctx context.Context, in *L
 	return out, nil
 }
 
+func (c *serviceAccountAPIClient) DeleteServiceAccount(ctx context.Context, in *DeleteServiceAccountRequest, opts ...grpc.CallOption) (*DeleteServiceAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteServiceAccountResponse)
+	err := c.cc.Invoke(ctx, ServiceAccountAPI_DeleteServiceAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceAccountAPIServer is the server API for ServiceAccountAPI service.
 // All implementations should embed UnimplementedServiceAccountAPIServer
 // for forward compatibility.
@@ -79,8 +117,18 @@ func (c *serviceAccountAPIClient) ListServiceAccounts(ctx context.Context, in *L
 // ServiceAccountAPI reads the organization's service accounts. A service
 // account is a non-human principal: it holds roles, and signs in with an
 // `adms_` key or with a token from an issuer it trusts. Every agent runs as
-// one, made with the agent.
+// one, made with the agent; one that runs no agent, such as CI's, is made
+// with CreateServiceAccount.
 type ServiceAccountAPIServer interface {
+	// CreateServiceAccount makes a service account that runs no agent, which
+	// signs in with a token from `issuer_id` carrying `subject`. For GitHub
+	// Actions the subject names the repository and the ref or environment, so
+	// a run from anywhere else cannot sign in as it. ALREADY_EXISTS when
+	// another service account has the name, or trusts the same issuer and
+	// subject.
+	//
+	// Scope: `serviceaccount:write`
+	CreateServiceAccount(context.Context, *CreateServiceAccountRequest) (*CreateServiceAccountResponse, error)
 	// GetServiceAccount returns a service account, and the issuer and subject
 	// it signs in with once known.
 	//
@@ -91,6 +139,12 @@ type ServiceAccountAPIServer interface {
 	//
 	// Scope: `serviceaccount:read`
 	ListServiceAccounts(context.Context, *ListServiceAccountsRequest) (*ListServiceAccountsResponse, error)
+	// DeleteServiceAccount removes a service account that runs no agent, and
+	// the roles it holds. FAILED_PRECONDITION for an agent's, which goes with
+	// its agent.
+	//
+	// Scope: `serviceaccount:write`
+	DeleteServiceAccount(context.Context, *DeleteServiceAccountRequest) (*DeleteServiceAccountResponse, error)
 }
 
 // UnimplementedServiceAccountAPIServer should be embedded to have
@@ -100,11 +154,17 @@ type ServiceAccountAPIServer interface {
 // pointer dereference when methods are called.
 type UnimplementedServiceAccountAPIServer struct{}
 
+func (UnimplementedServiceAccountAPIServer) CreateServiceAccount(context.Context, *CreateServiceAccountRequest) (*CreateServiceAccountResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateServiceAccount not implemented")
+}
 func (UnimplementedServiceAccountAPIServer) GetServiceAccount(context.Context, *GetServiceAccountRequest) (*GetServiceAccountResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetServiceAccount not implemented")
 }
 func (UnimplementedServiceAccountAPIServer) ListServiceAccounts(context.Context, *ListServiceAccountsRequest) (*ListServiceAccountsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListServiceAccounts not implemented")
+}
+func (UnimplementedServiceAccountAPIServer) DeleteServiceAccount(context.Context, *DeleteServiceAccountRequest) (*DeleteServiceAccountResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteServiceAccount not implemented")
 }
 func (UnimplementedServiceAccountAPIServer) testEmbeddedByValue() {}
 
@@ -124,6 +184,24 @@ func RegisterServiceAccountAPIServer(s grpc.ServiceRegistrar, srv ServiceAccount
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&ServiceAccountAPI_ServiceDesc, srv)
+}
+
+func _ServiceAccountAPI_CreateServiceAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateServiceAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceAccountAPIServer).CreateServiceAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ServiceAccountAPI_CreateServiceAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceAccountAPIServer).CreateServiceAccount(ctx, req.(*CreateServiceAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _ServiceAccountAPI_GetServiceAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -162,6 +240,24 @@ func _ServiceAccountAPI_ListServiceAccounts_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ServiceAccountAPI_DeleteServiceAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteServiceAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceAccountAPIServer).DeleteServiceAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ServiceAccountAPI_DeleteServiceAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceAccountAPIServer).DeleteServiceAccount(ctx, req.(*DeleteServiceAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ServiceAccountAPI_ServiceDesc is the grpc.ServiceDesc for ServiceAccountAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,12 +266,20 @@ var ServiceAccountAPI_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ServiceAccountAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "CreateServiceAccount",
+			Handler:    _ServiceAccountAPI_CreateServiceAccount_Handler,
+		},
+		{
 			MethodName: "GetServiceAccount",
 			Handler:    _ServiceAccountAPI_GetServiceAccount_Handler,
 		},
 		{
 			MethodName: "ListServiceAccounts",
 			Handler:    _ServiceAccountAPI_ListServiceAccounts_Handler,
+		},
+		{
+			MethodName: "DeleteServiceAccount",
+			Handler:    _ServiceAccountAPI_DeleteServiceAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

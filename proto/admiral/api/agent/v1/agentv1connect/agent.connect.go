@@ -74,6 +74,12 @@ const (
 	// AgentRuntimeAPIUploadJobPlanDiffProcedure is the procedure name of the AgentRuntimeAPI's
 	// UploadJobPlanDiff RPC.
 	AgentRuntimeAPIUploadJobPlanDiffProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanDiff"
+	// AgentRuntimeAPIUploadJobPlanFileProcedure is the procedure name of the AgentRuntimeAPI's
+	// UploadJobPlanFile RPC.
+	AgentRuntimeAPIUploadJobPlanFileProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/UploadJobPlanFile"
+	// AgentRuntimeAPIGetJobPlanFileProcedure is the procedure name of the AgentRuntimeAPI's
+	// GetJobPlanFile RPC.
+	AgentRuntimeAPIGetJobPlanFileProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/GetJobPlanFile"
 	// AgentRuntimeAPICheckJobPlanProcedure is the procedure name of the AgentRuntimeAPI's CheckJobPlan
 	// RPC.
 	AgentRuntimeAPICheckJobPlanProcedure = "/admiral.api.agent.v1.AgentRuntimeAPI/CheckJobPlan"
@@ -185,11 +191,11 @@ type AgentAPIClient interface {
 	CreateEnrollmentKey(context.Context, *v1.CreateEnrollmentKeyRequest) (*v1.CreateEnrollmentKeyResponse, error)
 	// GrantAgentUse lets the organization, a team, an application's
 	// environments, or one environment be assigned an agent. Only the agent's owner
-	// or a tenant admin may. Granting a target again replaces its profiles.
+	// or a tenant admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *v1.GrantAgentUseRequest) (*v1.GrantAgentUseResponse, error)
-	// RevokeAgentUse withdraws the grant to a target, whatever its profiles.
+	// RevokeAgentUse withdraws the grant to a target.
 	// Environments assigned the agent
 	// under it keep the assignment until they change it, and their new jobs wait
 	// with WAIT_REASON_AGENT_NOT_GRANTED.
@@ -246,11 +252,11 @@ type AgentAPIHandler interface {
 	CreateEnrollmentKey(context.Context, *v1.CreateEnrollmentKeyRequest) (*v1.CreateEnrollmentKeyResponse, error)
 	// GrantAgentUse lets the organization, a team, an application's
 	// environments, or one environment be assigned an agent. Only the agent's owner
-	// or a tenant admin may. Granting a target again replaces its profiles.
+	// or a tenant admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *v1.GrantAgentUseRequest) (*v1.GrantAgentUseResponse, error)
-	// RevokeAgentUse withdraws the grant to a target, whatever its profiles.
+	// RevokeAgentUse withdraws the grant to a target.
 	// Environments assigned the agent
 	// under it keep the assignment until they change it, and their new jobs wait
 	// with WAIT_REASON_AGENT_NOT_GRANTED.
@@ -763,6 +769,20 @@ var (
 			Procedure:  AgentRuntimeAPIUploadJobPlanDiffProcedure,
 		}
 	})
+	agentRuntimeAPIUploadJobPlanFileSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("AgentRuntimeAPI").Methods().ByName("UploadJobPlanFile"),
+			Procedure:  AgentRuntimeAPIUploadJobPlanFileProcedure,
+		}
+	})
+	agentRuntimeAPIGetJobPlanFileSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_agent_v1_agent_proto.Services().ByName("AgentRuntimeAPI").Methods().ByName("GetJobPlanFile"),
+			Procedure:  AgentRuntimeAPIGetJobPlanFileProcedure,
+		}
+	})
 	agentRuntimeAPICheckJobPlanSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType: connect.StreamTypeUnary,
@@ -794,8 +814,8 @@ type AgentRuntimeAPIClient interface {
 	// Heartbeat is the agent checking in about itself, not about what it
 	// deployed: its version, what it runs against (for Kubernetes, the version
 	// and API groups prepare renders against, and what its RBAC allows), and
-	// its issuer's current keys, and the profiles it defines with what each
-	// serves. Keys that differ from the trusted ones are
+	// where it runs, the engines it can run, the credentials it found around
+	// it, and its issuer's current keys. Keys that differ from the trusted ones are
 	// recorded for an admin, never applied. The response says when to check in
 	// next.
 	//
@@ -844,9 +864,29 @@ type AgentRuntimeAPIClient interface {
 	//
 	// Scope: `agent:exec`
 	UploadJobPlanDiff(context.Context, *v1.UploadJobPlanDiffRequest) (*v1.UploadJobPlanDiffResponse, error)
+	// UploadJobPlanFile stores a chunk of a Terraform PLAN attempt's saved plan
+	// file for one component, at `offset`. A chunk resent at an offset already
+	// written changes nothing. The last chunk returns the file's digest, which
+	// the component's plan names.
+	// A plan file holds the run's values unredacted, so Admiral stores it
+	// sealed like the run artifact.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's, or
+	// `offset` is past the end written so far.
+	//
+	// Scope: `agent:exec`
+	UploadJobPlanFile(context.Context, *v1.UploadJobPlanFileRequest) (*v1.UploadJobPlanFileResponse, error)
+	// GetJobPlanFile returns a chunk of the plan file an APPLY attempt applies,
+	// for one component, to the attempt holding the lease. The agent checks the
+	// whole file against the plan's digest before it applies it.
+	//
+	// Scope: `agent:exec`
+	GetJobPlanFile(context.Context, *v1.GetJobPlanFileRequest) (*v1.GetJobPlanFileResponse, error)
 	// CheckJobPlan compares an APPLY attempt's fresh plan with the plan it
 	// applies. `proceed` false means the target changed since that plan: stop
 	// before changing anything and report FAILED.
+	// Kubernetes components only: a Terraform apply runs its saved plan file,
+	// which the engine refuses once the state has moved.
 	//
 	// Scope: `agent:exec`
 	CheckJobPlan(context.Context, *v1.CheckJobPlanRequest) (*v1.CheckJobPlanResponse, error)
@@ -879,8 +919,8 @@ type AgentRuntimeAPIHandler interface {
 	// Heartbeat is the agent checking in about itself, not about what it
 	// deployed: its version, what it runs against (for Kubernetes, the version
 	// and API groups prepare renders against, and what its RBAC allows), and
-	// its issuer's current keys, and the profiles it defines with what each
-	// serves. Keys that differ from the trusted ones are
+	// where it runs, the engines it can run, the credentials it found around
+	// it, and its issuer's current keys. Keys that differ from the trusted ones are
 	// recorded for an admin, never applied. The response says when to check in
 	// next.
 	//
@@ -929,9 +969,29 @@ type AgentRuntimeAPIHandler interface {
 	//
 	// Scope: `agent:exec`
 	UploadJobPlanDiff(context.Context, *v1.UploadJobPlanDiffRequest) (*v1.UploadJobPlanDiffResponse, error)
+	// UploadJobPlanFile stores a chunk of a Terraform PLAN attempt's saved plan
+	// file for one component, at `offset`. A chunk resent at an offset already
+	// written changes nothing. The last chunk returns the file's digest, which
+	// the component's plan names.
+	// A plan file holds the run's values unredacted, so Admiral stores it
+	// sealed like the run artifact.
+	//
+	// FAILED_PRECONDITION when the lease lapsed or is not this attempt's, or
+	// `offset` is past the end written so far.
+	//
+	// Scope: `agent:exec`
+	UploadJobPlanFile(context.Context, *v1.UploadJobPlanFileRequest) (*v1.UploadJobPlanFileResponse, error)
+	// GetJobPlanFile returns a chunk of the plan file an APPLY attempt applies,
+	// for one component, to the attempt holding the lease. The agent checks the
+	// whole file against the plan's digest before it applies it.
+	//
+	// Scope: `agent:exec`
+	GetJobPlanFile(context.Context, *v1.GetJobPlanFileRequest) (*v1.GetJobPlanFileResponse, error)
 	// CheckJobPlan compares an APPLY attempt's fresh plan with the plan it
 	// applies. `proceed` false means the target changed since that plan: stop
 	// before changing anything and report FAILED.
+	// Kubernetes components only: a Terraform apply runs its saved plan file,
+	// which the engine refuses once the state has moved.
 	//
 	// Scope: `agent:exec`
 	CheckJobPlan(context.Context, *v1.CheckJobPlanRequest) (*v1.CheckJobPlanResponse, error)
@@ -956,6 +1016,8 @@ func RegisterAgentRuntimeAPIHandler(server *connect.Server, svc AgentRuntimeAPIH
 		connect.Method{Spec: agentRuntimeAPIAppendJobLogSpec(), Handler: adapter.appendJobLog},
 		connect.Method{Spec: agentRuntimeAPIGetJobArtifactSpec(), Handler: adapter.getJobArtifact},
 		connect.Method{Spec: agentRuntimeAPIUploadJobPlanDiffSpec(), Handler: adapter.uploadJobPlanDiff},
+		connect.Method{Spec: agentRuntimeAPIUploadJobPlanFileSpec(), Handler: adapter.uploadJobPlanFile},
+		connect.Method{Spec: agentRuntimeAPIGetJobPlanFileSpec(), Handler: adapter.getJobPlanFile},
 		connect.Method{Spec: agentRuntimeAPICheckJobPlanSpec(), Handler: adapter.checkJobPlan},
 		connect.Method{Spec: agentRuntimeAPIFinishJobSpec(), Handler: adapter.finishJob},
 	)
@@ -994,6 +1056,14 @@ func (UnimplementedAgentRuntimeAPIHandler) GetJobArtifact(context.Context, *v1.G
 
 func (UnimplementedAgentRuntimeAPIHandler) UploadJobPlanDiff(context.Context, *v1.UploadJobPlanDiffRequest) (*v1.UploadJobPlanDiffResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanDiff is not implemented")
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) UploadJobPlanFile(context.Context, *v1.UploadJobPlanFileRequest) (*v1.UploadJobPlanFileResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanFile is not implemented")
+}
+
+func (UnimplementedAgentRuntimeAPIHandler) GetJobPlanFile(context.Context, *v1.GetJobPlanFileRequest) (*v1.GetJobPlanFileResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.agent.v1.AgentRuntimeAPI.GetJobPlanFile is not implemented")
 }
 
 func (UnimplementedAgentRuntimeAPIHandler) CheckJobPlan(context.Context, *v1.CheckJobPlanRequest) (*v1.CheckJobPlanResponse, error) {
@@ -1067,6 +1137,22 @@ func (c *agentRuntimeAPIClient) GetJobArtifact(ctx context.Context, req *v1.GetJ
 func (c *agentRuntimeAPIClient) UploadJobPlanDiff(ctx context.Context, req *v1.UploadJobPlanDiffRequest) (*v1.UploadJobPlanDiffResponse, error) {
 	var res v1.UploadJobPlanDiffResponse
 	if err := c.client.CallUnary(ctx, agentRuntimeAPIUploadJobPlanDiffSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *agentRuntimeAPIClient) UploadJobPlanFile(ctx context.Context, req *v1.UploadJobPlanFileRequest) (*v1.UploadJobPlanFileResponse, error) {
+	var res v1.UploadJobPlanFileResponse
+	if err := c.client.CallUnary(ctx, agentRuntimeAPIUploadJobPlanFileSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *agentRuntimeAPIClient) GetJobPlanFile(ctx context.Context, req *v1.GetJobPlanFileRequest) (*v1.GetJobPlanFileResponse, error) {
+	var res v1.GetJobPlanFileResponse
+	if err := c.client.CallUnary(ctx, agentRuntimeAPIGetJobPlanFileSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -1180,6 +1266,30 @@ func (h agentRuntimeAPIHandler) uploadJobPlanDiff(ctx context.Context, _ connect
 		return err
 	}
 	res, err := h.svc.UploadJobPlanDiff(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h agentRuntimeAPIHandler) uploadJobPlanFile(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UploadJobPlanFileRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UploadJobPlanFile(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h agentRuntimeAPIHandler) getJobPlanFile(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetJobPlanFileRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetJobPlanFile(ctx, &req)
 	if err != nil {
 		return err
 	}

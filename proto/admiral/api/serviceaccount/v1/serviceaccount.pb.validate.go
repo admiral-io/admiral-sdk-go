@@ -152,6 +152,8 @@ func (m *ServiceAccount) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Name
+
 	if len(errors) > 0 {
 		return ServiceAccountMultiError(errors)
 	}
@@ -648,6 +650,270 @@ var _ interface {
 	ErrorName() string
 } = IssuerKeysValidationError{}
 
+// Validate checks the field values on CreateServiceAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateServiceAccountRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateServiceAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateServiceAccountRequestMultiError, or nil if none found.
+func (m *CreateServiceAccountRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateServiceAccountRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetServiceAccount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateServiceAccountRequestValidationError{
+					field:  "ServiceAccount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateServiceAccountRequestValidationError{
+					field:  "ServiceAccount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetServiceAccount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateServiceAccountRequestValidationError{
+				field:  "ServiceAccount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateServiceAccountRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateServiceAccountRequestMultiError is an error wrapping multiple
+// validation errors returned by CreateServiceAccountRequest.ValidateAll() if
+// the designated constraints aren't met.
+type CreateServiceAccountRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateServiceAccountRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateServiceAccountRequestMultiError) AllErrors() []error { return m }
+
+// CreateServiceAccountRequestValidationError is the validation error returned
+// by CreateServiceAccountRequest.Validate if the designated constraints
+// aren't met.
+type CreateServiceAccountRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateServiceAccountRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateServiceAccountRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateServiceAccountRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateServiceAccountRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateServiceAccountRequestValidationError) ErrorName() string {
+	return "CreateServiceAccountRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateServiceAccountRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateServiceAccountRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateServiceAccountRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateServiceAccountRequestValidationError{}
+
+// Validate checks the field values on CreateServiceAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateServiceAccountResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateServiceAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateServiceAccountResponseMultiError, or nil if none found.
+func (m *CreateServiceAccountResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateServiceAccountResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetServiceAccount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateServiceAccountResponseValidationError{
+					field:  "ServiceAccount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateServiceAccountResponseValidationError{
+					field:  "ServiceAccount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetServiceAccount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateServiceAccountResponseValidationError{
+				field:  "ServiceAccount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateServiceAccountResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateServiceAccountResponseMultiError is an error wrapping multiple
+// validation errors returned by CreateServiceAccountResponse.ValidateAll() if
+// the designated constraints aren't met.
+type CreateServiceAccountResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateServiceAccountResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateServiceAccountResponseMultiError) AllErrors() []error { return m }
+
+// CreateServiceAccountResponseValidationError is the validation error returned
+// by CreateServiceAccountResponse.Validate if the designated constraints
+// aren't met.
+type CreateServiceAccountResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateServiceAccountResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateServiceAccountResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateServiceAccountResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateServiceAccountResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateServiceAccountResponseValidationError) ErrorName() string {
+	return "CreateServiceAccountResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateServiceAccountResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateServiceAccountResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateServiceAccountResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateServiceAccountResponseValidationError{}
+
 // Validate checks the field values on GetServiceAccountRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -1129,6 +1395,214 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListServiceAccountsResponseValidationError{}
+
+// Validate checks the field values on DeleteServiceAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteServiceAccountRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteServiceAccountRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteServiceAccountRequestMultiError, or nil if none found.
+func (m *DeleteServiceAccountRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteServiceAccountRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ServiceAccountId
+
+	if len(errors) > 0 {
+		return DeleteServiceAccountRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteServiceAccountRequestMultiError is an error wrapping multiple
+// validation errors returned by DeleteServiceAccountRequest.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteServiceAccountRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteServiceAccountRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteServiceAccountRequestMultiError) AllErrors() []error { return m }
+
+// DeleteServiceAccountRequestValidationError is the validation error returned
+// by DeleteServiceAccountRequest.Validate if the designated constraints
+// aren't met.
+type DeleteServiceAccountRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteServiceAccountRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteServiceAccountRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteServiceAccountRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteServiceAccountRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteServiceAccountRequestValidationError) ErrorName() string {
+	return "DeleteServiceAccountRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteServiceAccountRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteServiceAccountRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteServiceAccountRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteServiceAccountRequestValidationError{}
+
+// Validate checks the field values on DeleteServiceAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteServiceAccountResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteServiceAccountResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteServiceAccountResponseMultiError, or nil if none found.
+func (m *DeleteServiceAccountResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteServiceAccountResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return DeleteServiceAccountResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteServiceAccountResponseMultiError is an error wrapping multiple
+// validation errors returned by DeleteServiceAccountResponse.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteServiceAccountResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteServiceAccountResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteServiceAccountResponseMultiError) AllErrors() []error { return m }
+
+// DeleteServiceAccountResponseValidationError is the validation error returned
+// by DeleteServiceAccountResponse.Validate if the designated constraints
+// aren't met.
+type DeleteServiceAccountResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteServiceAccountResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteServiceAccountResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteServiceAccountResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteServiceAccountResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteServiceAccountResponseValidationError) ErrorName() string {
+	return "DeleteServiceAccountResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteServiceAccountResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteServiceAccountResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteServiceAccountResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteServiceAccountResponseValidationError{}
 
 // Validate checks the field values on CreateIssuerRequest with the rules
 // defined in the proto definition for this message. If any rules are

@@ -129,12 +129,12 @@ var Catalog = map[string]Scope{
 	},
 	AgentExec: {
 		Name:         AgentExec,
-		Description:  "Agent runtime work: claim, start, renew, append the log of, fetch the artifact of, upload the plan diff of, check the plan of, and finish jobs.",
+		Description:  "Agent runtime work: claim, start, renew, append the log of, fetch the artifact of, upload the plan diff and plan file of, fetch the plan file of, check the plan of, and finish jobs.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentHeartbeat: {
 		Name:         AgentHeartbeat,
-		Description:  "Send an agent's heartbeat: its version, what it runs against, its profiles, and its issuer's current keys.",
+		Description:  "Send an agent's heartbeat: its version, where it runs, what it can deploy, the credentials it found, and its issuer's current keys.",
 		AssignableTo: []string{TokenTypeSAT},
 	},
 	AgentRead: {

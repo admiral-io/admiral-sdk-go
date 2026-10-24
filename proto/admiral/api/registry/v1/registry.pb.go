@@ -83,6 +83,56 @@ func (ComponentKind) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{0}
 }
 
+// InfraEngine is a Terraform-compatible tool an infra agent runs.
+type InfraEngine int32
+
+const (
+	InfraEngine_INFRA_ENGINE_UNSPECIFIED InfraEngine = 0
+	InfraEngine_INFRA_ENGINE_TERRAFORM   InfraEngine = 1
+	InfraEngine_INFRA_ENGINE_OPENTOFU    InfraEngine = 2
+)
+
+// Enum value maps for InfraEngine.
+var (
+	InfraEngine_name = map[int32]string{
+		0: "INFRA_ENGINE_UNSPECIFIED",
+		1: "INFRA_ENGINE_TERRAFORM",
+		2: "INFRA_ENGINE_OPENTOFU",
+	}
+	InfraEngine_value = map[string]int32{
+		"INFRA_ENGINE_UNSPECIFIED": 0,
+		"INFRA_ENGINE_TERRAFORM":   1,
+		"INFRA_ENGINE_OPENTOFU":    2,
+	}
+)
+
+func (x InfraEngine) Enum() *InfraEngine {
+	p := new(InfraEngine)
+	*p = x
+	return p
+}
+
+func (x InfraEngine) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (InfraEngine) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_registry_v1_registry_proto_enumTypes[1].Descriptor()
+}
+
+func (InfraEngine) Type() protoreflect.EnumType {
+	return &file_admiral_api_registry_v1_registry_proto_enumTypes[1]
+}
+
+func (x InfraEngine) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use InfraEngine.Descriptor instead.
+func (InfraEngine) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{1}
+}
+
 // FindingSeverity ranks what the publish gate found.
 type FindingSeverity int32
 
@@ -126,11 +176,11 @@ func (x FindingSeverity) String() string {
 }
 
 func (FindingSeverity) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_registry_v1_registry_proto_enumTypes[1].Descriptor()
+	return file_admiral_api_registry_v1_registry_proto_enumTypes[2].Descriptor()
 }
 
 func (FindingSeverity) Type() protoreflect.EnumType {
-	return &file_admiral_api_registry_v1_registry_proto_enumTypes[1]
+	return &file_admiral_api_registry_v1_registry_proto_enumTypes[2]
 }
 
 func (x FindingSeverity) Number() protoreflect.EnumNumber {
@@ -139,7 +189,7 @@ func (x FindingSeverity) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FindingSeverity.Descriptor instead.
 func (FindingSeverity) EnumDescriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{1}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{2}
 }
 
 // Status is whether a component is still recommended. Removing one is
@@ -179,11 +229,11 @@ func (x Component_Status) String() string {
 }
 
 func (Component_Status) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_registry_v1_registry_proto_enumTypes[2].Descriptor()
+	return file_admiral_api_registry_v1_registry_proto_enumTypes[3].Descriptor()
 }
 
 func (Component_Status) Type() protoreflect.EnumType {
-	return &file_admiral_api_registry_v1_registry_proto_enumTypes[2]
+	return &file_admiral_api_registry_v1_registry_proto_enumTypes[3]
 }
 
 func (x Component_Status) Number() protoreflect.EnumNumber {
@@ -235,11 +285,11 @@ func (x Version_Status) String() string {
 }
 
 func (Version_Status) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_registry_v1_registry_proto_enumTypes[3].Descriptor()
+	return file_admiral_api_registry_v1_registry_proto_enumTypes[4].Descriptor()
 }
 
 func (Version_Status) Type() protoreflect.EnumType {
-	return &file_admiral_api_registry_v1_registry_proto_enumTypes[3]
+	return &file_admiral_api_registry_v1_registry_proto_enumTypes[4]
 }
 
 func (x Version_Status) Number() protoreflect.EnumNumber {
@@ -292,11 +342,11 @@ func (x Provenance_Kind) String() string {
 }
 
 func (Provenance_Kind) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_registry_v1_registry_proto_enumTypes[4].Descriptor()
+	return file_admiral_api_registry_v1_registry_proto_enumTypes[5].Descriptor()
 }
 
 func (Provenance_Kind) Type() protoreflect.EnumType {
-	return &file_admiral_api_registry_v1_registry_proto_enumTypes[4]
+	return &file_admiral_api_registry_v1_registry_proto_enumTypes[5]
 }
 
 func (x Provenance_Kind) Number() protoreflect.EnumNumber {
@@ -305,7 +355,7 @@ func (x Provenance_Kind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Provenance_Kind.Descriptor instead.
 func (Provenance_Kind) EnumDescriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{7, 0}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{8, 0}
 }
 
 // Component is a registry entry: a name, and the versions and tags beneath
@@ -486,16 +536,19 @@ type Version struct {
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// The Terraform providers the bundle's root and vendored modules require,
 	// as `namespace/type` addresses without a registry host, read offline at
-	// publish. Empty for a Kubernetes component. A provider some agent in the
-	// tenant serves is a need: adding the component, setting its version or
-	// settings, or changing an assignment is refused unless the plan and apply
-	// profiles serve every need.
+	// publish. Empty for a Kubernetes component.
 	Providers []string `protobuf:"bytes,15,rep,name=providers,proto3" json:"providers,omitempty"`
 	// The organization's defaults stored with this version, as a JSON object;
 	// empty when there are none. The contract's defaults already include them.
 	BaselineValuesJson string `protobuf:"bytes,16,opt,name=baseline_values_json,json=baselineValuesJson,proto3" json:"baseline_values_json,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// The `required_version` constraint of a Terraform bundle's root, read at
+	// publish; empty when it states none. A range must accept the environment's
+	// version. An exact constraint (`= 1.10.6`) pins the component: it runs the
+	// environment's engine at that version, whatever version the environment
+	// sets, and never blocks the environment's version from moving.
+	RequiredVersion string `protobuf:"bytes,17,opt,name=required_version,json=requiredVersion,proto3" json:"required_version,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Version) Reset() {
@@ -640,6 +693,67 @@ func (x *Version) GetBaselineValuesJson() string {
 	return ""
 }
 
+func (x *Version) GetRequiredVersion() string {
+	if x != nil {
+		return x.RequiredVersion
+	}
+	return ""
+}
+
+// InfraEngineVersion is one engine at one exact version.
+type InfraEngineVersion struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Engine InfraEngine            `protobuf:"varint,1,opt,name=engine,proto3,enum=admiral.api.registry.v1.InfraEngine" json:"engine,omitempty"`
+	// Exact, e.g. `1.10.6`.
+	Version       string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InfraEngineVersion) Reset() {
+	*x = InfraEngineVersion{}
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InfraEngineVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InfraEngineVersion) ProtoMessage() {}
+
+func (x *InfraEngineVersion) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InfraEngineVersion.ProtoReflect.Descriptor instead.
+func (*InfraEngineVersion) Descriptor() ([]byte, []int) {
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *InfraEngineVersion) GetEngine() InfraEngine {
+	if x != nil {
+		return x.Engine
+	}
+	return InfraEngine_INFRA_ENGINE_UNSPECIFIED
+}
+
+func (x *InfraEngineVersion) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
 // Tag is a name pointing at a version.
 type Tag struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -658,7 +772,7 @@ type Tag struct {
 
 func (x *Tag) Reset() {
 	*x = Tag{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[2]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -670,7 +784,7 @@ func (x *Tag) String() string {
 func (*Tag) ProtoMessage() {}
 
 func (x *Tag) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[2]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -683,7 +797,7 @@ func (x *Tag) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Tag.ProtoReflect.Descriptor instead.
 func (*Tag) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{2}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Tag) GetName() string {
@@ -734,7 +848,7 @@ type Contract struct {
 
 func (x *Contract) Reset() {
 	*x = Contract{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[3]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -746,7 +860,7 @@ func (x *Contract) String() string {
 func (*Contract) ProtoMessage() {}
 
 func (x *Contract) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[3]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -759,7 +873,7 @@ func (x *Contract) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Contract.ProtoReflect.Descriptor instead.
 func (*Contract) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{3}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Contract) GetInputs() []*ContractInput {
@@ -811,7 +925,7 @@ type ContractInput struct {
 
 func (x *ContractInput) Reset() {
 	*x = ContractInput{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[4]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +937,7 @@ func (x *ContractInput) String() string {
 func (*ContractInput) ProtoMessage() {}
 
 func (x *ContractInput) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[4]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +950,7 @@ func (x *ContractInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContractInput.ProtoReflect.Descriptor instead.
 func (*ContractInput) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{4}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ContractInput) GetName() string {
@@ -929,7 +1043,7 @@ type ContractValidation struct {
 
 func (x *ContractValidation) Reset() {
 	*x = ContractValidation{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[5]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -941,7 +1055,7 @@ func (x *ContractValidation) String() string {
 func (*ContractValidation) ProtoMessage() {}
 
 func (x *ContractValidation) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[5]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -954,7 +1068,7 @@ func (x *ContractValidation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContractValidation.ProtoReflect.Descriptor instead.
 func (*ContractValidation) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{5}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ContractValidation) GetCondition() string {
@@ -983,7 +1097,7 @@ type ContractOutput struct {
 
 func (x *ContractOutput) Reset() {
 	*x = ContractOutput{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[6]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -995,7 +1109,7 @@ func (x *ContractOutput) String() string {
 func (*ContractOutput) ProtoMessage() {}
 
 func (x *ContractOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[6]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1008,7 +1122,7 @@ func (x *ContractOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContractOutput.ProtoReflect.Descriptor instead.
 func (*ContractOutput) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{6}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ContractOutput) GetName() string {
@@ -1069,7 +1183,7 @@ type Provenance struct {
 
 func (x *Provenance) Reset() {
 	*x = Provenance{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[7]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1081,7 +1195,7 @@ func (x *Provenance) String() string {
 func (*Provenance) ProtoMessage() {}
 
 func (x *Provenance) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[7]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1094,7 +1208,7 @@ func (x *Provenance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Provenance.ProtoReflect.Descriptor instead.
 func (*Provenance) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{7}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Provenance) GetKind() Provenance_Kind {
@@ -1174,7 +1288,7 @@ type PresentedCredential struct {
 
 func (x *PresentedCredential) Reset() {
 	*x = PresentedCredential{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[8]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1186,7 +1300,7 @@ func (x *PresentedCredential) String() string {
 func (*PresentedCredential) ProtoMessage() {}
 
 func (x *PresentedCredential) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[8]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1199,7 +1313,7 @@ func (x *PresentedCredential) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PresentedCredential.ProtoReflect.Descriptor instead.
 func (*PresentedCredential) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{8}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PresentedCredential) GetId() string {
@@ -1239,7 +1353,7 @@ type Dependency struct {
 
 func (x *Dependency) Reset() {
 	*x = Dependency{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[9]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1251,7 +1365,7 @@ func (x *Dependency) String() string {
 func (*Dependency) ProtoMessage() {}
 
 func (x *Dependency) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[9]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1264,7 +1378,7 @@ func (x *Dependency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Dependency.ProtoReflect.Descriptor instead.
 func (*Dependency) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Dependency) GetSource() string {
@@ -1306,7 +1420,7 @@ type Finding struct {
 
 func (x *Finding) Reset() {
 	*x = Finding{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[10]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1318,7 +1432,7 @@ func (x *Finding) String() string {
 func (*Finding) ProtoMessage() {}
 
 func (x *Finding) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[10]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1331,7 +1445,7 @@ func (x *Finding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Finding.ProtoReflect.Descriptor instead.
 func (*Finding) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Finding) GetSeverity() FindingSeverity {
@@ -1396,7 +1510,7 @@ type PublishComponentRequest struct {
 
 func (x *PublishComponentRequest) Reset() {
 	*x = PublishComponentRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[11]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1408,7 +1522,7 @@ func (x *PublishComponentRequest) String() string {
 func (*PublishComponentRequest) ProtoMessage() {}
 
 func (x *PublishComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[11]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1421,7 +1535,7 @@ func (x *PublishComponentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishComponentRequest.ProtoReflect.Descriptor instead.
 func (*PublishComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PublishComponentRequest) GetName() string {
@@ -1487,7 +1601,7 @@ type PublishComponentResponse struct {
 
 func (x *PublishComponentResponse) Reset() {
 	*x = PublishComponentResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[12]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1499,7 +1613,7 @@ func (x *PublishComponentResponse) String() string {
 func (*PublishComponentResponse) ProtoMessage() {}
 
 func (x *PublishComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[12]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1512,7 +1626,7 @@ func (x *PublishComponentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishComponentResponse.ProtoReflect.Descriptor instead.
 func (*PublishComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *PublishComponentResponse) GetComponent() *Component {
@@ -1556,7 +1670,7 @@ type ImportSource struct {
 
 func (x *ImportSource) Reset() {
 	*x = ImportSource{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[13]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1568,7 +1682,7 @@ func (x *ImportSource) String() string {
 func (*ImportSource) ProtoMessage() {}
 
 func (x *ImportSource) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[13]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1581,7 +1695,7 @@ func (x *ImportSource) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportSource.ProtoReflect.Descriptor instead.
 func (*ImportSource) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ImportSource) GetSource() isImportSource_Source {
@@ -1699,7 +1813,7 @@ type ImportComponentRequest struct {
 
 func (x *ImportComponentRequest) Reset() {
 	*x = ImportComponentRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[14]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1711,7 +1825,7 @@ func (x *ImportComponentRequest) String() string {
 func (*ImportComponentRequest) ProtoMessage() {}
 
 func (x *ImportComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[14]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1724,7 +1838,7 @@ func (x *ImportComponentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportComponentRequest.ProtoReflect.Descriptor instead.
 func (*ImportComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ImportComponentRequest) GetName() string {
@@ -1788,7 +1902,7 @@ type ImportComponentResponse struct {
 
 func (x *ImportComponentResponse) Reset() {
 	*x = ImportComponentResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[15]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1800,7 +1914,7 @@ func (x *ImportComponentResponse) String() string {
 func (*ImportComponentResponse) ProtoMessage() {}
 
 func (x *ImportComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[15]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1813,7 +1927,7 @@ func (x *ImportComponentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportComponentResponse.ProtoReflect.Descriptor instead.
 func (*ImportComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{15}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ImportComponentResponse) GetComponent() *Component {
@@ -1862,7 +1976,7 @@ type ListComponentsRequest struct {
 
 func (x *ListComponentsRequest) Reset() {
 	*x = ListComponentsRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[16]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1874,7 +1988,7 @@ func (x *ListComponentsRequest) String() string {
 func (*ListComponentsRequest) ProtoMessage() {}
 
 func (x *ListComponentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[16]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1887,7 +2001,7 @@ func (x *ListComponentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListComponentsRequest.ProtoReflect.Descriptor instead.
 func (*ListComponentsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{16}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListComponentsRequest) GetFilter() string {
@@ -1924,7 +2038,7 @@ type ListComponentsResponse struct {
 
 func (x *ListComponentsResponse) Reset() {
 	*x = ListComponentsResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[17]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1936,7 +2050,7 @@ func (x *ListComponentsResponse) String() string {
 func (*ListComponentsResponse) ProtoMessage() {}
 
 func (x *ListComponentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[17]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1949,7 +2063,7 @@ func (x *ListComponentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListComponentsResponse.ProtoReflect.Descriptor instead.
 func (*ListComponentsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{17}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListComponentsResponse) GetComponents() []*Component {
@@ -1977,7 +2091,7 @@ type GetComponentRequest struct {
 
 func (x *GetComponentRequest) Reset() {
 	*x = GetComponentRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[18]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1989,7 +2103,7 @@ func (x *GetComponentRequest) String() string {
 func (*GetComponentRequest) ProtoMessage() {}
 
 func (x *GetComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[18]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2002,7 +2116,7 @@ func (x *GetComponentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetComponentRequest.ProtoReflect.Descriptor instead.
 func (*GetComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{18}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetComponentRequest) GetComponent() string {
@@ -2022,7 +2136,7 @@ type GetComponentResponse struct {
 
 func (x *GetComponentResponse) Reset() {
 	*x = GetComponentResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[19]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2034,7 +2148,7 @@ func (x *GetComponentResponse) String() string {
 func (*GetComponentResponse) ProtoMessage() {}
 
 func (x *GetComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[19]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2047,7 +2161,7 @@ func (x *GetComponentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetComponentResponse.ProtoReflect.Descriptor instead.
 func (*GetComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{19}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetComponentResponse) GetComponent() *Component {
@@ -2073,7 +2187,7 @@ type UpdateComponentRequest struct {
 
 func (x *UpdateComponentRequest) Reset() {
 	*x = UpdateComponentRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[20]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2085,7 +2199,7 @@ func (x *UpdateComponentRequest) String() string {
 func (*UpdateComponentRequest) ProtoMessage() {}
 
 func (x *UpdateComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[20]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2098,7 +2212,7 @@ func (x *UpdateComponentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateComponentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{20}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *UpdateComponentRequest) GetComponent() *Component {
@@ -2125,7 +2239,7 @@ type UpdateComponentResponse struct {
 
 func (x *UpdateComponentResponse) Reset() {
 	*x = UpdateComponentResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[21]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2137,7 +2251,7 @@ func (x *UpdateComponentResponse) String() string {
 func (*UpdateComponentResponse) ProtoMessage() {}
 
 func (x *UpdateComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[21]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2150,7 +2264,7 @@ func (x *UpdateComponentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateComponentResponse.ProtoReflect.Descriptor instead.
 func (*UpdateComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{21}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *UpdateComponentResponse) GetComponent() *Component {
@@ -2175,7 +2289,7 @@ type SetComponentStatusRequest struct {
 
 func (x *SetComponentStatusRequest) Reset() {
 	*x = SetComponentStatusRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[22]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2187,7 +2301,7 @@ func (x *SetComponentStatusRequest) String() string {
 func (*SetComponentStatusRequest) ProtoMessage() {}
 
 func (x *SetComponentStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[22]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2200,7 +2314,7 @@ func (x *SetComponentStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetComponentStatusRequest.ProtoReflect.Descriptor instead.
 func (*SetComponentStatusRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{22}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *SetComponentStatusRequest) GetComponentId() string {
@@ -2241,7 +2355,7 @@ type SetComponentStatusResponse struct {
 
 func (x *SetComponentStatusResponse) Reset() {
 	*x = SetComponentStatusResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[23]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2253,7 +2367,7 @@ func (x *SetComponentStatusResponse) String() string {
 func (*SetComponentStatusResponse) ProtoMessage() {}
 
 func (x *SetComponentStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[23]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2266,7 +2380,7 @@ func (x *SetComponentStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetComponentStatusResponse.ProtoReflect.Descriptor instead.
 func (*SetComponentStatusResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{23}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SetComponentStatusResponse) GetComponent() *Component {
@@ -2286,7 +2400,7 @@ type DeleteComponentRequest struct {
 
 func (x *DeleteComponentRequest) Reset() {
 	*x = DeleteComponentRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[24]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2298,7 +2412,7 @@ func (x *DeleteComponentRequest) String() string {
 func (*DeleteComponentRequest) ProtoMessage() {}
 
 func (x *DeleteComponentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[24]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2311,7 +2425,7 @@ func (x *DeleteComponentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteComponentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteComponentRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{24}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *DeleteComponentRequest) GetComponentId() string {
@@ -2330,7 +2444,7 @@ type DeleteComponentResponse struct {
 
 func (x *DeleteComponentResponse) Reset() {
 	*x = DeleteComponentResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[25]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2342,7 +2456,7 @@ func (x *DeleteComponentResponse) String() string {
 func (*DeleteComponentResponse) ProtoMessage() {}
 
 func (x *DeleteComponentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[25]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2355,7 +2469,7 @@ func (x *DeleteComponentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteComponentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteComponentResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{25}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{26}
 }
 
 // ListVersionsRequest pages through one component's versions.
@@ -2377,7 +2491,7 @@ type ListVersionsRequest struct {
 
 func (x *ListVersionsRequest) Reset() {
 	*x = ListVersionsRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[26]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2389,7 +2503,7 @@ func (x *ListVersionsRequest) String() string {
 func (*ListVersionsRequest) ProtoMessage() {}
 
 func (x *ListVersionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[26]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2402,7 +2516,7 @@ func (x *ListVersionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListVersionsRequest.ProtoReflect.Descriptor instead.
 func (*ListVersionsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{26}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ListVersionsRequest) GetComponentId() string {
@@ -2444,7 +2558,7 @@ type ListVersionsResponse struct {
 
 func (x *ListVersionsResponse) Reset() {
 	*x = ListVersionsResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[27]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2456,7 +2570,7 @@ func (x *ListVersionsResponse) String() string {
 func (*ListVersionsResponse) ProtoMessage() {}
 
 func (x *ListVersionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[27]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2469,7 +2583,7 @@ func (x *ListVersionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListVersionsResponse.ProtoReflect.Descriptor instead.
 func (*ListVersionsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{27}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ListVersionsResponse) GetVersions() []*Version {
@@ -2500,7 +2614,7 @@ type GetVersionRequest struct {
 
 func (x *GetVersionRequest) Reset() {
 	*x = GetVersionRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[28]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2512,7 +2626,7 @@ func (x *GetVersionRequest) String() string {
 func (*GetVersionRequest) ProtoMessage() {}
 
 func (x *GetVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[28]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2525,7 +2639,7 @@ func (x *GetVersionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVersionRequest.ProtoReflect.Descriptor instead.
 func (*GetVersionRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{28}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *GetVersionRequest) GetComponentId() string {
@@ -2552,7 +2666,7 @@ type GetVersionResponse struct {
 
 func (x *GetVersionResponse) Reset() {
 	*x = GetVersionResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[29]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2564,7 +2678,7 @@ func (x *GetVersionResponse) String() string {
 func (*GetVersionResponse) ProtoMessage() {}
 
 func (x *GetVersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[29]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2577,7 +2691,7 @@ func (x *GetVersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVersionResponse.ProtoReflect.Descriptor instead.
 func (*GetVersionResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{29}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *GetVersionResponse) GetVersion() *Version {
@@ -2606,7 +2720,7 @@ type SetVersionStatusRequest struct {
 
 func (x *SetVersionStatusRequest) Reset() {
 	*x = SetVersionStatusRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[30]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2618,7 +2732,7 @@ func (x *SetVersionStatusRequest) String() string {
 func (*SetVersionStatusRequest) ProtoMessage() {}
 
 func (x *SetVersionStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[30]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2631,7 +2745,7 @@ func (x *SetVersionStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVersionStatusRequest.ProtoReflect.Descriptor instead.
 func (*SetVersionStatusRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{30}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *SetVersionStatusRequest) GetComponentId() string {
@@ -2672,7 +2786,7 @@ type SetVersionStatusResponse struct {
 
 func (x *SetVersionStatusResponse) Reset() {
 	*x = SetVersionStatusResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[31]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2684,7 +2798,7 @@ func (x *SetVersionStatusResponse) String() string {
 func (*SetVersionStatusResponse) ProtoMessage() {}
 
 func (x *SetVersionStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[31]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2697,7 +2811,7 @@ func (x *SetVersionStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetVersionStatusResponse.ProtoReflect.Descriptor instead.
 func (*SetVersionStatusResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{31}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SetVersionStatusResponse) GetVersion() *Version {
@@ -2720,7 +2834,7 @@ type SetTagRequest struct {
 
 func (x *SetTagRequest) Reset() {
 	*x = SetTagRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[32]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2732,7 +2846,7 @@ func (x *SetTagRequest) String() string {
 func (*SetTagRequest) ProtoMessage() {}
 
 func (x *SetTagRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[32]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2745,7 +2859,7 @@ func (x *SetTagRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTagRequest.ProtoReflect.Descriptor instead.
 func (*SetTagRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{32}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SetTagRequest) GetComponentId() string {
@@ -2779,7 +2893,7 @@ type SetTagResponse struct {
 
 func (x *SetTagResponse) Reset() {
 	*x = SetTagResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[33]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2791,7 +2905,7 @@ func (x *SetTagResponse) String() string {
 func (*SetTagResponse) ProtoMessage() {}
 
 func (x *SetTagResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[33]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2804,7 +2918,7 @@ func (x *SetTagResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTagResponse.ProtoReflect.Descriptor instead.
 func (*SetTagResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{33}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *SetTagResponse) GetTag() *Tag {
@@ -2825,7 +2939,7 @@ type DeleteTagRequest struct {
 
 func (x *DeleteTagRequest) Reset() {
 	*x = DeleteTagRequest{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[34]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2837,7 +2951,7 @@ func (x *DeleteTagRequest) String() string {
 func (*DeleteTagRequest) ProtoMessage() {}
 
 func (x *DeleteTagRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[34]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2850,7 +2964,7 @@ func (x *DeleteTagRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTagRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTagRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{34}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *DeleteTagRequest) GetComponentId() string {
@@ -2876,7 +2990,7 @@ type DeleteTagResponse struct {
 
 func (x *DeleteTagResponse) Reset() {
 	*x = DeleteTagResponse{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[35]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2888,7 +3002,7 @@ func (x *DeleteTagResponse) String() string {
 func (*DeleteTagResponse) ProtoMessage() {}
 
 func (x *DeleteTagResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[35]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2901,7 +3015,7 @@ func (x *DeleteTagResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTagResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTagResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{35}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{36}
 }
 
 // A chart in an OCI registry: `oci://ghcr.io/argoproj/argo-helm/argo-cd`
@@ -2916,7 +3030,7 @@ type ImportSource_OCIChart struct {
 
 func (x *ImportSource_OCIChart) Reset() {
 	*x = ImportSource_OCIChart{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[38]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2928,7 +3042,7 @@ func (x *ImportSource_OCIChart) String() string {
 func (*ImportSource_OCIChart) ProtoMessage() {}
 
 func (x *ImportSource_OCIChart) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[38]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2941,7 +3055,7 @@ func (x *ImportSource_OCIChart) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportSource_OCIChart.ProtoReflect.Descriptor instead.
 func (*ImportSource_OCIChart) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13, 0}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14, 0}
 }
 
 func (x *ImportSource_OCIChart) GetReference() string {
@@ -2971,7 +3085,7 @@ type ImportSource_HelmChart struct {
 
 func (x *ImportSource_HelmChart) Reset() {
 	*x = ImportSource_HelmChart{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[39]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2983,7 +3097,7 @@ func (x *ImportSource_HelmChart) String() string {
 func (*ImportSource_HelmChart) ProtoMessage() {}
 
 func (x *ImportSource_HelmChart) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[39]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2996,7 +3110,7 @@ func (x *ImportSource_HelmChart) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportSource_HelmChart.ProtoReflect.Descriptor instead.
 func (*ImportSource_HelmChart) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13, 1}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14, 1}
 }
 
 func (x *ImportSource_HelmChart) GetRepository() string {
@@ -3034,7 +3148,7 @@ type ImportSource_RegistryModule struct {
 
 func (x *ImportSource_RegistryModule) Reset() {
 	*x = ImportSource_RegistryModule{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[40]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3046,7 +3160,7 @@ func (x *ImportSource_RegistryModule) String() string {
 func (*ImportSource_RegistryModule) ProtoMessage() {}
 
 func (x *ImportSource_RegistryModule) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[40]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3059,7 +3173,7 @@ func (x *ImportSource_RegistryModule) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportSource_RegistryModule.ProtoReflect.Descriptor instead.
 func (*ImportSource_RegistryModule) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13, 2}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14, 2}
 }
 
 func (x *ImportSource_RegistryModule) GetAddress() string {
@@ -3091,7 +3205,7 @@ type ImportSource_GitTree struct {
 
 func (x *ImportSource_GitTree) Reset() {
 	*x = ImportSource_GitTree{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[41]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3103,7 +3217,7 @@ func (x *ImportSource_GitTree) String() string {
 func (*ImportSource_GitTree) ProtoMessage() {}
 
 func (x *ImportSource_GitTree) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[41]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3116,7 +3230,7 @@ func (x *ImportSource_GitTree) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportSource_GitTree.ProtoReflect.Descriptor instead.
 func (*ImportSource_GitTree) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13, 3}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14, 3}
 }
 
 func (x *ImportSource_GitTree) GetUrl() string {
@@ -3150,7 +3264,7 @@ type ImportSource_Archive struct {
 
 func (x *ImportSource_Archive) Reset() {
 	*x = ImportSource_Archive{}
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[42]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3162,7 +3276,7 @@ func (x *ImportSource_Archive) String() string {
 func (*ImportSource_Archive) ProtoMessage() {}
 
 func (x *ImportSource_Archive) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[42]
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3175,7 +3289,7 @@ func (x *ImportSource_Archive) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportSource_Archive.ProtoReflect.Descriptor instead.
 func (*ImportSource_Archive) Descriptor() ([]byte, []int) {
-	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{13, 4}
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14, 4}
 }
 
 func (x *ImportSource_Archive) GetUrl() string {
@@ -3213,7 +3327,7 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rSTATUS_ACTIVE\x10\x01\x12\x15\n" +
-	"\x11STATUS_DEPRECATED\x10\x02\"\x04\b\x03\x10\x03*\x0eSTATUS_RETIRED\"\xc6\a\n" +
+	"\x11STATUS_DEPRECATED\x10\x02\"\x04\b\x03\x10\x03*\x0eSTATUS_RETIRED\"\xf6\a\n" +
 	"\aVersion\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^ver-[0-9a-z]+$R\x02id\x12&\n" +
 	"\fcomponent_id\x18\x02 \x01(\tB\x03\xe0A\x03R\vcomponentId\x12\x1b\n" +
@@ -3236,12 +3350,17 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12!\n" +
 	"\tproviders\x18\x0f \x03(\tB\x03\xe0A\x03R\tproviders\x125\n" +
-	"\x14baseline_values_json\x18\x10 \x01(\tB\x03\xe0A\x03R\x12baselineValuesJson\"a\n" +
+	"\x14baseline_values_json\x18\x10 \x01(\tB\x03\xe0A\x03R\x12baselineValuesJson\x12.\n" +
+	"\x10required_version\x18\x11 \x01(\tB\x03\xe0A\x03R\x0frequiredVersion\"a\n" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10STATUS_PUBLISHED\x10\x01\x12\x15\n" +
 	"\x11STATUS_DEPRECATED\x10\x02\x12\x12\n" +
-	"\x0eSTATUS_REVOKED\x10\x03\"\xde\x01\n" +
+	"\x0eSTATUS_REVOKED\x10\x03\"\xad\x01\n" +
+	"\x12InfraEngineVersion\x12H\n" +
+	"\x06engine\x18\x01 \x01(\x0e2$.admiral.api.registry.v1.InfraEngineB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x06engine\x12M\n" +
+	"\aversion\x18\x02 \x01(\tB3\xbaH0r.\x18@2*^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$R\aversion\"\xde\x01\n" +
 	"\x03Tag\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\x03R\x04name\x12\x1b\n" +
 	"\x06digest\x18\x02 \x01(\tB\x03\xe0A\x03R\x06digest\x12!\n" +
@@ -3440,7 +3559,11 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x1aCOMPONENT_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18COMPONENT_KIND_TERRAFORM\x10\x01\x12\x17\n" +
 	"\x13COMPONENT_KIND_HELM\x10\x02\x12\x1c\n" +
-	"\x18COMPONENT_KIND_MANIFESTS\x10\x03*\xbf\x01\n" +
+	"\x18COMPONENT_KIND_MANIFESTS\x10\x03*b\n" +
+	"\vInfraEngine\x12\x1c\n" +
+	"\x18INFRA_ENGINE_UNSPECIFIED\x10\x00\x12\x1a\n" +
+	"\x16INFRA_ENGINE_TERRAFORM\x10\x01\x12\x19\n" +
+	"\x15INFRA_ENGINE_OPENTOFU\x10\x02*\xbf\x01\n" +
 	"\x0fFindingSeverity\x12 \n" +
 	"\x1cFINDING_SEVERITY_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15FINDING_SEVERITY_INFO\x10\x01\x12\x18\n" +
@@ -3512,146 +3635,149 @@ func file_admiral_api_registry_v1_registry_proto_rawDescGZIP() []byte {
 	return file_admiral_api_registry_v1_registry_proto_rawDescData
 }
 
-var file_admiral_api_registry_v1_registry_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_admiral_api_registry_v1_registry_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
+var file_admiral_api_registry_v1_registry_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_admiral_api_registry_v1_registry_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
 var file_admiral_api_registry_v1_registry_proto_goTypes = []any{
 	(ComponentKind)(0),                  // 0: admiral.api.registry.v1.ComponentKind
-	(FindingSeverity)(0),                // 1: admiral.api.registry.v1.FindingSeverity
-	(Component_Status)(0),               // 2: admiral.api.registry.v1.Component.Status
-	(Version_Status)(0),                 // 3: admiral.api.registry.v1.Version.Status
-	(Provenance_Kind)(0),                // 4: admiral.api.registry.v1.Provenance.Kind
-	(*Component)(nil),                   // 5: admiral.api.registry.v1.Component
-	(*Version)(nil),                     // 6: admiral.api.registry.v1.Version
-	(*Tag)(nil),                         // 7: admiral.api.registry.v1.Tag
-	(*Contract)(nil),                    // 8: admiral.api.registry.v1.Contract
-	(*ContractInput)(nil),               // 9: admiral.api.registry.v1.ContractInput
-	(*ContractValidation)(nil),          // 10: admiral.api.registry.v1.ContractValidation
-	(*ContractOutput)(nil),              // 11: admiral.api.registry.v1.ContractOutput
-	(*Provenance)(nil),                  // 12: admiral.api.registry.v1.Provenance
-	(*PresentedCredential)(nil),         // 13: admiral.api.registry.v1.PresentedCredential
-	(*Dependency)(nil),                  // 14: admiral.api.registry.v1.Dependency
-	(*Finding)(nil),                     // 15: admiral.api.registry.v1.Finding
-	(*PublishComponentRequest)(nil),     // 16: admiral.api.registry.v1.PublishComponentRequest
-	(*PublishComponentResponse)(nil),    // 17: admiral.api.registry.v1.PublishComponentResponse
-	(*ImportSource)(nil),                // 18: admiral.api.registry.v1.ImportSource
-	(*ImportComponentRequest)(nil),      // 19: admiral.api.registry.v1.ImportComponentRequest
-	(*ImportComponentResponse)(nil),     // 20: admiral.api.registry.v1.ImportComponentResponse
-	(*ListComponentsRequest)(nil),       // 21: admiral.api.registry.v1.ListComponentsRequest
-	(*ListComponentsResponse)(nil),      // 22: admiral.api.registry.v1.ListComponentsResponse
-	(*GetComponentRequest)(nil),         // 23: admiral.api.registry.v1.GetComponentRequest
-	(*GetComponentResponse)(nil),        // 24: admiral.api.registry.v1.GetComponentResponse
-	(*UpdateComponentRequest)(nil),      // 25: admiral.api.registry.v1.UpdateComponentRequest
-	(*UpdateComponentResponse)(nil),     // 26: admiral.api.registry.v1.UpdateComponentResponse
-	(*SetComponentStatusRequest)(nil),   // 27: admiral.api.registry.v1.SetComponentStatusRequest
-	(*SetComponentStatusResponse)(nil),  // 28: admiral.api.registry.v1.SetComponentStatusResponse
-	(*DeleteComponentRequest)(nil),      // 29: admiral.api.registry.v1.DeleteComponentRequest
-	(*DeleteComponentResponse)(nil),     // 30: admiral.api.registry.v1.DeleteComponentResponse
-	(*ListVersionsRequest)(nil),         // 31: admiral.api.registry.v1.ListVersionsRequest
-	(*ListVersionsResponse)(nil),        // 32: admiral.api.registry.v1.ListVersionsResponse
-	(*GetVersionRequest)(nil),           // 33: admiral.api.registry.v1.GetVersionRequest
-	(*GetVersionResponse)(nil),          // 34: admiral.api.registry.v1.GetVersionResponse
-	(*SetVersionStatusRequest)(nil),     // 35: admiral.api.registry.v1.SetVersionStatusRequest
-	(*SetVersionStatusResponse)(nil),    // 36: admiral.api.registry.v1.SetVersionStatusResponse
-	(*SetTagRequest)(nil),               // 37: admiral.api.registry.v1.SetTagRequest
-	(*SetTagResponse)(nil),              // 38: admiral.api.registry.v1.SetTagResponse
-	(*DeleteTagRequest)(nil),            // 39: admiral.api.registry.v1.DeleteTagRequest
-	(*DeleteTagResponse)(nil),           // 40: admiral.api.registry.v1.DeleteTagResponse
-	nil,                                 // 41: admiral.api.registry.v1.Component.LabelsEntry
-	nil,                                 // 42: admiral.api.registry.v1.PublishComponentRequest.LabelsEntry
-	(*ImportSource_OCIChart)(nil),       // 43: admiral.api.registry.v1.ImportSource.OCIChart
-	(*ImportSource_HelmChart)(nil),      // 44: admiral.api.registry.v1.ImportSource.HelmChart
-	(*ImportSource_RegistryModule)(nil), // 45: admiral.api.registry.v1.ImportSource.RegistryModule
-	(*ImportSource_GitTree)(nil),        // 46: admiral.api.registry.v1.ImportSource.GitTree
-	(*ImportSource_Archive)(nil),        // 47: admiral.api.registry.v1.ImportSource.Archive
-	nil,                                 // 48: admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
-	(*v1.ActorRef)(nil),                 // 49: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),       // 50: google.protobuf.Timestamp
-	(*structpb.Value)(nil),              // 51: google.protobuf.Value
-	(*structpb.Struct)(nil),             // 52: google.protobuf.Struct
-	(*fieldmaskpb.FieldMask)(nil),       // 53: google.protobuf.FieldMask
+	(InfraEngine)(0),                    // 1: admiral.api.registry.v1.InfraEngine
+	(FindingSeverity)(0),                // 2: admiral.api.registry.v1.FindingSeverity
+	(Component_Status)(0),               // 3: admiral.api.registry.v1.Component.Status
+	(Version_Status)(0),                 // 4: admiral.api.registry.v1.Version.Status
+	(Provenance_Kind)(0),                // 5: admiral.api.registry.v1.Provenance.Kind
+	(*Component)(nil),                   // 6: admiral.api.registry.v1.Component
+	(*Version)(nil),                     // 7: admiral.api.registry.v1.Version
+	(*InfraEngineVersion)(nil),          // 8: admiral.api.registry.v1.InfraEngineVersion
+	(*Tag)(nil),                         // 9: admiral.api.registry.v1.Tag
+	(*Contract)(nil),                    // 10: admiral.api.registry.v1.Contract
+	(*ContractInput)(nil),               // 11: admiral.api.registry.v1.ContractInput
+	(*ContractValidation)(nil),          // 12: admiral.api.registry.v1.ContractValidation
+	(*ContractOutput)(nil),              // 13: admiral.api.registry.v1.ContractOutput
+	(*Provenance)(nil),                  // 14: admiral.api.registry.v1.Provenance
+	(*PresentedCredential)(nil),         // 15: admiral.api.registry.v1.PresentedCredential
+	(*Dependency)(nil),                  // 16: admiral.api.registry.v1.Dependency
+	(*Finding)(nil),                     // 17: admiral.api.registry.v1.Finding
+	(*PublishComponentRequest)(nil),     // 18: admiral.api.registry.v1.PublishComponentRequest
+	(*PublishComponentResponse)(nil),    // 19: admiral.api.registry.v1.PublishComponentResponse
+	(*ImportSource)(nil),                // 20: admiral.api.registry.v1.ImportSource
+	(*ImportComponentRequest)(nil),      // 21: admiral.api.registry.v1.ImportComponentRequest
+	(*ImportComponentResponse)(nil),     // 22: admiral.api.registry.v1.ImportComponentResponse
+	(*ListComponentsRequest)(nil),       // 23: admiral.api.registry.v1.ListComponentsRequest
+	(*ListComponentsResponse)(nil),      // 24: admiral.api.registry.v1.ListComponentsResponse
+	(*GetComponentRequest)(nil),         // 25: admiral.api.registry.v1.GetComponentRequest
+	(*GetComponentResponse)(nil),        // 26: admiral.api.registry.v1.GetComponentResponse
+	(*UpdateComponentRequest)(nil),      // 27: admiral.api.registry.v1.UpdateComponentRequest
+	(*UpdateComponentResponse)(nil),     // 28: admiral.api.registry.v1.UpdateComponentResponse
+	(*SetComponentStatusRequest)(nil),   // 29: admiral.api.registry.v1.SetComponentStatusRequest
+	(*SetComponentStatusResponse)(nil),  // 30: admiral.api.registry.v1.SetComponentStatusResponse
+	(*DeleteComponentRequest)(nil),      // 31: admiral.api.registry.v1.DeleteComponentRequest
+	(*DeleteComponentResponse)(nil),     // 32: admiral.api.registry.v1.DeleteComponentResponse
+	(*ListVersionsRequest)(nil),         // 33: admiral.api.registry.v1.ListVersionsRequest
+	(*ListVersionsResponse)(nil),        // 34: admiral.api.registry.v1.ListVersionsResponse
+	(*GetVersionRequest)(nil),           // 35: admiral.api.registry.v1.GetVersionRequest
+	(*GetVersionResponse)(nil),          // 36: admiral.api.registry.v1.GetVersionResponse
+	(*SetVersionStatusRequest)(nil),     // 37: admiral.api.registry.v1.SetVersionStatusRequest
+	(*SetVersionStatusResponse)(nil),    // 38: admiral.api.registry.v1.SetVersionStatusResponse
+	(*SetTagRequest)(nil),               // 39: admiral.api.registry.v1.SetTagRequest
+	(*SetTagResponse)(nil),              // 40: admiral.api.registry.v1.SetTagResponse
+	(*DeleteTagRequest)(nil),            // 41: admiral.api.registry.v1.DeleteTagRequest
+	(*DeleteTagResponse)(nil),           // 42: admiral.api.registry.v1.DeleteTagResponse
+	nil,                                 // 43: admiral.api.registry.v1.Component.LabelsEntry
+	nil,                                 // 44: admiral.api.registry.v1.PublishComponentRequest.LabelsEntry
+	(*ImportSource_OCIChart)(nil),       // 45: admiral.api.registry.v1.ImportSource.OCIChart
+	(*ImportSource_HelmChart)(nil),      // 46: admiral.api.registry.v1.ImportSource.HelmChart
+	(*ImportSource_RegistryModule)(nil), // 47: admiral.api.registry.v1.ImportSource.RegistryModule
+	(*ImportSource_GitTree)(nil),        // 48: admiral.api.registry.v1.ImportSource.GitTree
+	(*ImportSource_Archive)(nil),        // 49: admiral.api.registry.v1.ImportSource.Archive
+	nil,                                 // 50: admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
+	(*v1.ActorRef)(nil),                 // 51: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),       // 52: google.protobuf.Timestamp
+	(*structpb.Value)(nil),              // 53: google.protobuf.Value
+	(*structpb.Struct)(nil),             // 54: google.protobuf.Struct
+	(*fieldmaskpb.FieldMask)(nil),       // 55: google.protobuf.FieldMask
 }
 var file_admiral_api_registry_v1_registry_proto_depIdxs = []int32{
-	41, // 0: admiral.api.registry.v1.Component.labels:type_name -> admiral.api.registry.v1.Component.LabelsEntry
-	7,  // 1: admiral.api.registry.v1.Component.tags:type_name -> admiral.api.registry.v1.Tag
-	49, // 2: admiral.api.registry.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
-	50, // 3: admiral.api.registry.v1.Component.created_at:type_name -> google.protobuf.Timestamp
-	50, // 4: admiral.api.registry.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
-	2,  // 5: admiral.api.registry.v1.Component.status:type_name -> admiral.api.registry.v1.Component.Status
-	50, // 6: admiral.api.registry.v1.Component.status_changed_at:type_name -> google.protobuf.Timestamp
+	43, // 0: admiral.api.registry.v1.Component.labels:type_name -> admiral.api.registry.v1.Component.LabelsEntry
+	9,  // 1: admiral.api.registry.v1.Component.tags:type_name -> admiral.api.registry.v1.Tag
+	51, // 2: admiral.api.registry.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
+	52, // 3: admiral.api.registry.v1.Component.created_at:type_name -> google.protobuf.Timestamp
+	52, // 4: admiral.api.registry.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
+	3,  // 5: admiral.api.registry.v1.Component.status:type_name -> admiral.api.registry.v1.Component.Status
+	52, // 6: admiral.api.registry.v1.Component.status_changed_at:type_name -> google.protobuf.Timestamp
 	0,  // 7: admiral.api.registry.v1.Version.kind:type_name -> admiral.api.registry.v1.ComponentKind
-	8,  // 8: admiral.api.registry.v1.Version.contract:type_name -> admiral.api.registry.v1.Contract
-	12, // 9: admiral.api.registry.v1.Version.provenance:type_name -> admiral.api.registry.v1.Provenance
-	15, // 10: admiral.api.registry.v1.Version.findings:type_name -> admiral.api.registry.v1.Finding
-	3,  // 11: admiral.api.registry.v1.Version.status:type_name -> admiral.api.registry.v1.Version.Status
-	50, // 12: admiral.api.registry.v1.Version.status_changed_at:type_name -> google.protobuf.Timestamp
-	49, // 13: admiral.api.registry.v1.Version.created_by:type_name -> admiral.common.v1.ActorRef
-	50, // 14: admiral.api.registry.v1.Version.created_at:type_name -> google.protobuf.Timestamp
-	50, // 15: admiral.api.registry.v1.Tag.created_at:type_name -> google.protobuf.Timestamp
-	50, // 16: admiral.api.registry.v1.Tag.updated_at:type_name -> google.protobuf.Timestamp
-	9,  // 17: admiral.api.registry.v1.Contract.inputs:type_name -> admiral.api.registry.v1.ContractInput
-	11, // 18: admiral.api.registry.v1.Contract.outputs:type_name -> admiral.api.registry.v1.ContractOutput
-	51, // 19: admiral.api.registry.v1.ContractInput.default:type_name -> google.protobuf.Value
-	10, // 20: admiral.api.registry.v1.ContractInput.validations:type_name -> admiral.api.registry.v1.ContractValidation
-	52, // 21: admiral.api.registry.v1.ContractInput.schema:type_name -> google.protobuf.Struct
-	4,  // 22: admiral.api.registry.v1.Provenance.kind:type_name -> admiral.api.registry.v1.Provenance.Kind
-	14, // 23: admiral.api.registry.v1.Provenance.dependencies:type_name -> admiral.api.registry.v1.Dependency
-	13, // 24: admiral.api.registry.v1.Provenance.credentials:type_name -> admiral.api.registry.v1.PresentedCredential
-	1,  // 25: admiral.api.registry.v1.Finding.severity:type_name -> admiral.api.registry.v1.FindingSeverity
-	0,  // 26: admiral.api.registry.v1.PublishComponentRequest.kind:type_name -> admiral.api.registry.v1.ComponentKind
-	42, // 27: admiral.api.registry.v1.PublishComponentRequest.labels:type_name -> admiral.api.registry.v1.PublishComponentRequest.LabelsEntry
-	12, // 28: admiral.api.registry.v1.PublishComponentRequest.provenance:type_name -> admiral.api.registry.v1.Provenance
-	5,  // 29: admiral.api.registry.v1.PublishComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	6,  // 30: admiral.api.registry.v1.PublishComponentResponse.version:type_name -> admiral.api.registry.v1.Version
-	43, // 31: admiral.api.registry.v1.ImportSource.oci_chart:type_name -> admiral.api.registry.v1.ImportSource.OCIChart
-	44, // 32: admiral.api.registry.v1.ImportSource.helm_chart:type_name -> admiral.api.registry.v1.ImportSource.HelmChart
-	45, // 33: admiral.api.registry.v1.ImportSource.registry_module:type_name -> admiral.api.registry.v1.ImportSource.RegistryModule
-	46, // 34: admiral.api.registry.v1.ImportSource.git_tree:type_name -> admiral.api.registry.v1.ImportSource.GitTree
-	47, // 35: admiral.api.registry.v1.ImportSource.archive:type_name -> admiral.api.registry.v1.ImportSource.Archive
-	18, // 36: admiral.api.registry.v1.ImportComponentRequest.source:type_name -> admiral.api.registry.v1.ImportSource
-	48, // 37: admiral.api.registry.v1.ImportComponentRequest.labels:type_name -> admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
-	5,  // 38: admiral.api.registry.v1.ImportComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	6,  // 39: admiral.api.registry.v1.ImportComponentResponse.version:type_name -> admiral.api.registry.v1.Version
-	5,  // 40: admiral.api.registry.v1.ListComponentsResponse.components:type_name -> admiral.api.registry.v1.Component
-	5,  // 41: admiral.api.registry.v1.GetComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	5,  // 42: admiral.api.registry.v1.UpdateComponentRequest.component:type_name -> admiral.api.registry.v1.Component
-	53, // 43: admiral.api.registry.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	5,  // 44: admiral.api.registry.v1.UpdateComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	2,  // 45: admiral.api.registry.v1.SetComponentStatusRequest.status:type_name -> admiral.api.registry.v1.Component.Status
-	5,  // 46: admiral.api.registry.v1.SetComponentStatusResponse.component:type_name -> admiral.api.registry.v1.Component
-	6,  // 47: admiral.api.registry.v1.ListVersionsResponse.versions:type_name -> admiral.api.registry.v1.Version
-	6,  // 48: admiral.api.registry.v1.GetVersionResponse.version:type_name -> admiral.api.registry.v1.Version
-	3,  // 49: admiral.api.registry.v1.SetVersionStatusRequest.status:type_name -> admiral.api.registry.v1.Version.Status
-	6,  // 50: admiral.api.registry.v1.SetVersionStatusResponse.version:type_name -> admiral.api.registry.v1.Version
-	7,  // 51: admiral.api.registry.v1.SetTagResponse.tag:type_name -> admiral.api.registry.v1.Tag
-	16, // 52: admiral.api.registry.v1.RegistryAPI.PublishComponent:input_type -> admiral.api.registry.v1.PublishComponentRequest
-	19, // 53: admiral.api.registry.v1.RegistryAPI.ImportComponent:input_type -> admiral.api.registry.v1.ImportComponentRequest
-	21, // 54: admiral.api.registry.v1.RegistryAPI.ListComponents:input_type -> admiral.api.registry.v1.ListComponentsRequest
-	23, // 55: admiral.api.registry.v1.RegistryAPI.GetComponent:input_type -> admiral.api.registry.v1.GetComponentRequest
-	25, // 56: admiral.api.registry.v1.RegistryAPI.UpdateComponent:input_type -> admiral.api.registry.v1.UpdateComponentRequest
-	27, // 57: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:input_type -> admiral.api.registry.v1.SetComponentStatusRequest
-	29, // 58: admiral.api.registry.v1.RegistryAPI.DeleteComponent:input_type -> admiral.api.registry.v1.DeleteComponentRequest
-	31, // 59: admiral.api.registry.v1.RegistryAPI.ListVersions:input_type -> admiral.api.registry.v1.ListVersionsRequest
-	33, // 60: admiral.api.registry.v1.RegistryAPI.GetVersion:input_type -> admiral.api.registry.v1.GetVersionRequest
-	35, // 61: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:input_type -> admiral.api.registry.v1.SetVersionStatusRequest
-	37, // 62: admiral.api.registry.v1.RegistryAPI.SetTag:input_type -> admiral.api.registry.v1.SetTagRequest
-	39, // 63: admiral.api.registry.v1.RegistryAPI.DeleteTag:input_type -> admiral.api.registry.v1.DeleteTagRequest
-	17, // 64: admiral.api.registry.v1.RegistryAPI.PublishComponent:output_type -> admiral.api.registry.v1.PublishComponentResponse
-	20, // 65: admiral.api.registry.v1.RegistryAPI.ImportComponent:output_type -> admiral.api.registry.v1.ImportComponentResponse
-	22, // 66: admiral.api.registry.v1.RegistryAPI.ListComponents:output_type -> admiral.api.registry.v1.ListComponentsResponse
-	24, // 67: admiral.api.registry.v1.RegistryAPI.GetComponent:output_type -> admiral.api.registry.v1.GetComponentResponse
-	26, // 68: admiral.api.registry.v1.RegistryAPI.UpdateComponent:output_type -> admiral.api.registry.v1.UpdateComponentResponse
-	28, // 69: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:output_type -> admiral.api.registry.v1.SetComponentStatusResponse
-	30, // 70: admiral.api.registry.v1.RegistryAPI.DeleteComponent:output_type -> admiral.api.registry.v1.DeleteComponentResponse
-	32, // 71: admiral.api.registry.v1.RegistryAPI.ListVersions:output_type -> admiral.api.registry.v1.ListVersionsResponse
-	34, // 72: admiral.api.registry.v1.RegistryAPI.GetVersion:output_type -> admiral.api.registry.v1.GetVersionResponse
-	36, // 73: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:output_type -> admiral.api.registry.v1.SetVersionStatusResponse
-	38, // 74: admiral.api.registry.v1.RegistryAPI.SetTag:output_type -> admiral.api.registry.v1.SetTagResponse
-	40, // 75: admiral.api.registry.v1.RegistryAPI.DeleteTag:output_type -> admiral.api.registry.v1.DeleteTagResponse
-	64, // [64:76] is the sub-list for method output_type
-	52, // [52:64] is the sub-list for method input_type
-	52, // [52:52] is the sub-list for extension type_name
-	52, // [52:52] is the sub-list for extension extendee
-	0,  // [0:52] is the sub-list for field type_name
+	10, // 8: admiral.api.registry.v1.Version.contract:type_name -> admiral.api.registry.v1.Contract
+	14, // 9: admiral.api.registry.v1.Version.provenance:type_name -> admiral.api.registry.v1.Provenance
+	17, // 10: admiral.api.registry.v1.Version.findings:type_name -> admiral.api.registry.v1.Finding
+	4,  // 11: admiral.api.registry.v1.Version.status:type_name -> admiral.api.registry.v1.Version.Status
+	52, // 12: admiral.api.registry.v1.Version.status_changed_at:type_name -> google.protobuf.Timestamp
+	51, // 13: admiral.api.registry.v1.Version.created_by:type_name -> admiral.common.v1.ActorRef
+	52, // 14: admiral.api.registry.v1.Version.created_at:type_name -> google.protobuf.Timestamp
+	1,  // 15: admiral.api.registry.v1.InfraEngineVersion.engine:type_name -> admiral.api.registry.v1.InfraEngine
+	52, // 16: admiral.api.registry.v1.Tag.created_at:type_name -> google.protobuf.Timestamp
+	52, // 17: admiral.api.registry.v1.Tag.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 18: admiral.api.registry.v1.Contract.inputs:type_name -> admiral.api.registry.v1.ContractInput
+	13, // 19: admiral.api.registry.v1.Contract.outputs:type_name -> admiral.api.registry.v1.ContractOutput
+	53, // 20: admiral.api.registry.v1.ContractInput.default:type_name -> google.protobuf.Value
+	12, // 21: admiral.api.registry.v1.ContractInput.validations:type_name -> admiral.api.registry.v1.ContractValidation
+	54, // 22: admiral.api.registry.v1.ContractInput.schema:type_name -> google.protobuf.Struct
+	5,  // 23: admiral.api.registry.v1.Provenance.kind:type_name -> admiral.api.registry.v1.Provenance.Kind
+	16, // 24: admiral.api.registry.v1.Provenance.dependencies:type_name -> admiral.api.registry.v1.Dependency
+	15, // 25: admiral.api.registry.v1.Provenance.credentials:type_name -> admiral.api.registry.v1.PresentedCredential
+	2,  // 26: admiral.api.registry.v1.Finding.severity:type_name -> admiral.api.registry.v1.FindingSeverity
+	0,  // 27: admiral.api.registry.v1.PublishComponentRequest.kind:type_name -> admiral.api.registry.v1.ComponentKind
+	44, // 28: admiral.api.registry.v1.PublishComponentRequest.labels:type_name -> admiral.api.registry.v1.PublishComponentRequest.LabelsEntry
+	14, // 29: admiral.api.registry.v1.PublishComponentRequest.provenance:type_name -> admiral.api.registry.v1.Provenance
+	6,  // 30: admiral.api.registry.v1.PublishComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	7,  // 31: admiral.api.registry.v1.PublishComponentResponse.version:type_name -> admiral.api.registry.v1.Version
+	45, // 32: admiral.api.registry.v1.ImportSource.oci_chart:type_name -> admiral.api.registry.v1.ImportSource.OCIChart
+	46, // 33: admiral.api.registry.v1.ImportSource.helm_chart:type_name -> admiral.api.registry.v1.ImportSource.HelmChart
+	47, // 34: admiral.api.registry.v1.ImportSource.registry_module:type_name -> admiral.api.registry.v1.ImportSource.RegistryModule
+	48, // 35: admiral.api.registry.v1.ImportSource.git_tree:type_name -> admiral.api.registry.v1.ImportSource.GitTree
+	49, // 36: admiral.api.registry.v1.ImportSource.archive:type_name -> admiral.api.registry.v1.ImportSource.Archive
+	20, // 37: admiral.api.registry.v1.ImportComponentRequest.source:type_name -> admiral.api.registry.v1.ImportSource
+	50, // 38: admiral.api.registry.v1.ImportComponentRequest.labels:type_name -> admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
+	6,  // 39: admiral.api.registry.v1.ImportComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	7,  // 40: admiral.api.registry.v1.ImportComponentResponse.version:type_name -> admiral.api.registry.v1.Version
+	6,  // 41: admiral.api.registry.v1.ListComponentsResponse.components:type_name -> admiral.api.registry.v1.Component
+	6,  // 42: admiral.api.registry.v1.GetComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	6,  // 43: admiral.api.registry.v1.UpdateComponentRequest.component:type_name -> admiral.api.registry.v1.Component
+	55, // 44: admiral.api.registry.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	6,  // 45: admiral.api.registry.v1.UpdateComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	3,  // 46: admiral.api.registry.v1.SetComponentStatusRequest.status:type_name -> admiral.api.registry.v1.Component.Status
+	6,  // 47: admiral.api.registry.v1.SetComponentStatusResponse.component:type_name -> admiral.api.registry.v1.Component
+	7,  // 48: admiral.api.registry.v1.ListVersionsResponse.versions:type_name -> admiral.api.registry.v1.Version
+	7,  // 49: admiral.api.registry.v1.GetVersionResponse.version:type_name -> admiral.api.registry.v1.Version
+	4,  // 50: admiral.api.registry.v1.SetVersionStatusRequest.status:type_name -> admiral.api.registry.v1.Version.Status
+	7,  // 51: admiral.api.registry.v1.SetVersionStatusResponse.version:type_name -> admiral.api.registry.v1.Version
+	9,  // 52: admiral.api.registry.v1.SetTagResponse.tag:type_name -> admiral.api.registry.v1.Tag
+	18, // 53: admiral.api.registry.v1.RegistryAPI.PublishComponent:input_type -> admiral.api.registry.v1.PublishComponentRequest
+	21, // 54: admiral.api.registry.v1.RegistryAPI.ImportComponent:input_type -> admiral.api.registry.v1.ImportComponentRequest
+	23, // 55: admiral.api.registry.v1.RegistryAPI.ListComponents:input_type -> admiral.api.registry.v1.ListComponentsRequest
+	25, // 56: admiral.api.registry.v1.RegistryAPI.GetComponent:input_type -> admiral.api.registry.v1.GetComponentRequest
+	27, // 57: admiral.api.registry.v1.RegistryAPI.UpdateComponent:input_type -> admiral.api.registry.v1.UpdateComponentRequest
+	29, // 58: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:input_type -> admiral.api.registry.v1.SetComponentStatusRequest
+	31, // 59: admiral.api.registry.v1.RegistryAPI.DeleteComponent:input_type -> admiral.api.registry.v1.DeleteComponentRequest
+	33, // 60: admiral.api.registry.v1.RegistryAPI.ListVersions:input_type -> admiral.api.registry.v1.ListVersionsRequest
+	35, // 61: admiral.api.registry.v1.RegistryAPI.GetVersion:input_type -> admiral.api.registry.v1.GetVersionRequest
+	37, // 62: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:input_type -> admiral.api.registry.v1.SetVersionStatusRequest
+	39, // 63: admiral.api.registry.v1.RegistryAPI.SetTag:input_type -> admiral.api.registry.v1.SetTagRequest
+	41, // 64: admiral.api.registry.v1.RegistryAPI.DeleteTag:input_type -> admiral.api.registry.v1.DeleteTagRequest
+	19, // 65: admiral.api.registry.v1.RegistryAPI.PublishComponent:output_type -> admiral.api.registry.v1.PublishComponentResponse
+	22, // 66: admiral.api.registry.v1.RegistryAPI.ImportComponent:output_type -> admiral.api.registry.v1.ImportComponentResponse
+	24, // 67: admiral.api.registry.v1.RegistryAPI.ListComponents:output_type -> admiral.api.registry.v1.ListComponentsResponse
+	26, // 68: admiral.api.registry.v1.RegistryAPI.GetComponent:output_type -> admiral.api.registry.v1.GetComponentResponse
+	28, // 69: admiral.api.registry.v1.RegistryAPI.UpdateComponent:output_type -> admiral.api.registry.v1.UpdateComponentResponse
+	30, // 70: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:output_type -> admiral.api.registry.v1.SetComponentStatusResponse
+	32, // 71: admiral.api.registry.v1.RegistryAPI.DeleteComponent:output_type -> admiral.api.registry.v1.DeleteComponentResponse
+	34, // 72: admiral.api.registry.v1.RegistryAPI.ListVersions:output_type -> admiral.api.registry.v1.ListVersionsResponse
+	36, // 73: admiral.api.registry.v1.RegistryAPI.GetVersion:output_type -> admiral.api.registry.v1.GetVersionResponse
+	38, // 74: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:output_type -> admiral.api.registry.v1.SetVersionStatusResponse
+	40, // 75: admiral.api.registry.v1.RegistryAPI.SetTag:output_type -> admiral.api.registry.v1.SetTagResponse
+	42, // 76: admiral.api.registry.v1.RegistryAPI.DeleteTag:output_type -> admiral.api.registry.v1.DeleteTagResponse
+	65, // [65:77] is the sub-list for method output_type
+	53, // [53:65] is the sub-list for method input_type
+	53, // [53:53] is the sub-list for extension type_name
+	53, // [53:53] is the sub-list for extension extendee
+	0,  // [0:53] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_registry_v1_registry_proto_init() }
@@ -3659,8 +3785,8 @@ func file_admiral_api_registry_v1_registry_proto_init() {
 	if File_admiral_api_registry_v1_registry_proto != nil {
 		return
 	}
-	file_admiral_api_registry_v1_registry_proto_msgTypes[4].OneofWrappers = []any{}
-	file_admiral_api_registry_v1_registry_proto_msgTypes[13].OneofWrappers = []any{
+	file_admiral_api_registry_v1_registry_proto_msgTypes[5].OneofWrappers = []any{}
+	file_admiral_api_registry_v1_registry_proto_msgTypes[14].OneofWrappers = []any{
 		(*ImportSource_OciChart)(nil),
 		(*ImportSource_HelmChart_)(nil),
 		(*ImportSource_RegistryModule_)(nil),
@@ -3672,8 +3798,8 @@ func file_admiral_api_registry_v1_registry_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_registry_v1_registry_proto_rawDesc), len(file_admiral_api_registry_v1_registry_proto_rawDesc)),
-			NumEnums:      5,
-			NumMessages:   44,
+			NumEnums:      6,
+			NumMessages:   45,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -37,15 +37,19 @@ type ServiceAccount struct {
 	// runs no agent.
 	AgentId string `protobuf:"bytes,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	// `iss-`: the issuer whose tokens it accepts. For an agent's, set when the
-	// agent enrolls; empty before.
+	// agent enrolls; empty before. For one that runs no agent, set on create.
 	IssuerId string `protobuf:"bytes,3,opt,name=issuer_id,json=issuerId,proto3" json:"issuer_id,omitempty"`
 	// The `sub` a token must carry. For a Kubernetes service account,
-	// `system:serviceaccount:<namespace>:<name>`. For an agent's, recorded from
-	// its verified token when it enrolls and fixed from then on; empty before.
-	Subject       string                 `protobuf:"bytes,4,opt,name=subject,proto3" json:"subject,omitempty"`
-	EnrolledAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=enrolled_at,json=enrolledAt,proto3" json:"enrolled_at,omitempty"`
-	CreatedBy     *v1.ActorRef           `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// `system:serviceaccount:<namespace>:<name>`; for GitHub Actions,
+	// `repo:<owner>/<repo>:ref:refs/heads/<branch>` or
+	// `repo:<owner>/<repo>:environment:<name>`. For an agent's, recorded from
+	// its verified token when it enrolls; empty before. Fixed once set.
+	Subject    string                 `protobuf:"bytes,4,opt,name=subject,proto3" json:"subject,omitempty"`
+	EnrolledAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=enrolled_at,json=enrolledAt,proto3" json:"enrolled_at,omitempty"`
+	CreatedBy  *v1.ActorRef           `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// An agent's takes the agent's name. Unique in the organization.
+	Name          string `protobuf:"bytes,8,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -127,6 +131,13 @@ func (x *ServiceAccount) GetCreatedAt() *timestamppb.Timestamp {
 		return x.CreatedAt
 	}
 	return nil
+}
+
+func (x *ServiceAccount) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
 }
 
 // Issuer is a set of keys Admiral accepts tokens from. A token must carry
@@ -362,6 +373,95 @@ func (*IssuerKeys_Jwks) isIssuerKeys_Source() {}
 
 func (*IssuerKeys_Reported_) isIssuerKeys_Source() {}
 
+type CreateServiceAccountRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The service account to create: `name`, `issuer_id` and `subject`.
+	ServiceAccount *ServiceAccount `protobuf:"bytes,1,opt,name=service_account,json=serviceAccount,proto3" json:"service_account,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CreateServiceAccountRequest) Reset() {
+	*x = CreateServiceAccountRequest{}
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateServiceAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateServiceAccountRequest) ProtoMessage() {}
+
+func (x *CreateServiceAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateServiceAccountRequest.ProtoReflect.Descriptor instead.
+func (*CreateServiceAccountRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateServiceAccountRequest) GetServiceAccount() *ServiceAccount {
+	if x != nil {
+		return x.ServiceAccount
+	}
+	return nil
+}
+
+type CreateServiceAccountResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ServiceAccount *ServiceAccount        `protobuf:"bytes,1,opt,name=service_account,json=serviceAccount,proto3" json:"service_account,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CreateServiceAccountResponse) Reset() {
+	*x = CreateServiceAccountResponse{}
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateServiceAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateServiceAccountResponse) ProtoMessage() {}
+
+func (x *CreateServiceAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateServiceAccountResponse.ProtoReflect.Descriptor instead.
+func (*CreateServiceAccountResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CreateServiceAccountResponse) GetServiceAccount() *ServiceAccount {
+	if x != nil {
+		return x.ServiceAccount
+	}
+	return nil
+}
+
 type GetServiceAccountRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	ServiceAccountId string                 `protobuf:"bytes,1,opt,name=service_account_id,json=serviceAccountId,proto3" json:"service_account_id,omitempty"`
@@ -371,7 +471,7 @@ type GetServiceAccountRequest struct {
 
 func (x *GetServiceAccountRequest) Reset() {
 	*x = GetServiceAccountRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[3]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +483,7 @@ func (x *GetServiceAccountRequest) String() string {
 func (*GetServiceAccountRequest) ProtoMessage() {}
 
 func (x *GetServiceAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[3]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +496,7 @@ func (x *GetServiceAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceAccountRequest.ProtoReflect.Descriptor instead.
 func (*GetServiceAccountRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{3}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetServiceAccountRequest) GetServiceAccountId() string {
@@ -415,7 +515,7 @@ type GetServiceAccountResponse struct {
 
 func (x *GetServiceAccountResponse) Reset() {
 	*x = GetServiceAccountResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[4]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -427,7 +527,7 @@ func (x *GetServiceAccountResponse) String() string {
 func (*GetServiceAccountResponse) ProtoMessage() {}
 
 func (x *GetServiceAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[4]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -440,7 +540,7 @@ func (x *GetServiceAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceAccountResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceAccountResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{4}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetServiceAccountResponse) GetServiceAccount() *ServiceAccount {
@@ -468,7 +568,7 @@ type ListServiceAccountsRequest struct {
 
 func (x *ListServiceAccountsRequest) Reset() {
 	*x = ListServiceAccountsRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[5]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -480,7 +580,7 @@ func (x *ListServiceAccountsRequest) String() string {
 func (*ListServiceAccountsRequest) ProtoMessage() {}
 
 func (x *ListServiceAccountsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[5]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -493,7 +593,7 @@ func (x *ListServiceAccountsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListServiceAccountsRequest.ProtoReflect.Descriptor instead.
 func (*ListServiceAccountsRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{5}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListServiceAccountsRequest) GetFilter() string {
@@ -527,7 +627,7 @@ type ListServiceAccountsResponse struct {
 
 func (x *ListServiceAccountsResponse) Reset() {
 	*x = ListServiceAccountsResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[6]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -539,7 +639,7 @@ func (x *ListServiceAccountsResponse) String() string {
 func (*ListServiceAccountsResponse) ProtoMessage() {}
 
 func (x *ListServiceAccountsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[6]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -552,7 +652,7 @@ func (x *ListServiceAccountsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListServiceAccountsResponse.ProtoReflect.Descriptor instead.
 func (*ListServiceAccountsResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{6}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListServiceAccountsResponse) GetServiceAccounts() []*ServiceAccount {
@@ -569,6 +669,86 @@ func (x *ListServiceAccountsResponse) GetNextPageToken() string {
 	return ""
 }
 
+type DeleteServiceAccountRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ServiceAccountId string                 `protobuf:"bytes,1,opt,name=service_account_id,json=serviceAccountId,proto3" json:"service_account_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *DeleteServiceAccountRequest) Reset() {
+	*x = DeleteServiceAccountRequest{}
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteServiceAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteServiceAccountRequest) ProtoMessage() {}
+
+func (x *DeleteServiceAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteServiceAccountRequest.ProtoReflect.Descriptor instead.
+func (*DeleteServiceAccountRequest) Descriptor() ([]byte, []int) {
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DeleteServiceAccountRequest) GetServiceAccountId() string {
+	if x != nil {
+		return x.ServiceAccountId
+	}
+	return ""
+}
+
+type DeleteServiceAccountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteServiceAccountResponse) Reset() {
+	*x = DeleteServiceAccountResponse{}
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteServiceAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteServiceAccountResponse) ProtoMessage() {}
+
+func (x *DeleteServiceAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteServiceAccountResponse.ProtoReflect.Descriptor instead.
+func (*DeleteServiceAccountResponse) Descriptor() ([]byte, []int) {
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{10}
+}
+
 type CreateIssuerRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The issuer to create: `name`, `iss` and `keys`.
@@ -579,7 +759,7 @@ type CreateIssuerRequest struct {
 
 func (x *CreateIssuerRequest) Reset() {
 	*x = CreateIssuerRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[7]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -591,7 +771,7 @@ func (x *CreateIssuerRequest) String() string {
 func (*CreateIssuerRequest) ProtoMessage() {}
 
 func (x *CreateIssuerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[7]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -604,7 +784,7 @@ func (x *CreateIssuerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateIssuerRequest.ProtoReflect.Descriptor instead.
 func (*CreateIssuerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{7}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateIssuerRequest) GetIssuer() *Issuer {
@@ -623,7 +803,7 @@ type CreateIssuerResponse struct {
 
 func (x *CreateIssuerResponse) Reset() {
 	*x = CreateIssuerResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[8]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -635,7 +815,7 @@ func (x *CreateIssuerResponse) String() string {
 func (*CreateIssuerResponse) ProtoMessage() {}
 
 func (x *CreateIssuerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[8]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -648,7 +828,7 @@ func (x *CreateIssuerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateIssuerResponse.ProtoReflect.Descriptor instead.
 func (*CreateIssuerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{8}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CreateIssuerResponse) GetIssuer() *Issuer {
@@ -667,7 +847,7 @@ type GetIssuerRequest struct {
 
 func (x *GetIssuerRequest) Reset() {
 	*x = GetIssuerRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[9]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -679,7 +859,7 @@ func (x *GetIssuerRequest) String() string {
 func (*GetIssuerRequest) ProtoMessage() {}
 
 func (x *GetIssuerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[9]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -692,7 +872,7 @@ func (x *GetIssuerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIssuerRequest.ProtoReflect.Descriptor instead.
 func (*GetIssuerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{9}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetIssuerRequest) GetIssuerId() string {
@@ -711,7 +891,7 @@ type GetIssuerResponse struct {
 
 func (x *GetIssuerResponse) Reset() {
 	*x = GetIssuerResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[10]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -723,7 +903,7 @@ func (x *GetIssuerResponse) String() string {
 func (*GetIssuerResponse) ProtoMessage() {}
 
 func (x *GetIssuerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[10]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -736,7 +916,7 @@ func (x *GetIssuerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIssuerResponse.ProtoReflect.Descriptor instead.
 func (*GetIssuerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{10}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetIssuerResponse) GetIssuer() *Issuer {
@@ -763,7 +943,7 @@ type ListIssuersRequest struct {
 
 func (x *ListIssuersRequest) Reset() {
 	*x = ListIssuersRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[11]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -775,7 +955,7 @@ func (x *ListIssuersRequest) String() string {
 func (*ListIssuersRequest) ProtoMessage() {}
 
 func (x *ListIssuersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[11]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -788,7 +968,7 @@ func (x *ListIssuersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListIssuersRequest.ProtoReflect.Descriptor instead.
 func (*ListIssuersRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{11}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListIssuersRequest) GetFilter() string {
@@ -822,7 +1002,7 @@ type ListIssuersResponse struct {
 
 func (x *ListIssuersResponse) Reset() {
 	*x = ListIssuersResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[12]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -834,7 +1014,7 @@ func (x *ListIssuersResponse) String() string {
 func (*ListIssuersResponse) ProtoMessage() {}
 
 func (x *ListIssuersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[12]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -847,7 +1027,7 @@ func (x *ListIssuersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListIssuersResponse.ProtoReflect.Descriptor instead.
 func (*ListIssuersResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{12}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListIssuersResponse) GetIssuers() []*Issuer {
@@ -878,7 +1058,7 @@ type SetIssuerKeysRequest struct {
 
 func (x *SetIssuerKeysRequest) Reset() {
 	*x = SetIssuerKeysRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[13]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -890,7 +1070,7 @@ func (x *SetIssuerKeysRequest) String() string {
 func (*SetIssuerKeysRequest) ProtoMessage() {}
 
 func (x *SetIssuerKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[13]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -903,7 +1083,7 @@ func (x *SetIssuerKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetIssuerKeysRequest.ProtoReflect.Descriptor instead.
 func (*SetIssuerKeysRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{13}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *SetIssuerKeysRequest) GetIssuerId() string {
@@ -966,7 +1146,7 @@ type SetIssuerKeysResponse struct {
 
 func (x *SetIssuerKeysResponse) Reset() {
 	*x = SetIssuerKeysResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[14]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -978,7 +1158,7 @@ func (x *SetIssuerKeysResponse) String() string {
 func (*SetIssuerKeysResponse) ProtoMessage() {}
 
 func (x *SetIssuerKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[14]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -991,7 +1171,7 @@ func (x *SetIssuerKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetIssuerKeysResponse.ProtoReflect.Descriptor instead.
 func (*SetIssuerKeysResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{14}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *SetIssuerKeysResponse) GetIssuer() *Issuer {
@@ -1010,7 +1190,7 @@ type DeleteIssuerRequest struct {
 
 func (x *DeleteIssuerRequest) Reset() {
 	*x = DeleteIssuerRequest{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[15]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1022,7 +1202,7 @@ func (x *DeleteIssuerRequest) String() string {
 func (*DeleteIssuerRequest) ProtoMessage() {}
 
 func (x *DeleteIssuerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[15]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1035,7 +1215,7 @@ func (x *DeleteIssuerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteIssuerRequest.ProtoReflect.Descriptor instead.
 func (*DeleteIssuerRequest) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{15}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *DeleteIssuerRequest) GetIssuerId() string {
@@ -1053,7 +1233,7 @@ type DeleteIssuerResponse struct {
 
 func (x *DeleteIssuerResponse) Reset() {
 	*x = DeleteIssuerResponse{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[16]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1065,7 +1245,7 @@ func (x *DeleteIssuerResponse) String() string {
 func (*DeleteIssuerResponse) ProtoMessage() {}
 
 func (x *DeleteIssuerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[16]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1078,7 +1258,7 @@ func (x *DeleteIssuerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteIssuerResponse.ProtoReflect.Descriptor instead.
 func (*DeleteIssuerResponse) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{16}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{20}
 }
 
 // Reported marks keys the agents that trust the issuer report from inside
@@ -1091,7 +1271,7 @@ type IssuerKeys_Reported struct {
 
 func (x *IssuerKeys_Reported) Reset() {
 	*x = IssuerKeys_Reported{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[17]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1103,7 +1283,7 @@ func (x *IssuerKeys_Reported) String() string {
 func (*IssuerKeys_Reported) ProtoMessage() {}
 
 func (x *IssuerKeys_Reported) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[17]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1128,7 +1308,7 @@ type SetIssuerKeysRequest_AcceptPending struct {
 
 func (x *SetIssuerKeysRequest_AcceptPending) Reset() {
 	*x = SetIssuerKeysRequest_AcceptPending{}
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[18]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1140,7 +1320,7 @@ func (x *SetIssuerKeysRequest_AcceptPending) String() string {
 func (*SetIssuerKeysRequest_AcceptPending) ProtoMessage() {}
 
 func (x *SetIssuerKeysRequest_AcceptPending) ProtoReflect() protoreflect.Message {
-	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[18]
+	mi := &file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1153,25 +1333,26 @@ func (x *SetIssuerKeysRequest_AcceptPending) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use SetIssuerKeysRequest_AcceptPending.ProtoReflect.Descriptor instead.
 func (*SetIssuerKeysRequest_AcceptPending) Descriptor() ([]byte, []int) {
-	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{13, 0}
+	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP(), []int{17, 0}
 }
 
 var File_admiral_api_serviceaccount_v1_serviceaccount_proto protoreflect.FileDescriptor
 
 const file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDesc = "" +
 	"\n" +
-	"2admiral/api/serviceaccount/v1/serviceaccount.proto\x12\x1dadmiral.api.serviceaccount.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe1\x02\n" +
+	"2admiral/api/serviceaccount/v1/serviceaccount.proto\x12\x1dadmiral.api.serviceaccount.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc5\x03\n" +
 	"\x0eServiceAccount\x12+\n" +
 	"\x02id\x18\x01 \x01(\tB\x1b\xe0A\x03\xbaH\x15\xd8\x01\x01r\x102\x0e^sa-[0-9a-z]+$R\x02id\x12\x1e\n" +
-	"\bagent_id\x18\x02 \x01(\tB\x03\xe0A\x03R\aagentId\x12 \n" +
-	"\tissuer_id\x18\x03 \x01(\tB\x03\xe0A\x03R\bissuerId\x12\x1d\n" +
-	"\asubject\x18\x04 \x01(\tB\x03\xe0A\x03R\asubject\x12@\n" +
+	"\bagent_id\x18\x02 \x01(\tB\x03\xe0A\x03R\aagentId\x129\n" +
+	"\tissuer_id\x18\x03 \x01(\tB\x1c\xe0A\x05\xbaH\x16\xd8\x01\x01r\x112\x0f^iss-[0-9a-z]+$R\bissuerId\x12%\n" +
+	"\asubject\x18\x04 \x01(\tB\v\xe0A\x05\xbaH\x05r\x03\x18\x80\x04R\asubject\x12@\n" +
 	"\venrolled_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"enrolledAt\x12?\n" +
 	"\n" +
 	"created_by\x18\x06 \x01(\v2\x1b.admiral.common.v1.ActorRefB\x03\xe0A\x03R\tcreatedBy\x12>\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\"\xbc\x04\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12A\n" +
+	"\x04name\x18\b \x01(\tB-\xe0A\x05\xbaH'r%\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\"\xbc\x04\n" +
 	"\x06Issuer\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^iss-[0-9a-z]+$R\x02id\x12>\n" +
 	"\x04name\x18\x02 \x01(\tB*\xbaH'r%\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12\x1f\n" +
@@ -1193,7 +1374,12 @@ const file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDesc = "" +
 	"\breported\x18\x03 \x01(\v22.admiral.api.serviceaccount.v1.IssuerKeys.ReportedH\x00R\breported\x1a\n" +
 	"\n" +
 	"\bReportedB\x0f\n" +
-	"\x06source\x12\x05\xbaH\x02\b\x01\"b\n" +
+	"\x06source\x12\x05\xbaH\x02\b\x01\"\x91\x02\n" +
+	"\x1bCreateServiceAccountRequest\x12\xf1\x01\n" +
+	"\x0fservice_account\x18\x01 \x01(\v2-.admiral.api.serviceaccount.v1.ServiceAccountB\x98\x01\xe0A\x02\xbaH\x91\x01\xba\x01\x8a\x01\n" +
+	"\x1fcreate_service_account.identity\x12(name, issuer_id and subject are required\x1a=this.name != '' && this.issuer_id != '' && this.subject != ''\xc8\x01\x01R\x0eserviceAccount\"v\n" +
+	"\x1cCreateServiceAccountResponse\x12V\n" +
+	"\x0fservice_account\x18\x01 \x01(\v2-.admiral.api.serviceaccount.v1.ServiceAccountR\x0eserviceAccount\"b\n" +
 	"\x18GetServiceAccountRequest\x12F\n" +
 	"\x12service_account_id\x18\x01 \x01(\tB\x18\xe0A\x02\xbaH\x12r\x102\x0e^sa-[0-9a-z]+$R\x10serviceAccountId\"s\n" +
 	"\x19GetServiceAccountResponse\x12V\n" +
@@ -1205,7 +1391,10 @@ const file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDesc = "" +
 	"page_token\x18\x03 \x01(\tR\tpageToken\"\x9f\x01\n" +
 	"\x1bListServiceAccountsResponse\x12X\n" +
 	"\x10service_accounts\x18\x01 \x03(\v2-.admiral.api.serviceaccount.v1.ServiceAccountR\x0fserviceAccounts\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xea\x01\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"e\n" +
+	"\x1bDeleteServiceAccountRequest\x12F\n" +
+	"\x12service_account_id\x18\x01 \x01(\tB\x18\xe0A\x02\xbaH\x12r\x102\x0e^sa-[0-9a-z]+$R\x10serviceAccountId\"\x1e\n" +
+	"\x1cDeleteServiceAccountResponse\"\xea\x01\n" +
 	"\x13CreateIssuerRequest\x12H\n" +
 	"\x06issuer\x18\x01 \x01(\v2%.admiral.api.serviceaccount.v1.IssuerB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x06issuer:\x88\x01\xbaH\x84\x01\x1a\x81\x01\n" +
 	"\x12create_issuer.keys\x12Jkeys must be a jwks_uri or a jwks; reported keys come only from enrollment\x1a\x1f!has(this.issuer.keys.reported)\"U\n" +
@@ -1233,14 +1422,20 @@ const file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDesc = "" +
 	"\x06issuer\x18\x01 \x01(\v2%.admiral.api.serviceaccount.v1.IssuerR\x06issuer\"M\n" +
 	"\x13DeleteIssuerRequest\x126\n" +
 	"\tissuer_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^iss-[0-9a-z]+$R\bissuerId\"\x16\n" +
-	"\x14DeleteIssuerResponse2\x8b\x04\n" +
-	"\x11ServiceAccountAPI\x12\x83\x02\n" +
+	"\x14DeleteIssuerResponse2\x95\b\n" +
+	"\x11ServiceAccountAPI\x12\xf9\x01\n" +
+	"\x14CreateServiceAccount\x12:.admiral.api.serviceaccount.v1.CreateServiceAccountRequest\x1a;.admiral.api.serviceaccount.v1.CreateServiceAccountResponse\"h\xbaG,\n" +
+	"\x10Service Accounts\x12\x18Create a service account\xa2\x97$\x16\n" +
+	"\x14serviceaccount:write\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/v1/service-accounts\x12\x83\x02\n" +
 	"\x11GetServiceAccount\x127.admiral.api.serviceaccount.v1.GetServiceAccountRequest\x1a8.admiral.api.serviceaccount.v1.GetServiceAccountResponse\"{\xbaG.\n" +
 	"\x10Service Accounts\x12\x1aRetrieve a service account\xa2\x97$\x15\n" +
 	"\x13serviceaccount:read\x82\xd3\xe4\x93\x02+\x12)/v1/service-accounts/{service_account_id}\x12\xef\x01\n" +
 	"\x13ListServiceAccounts\x129.admiral.api.serviceaccount.v1.ListServiceAccountsRequest\x1a:.admiral.api.serviceaccount.v1.ListServiceAccountsResponse\"a\xbaG)\n" +
 	"\x10Service Accounts\x12\x15List service accounts\xa2\x97$\x15\n" +
-	"\x13serviceaccount:read\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/service-accounts2\x96\b\n" +
+	"\x13serviceaccount:read\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/service-accounts\x12\x8b\x02\n" +
+	"\x14DeleteServiceAccount\x12:.admiral.api.serviceaccount.v1.DeleteServiceAccountRequest\x1a;.admiral.api.serviceaccount.v1.DeleteServiceAccountResponse\"z\xbaG,\n" +
+	"\x10Service Accounts\x12\x18Delete a service account\xa2\x97$\x16\n" +
+	"\x14serviceaccount:write\x82\xd3\xe4\x93\x02+*)/v1/service-accounts/{service_account_id}2\x96\b\n" +
 	"\tIssuerAPI\x12\xc9\x01\n" +
 	"\fCreateIssuer\x122.admiral.api.serviceaccount.v1.CreateIssuerRequest\x1a3.admiral.api.serviceaccount.v1.CreateIssuerResponse\"P\xbaG\x1d\n" +
 	"\aIssuers\x12\x12Register an issuer\xa2\x97$\x16\n" +
@@ -1271,68 +1466,78 @@ func file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescGZIP() []byt
 	return file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDescData
 }
 
-var file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_admiral_api_serviceaccount_v1_serviceaccount_proto_goTypes = []any{
 	(*ServiceAccount)(nil),                     // 0: admiral.api.serviceaccount.v1.ServiceAccount
 	(*Issuer)(nil),                             // 1: admiral.api.serviceaccount.v1.Issuer
 	(*IssuerKeys)(nil),                         // 2: admiral.api.serviceaccount.v1.IssuerKeys
-	(*GetServiceAccountRequest)(nil),           // 3: admiral.api.serviceaccount.v1.GetServiceAccountRequest
-	(*GetServiceAccountResponse)(nil),          // 4: admiral.api.serviceaccount.v1.GetServiceAccountResponse
-	(*ListServiceAccountsRequest)(nil),         // 5: admiral.api.serviceaccount.v1.ListServiceAccountsRequest
-	(*ListServiceAccountsResponse)(nil),        // 6: admiral.api.serviceaccount.v1.ListServiceAccountsResponse
-	(*CreateIssuerRequest)(nil),                // 7: admiral.api.serviceaccount.v1.CreateIssuerRequest
-	(*CreateIssuerResponse)(nil),               // 8: admiral.api.serviceaccount.v1.CreateIssuerResponse
-	(*GetIssuerRequest)(nil),                   // 9: admiral.api.serviceaccount.v1.GetIssuerRequest
-	(*GetIssuerResponse)(nil),                  // 10: admiral.api.serviceaccount.v1.GetIssuerResponse
-	(*ListIssuersRequest)(nil),                 // 11: admiral.api.serviceaccount.v1.ListIssuersRequest
-	(*ListIssuersResponse)(nil),                // 12: admiral.api.serviceaccount.v1.ListIssuersResponse
-	(*SetIssuerKeysRequest)(nil),               // 13: admiral.api.serviceaccount.v1.SetIssuerKeysRequest
-	(*SetIssuerKeysResponse)(nil),              // 14: admiral.api.serviceaccount.v1.SetIssuerKeysResponse
-	(*DeleteIssuerRequest)(nil),                // 15: admiral.api.serviceaccount.v1.DeleteIssuerRequest
-	(*DeleteIssuerResponse)(nil),               // 16: admiral.api.serviceaccount.v1.DeleteIssuerResponse
-	(*IssuerKeys_Reported)(nil),                // 17: admiral.api.serviceaccount.v1.IssuerKeys.Reported
-	(*SetIssuerKeysRequest_AcceptPending)(nil), // 18: admiral.api.serviceaccount.v1.SetIssuerKeysRequest.AcceptPending
-	(*timestamppb.Timestamp)(nil),              // 19: google.protobuf.Timestamp
-	(*v1.ActorRef)(nil),                        // 20: admiral.common.v1.ActorRef
+	(*CreateServiceAccountRequest)(nil),        // 3: admiral.api.serviceaccount.v1.CreateServiceAccountRequest
+	(*CreateServiceAccountResponse)(nil),       // 4: admiral.api.serviceaccount.v1.CreateServiceAccountResponse
+	(*GetServiceAccountRequest)(nil),           // 5: admiral.api.serviceaccount.v1.GetServiceAccountRequest
+	(*GetServiceAccountResponse)(nil),          // 6: admiral.api.serviceaccount.v1.GetServiceAccountResponse
+	(*ListServiceAccountsRequest)(nil),         // 7: admiral.api.serviceaccount.v1.ListServiceAccountsRequest
+	(*ListServiceAccountsResponse)(nil),        // 8: admiral.api.serviceaccount.v1.ListServiceAccountsResponse
+	(*DeleteServiceAccountRequest)(nil),        // 9: admiral.api.serviceaccount.v1.DeleteServiceAccountRequest
+	(*DeleteServiceAccountResponse)(nil),       // 10: admiral.api.serviceaccount.v1.DeleteServiceAccountResponse
+	(*CreateIssuerRequest)(nil),                // 11: admiral.api.serviceaccount.v1.CreateIssuerRequest
+	(*CreateIssuerResponse)(nil),               // 12: admiral.api.serviceaccount.v1.CreateIssuerResponse
+	(*GetIssuerRequest)(nil),                   // 13: admiral.api.serviceaccount.v1.GetIssuerRequest
+	(*GetIssuerResponse)(nil),                  // 14: admiral.api.serviceaccount.v1.GetIssuerResponse
+	(*ListIssuersRequest)(nil),                 // 15: admiral.api.serviceaccount.v1.ListIssuersRequest
+	(*ListIssuersResponse)(nil),                // 16: admiral.api.serviceaccount.v1.ListIssuersResponse
+	(*SetIssuerKeysRequest)(nil),               // 17: admiral.api.serviceaccount.v1.SetIssuerKeysRequest
+	(*SetIssuerKeysResponse)(nil),              // 18: admiral.api.serviceaccount.v1.SetIssuerKeysResponse
+	(*DeleteIssuerRequest)(nil),                // 19: admiral.api.serviceaccount.v1.DeleteIssuerRequest
+	(*DeleteIssuerResponse)(nil),               // 20: admiral.api.serviceaccount.v1.DeleteIssuerResponse
+	(*IssuerKeys_Reported)(nil),                // 21: admiral.api.serviceaccount.v1.IssuerKeys.Reported
+	(*SetIssuerKeysRequest_AcceptPending)(nil), // 22: admiral.api.serviceaccount.v1.SetIssuerKeysRequest.AcceptPending
+	(*timestamppb.Timestamp)(nil),              // 23: google.protobuf.Timestamp
+	(*v1.ActorRef)(nil),                        // 24: admiral.common.v1.ActorRef
 }
 var file_admiral_api_serviceaccount_v1_serviceaccount_proto_depIdxs = []int32{
-	19, // 0: admiral.api.serviceaccount.v1.ServiceAccount.enrolled_at:type_name -> google.protobuf.Timestamp
-	20, // 1: admiral.api.serviceaccount.v1.ServiceAccount.created_by:type_name -> admiral.common.v1.ActorRef
-	19, // 2: admiral.api.serviceaccount.v1.ServiceAccount.created_at:type_name -> google.protobuf.Timestamp
+	23, // 0: admiral.api.serviceaccount.v1.ServiceAccount.enrolled_at:type_name -> google.protobuf.Timestamp
+	24, // 1: admiral.api.serviceaccount.v1.ServiceAccount.created_by:type_name -> admiral.common.v1.ActorRef
+	23, // 2: admiral.api.serviceaccount.v1.ServiceAccount.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 3: admiral.api.serviceaccount.v1.Issuer.keys:type_name -> admiral.api.serviceaccount.v1.IssuerKeys
-	19, // 4: admiral.api.serviceaccount.v1.Issuer.keys_updated_at:type_name -> google.protobuf.Timestamp
-	19, // 5: admiral.api.serviceaccount.v1.Issuer.pending_keys_at:type_name -> google.protobuf.Timestamp
-	20, // 6: admiral.api.serviceaccount.v1.Issuer.created_by:type_name -> admiral.common.v1.ActorRef
-	19, // 7: admiral.api.serviceaccount.v1.Issuer.created_at:type_name -> google.protobuf.Timestamp
-	17, // 8: admiral.api.serviceaccount.v1.IssuerKeys.reported:type_name -> admiral.api.serviceaccount.v1.IssuerKeys.Reported
-	0,  // 9: admiral.api.serviceaccount.v1.GetServiceAccountResponse.service_account:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
-	0,  // 10: admiral.api.serviceaccount.v1.ListServiceAccountsResponse.service_accounts:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
-	1,  // 11: admiral.api.serviceaccount.v1.CreateIssuerRequest.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
-	1,  // 12: admiral.api.serviceaccount.v1.CreateIssuerResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
-	1,  // 13: admiral.api.serviceaccount.v1.GetIssuerResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
-	1,  // 14: admiral.api.serviceaccount.v1.ListIssuersResponse.issuers:type_name -> admiral.api.serviceaccount.v1.Issuer
-	2,  // 15: admiral.api.serviceaccount.v1.SetIssuerKeysRequest.keys:type_name -> admiral.api.serviceaccount.v1.IssuerKeys
-	18, // 16: admiral.api.serviceaccount.v1.SetIssuerKeysRequest.accept_pending:type_name -> admiral.api.serviceaccount.v1.SetIssuerKeysRequest.AcceptPending
-	1,  // 17: admiral.api.serviceaccount.v1.SetIssuerKeysResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
-	3,  // 18: admiral.api.serviceaccount.v1.ServiceAccountAPI.GetServiceAccount:input_type -> admiral.api.serviceaccount.v1.GetServiceAccountRequest
-	5,  // 19: admiral.api.serviceaccount.v1.ServiceAccountAPI.ListServiceAccounts:input_type -> admiral.api.serviceaccount.v1.ListServiceAccountsRequest
-	7,  // 20: admiral.api.serviceaccount.v1.IssuerAPI.CreateIssuer:input_type -> admiral.api.serviceaccount.v1.CreateIssuerRequest
-	9,  // 21: admiral.api.serviceaccount.v1.IssuerAPI.GetIssuer:input_type -> admiral.api.serviceaccount.v1.GetIssuerRequest
-	11, // 22: admiral.api.serviceaccount.v1.IssuerAPI.ListIssuers:input_type -> admiral.api.serviceaccount.v1.ListIssuersRequest
-	13, // 23: admiral.api.serviceaccount.v1.IssuerAPI.SetIssuerKeys:input_type -> admiral.api.serviceaccount.v1.SetIssuerKeysRequest
-	15, // 24: admiral.api.serviceaccount.v1.IssuerAPI.DeleteIssuer:input_type -> admiral.api.serviceaccount.v1.DeleteIssuerRequest
-	4,  // 25: admiral.api.serviceaccount.v1.ServiceAccountAPI.GetServiceAccount:output_type -> admiral.api.serviceaccount.v1.GetServiceAccountResponse
-	6,  // 26: admiral.api.serviceaccount.v1.ServiceAccountAPI.ListServiceAccounts:output_type -> admiral.api.serviceaccount.v1.ListServiceAccountsResponse
-	8,  // 27: admiral.api.serviceaccount.v1.IssuerAPI.CreateIssuer:output_type -> admiral.api.serviceaccount.v1.CreateIssuerResponse
-	10, // 28: admiral.api.serviceaccount.v1.IssuerAPI.GetIssuer:output_type -> admiral.api.serviceaccount.v1.GetIssuerResponse
-	12, // 29: admiral.api.serviceaccount.v1.IssuerAPI.ListIssuers:output_type -> admiral.api.serviceaccount.v1.ListIssuersResponse
-	14, // 30: admiral.api.serviceaccount.v1.IssuerAPI.SetIssuerKeys:output_type -> admiral.api.serviceaccount.v1.SetIssuerKeysResponse
-	16, // 31: admiral.api.serviceaccount.v1.IssuerAPI.DeleteIssuer:output_type -> admiral.api.serviceaccount.v1.DeleteIssuerResponse
-	25, // [25:32] is the sub-list for method output_type
-	18, // [18:25] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	23, // 4: admiral.api.serviceaccount.v1.Issuer.keys_updated_at:type_name -> google.protobuf.Timestamp
+	23, // 5: admiral.api.serviceaccount.v1.Issuer.pending_keys_at:type_name -> google.protobuf.Timestamp
+	24, // 6: admiral.api.serviceaccount.v1.Issuer.created_by:type_name -> admiral.common.v1.ActorRef
+	23, // 7: admiral.api.serviceaccount.v1.Issuer.created_at:type_name -> google.protobuf.Timestamp
+	21, // 8: admiral.api.serviceaccount.v1.IssuerKeys.reported:type_name -> admiral.api.serviceaccount.v1.IssuerKeys.Reported
+	0,  // 9: admiral.api.serviceaccount.v1.CreateServiceAccountRequest.service_account:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
+	0,  // 10: admiral.api.serviceaccount.v1.CreateServiceAccountResponse.service_account:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
+	0,  // 11: admiral.api.serviceaccount.v1.GetServiceAccountResponse.service_account:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
+	0,  // 12: admiral.api.serviceaccount.v1.ListServiceAccountsResponse.service_accounts:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
+	1,  // 13: admiral.api.serviceaccount.v1.CreateIssuerRequest.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
+	1,  // 14: admiral.api.serviceaccount.v1.CreateIssuerResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
+	1,  // 15: admiral.api.serviceaccount.v1.GetIssuerResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
+	1,  // 16: admiral.api.serviceaccount.v1.ListIssuersResponse.issuers:type_name -> admiral.api.serviceaccount.v1.Issuer
+	2,  // 17: admiral.api.serviceaccount.v1.SetIssuerKeysRequest.keys:type_name -> admiral.api.serviceaccount.v1.IssuerKeys
+	22, // 18: admiral.api.serviceaccount.v1.SetIssuerKeysRequest.accept_pending:type_name -> admiral.api.serviceaccount.v1.SetIssuerKeysRequest.AcceptPending
+	1,  // 19: admiral.api.serviceaccount.v1.SetIssuerKeysResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
+	3,  // 20: admiral.api.serviceaccount.v1.ServiceAccountAPI.CreateServiceAccount:input_type -> admiral.api.serviceaccount.v1.CreateServiceAccountRequest
+	5,  // 21: admiral.api.serviceaccount.v1.ServiceAccountAPI.GetServiceAccount:input_type -> admiral.api.serviceaccount.v1.GetServiceAccountRequest
+	7,  // 22: admiral.api.serviceaccount.v1.ServiceAccountAPI.ListServiceAccounts:input_type -> admiral.api.serviceaccount.v1.ListServiceAccountsRequest
+	9,  // 23: admiral.api.serviceaccount.v1.ServiceAccountAPI.DeleteServiceAccount:input_type -> admiral.api.serviceaccount.v1.DeleteServiceAccountRequest
+	11, // 24: admiral.api.serviceaccount.v1.IssuerAPI.CreateIssuer:input_type -> admiral.api.serviceaccount.v1.CreateIssuerRequest
+	13, // 25: admiral.api.serviceaccount.v1.IssuerAPI.GetIssuer:input_type -> admiral.api.serviceaccount.v1.GetIssuerRequest
+	15, // 26: admiral.api.serviceaccount.v1.IssuerAPI.ListIssuers:input_type -> admiral.api.serviceaccount.v1.ListIssuersRequest
+	17, // 27: admiral.api.serviceaccount.v1.IssuerAPI.SetIssuerKeys:input_type -> admiral.api.serviceaccount.v1.SetIssuerKeysRequest
+	19, // 28: admiral.api.serviceaccount.v1.IssuerAPI.DeleteIssuer:input_type -> admiral.api.serviceaccount.v1.DeleteIssuerRequest
+	4,  // 29: admiral.api.serviceaccount.v1.ServiceAccountAPI.CreateServiceAccount:output_type -> admiral.api.serviceaccount.v1.CreateServiceAccountResponse
+	6,  // 30: admiral.api.serviceaccount.v1.ServiceAccountAPI.GetServiceAccount:output_type -> admiral.api.serviceaccount.v1.GetServiceAccountResponse
+	8,  // 31: admiral.api.serviceaccount.v1.ServiceAccountAPI.ListServiceAccounts:output_type -> admiral.api.serviceaccount.v1.ListServiceAccountsResponse
+	10, // 32: admiral.api.serviceaccount.v1.ServiceAccountAPI.DeleteServiceAccount:output_type -> admiral.api.serviceaccount.v1.DeleteServiceAccountResponse
+	12, // 33: admiral.api.serviceaccount.v1.IssuerAPI.CreateIssuer:output_type -> admiral.api.serviceaccount.v1.CreateIssuerResponse
+	14, // 34: admiral.api.serviceaccount.v1.IssuerAPI.GetIssuer:output_type -> admiral.api.serviceaccount.v1.GetIssuerResponse
+	16, // 35: admiral.api.serviceaccount.v1.IssuerAPI.ListIssuers:output_type -> admiral.api.serviceaccount.v1.ListIssuersResponse
+	18, // 36: admiral.api.serviceaccount.v1.IssuerAPI.SetIssuerKeys:output_type -> admiral.api.serviceaccount.v1.SetIssuerKeysResponse
+	20, // 37: admiral.api.serviceaccount.v1.IssuerAPI.DeleteIssuer:output_type -> admiral.api.serviceaccount.v1.DeleteIssuerResponse
+	29, // [29:38] is the sub-list for method output_type
+	20, // [20:29] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_serviceaccount_v1_serviceaccount_proto_init() }
@@ -1345,7 +1550,7 @@ func file_admiral_api_serviceaccount_v1_serviceaccount_proto_init() {
 		(*IssuerKeys_Jwks)(nil),
 		(*IssuerKeys_Reported_)(nil),
 	}
-	file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[13].OneofWrappers = []any{
+	file_admiral_api_serviceaccount_v1_serviceaccount_proto_msgTypes[17].OneofWrappers = []any{
 		(*SetIssuerKeysRequest_Keys)(nil),
 		(*SetIssuerKeysRequest_AcceptPending_)(nil),
 	}
@@ -1355,7 +1560,7 @@ func file_admiral_api_serviceaccount_v1_serviceaccount_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDesc), len(file_admiral_api_serviceaccount_v1_serviceaccount_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
