@@ -63,6 +63,8 @@ const (
 	RunWrite            = "run:write"
 	ServiceaccountRead  = "serviceaccount:read"
 	ServiceaccountWrite = "serviceaccount:write"
+	StateRead           = "state:read"
+	StateWrite          = "state:write"
 	TenantRead          = "tenant:read"
 	TenantWrite         = "tenant:write"
 	UserRead            = "user:read"
@@ -88,6 +90,7 @@ var Groups = map[string]Group{
 	"env":            {Name: "env", Description: "Deployment environments and the components in them."},
 	"run":            {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
 	"serviceaccount": {Name: "serviceaccount", Description: "Service accounts, and the issuers they accept tokens from."},
+	"state":          {Name: "state", Description: "Hosted Terraform state and its versions."},
 	"tenant":         {Name: "tenant", Description: "Your tenant."},
 	"user":           {Name: "user", Description: "Members of your tenant."},
 }
@@ -242,6 +245,17 @@ var Catalog = map[string]Scope{
 		Implies:      []string{ServiceaccountRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
+	StateRead: {
+		Name:         StateRead,
+		Description:  "Read hosted Terraform state, its outputs and its versions.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	StateWrite: {
+		Name:         StateWrite,
+		Description:  "Lock, write and force-unlock hosted Terraform state. Whether you may is decided per environment, not by holding this.",
+		Implies:      []string{StateRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
 	TenantRead: {
 		Name:         TenantRead,
 		Description:  "Read the caller's own tenant -- name, slug, status and logo.",
@@ -279,6 +293,7 @@ var impliesClosure = map[string][]string{
 	EnvWrite:            []string{EnvRead},
 	RunWrite:            []string{RunRead},
 	ServiceaccountWrite: []string{ServiceaccountRead},
+	StateWrite:          []string{StateRead},
 	TenantWrite:         []string{TenantRead},
 	UserWrite:           []string{UserRead},
 }
