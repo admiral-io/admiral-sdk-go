@@ -247,12 +247,12 @@ var Catalog = map[string]Scope{
 	},
 	StateRead: {
 		Name:         StateRead,
-		Description:  "Read hosted Terraform state, its outputs and its versions.",
+		Description:  "Read hosted Terraform state, its outputs and its versions. Enforced by admiral-state.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	StateWrite: {
 		Name:         StateWrite,
-		Description:  "Lock, write and force-unlock hosted Terraform state. Whether you may is decided per environment, not by holding this.",
+		Description:  "Lock, write and force-unlock hosted Terraform state. Whether you may is decided per environment, not by holding this. Enforced by admiral-state.",
 		Implies:      []string{StateRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
