@@ -29,8 +29,8 @@ const (
 )
 
 // Status is where the run is. A change set run or a reapply ends APPLIED,
-// PARTIAL, NO_CHANGES, SUPERSEDED, FAILED or CANCELLED; a drift check ends
-// CLEAN, DRIFTED, FAILED or CANCELLED.
+// PARTIAL, UNKNOWN, NO_CHANGES, SUPERSEDED, FAILED or CANCELLED; a drift
+// check ends CLEAN, DRIFTED, FAILED or CANCELLED.
 type Run_Status int32
 
 const (
@@ -58,6 +58,10 @@ const (
 	Run_STATUS_CLEAN Run_Status = 12
 	// A drift check found changes made outside Admiral.
 	Run_STATUS_DRIFTED Run_Status = 13
+	// The apply started and its agent never reported, so what it changed is
+	// not known. The environment is held as for PARTIAL: plan to see what
+	// landed, then revert or accept.
+	Run_STATUS_UNKNOWN Run_Status = 14
 )
 
 // Enum value maps for Run_Status.
@@ -77,6 +81,7 @@ var (
 		11: "STATUS_CANCELLED",
 		12: "STATUS_CLEAN",
 		13: "STATUS_DRIFTED",
+		14: "STATUS_UNKNOWN",
 	}
 	Run_Status_value = map[string]int32{
 		"STATUS_UNSPECIFIED": 0,
@@ -93,6 +98,7 @@ var (
 		"STATUS_CANCELLED":   11,
 		"STATUS_CLEAN":       12,
 		"STATUS_DRIFTED":     13,
+		"STATUS_UNKNOWN":     14,
 	}
 )
 
@@ -245,6 +251,9 @@ const (
 	ComponentApply_STATUS_FAILED    ComponentApply_Status = 4
 	// Not attempted: the apply stopped before reaching it.
 	ComponentApply_STATUS_SKIPPED ComponentApply_Status = 5
+	// The apply ended without a report, so whether this component changed is
+	// not known.
+	ComponentApply_STATUS_UNKNOWN ComponentApply_Status = 6
 )
 
 // Enum value maps for ComponentApply_Status.
@@ -256,6 +265,7 @@ var (
 		3: "STATUS_SUCCEEDED",
 		4: "STATUS_FAILED",
 		5: "STATUS_SKIPPED",
+		6: "STATUS_UNKNOWN",
 	}
 	ComponentApply_Status_value = map[string]int32{
 		"STATUS_UNSPECIFIED": 0,
@@ -264,6 +274,7 @@ var (
 		"STATUS_SUCCEEDED":   3,
 		"STATUS_FAILED":      4,
 		"STATUS_SKIPPED":     5,
+		"STATUS_UNKNOWN":     6,
 	}
 )
 
@@ -1851,7 +1862,7 @@ var File_admiral_api_run_v1_run_proto protoreflect.FileDescriptor
 
 const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\n" +
-	"\x1cadmiral/api/run/v1/run.proto\x12\x12admiral.api.run.v1\x1a admiral/api/agent/v1/agent.proto\x1a,admiral/api/environment/v1/environment.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xda\n" +
+	"\x1cadmiral/api/run/v1/run.proto\x12\x12admiral.api.run.v1\x1a admiral/api/agent/v1/agent.proto\x1a,admiral/api/environment/v1/environment.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xee\n" +
 	"\n" +
 	"\x03Run\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^run-[0-9a-z]+$R\x02id\x12C\n" +
@@ -1874,7 +1885,7 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tcreatedAt\x12@\n" +
 	"\vfinished_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"finishedAt\x12Z\n" +
-	"\x11required_approval\x18\x0f \x01(\v2(.admiral.api.environment.v1.ApprovalRuleB\x03\xe0A\x03R\x10requiredApproval\"\xac\x02\n" +
+	"\x11required_approval\x18\x0f \x01(\v2(.admiral.api.environment.v1.ApprovalRuleB\x03\xe0A\x03R\x10requiredApproval\"\xc0\x02\n" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10STATUS_PREPARING\x10\x01\x12\x11\n" +
@@ -1890,7 +1901,8 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\x12\x14\n" +
 	"\x10STATUS_CANCELLED\x10\v\x12\x10\n" +
 	"\fSTATUS_CLEAN\x10\f\x12\x12\n" +
-	"\x0eSTATUS_DRIFTED\x10\r\"r\n" +
+	"\x0eSTATUS_DRIFTED\x10\r\x12\x12\n" +
+	"\x0eSTATUS_UNKNOWN\x10\x0e\"r\n" +
 	"\aTrigger\x12\x17\n" +
 	"\x13TRIGGER_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fTRIGGER_USER\x10\x01\x12\x14\n" +
@@ -1959,18 +1971,19 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\bagent_id\x18\x04 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^agt-[0-9a-z]+$R\aagentId\x12<\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\x03\xe0A\x03R\x06status\x12F\n" +
 	"\vwait_reason\x18\x06 \x01(\x0e2 .admiral.api.agent.v1.WaitReasonB\x03\xe0A\x03R\n" +
-	"waitReason\"\x93\x02\n" +
+	"waitReason\"\xa7\x02\n" +
 	"\x0eComponentApply\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12A\n" +
 	"\x06status\x18\x02 \x01(\x0e2).admiral.api.run.v1.ComponentApply.StatusR\x06status\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"\x85\x01\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"\x99\x01\n" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rSTATUS_QUEUED\x10\x01\x12\x13\n" +
 	"\x0fSTATUS_APPLYING\x10\x02\x12\x14\n" +
 	"\x10STATUS_SUCCEEDED\x10\x03\x12\x11\n" +
 	"\rSTATUS_FAILED\x10\x04\x12\x12\n" +
-	"\x0eSTATUS_SKIPPED\x10\x05\"\x82\x02\n" +
+	"\x0eSTATUS_SKIPPED\x10\x05\x12\x12\n" +
+	"\x0eSTATUS_UNKNOWN\x10\x06\"\x82\x02\n" +
 	"\bApproval\x12\x1f\n" +
 	"\vplan_digest\x18\x01 \x01(\tR\n" +
 	"planDigest\x12<\n" +

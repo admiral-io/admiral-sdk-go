@@ -258,23 +258,23 @@ var Catalog = map[string]Scope{
 	},
 	TenantRead: {
 		Name:         TenantRead,
-		Description:  "Read the caller's own tenant -- name, slug, status and logo.",
+		Description:  "Read tenants, their name, slug, status and logo.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	TenantWrite: {
 		Name:         TenantWrite,
-		Description:  "Update the caller's own tenant's settings. Whether you may is decided per tenant, not by holding this.",
+		Description:  "Update a tenant's settings, and register, suspend, reactivate and delete tenants.",
 		Implies:      []string{TenantRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
 	UserRead: {
 		Name:         UserRead,
-		Description:  "Read user profiles within your own tenant.",
+		Description:  "Read user profiles and invitations.",
 		AssignableTo: []string{TokenTypePAT},
 	},
 	UserWrite: {
 		Name:         UserWrite,
-		Description:  "Create users and manage their access -- suspending, reactivating, or offboarding them. Reach is decided per tenant rather than by holding this, so the same scope covers adding someone to your own tenant and an operator acting across the platform.",
+		Description:  "Invite users and revoke invitations; update profiles, change roles, revoke authentication factors, and suspend, reactivate and delete users.",
 		Implies:      []string{UserRead},
 		AssignableTo: []string{TokenTypePAT},
 	},

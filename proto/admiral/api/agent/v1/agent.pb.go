@@ -2330,8 +2330,11 @@ type ResourceChange struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	Resource *ResourceRef           `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
 	Action   ResourceChange_Action  `protobuf:"varint,2,opt,name=action,proto3,enum=admiral.api.agent.v1.ResourceChange_Action" json:"action,omitempty"`
-	// `sha256:<hex>` of this resource's ResourceDiff in the PlanDiff,
-	// deterministically marshaled. Empty for ACTION_NO_OP.
+	// `sha256:<hex>` of what the apply changes in this Kubernetes object: the
+	// action and each changed path with its before and after value, so a field
+	// the apply does not touch, such as replicas an autoscaler moved, leaves it
+	// unchanged. Empty for a Terraform resource, whose saved plan file pins what
+	// the apply changes, and for ACTION_NO_OP.
 	DiffDigest    string `protobuf:"bytes,3,opt,name=diff_digest,json=diffDigest,proto3" json:"diff_digest,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
