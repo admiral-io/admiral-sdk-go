@@ -94,11 +94,14 @@ const (
 	// to it right now (planning, applying, holding the environment) is on
 	// its runs, not here.
 	ChangeSet_STATUS_OPEN ChangeSet_Status = 1
-	// It took effect: its apply succeeded, or a partial apply was accepted.
+	// It took effect: every component in it landed, or its live state was
+	// recorded as it is under break-glass.
 	ChangeSet_STATUS_APPLIED ChangeSet_Status = 2
-	// It ended without taking effect: discarded, or its partial apply was
-	// reverted.
+	// It ended without taking effect: discarded before it applied.
 	ChangeSet_STATUS_CLOSED ChangeSet_Status = 3
+	// Every component it touched is back to its content from before it, by a
+	// revert in place or by the change set in `reverted_by_change_set_id`.
+	ChangeSet_STATUS_REVERTED ChangeSet_Status = 4
 )
 
 // Enum value maps for ChangeSet_Status.
@@ -108,12 +111,14 @@ var (
 		1: "STATUS_OPEN",
 		2: "STATUS_APPLIED",
 		3: "STATUS_CLOSED",
+		4: "STATUS_REVERTED",
 	}
 	ChangeSet_Status_value = map[string]int32{
 		"STATUS_UNSPECIFIED": 0,
 		"STATUS_OPEN":        1,
 		"STATUS_APPLIED":     2,
 		"STATUS_CLOSED":      3,
+		"STATUS_REVERTED":    4,
 	}
 )
 
@@ -614,9 +619,12 @@ type ChangeSet struct {
 	Behind bool `protobuf:"varint,13,opt,name=behind,proto3" json:"behind,omitempty"`
 	// The change set's newest run; empty before its first. Its status is the
 	// change set's progress: planning, awaiting approval, applying, failed.
-	LatestRunId   string `protobuf:"bytes,14,opt,name=latest_run_id,json=latestRunId,proto3" json:"latest_run_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	LatestRunId string `protobuf:"bytes,14,opt,name=latest_run_id,json=latestRunId,proto3" json:"latest_run_id,omitempty"`
+	// Set when another change set reverted this one: the change set that did.
+	// Empty for a revert in place.
+	RevertedByChangeSetId string `protobuf:"bytes,15,opt,name=reverted_by_change_set_id,json=revertedByChangeSetId,proto3" json:"reverted_by_change_set_id,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *ChangeSet) Reset() {
@@ -736,6 +744,13 @@ func (x *ChangeSet) GetBehind() bool {
 func (x *ChangeSet) GetLatestRunId() string {
 	if x != nil {
 		return x.LatestRunId
+	}
+	return ""
+}
+
+func (x *ChangeSet) GetRevertedByChangeSetId() string {
+	if x != nil {
+		return x.RevertedByChangeSetId
 	}
 	return ""
 }
@@ -4356,9 +4371,13 @@ func (x *GetArtifactResponse) GetArtifact() []byte {
 type RevertChangeSetRequest struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	ChangeSetId string                 `protobuf:"bytes,1,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
-	// The new change set's title and description. An empty title becomes
-	// "Revert" and the reverted change set's title.
-	ChangeSet     *ChangeSet `protobuf:"bytes,3,opt,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
+	// The new change set's title and description, when the revert opens one.
+	// An empty title becomes "Revert" and the reverted change set's title.
+	ChangeSet *ChangeSet `protobuf:"bytes,3,opt,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
+	// The components to return, by name, for a change set that holds its
+	// environment. Empty returns every component it touched. A change set that
+	// has closed is reverted whole, so naming components is refused.
+	Components    []string `protobuf:"bytes,4,rep,name=components,proto3" json:"components,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4407,9 +4426,18 @@ func (x *RevertChangeSetRequest) GetChangeSet() *ChangeSet {
 	return nil
 }
 
+func (x *RevertChangeSetRequest) GetComponents() []string {
+	if x != nil {
+		return x.Components
+	}
+	return nil
+}
+
 type RevertChangeSetResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ChangeSet     *ChangeSet             `protobuf:"bytes,1,opt,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The change set that carries the revert: the held one, at its new
+	// revision, or the new change set.
+	ChangeSet     *ChangeSet `protobuf:"bytes,1,opt,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4455,7 +4483,7 @@ var File_admiral_api_changeset_v1_changeset_proto protoreflect.FileDescriptor
 
 const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\n" +
-	"(admiral/api/changeset/v1/changeset.proto\x12\x18admiral.api.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xff\x05\n" +
+	"(admiral/api/changeset/v1/changeset.proto\x12\x18admiral.api.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd3\x06\n" +
 	"\tChangeSet\x12+\n" +
 	"\x02id\x18\x01 \x01(\tB\x1b\xe0A\x03\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\x02id\x12*\n" +
 	"\x0eapplication_id\x18\x02 \x01(\tB\x03\xe0A\x03R\rapplicationId\x12*\n" +
@@ -4473,12 +4501,14 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tupdatedAt\x126\n" +
 	"\x15reverts_change_set_id\x18\f \x01(\tB\x03\xe0A\x03R\x12revertsChangeSetId\x12\x1b\n" +
 	"\x06behind\x18\r \x01(\bB\x03\xe0A\x03R\x06behind\x12'\n" +
-	"\rlatest_run_id\x18\x0e \x01(\tB\x03\xe0A\x03R\vlatestRunId\"X\n" +
+	"\rlatest_run_id\x18\x0e \x01(\tB\x03\xe0A\x03R\vlatestRunId\x12=\n" +
+	"\x19reverted_by_change_set_id\x18\x0f \x01(\tB\x03\xe0A\x03R\x15revertedByChangeSetId\"m\n" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vSTATUS_OPEN\x10\x01\x12\x12\n" +
 	"\x0eSTATUS_APPLIED\x10\x02\x12\x11\n" +
-	"\rSTATUS_CLOSED\x10\x03J\x04\b\t\x10\n" +
+	"\rSTATUS_CLOSED\x10\x03\x12\x13\n" +
+	"\x0fSTATUS_REVERTED\x10\x04J\x04\b\t\x10\n" +
 	"R\x0fcreated_by_kind\"\xad\x04\n" +
 	"\bRevision\x12,\n" +
 	"\x02id\x18\n" +
@@ -4807,11 +4837,14 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\brevision\x18\x03 \x01(\tB+\xe0A\x02\xbaH%r#2!^([1-9][0-9]{0,8}|rev-[0-9a-z]+)$R\brevisionJ\x04\b\x02\x10\x03\"Z\n" +
 	"\x13GetArtifactResponse\x12'\n" +
 	"\x0fartifact_digest\x18\x01 \x01(\tR\x0eartifactDigest\x12\x1a\n" +
-	"\bartifact\x18\x02 \x01(\fR\bartifact\"\xa7\x01\n" +
+	"\bartifact\x18\x02 \x01(\fR\bartifact\"\xfb\x01\n" +
 	"\x16RevertChangeSetRequest\x12<\n" +
 	"\rchange_set_id\x18\x01 \x01(\tB\x18\xe0A\x02\xbaH\x12r\x102\x0e^cs-[0-9a-z]+$R\vchangeSetId\x12B\n" +
 	"\n" +
-	"change_set\x18\x03 \x01(\v2#.admiral.api.changeset.v1.ChangeSetR\tchangeSetJ\x04\b\x02\x10\x03R\x05title\"]\n" +
+	"change_set\x18\x03 \x01(\v2#.admiral.api.changeset.v1.ChangeSetR\tchangeSet\x12R\n" +
+	"\n" +
+	"components\x18\x04 \x03(\tB2\xbaH/\x92\x01,\x10\x80\x02\x18\x01\"%r#2!^[a-z]([a-z0-9-]{0,51}[a-z0-9])?$R\n" +
+	"componentsJ\x04\b\x02\x10\x03R\x05title\"]\n" +
 	"\x17RevertChangeSetResponse\x12B\n" +
 	"\n" +
 	"change_set\x18\x01 \x01(\v2#.admiral.api.changeset.v1.ChangeSetR\tchangeSet*\x90\x01\n" +

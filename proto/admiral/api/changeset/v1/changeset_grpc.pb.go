@@ -144,10 +144,16 @@ type ChangeSetAPIClient interface {
 	//
 	// Scope: `changeset:read`
 	GetArtifact(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
-	// RevertChangeSet opens a new change set that returns every component the
-	// given change set's apply changed to its state before that apply. History
-	// moves forward: the revert is planned, approved and applied like any other
-	// change set, and may apply while the reverted apply holds the environment.
+	// RevertChangeSet returns components a change set touched to their content
+	// from before it. History moves forward: a revert is planned, approved and
+	// applied like any other change.
+	//
+	// A change set that holds its environment is reverted in place: a new
+	// revision of the same change set, for the components named or every one it
+	// touched. When every component is back, it reads REVERTED; when some are
+	// kept, it reads APPLIED with what it kept. A change set that has closed is
+	// reverted whole by a new change set, which may apply only while the
+	// environment has not moved past it.
 	//
 	// Scope: `changeset:write`
 	RevertChangeSet(ctx context.Context, in *RevertChangeSetRequest, opts ...grpc.CallOption) (*RevertChangeSetResponse, error)
@@ -410,10 +416,16 @@ type ChangeSetAPIServer interface {
 	//
 	// Scope: `changeset:read`
 	GetArtifact(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
-	// RevertChangeSet opens a new change set that returns every component the
-	// given change set's apply changed to its state before that apply. History
-	// moves forward: the revert is planned, approved and applied like any other
-	// change set, and may apply while the reverted apply holds the environment.
+	// RevertChangeSet returns components a change set touched to their content
+	// from before it. History moves forward: a revert is planned, approved and
+	// applied like any other change.
+	//
+	// A change set that holds its environment is reverted in place: a new
+	// revision of the same change set, for the components named or every one it
+	// touched. When every component is back, it reads REVERTED; when some are
+	// kept, it reads APPLIED with what it kept. A change set that has closed is
+	// reverted whole by a new change set, which may apply only while the
+	// environment has not moved past it.
 	//
 	// Scope: `changeset:write`
 	RevertChangeSet(context.Context, *RevertChangeSetRequest) (*RevertChangeSetResponse, error)

@@ -164,6 +164,8 @@ func (m *ChangeSet) validate(all bool) error {
 
 	// no validation rules for LatestRunId
 
+	// no validation rules for RevertedByChangeSetId
+
 	if len(errors) > 0 {
 		return ChangeSetMultiError(errors)
 	}
