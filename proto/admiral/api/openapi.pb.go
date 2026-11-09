@@ -25,7 +25,7 @@ var File_admiral_api_openapi_proto protoreflect.FileDescriptor
 
 const file_admiral_api_openapi_proto_rawDesc = "" +
 	"\n" +
-	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xfe\f\xbaG\xd3\v\x12\x91\x01\n" +
+	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\x87\x0e\xbaG\xdc\f\x12\x91\x01\n" +
 	"\vAdmiral API\x12\x81\x01The Admiral REST API for managing applications, infrastructure, and runs. See https://admiral.io/docs for complete documentation.:?\n" +
 	"\fApplications\x12/Manage application lifecycle and configuration.:o\n" +
 	"\fEnvironments\x12_Manage deployment environments within an application, and view the components deployed to them.:\x88\x01\n" +
@@ -35,7 +35,8 @@ const file_admiral_api_openapi_proto_rawDesc = "" +
 	"\n" +
 	"Components\x12WPublish, import and curate the component registry: components, their versions and tags.:=\n" +
 	"\x06Tenant\x123Your organization: its name, slug, status and logo.:A\n" +
-	"\vCredentials\x122Manage credentials for accessing external systems.:o\n" +
+	"\vCredentials\x122Manage credentials for accessing external systems.:\x86\x01\n" +
+	"\fIntegrations\x12vThe outside services your organization connects, such as Admiral's GitHub App, and the install flow that connects one.:o\n" +
 	"\x10Service Accounts\x12[The non-human principals your agents run as, and the issuer and subject each signs in with.:i\n" +
 	"\aIssuers\x12^The token issuers your service accounts trust, by key URL, pasted keys, or keys agents report.:3\n" +
 	"\x06Agents\x12)Manage your agents, and who may use each.:.\n" +

@@ -59,6 +59,8 @@ const (
 	CredentialWrite     = "credential:write"
 	EnvRead             = "env:read"
 	EnvWrite            = "env:write"
+	IntegrationRead     = "integration:read"
+	IntegrationWrite    = "integration:write"
 	RunRead             = "run:read"
 	RunWrite            = "run:write"
 	ServiceaccountRead  = "serviceaccount:read"
@@ -88,6 +90,7 @@ var Groups = map[string]Group{
 	"component":      {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
 	"credential":     {Name: "credential", Description: "Credentials for external systems."},
 	"env":            {Name: "env", Description: "Deployment environments and the components in them."},
+	"integration":    {Name: "integration", Description: "Integrations your organization connects, such as the GitHub App."},
 	"run":            {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
 	"serviceaccount": {Name: "serviceaccount", Description: "Service accounts, and the issuers they accept tokens from."},
 	"state":          {Name: "state", Description: "Hosted Terraform state and its versions."},
@@ -223,6 +226,17 @@ var Catalog = map[string]Scope{
 		Implies:      []string{EnvRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
+	IntegrationRead: {
+		Name:         IntegrationRead,
+		Description:  "Read integrations, their status and what they connect to.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	IntegrationWrite: {
+		Name:         IntegrationWrite,
+		Description:  "Connect, install and remove integrations.",
+		Implies:      []string{IntegrationRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
 	RunRead: {
 		Name:         RunRead,
 		Description:  "Read runs, their plans, applies and approvals.",
@@ -291,6 +305,7 @@ var impliesClosure = map[string][]string{
 	ComponentWrite:      []string{ComponentPublish, ComponentRead},
 	CredentialWrite:     []string{CredentialRead},
 	EnvWrite:            []string{EnvRead},
+	IntegrationWrite:    []string{IntegrationRead},
 	RunWrite:            []string{RunRead},
 	ServiceaccountWrite: []string{ServiceaccountRead},
 	StateWrite:          []string{StateRead},

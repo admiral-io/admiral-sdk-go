@@ -43,6 +43,7 @@ func main() {
 	// c.Credential().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
+	// c.Integration().MethodName(ctx, req)
 	// c.Invitation().MethodName(ctx, req)
 	// c.Registry().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
@@ -66,6 +67,7 @@ func main() {
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/api/credential/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/api/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/api/healthcheck/v1` |
+| IntegrationAPI | `Integration()` | `go.admiral.io/sdk/proto/admiral/api/integration/v1` |
 | InvitationAPI | `Invitation()` | `go.admiral.io/sdk/proto/admiral/api/invitation/v1` |
 | RegistryAPI | `Registry()` | `go.admiral.io/sdk/proto/admiral/api/registry/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |

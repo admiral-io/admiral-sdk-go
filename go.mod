@@ -8,7 +8,7 @@ require (
 	connectrpc.com/connect/v2 v2.0.2
 	github.com/google/gnostic v0.7.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.33.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20261026165753-2ffab32bce7e
+	google.golang.org/genproto/googleapis/api v0.0.0-20261104224025-d1e00e9f33ab
 	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 )
