@@ -13,6 +13,7 @@ import (
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	serviceaccountv1 "go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1"
+	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
@@ -49,6 +50,8 @@ type AdmiralClient interface {
 	ServiceAccount() serviceaccountv1.ServiceAccountAPIClient
 	// Issuer returns the IssuerAPI client.
 	Issuer() serviceaccountv1.IssuerAPIClient
+	// Source returns the SourceAPI client.
+	Source() sourcev1.SourceAPIClient
 	// Tenant returns the TenantAPI client.
 	Tenant() tenantv1.TenantAPIClient
 	// User returns the UserAPI client.

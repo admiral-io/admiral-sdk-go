@@ -20,6 +20,7 @@ import (
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	serviceaccountv1 "go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1"
+	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
 	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
@@ -48,6 +49,7 @@ type Client struct {
 	run runv1.RunAPIClient
 	serviceAccount serviceaccountv1.ServiceAccountAPIClient
 	issuer serviceaccountv1.IssuerAPIClient
+	source sourcev1.SourceAPIClient
 	tenant tenantv1.TenantAPIClient
 	user userv1.UserAPIClient
 }
@@ -107,6 +109,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		run: runv1.NewRunAPIClient(conn),
 		serviceAccount: serviceaccountv1.NewServiceAccountAPIClient(conn),
 		issuer: serviceaccountv1.NewIssuerAPIClient(conn),
+		source: sourcev1.NewSourceAPIClient(conn),
 		tenant: tenantv1.NewTenantAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
 	}, nil
@@ -185,6 +188,11 @@ func (c *Client) ServiceAccount() serviceaccountv1.ServiceAccountAPIClient {
 // Issuer returns the IssuerAPI client.
 func (c *Client) Issuer() serviceaccountv1.IssuerAPIClient {
 	return c.issuer
+}
+
+// Source returns the SourceAPI client.
+func (c *Client) Source() sourcev1.SourceAPIClient {
+	return c.source
 }
 
 // Tenant returns the TenantAPI client.

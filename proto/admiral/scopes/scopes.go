@@ -65,6 +65,8 @@ const (
 	RunWrite            = "run:write"
 	ServiceaccountRead  = "serviceaccount:read"
 	ServiceaccountWrite = "serviceaccount:write"
+	SourceRead          = "source:read"
+	SourceWrite         = "source:write"
 	StateRead           = "state:read"
 	StateWrite          = "state:write"
 	TenantRead          = "tenant:read"
@@ -93,6 +95,7 @@ var Groups = map[string]Group{
 	"integration":    {Name: "integration", Description: "Integrations your organization connects, such as the GitHub App."},
 	"run":            {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
 	"serviceaccount": {Name: "serviceaccount", Description: "Service accounts, and the issuers they accept tokens from."},
+	"source":         {Name: "source", Description: "Sources, the upstream locations components come from and the grants that reach them."},
 	"state":          {Name: "state", Description: "Hosted Terraform state and its versions."},
 	"tenant":         {Name: "tenant", Description: "Your tenant."},
 	"user":           {Name: "user", Description: "Members of your tenant."},
@@ -259,6 +262,17 @@ var Catalog = map[string]Scope{
 		Implies:      []string{ServiceaccountRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
+	SourceRead: {
+		Name:         SourceRead,
+		Description:  "Read sources, browse what they offer and discover versions.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	SourceWrite: {
+		Name:         SourceWrite,
+		Description:  "Create, update and delete sources.",
+		Implies:      []string{SourceRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
 	StateRead: {
 		Name:         StateRead,
 		Description:  "Read hosted Terraform state, its outputs and its versions. Enforced by admiral-state.",
@@ -308,6 +322,7 @@ var impliesClosure = map[string][]string{
 	IntegrationWrite:    []string{IntegrationRead},
 	RunWrite:            []string{RunRead},
 	ServiceaccountWrite: []string{ServiceaccountRead},
+	SourceWrite:         []string{SourceRead},
 	StateWrite:          []string{StateRead},
 	TenantWrite:         []string{TenantRead},
 	UserWrite:           []string{UserRead},
