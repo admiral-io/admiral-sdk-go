@@ -1176,7 +1176,11 @@ type Provenance struct {
 	// carried no notes.
 	CommitMessage string `protobuf:"bytes,9,opt,name=commit_message,json=commitMessage,proto3" json:"commit_message,omitempty"`
 	// Who wrote that commit, by name. Not the email address.
-	CommitAuthor  string `protobuf:"bytes,10,opt,name=commit_author,json=commitAuthor,proto3" json:"commit_author,omitempty"`
+	CommitAuthor string `protobuf:"bytes,10,opt,name=commit_author,json=commitAuthor,proto3" json:"commit_author,omitempty"`
+	// The source the version came through, set by the server on an import
+	// through a source and on a push. Empty for a CLI publish or an import by
+	// raw coordinates.
+	SourceId      string `protobuf:"bytes,11,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1270,6 +1274,13 @@ func (x *Provenance) GetCommitMessage() string {
 func (x *Provenance) GetCommitAuthor() string {
 	if x != nil {
 		return x.CommitAuthor
+	}
+	return ""
+}
+
+func (x *Provenance) GetSourceId() string {
+	if x != nil {
+		return x.SourceId
 	}
 	return ""
 }
@@ -1663,6 +1674,7 @@ type ImportSource struct {
 	//	*ImportSource_RegistryModule_
 	//	*ImportSource_GitTree_
 	//	*ImportSource_Archive_
+	//	*ImportSource_FromSource_
 	Source        isImportSource_Source `protobuf_oneof:"source"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1750,6 +1762,15 @@ func (x *ImportSource) GetArchive() *ImportSource_Archive {
 	return nil
 }
 
+func (x *ImportSource) GetFromSource() *ImportSource_FromSource {
+	if x != nil {
+		if x, ok := x.Source.(*ImportSource_FromSource_); ok {
+			return x.FromSource
+		}
+	}
+	return nil
+}
+
 type isImportSource_Source interface {
 	isImportSource_Source()
 }
@@ -1774,6 +1795,10 @@ type ImportSource_Archive_ struct {
 	Archive *ImportSource_Archive `protobuf:"bytes,5,opt,name=archive,proto3,oneof"`
 }
 
+type ImportSource_FromSource_ struct {
+	FromSource *ImportSource_FromSource `protobuf:"bytes,6,opt,name=from_source,json=fromSource,proto3,oneof"`
+}
+
 func (*ImportSource_OciChart) isImportSource_Source() {}
 
 func (*ImportSource_HelmChart_) isImportSource_Source() {}
@@ -1783,6 +1808,8 @@ func (*ImportSource_RegistryModule_) isImportSource_Source() {}
 func (*ImportSource_GitTree_) isImportSource_Source() {}
 
 func (*ImportSource_Archive_) isImportSource_Source() {}
+
+func (*ImportSource_FromSource_) isImportSource_Source() {}
 
 type ImportComponentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -3299,6 +3326,76 @@ func (x *ImportSource_Archive) GetUrl() string {
 	return ""
 }
 
+// FromSource is an artifact reached through one of the organization's
+// sources, under the source's own grant, and bounded by its `allows`. No
+// credential rides the request: picking the source is picking the
+// credential. The version is exact, spelled as ListSourceVersions returns
+// it, an ordered version or a branch name; no keyword, range or
+// constraint is accepted, so `latest` imports a tag literally named
+// latest, and the server fills the provenance from what the source
+// resolved. For a git source the artifact is a path in the repository,
+// empty for the root; for a Helm repository a chart name; for a registry
+// a name under the namespace.
+type ImportSource_FromSource struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SourceId      string                 `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
+	Artifact      string                 `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Version       string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportSource_FromSource) Reset() {
+	*x = ImportSource_FromSource{}
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportSource_FromSource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportSource_FromSource) ProtoMessage() {}
+
+func (x *ImportSource_FromSource) ProtoReflect() protoreflect.Message {
+	mi := &file_admiral_api_registry_v1_registry_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportSource_FromSource.ProtoReflect.Descriptor instead.
+func (*ImportSource_FromSource) Descriptor() ([]byte, []int) {
+	return file_admiral_api_registry_v1_registry_proto_rawDescGZIP(), []int{14, 5}
+}
+
+func (x *ImportSource_FromSource) GetSourceId() string {
+	if x != nil {
+		return x.SourceId
+	}
+	return ""
+}
+
+func (x *ImportSource_FromSource) GetArtifact() string {
+	if x != nil {
+		return x.Artifact
+	}
+	return ""
+}
+
+func (x *ImportSource_FromSource) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
 var File_admiral_api_registry_v1_registry_proto protoreflect.FileDescriptor
 
 const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
@@ -3394,7 +3491,7 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x0eContractOutput\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1c\n" +
-	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xe3\x03\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\x9e\x04\n" +
 	"\n" +
 	"Provenance\x12<\n" +
 	"\x04kind\x18\x01 \x01(\x0e2(.admiral.api.registry.v1.Provenance.KindR\x04kind\x12\x10\n" +
@@ -3406,7 +3503,8 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\vcredentials\x18\b \x03(\v2,.admiral.api.registry.v1.PresentedCredentialB\x03\xe0A\x03R\vcredentials\x12/\n" +
 	"\x0ecommit_message\x18\t \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\rcommitMessage\x12-\n" +
 	"\rcommit_author\x18\n" +
-	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\fcommitAuthor\"<\n" +
+	" \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\fcommitAuthor\x129\n" +
+	"\tsource_id\x18\v \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^src-[0-9a-z]+$R\bsourceId\"<\n" +
 	"\x04Kind\x12\x14\n" +
 	"\x10KIND_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tKIND_PUSH\x10\x01\x12\x0f\n" +
@@ -3446,14 +3544,17 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x18PublishComponentResponse\x12@\n" +
 	"\tcomponent\x18\x01 \x01(\v2\".admiral.api.registry.v1.ComponentR\tcomponent\x12:\n" +
 	"\aversion\x18\x02 \x01(\v2 .admiral.api.registry.v1.VersionR\aversion\x12\x1c\n" +
-	"\tunchanged\x18\x03 \x01(\bR\tunchanged\"\xa9\b\n" +
+	"\tunchanged\x18\x03 \x01(\bR\tunchanged\"\xb5\n" +
+	"\n" +
 	"\fImportSource\x12M\n" +
 	"\toci_chart\x18\x01 \x01(\v2..admiral.api.registry.v1.ImportSource.OCIChartH\x00R\bociChart\x12P\n" +
 	"\n" +
 	"helm_chart\x18\x02 \x01(\v2/.admiral.api.registry.v1.ImportSource.HelmChartH\x00R\thelmChart\x12_\n" +
 	"\x0fregistry_module\x18\x03 \x01(\v24.admiral.api.registry.v1.ImportSource.RegistryModuleH\x00R\x0eregistryModule\x12J\n" +
 	"\bgit_tree\x18\x04 \x01(\v2-.admiral.api.registry.v1.ImportSource.GitTreeH\x00R\agitTree\x12I\n" +
-	"\aarchive\x18\x05 \x01(\v2-.admiral.api.registry.v1.ImportSource.ArchiveH\x00R\aarchive\x1a\x88\x01\n" +
+	"\aarchive\x18\x05 \x01(\v2-.admiral.api.registry.v1.ImportSource.ArchiveH\x00R\aarchive\x12S\n" +
+	"\vfrom_source\x18\x06 \x01(\v20.admiral.api.registry.v1.ImportSource.FromSourceH\x00R\n" +
+	"fromSource\x1a\x88\x01\n" +
 	"\bOCIChart\x123\n" +
 	"\treference\x18\x01 \x01(\tB\x15\xe0A\x02\xbaH\x0fr\r\x10\a\x18\x80\x04:\x06oci://R\treference\x12G\n" +
 	"\aversion\x18\x02 \x01(\tB-\xe0A\x02\xbaH'r%2#^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$R\aversion\x1a\xcc\x01\n" +
@@ -3472,8 +3573,13 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x04path\x18\x03 \x01(\tB\r\xbaH\n" +
 	"r\b\x18\x80\x04\xba\x01\x02..R\x04path\x1a+\n" +
 	"\aArchive\x12 \n" +
-	"\x03url\x18\x01 \x01(\tB\x0e\xe0A\x02\xbaH\br\x06\x18\x80\x04\x88\x01\x01R\x03urlB\b\n" +
-	"\x06source\"\xd5\x06\n" +
+	"\x03url\x18\x01 \x01(\tB\x0e\xe0A\x02\xbaH\br\x06\x18\x80\x04\x88\x01\x01R\x03url\x1a\xb4\x01\n" +
+	"\n" +
+	"FromSource\x126\n" +
+	"\tsource_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^src-[0-9a-z]+$R\bsourceId\x12$\n" +
+	"\bartifact\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\bartifact\x12H\n" +
+	"\aversion\x18\x03 \x01(\tB.\xe0A\x02\xbaH(r&2$^[A-Za-z0-9][A-Za-z0-9._/+-]{0,127}$R\aversionB\b\n" +
+	"\x06source\"\x94\b\n" +
 	"\x16ImportComponentRequest\x12A\n" +
 	"\x04name\x18\x01 \x01(\tB-\xbaH*r(\x18?2$^([a-z]([a-z0-9-]{0,61}[a-z0-9])?)?$R\x04name\x12H\n" +
 	"\x06source\x18\x02 \x01(\v2%.admiral.api.registry.v1.ImportSourceB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\x06source\x12G\n" +
@@ -3484,7 +3590,8 @@ const file_admiral_api_registry_v1_registry_proto_rawDesc = "" +
 	"\x14baseline_values_json\x18\a \x01(\tB\t\xbaH\x06r\x04\x18\x80\x80@R\x12baselineValuesJson\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01:\x8b\x02\xbaH\x87\x02\x1a\x86\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01:\xca\x03\xbaH\xc6\x03\x1a\xbc\x01\n" +
+	")import_component.source_carries_the_grant\x12Man import through a source names no credentials; the source carries the grant\x1a@!has(this.source.from_source) || this.credential_ids.size() == 0\x1a\x86\x01\n" +
 	"#import_component.tags.tag_not_an_id\x126a tag cannot start with ver-, which marks a version id\x1a'this.tags.all(t, !t.startsWith('ver-'))\x1a|\n" +
 	"\x1fimport_component.name_not_an_id\x12:a component name cannot start with cmp-, which marks an id\x1a\x1d!this.name.startsWith('cmp-')\"\xb5\x01\n" +
 	"\x17ImportComponentResponse\x12@\n" +
@@ -3636,7 +3743,7 @@ func file_admiral_api_registry_v1_registry_proto_rawDescGZIP() []byte {
 }
 
 var file_admiral_api_registry_v1_registry_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_admiral_api_registry_v1_registry_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_admiral_api_registry_v1_registry_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
 var file_admiral_api_registry_v1_registry_proto_goTypes = []any{
 	(ComponentKind)(0),                  // 0: admiral.api.registry.v1.ComponentKind
 	(InfraEngine)(0),                    // 1: admiral.api.registry.v1.InfraEngine
@@ -3688,37 +3795,38 @@ var file_admiral_api_registry_v1_registry_proto_goTypes = []any{
 	(*ImportSource_RegistryModule)(nil), // 47: admiral.api.registry.v1.ImportSource.RegistryModule
 	(*ImportSource_GitTree)(nil),        // 48: admiral.api.registry.v1.ImportSource.GitTree
 	(*ImportSource_Archive)(nil),        // 49: admiral.api.registry.v1.ImportSource.Archive
-	nil,                                 // 50: admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
-	(*v1.ActorRef)(nil),                 // 51: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),       // 52: google.protobuf.Timestamp
-	(*structpb.Value)(nil),              // 53: google.protobuf.Value
-	(*structpb.Struct)(nil),             // 54: google.protobuf.Struct
-	(*fieldmaskpb.FieldMask)(nil),       // 55: google.protobuf.FieldMask
+	(*ImportSource_FromSource)(nil),     // 50: admiral.api.registry.v1.ImportSource.FromSource
+	nil,                                 // 51: admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
+	(*v1.ActorRef)(nil),                 // 52: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),       // 53: google.protobuf.Timestamp
+	(*structpb.Value)(nil),              // 54: google.protobuf.Value
+	(*structpb.Struct)(nil),             // 55: google.protobuf.Struct
+	(*fieldmaskpb.FieldMask)(nil),       // 56: google.protobuf.FieldMask
 }
 var file_admiral_api_registry_v1_registry_proto_depIdxs = []int32{
 	43, // 0: admiral.api.registry.v1.Component.labels:type_name -> admiral.api.registry.v1.Component.LabelsEntry
 	9,  // 1: admiral.api.registry.v1.Component.tags:type_name -> admiral.api.registry.v1.Tag
-	51, // 2: admiral.api.registry.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
-	52, // 3: admiral.api.registry.v1.Component.created_at:type_name -> google.protobuf.Timestamp
-	52, // 4: admiral.api.registry.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
+	52, // 2: admiral.api.registry.v1.Component.created_by:type_name -> admiral.common.v1.ActorRef
+	53, // 3: admiral.api.registry.v1.Component.created_at:type_name -> google.protobuf.Timestamp
+	53, // 4: admiral.api.registry.v1.Component.updated_at:type_name -> google.protobuf.Timestamp
 	3,  // 5: admiral.api.registry.v1.Component.status:type_name -> admiral.api.registry.v1.Component.Status
-	52, // 6: admiral.api.registry.v1.Component.status_changed_at:type_name -> google.protobuf.Timestamp
+	53, // 6: admiral.api.registry.v1.Component.status_changed_at:type_name -> google.protobuf.Timestamp
 	0,  // 7: admiral.api.registry.v1.Version.kind:type_name -> admiral.api.registry.v1.ComponentKind
 	10, // 8: admiral.api.registry.v1.Version.contract:type_name -> admiral.api.registry.v1.Contract
 	14, // 9: admiral.api.registry.v1.Version.provenance:type_name -> admiral.api.registry.v1.Provenance
 	17, // 10: admiral.api.registry.v1.Version.findings:type_name -> admiral.api.registry.v1.Finding
 	4,  // 11: admiral.api.registry.v1.Version.status:type_name -> admiral.api.registry.v1.Version.Status
-	52, // 12: admiral.api.registry.v1.Version.status_changed_at:type_name -> google.protobuf.Timestamp
-	51, // 13: admiral.api.registry.v1.Version.created_by:type_name -> admiral.common.v1.ActorRef
-	52, // 14: admiral.api.registry.v1.Version.created_at:type_name -> google.protobuf.Timestamp
+	53, // 12: admiral.api.registry.v1.Version.status_changed_at:type_name -> google.protobuf.Timestamp
+	52, // 13: admiral.api.registry.v1.Version.created_by:type_name -> admiral.common.v1.ActorRef
+	53, // 14: admiral.api.registry.v1.Version.created_at:type_name -> google.protobuf.Timestamp
 	1,  // 15: admiral.api.registry.v1.InfraEngineVersion.engine:type_name -> admiral.api.registry.v1.InfraEngine
-	52, // 16: admiral.api.registry.v1.Tag.created_at:type_name -> google.protobuf.Timestamp
-	52, // 17: admiral.api.registry.v1.Tag.updated_at:type_name -> google.protobuf.Timestamp
+	53, // 16: admiral.api.registry.v1.Tag.created_at:type_name -> google.protobuf.Timestamp
+	53, // 17: admiral.api.registry.v1.Tag.updated_at:type_name -> google.protobuf.Timestamp
 	11, // 18: admiral.api.registry.v1.Contract.inputs:type_name -> admiral.api.registry.v1.ContractInput
 	13, // 19: admiral.api.registry.v1.Contract.outputs:type_name -> admiral.api.registry.v1.ContractOutput
-	53, // 20: admiral.api.registry.v1.ContractInput.default:type_name -> google.protobuf.Value
+	54, // 20: admiral.api.registry.v1.ContractInput.default:type_name -> google.protobuf.Value
 	12, // 21: admiral.api.registry.v1.ContractInput.validations:type_name -> admiral.api.registry.v1.ContractValidation
-	54, // 22: admiral.api.registry.v1.ContractInput.schema:type_name -> google.protobuf.Struct
+	55, // 22: admiral.api.registry.v1.ContractInput.schema:type_name -> google.protobuf.Struct
 	5,  // 23: admiral.api.registry.v1.Provenance.kind:type_name -> admiral.api.registry.v1.Provenance.Kind
 	16, // 24: admiral.api.registry.v1.Provenance.dependencies:type_name -> admiral.api.registry.v1.Dependency
 	15, // 25: admiral.api.registry.v1.Provenance.credentials:type_name -> admiral.api.registry.v1.PresentedCredential
@@ -3733,51 +3841,52 @@ var file_admiral_api_registry_v1_registry_proto_depIdxs = []int32{
 	47, // 34: admiral.api.registry.v1.ImportSource.registry_module:type_name -> admiral.api.registry.v1.ImportSource.RegistryModule
 	48, // 35: admiral.api.registry.v1.ImportSource.git_tree:type_name -> admiral.api.registry.v1.ImportSource.GitTree
 	49, // 36: admiral.api.registry.v1.ImportSource.archive:type_name -> admiral.api.registry.v1.ImportSource.Archive
-	20, // 37: admiral.api.registry.v1.ImportComponentRequest.source:type_name -> admiral.api.registry.v1.ImportSource
-	50, // 38: admiral.api.registry.v1.ImportComponentRequest.labels:type_name -> admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
-	6,  // 39: admiral.api.registry.v1.ImportComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	7,  // 40: admiral.api.registry.v1.ImportComponentResponse.version:type_name -> admiral.api.registry.v1.Version
-	6,  // 41: admiral.api.registry.v1.ListComponentsResponse.components:type_name -> admiral.api.registry.v1.Component
-	6,  // 42: admiral.api.registry.v1.GetComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	6,  // 43: admiral.api.registry.v1.UpdateComponentRequest.component:type_name -> admiral.api.registry.v1.Component
-	55, // 44: admiral.api.registry.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	6,  // 45: admiral.api.registry.v1.UpdateComponentResponse.component:type_name -> admiral.api.registry.v1.Component
-	3,  // 46: admiral.api.registry.v1.SetComponentStatusRequest.status:type_name -> admiral.api.registry.v1.Component.Status
-	6,  // 47: admiral.api.registry.v1.SetComponentStatusResponse.component:type_name -> admiral.api.registry.v1.Component
-	7,  // 48: admiral.api.registry.v1.ListVersionsResponse.versions:type_name -> admiral.api.registry.v1.Version
-	7,  // 49: admiral.api.registry.v1.GetVersionResponse.version:type_name -> admiral.api.registry.v1.Version
-	4,  // 50: admiral.api.registry.v1.SetVersionStatusRequest.status:type_name -> admiral.api.registry.v1.Version.Status
-	7,  // 51: admiral.api.registry.v1.SetVersionStatusResponse.version:type_name -> admiral.api.registry.v1.Version
-	9,  // 52: admiral.api.registry.v1.SetTagResponse.tag:type_name -> admiral.api.registry.v1.Tag
-	18, // 53: admiral.api.registry.v1.RegistryAPI.PublishComponent:input_type -> admiral.api.registry.v1.PublishComponentRequest
-	21, // 54: admiral.api.registry.v1.RegistryAPI.ImportComponent:input_type -> admiral.api.registry.v1.ImportComponentRequest
-	23, // 55: admiral.api.registry.v1.RegistryAPI.ListComponents:input_type -> admiral.api.registry.v1.ListComponentsRequest
-	25, // 56: admiral.api.registry.v1.RegistryAPI.GetComponent:input_type -> admiral.api.registry.v1.GetComponentRequest
-	27, // 57: admiral.api.registry.v1.RegistryAPI.UpdateComponent:input_type -> admiral.api.registry.v1.UpdateComponentRequest
-	29, // 58: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:input_type -> admiral.api.registry.v1.SetComponentStatusRequest
-	31, // 59: admiral.api.registry.v1.RegistryAPI.DeleteComponent:input_type -> admiral.api.registry.v1.DeleteComponentRequest
-	33, // 60: admiral.api.registry.v1.RegistryAPI.ListVersions:input_type -> admiral.api.registry.v1.ListVersionsRequest
-	35, // 61: admiral.api.registry.v1.RegistryAPI.GetVersion:input_type -> admiral.api.registry.v1.GetVersionRequest
-	37, // 62: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:input_type -> admiral.api.registry.v1.SetVersionStatusRequest
-	39, // 63: admiral.api.registry.v1.RegistryAPI.SetTag:input_type -> admiral.api.registry.v1.SetTagRequest
-	41, // 64: admiral.api.registry.v1.RegistryAPI.DeleteTag:input_type -> admiral.api.registry.v1.DeleteTagRequest
-	19, // 65: admiral.api.registry.v1.RegistryAPI.PublishComponent:output_type -> admiral.api.registry.v1.PublishComponentResponse
-	22, // 66: admiral.api.registry.v1.RegistryAPI.ImportComponent:output_type -> admiral.api.registry.v1.ImportComponentResponse
-	24, // 67: admiral.api.registry.v1.RegistryAPI.ListComponents:output_type -> admiral.api.registry.v1.ListComponentsResponse
-	26, // 68: admiral.api.registry.v1.RegistryAPI.GetComponent:output_type -> admiral.api.registry.v1.GetComponentResponse
-	28, // 69: admiral.api.registry.v1.RegistryAPI.UpdateComponent:output_type -> admiral.api.registry.v1.UpdateComponentResponse
-	30, // 70: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:output_type -> admiral.api.registry.v1.SetComponentStatusResponse
-	32, // 71: admiral.api.registry.v1.RegistryAPI.DeleteComponent:output_type -> admiral.api.registry.v1.DeleteComponentResponse
-	34, // 72: admiral.api.registry.v1.RegistryAPI.ListVersions:output_type -> admiral.api.registry.v1.ListVersionsResponse
-	36, // 73: admiral.api.registry.v1.RegistryAPI.GetVersion:output_type -> admiral.api.registry.v1.GetVersionResponse
-	38, // 74: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:output_type -> admiral.api.registry.v1.SetVersionStatusResponse
-	40, // 75: admiral.api.registry.v1.RegistryAPI.SetTag:output_type -> admiral.api.registry.v1.SetTagResponse
-	42, // 76: admiral.api.registry.v1.RegistryAPI.DeleteTag:output_type -> admiral.api.registry.v1.DeleteTagResponse
-	65, // [65:77] is the sub-list for method output_type
-	53, // [53:65] is the sub-list for method input_type
-	53, // [53:53] is the sub-list for extension type_name
-	53, // [53:53] is the sub-list for extension extendee
-	0,  // [0:53] is the sub-list for field type_name
+	50, // 37: admiral.api.registry.v1.ImportSource.from_source:type_name -> admiral.api.registry.v1.ImportSource.FromSource
+	20, // 38: admiral.api.registry.v1.ImportComponentRequest.source:type_name -> admiral.api.registry.v1.ImportSource
+	51, // 39: admiral.api.registry.v1.ImportComponentRequest.labels:type_name -> admiral.api.registry.v1.ImportComponentRequest.LabelsEntry
+	6,  // 40: admiral.api.registry.v1.ImportComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	7,  // 41: admiral.api.registry.v1.ImportComponentResponse.version:type_name -> admiral.api.registry.v1.Version
+	6,  // 42: admiral.api.registry.v1.ListComponentsResponse.components:type_name -> admiral.api.registry.v1.Component
+	6,  // 43: admiral.api.registry.v1.GetComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	6,  // 44: admiral.api.registry.v1.UpdateComponentRequest.component:type_name -> admiral.api.registry.v1.Component
+	56, // 45: admiral.api.registry.v1.UpdateComponentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	6,  // 46: admiral.api.registry.v1.UpdateComponentResponse.component:type_name -> admiral.api.registry.v1.Component
+	3,  // 47: admiral.api.registry.v1.SetComponentStatusRequest.status:type_name -> admiral.api.registry.v1.Component.Status
+	6,  // 48: admiral.api.registry.v1.SetComponentStatusResponse.component:type_name -> admiral.api.registry.v1.Component
+	7,  // 49: admiral.api.registry.v1.ListVersionsResponse.versions:type_name -> admiral.api.registry.v1.Version
+	7,  // 50: admiral.api.registry.v1.GetVersionResponse.version:type_name -> admiral.api.registry.v1.Version
+	4,  // 51: admiral.api.registry.v1.SetVersionStatusRequest.status:type_name -> admiral.api.registry.v1.Version.Status
+	7,  // 52: admiral.api.registry.v1.SetVersionStatusResponse.version:type_name -> admiral.api.registry.v1.Version
+	9,  // 53: admiral.api.registry.v1.SetTagResponse.tag:type_name -> admiral.api.registry.v1.Tag
+	18, // 54: admiral.api.registry.v1.RegistryAPI.PublishComponent:input_type -> admiral.api.registry.v1.PublishComponentRequest
+	21, // 55: admiral.api.registry.v1.RegistryAPI.ImportComponent:input_type -> admiral.api.registry.v1.ImportComponentRequest
+	23, // 56: admiral.api.registry.v1.RegistryAPI.ListComponents:input_type -> admiral.api.registry.v1.ListComponentsRequest
+	25, // 57: admiral.api.registry.v1.RegistryAPI.GetComponent:input_type -> admiral.api.registry.v1.GetComponentRequest
+	27, // 58: admiral.api.registry.v1.RegistryAPI.UpdateComponent:input_type -> admiral.api.registry.v1.UpdateComponentRequest
+	29, // 59: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:input_type -> admiral.api.registry.v1.SetComponentStatusRequest
+	31, // 60: admiral.api.registry.v1.RegistryAPI.DeleteComponent:input_type -> admiral.api.registry.v1.DeleteComponentRequest
+	33, // 61: admiral.api.registry.v1.RegistryAPI.ListVersions:input_type -> admiral.api.registry.v1.ListVersionsRequest
+	35, // 62: admiral.api.registry.v1.RegistryAPI.GetVersion:input_type -> admiral.api.registry.v1.GetVersionRequest
+	37, // 63: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:input_type -> admiral.api.registry.v1.SetVersionStatusRequest
+	39, // 64: admiral.api.registry.v1.RegistryAPI.SetTag:input_type -> admiral.api.registry.v1.SetTagRequest
+	41, // 65: admiral.api.registry.v1.RegistryAPI.DeleteTag:input_type -> admiral.api.registry.v1.DeleteTagRequest
+	19, // 66: admiral.api.registry.v1.RegistryAPI.PublishComponent:output_type -> admiral.api.registry.v1.PublishComponentResponse
+	22, // 67: admiral.api.registry.v1.RegistryAPI.ImportComponent:output_type -> admiral.api.registry.v1.ImportComponentResponse
+	24, // 68: admiral.api.registry.v1.RegistryAPI.ListComponents:output_type -> admiral.api.registry.v1.ListComponentsResponse
+	26, // 69: admiral.api.registry.v1.RegistryAPI.GetComponent:output_type -> admiral.api.registry.v1.GetComponentResponse
+	28, // 70: admiral.api.registry.v1.RegistryAPI.UpdateComponent:output_type -> admiral.api.registry.v1.UpdateComponentResponse
+	30, // 71: admiral.api.registry.v1.RegistryAPI.SetComponentStatus:output_type -> admiral.api.registry.v1.SetComponentStatusResponse
+	32, // 72: admiral.api.registry.v1.RegistryAPI.DeleteComponent:output_type -> admiral.api.registry.v1.DeleteComponentResponse
+	34, // 73: admiral.api.registry.v1.RegistryAPI.ListVersions:output_type -> admiral.api.registry.v1.ListVersionsResponse
+	36, // 74: admiral.api.registry.v1.RegistryAPI.GetVersion:output_type -> admiral.api.registry.v1.GetVersionResponse
+	38, // 75: admiral.api.registry.v1.RegistryAPI.SetVersionStatus:output_type -> admiral.api.registry.v1.SetVersionStatusResponse
+	40, // 76: admiral.api.registry.v1.RegistryAPI.SetTag:output_type -> admiral.api.registry.v1.SetTagResponse
+	42, // 77: admiral.api.registry.v1.RegistryAPI.DeleteTag:output_type -> admiral.api.registry.v1.DeleteTagResponse
+	66, // [66:78] is the sub-list for method output_type
+	54, // [54:66] is the sub-list for method input_type
+	54, // [54:54] is the sub-list for extension type_name
+	54, // [54:54] is the sub-list for extension extendee
+	0,  // [0:54] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_registry_v1_registry_proto_init() }
@@ -3792,6 +3901,7 @@ func file_admiral_api_registry_v1_registry_proto_init() {
 		(*ImportSource_RegistryModule_)(nil),
 		(*ImportSource_GitTree_)(nil),
 		(*ImportSource_Archive_)(nil),
+		(*ImportSource_FromSource_)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3799,7 +3909,7 @@ func file_admiral_api_registry_v1_registry_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_registry_v1_registry_proto_rawDesc), len(file_admiral_api_registry_v1_registry_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   45,
+			NumMessages:   46,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

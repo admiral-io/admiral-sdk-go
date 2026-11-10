@@ -1554,6 +1554,8 @@ func (m *Provenance) validate(all bool) error {
 
 	// no validation rules for CommitAuthor
 
+	// no validation rules for SourceId
+
 	if len(errors) > 0 {
 		return ProvenanceMultiError(errors)
 	}
@@ -2475,6 +2477,47 @@ func (m *ImportSource) validate(all bool) error {
 			if err := v.Validate(); err != nil {
 				return ImportSourceValidationError{
 					field:  "Archive",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *ImportSource_FromSource_:
+		if v == nil {
+			err := ImportSourceValidationError{
+				field:  "Source",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetFromSource()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ImportSourceValidationError{
+						field:  "FromSource",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ImportSourceValidationError{
+						field:  "FromSource",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetFromSource()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ImportSourceValidationError{
+					field:  "FromSource",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -5781,3 +5824,111 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ImportSource_ArchiveValidationError{}
+
+// Validate checks the field values on ImportSource_FromSource with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ImportSource_FromSource) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ImportSource_FromSource with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ImportSource_FromSourceMultiError, or nil if none found.
+func (m *ImportSource_FromSource) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ImportSource_FromSource) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SourceId
+
+	// no validation rules for Artifact
+
+	// no validation rules for Version
+
+	if len(errors) > 0 {
+		return ImportSource_FromSourceMultiError(errors)
+	}
+
+	return nil
+}
+
+// ImportSource_FromSourceMultiError is an error wrapping multiple validation
+// errors returned by ImportSource_FromSource.ValidateAll() if the designated
+// constraints aren't met.
+type ImportSource_FromSourceMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ImportSource_FromSourceMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ImportSource_FromSourceMultiError) AllErrors() []error { return m }
+
+// ImportSource_FromSourceValidationError is the validation error returned by
+// ImportSource_FromSource.Validate if the designated constraints aren't met.
+type ImportSource_FromSourceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ImportSource_FromSourceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ImportSource_FromSourceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ImportSource_FromSourceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ImportSource_FromSourceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ImportSource_FromSourceValidationError) ErrorName() string {
+	return "ImportSource_FromSourceValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ImportSource_FromSourceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sImportSource_FromSource.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ImportSource_FromSourceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ImportSource_FromSourceValidationError{}
