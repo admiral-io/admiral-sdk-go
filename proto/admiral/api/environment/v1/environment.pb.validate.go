@@ -471,6 +471,8 @@ func (m *Tracking) validate(all bool) error {
 
 	// no validation rules for Pattern
 
+	// no validation rules for AfterMerge
+
 	if len(errors) > 0 {
 		return TrackingMultiError(errors)
 	}

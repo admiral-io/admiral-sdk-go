@@ -91,6 +91,61 @@ func (Tracking_Kind) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{1, 0}
 }
 
+// AfterMerge is what a pull request's approved plan does when the pull
+// request merges and the merge publishes the same bytes: APPLY, the
+// default, applies it with no second step; WAIT leaves it planned for a
+// person. A merge that publishes different bytes re-plans either way,
+// with no approvals (records: a reviewed plan applies after merge).
+type Tracking_AfterMerge int32
+
+const (
+	// APPLY.
+	Tracking_AFTER_MERGE_UNSPECIFIED Tracking_AfterMerge = 0
+	Tracking_AFTER_MERGE_APPLY       Tracking_AfterMerge = 1
+	Tracking_AFTER_MERGE_WAIT        Tracking_AfterMerge = 2
+)
+
+// Enum value maps for Tracking_AfterMerge.
+var (
+	Tracking_AfterMerge_name = map[int32]string{
+		0: "AFTER_MERGE_UNSPECIFIED",
+		1: "AFTER_MERGE_APPLY",
+		2: "AFTER_MERGE_WAIT",
+	}
+	Tracking_AfterMerge_value = map[string]int32{
+		"AFTER_MERGE_UNSPECIFIED": 0,
+		"AFTER_MERGE_APPLY":       1,
+		"AFTER_MERGE_WAIT":        2,
+	}
+)
+
+func (x Tracking_AfterMerge) Enum() *Tracking_AfterMerge {
+	p := new(Tracking_AfterMerge)
+	*p = x
+	return p
+}
+
+func (x Tracking_AfterMerge) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Tracking_AfterMerge) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_environment_v1_environment_proto_enumTypes[1].Descriptor()
+}
+
+func (Tracking_AfterMerge) Type() protoreflect.EnumType {
+	return &file_admiral_api_environment_v1_environment_proto_enumTypes[1]
+}
+
+func (x Tracking_AfterMerge) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Tracking_AfterMerge.Descriptor instead.
+func (Tracking_AfterMerge) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{1, 1}
+}
+
 // Environment is a named place an application deploys to (dev, staging,
 // prod).
 type Environment struct {
@@ -305,6 +360,7 @@ type Tracking struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Kind          Tracking_Kind          `protobuf:"varint,1,opt,name=kind,proto3,enum=admiral.api.environment.v1.Tracking_Kind" json:"kind,omitempty"`
 	Pattern       string                 `protobuf:"bytes,2,opt,name=pattern,proto3" json:"pattern,omitempty"`
+	AfterMerge    Tracking_AfterMerge    `protobuf:"varint,3,opt,name=after_merge,json=afterMerge,proto3,enum=admiral.api.environment.v1.Tracking_AfterMerge" json:"after_merge,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -351,6 +407,13 @@ func (x *Tracking) GetPattern() string {
 		return x.Pattern
 	}
 	return ""
+}
+
+func (x *Tracking) GetAfterMerge() Tracking_AfterMerge {
+	if x != nil {
+		return x.AfterMerge
+	}
+	return Tracking_AFTER_MERGE_UNSPECIFIED
 }
 
 // AgentAssignment binds an agent to an environment, with the settings for
@@ -1752,16 +1815,23 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01J\x04\b\b\x10\tJ\x04\b\t\x10\n" +
 	"J\x04\b\r\x10\x0eJ\x04\b\x0e\x10\x0fJ\x04\b\x10\x10\x11J\x04\b\x11\x10\x12R\x13has_pending_changesR\x10last_deployed_atR\n" +
-	"kubernetesR\x11approval_requiredR\x15held_by_change_set_idR\x05prune\"\xce\x01\n" +
+	"kubernetesR\x11approval_requiredR\x15held_by_change_set_idR\x05prune\"\x82\x03\n" +
 	"\bTracking\x12L\n" +
 	"\x04kind\x18\x01 \x01(\x0e2).admiral.api.environment.v1.Tracking.KindB\r\xe0A\x02\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04kind\x12'\n" +
-	"\apattern\x18\x02 \x01(\tB\r\xe0A\x02\xbaH\ar\x05\x10\x01\x18\x80\x01R\apattern\"K\n" +
+	"\apattern\x18\x02 \x01(\tB\r\xe0A\x02\xbaH\ar\x05\x10\x01\x18\x80\x01R\apattern\x12Z\n" +
+	"\vafter_merge\x18\x03 \x01(\x0e2/.admiral.api.environment.v1.Tracking.AfterMergeB\b\xbaH\x05\x82\x01\x02\x10\x01R\n" +
+	"afterMerge\"K\n" +
 	"\x04Kind\x12\x14\n" +
 	"\x10KIND_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vKIND_BRANCH\x10\x01\x12\f\n" +
 	"\bKIND_TAG\x10\x02\x12\x0e\n" +
 	"\n" +
-	"KIND_RANGE\x10\x03\"\x9f\x02\n" +
+	"KIND_RANGE\x10\x03\"V\n" +
+	"\n" +
+	"AfterMerge\x12\x1b\n" +
+	"\x17AFTER_MERGE_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11AFTER_MERGE_APPLY\x10\x01\x12\x14\n" +
+	"\x10AFTER_MERGE_WAIT\x10\x02\"\x9f\x02\n" +
 	"\x0fAgentAssignment\x124\n" +
 	"\bagent_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^agt-[0-9a-z]+$R\aagentId\x12)\n" +
 	"\x02id\x18\x03 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^asg-[0-9a-z]+$R\x02id\x12P\n" +
@@ -1898,98 +1968,100 @@ func file_admiral_api_environment_v1_environment_proto_rawDescGZIP() []byte {
 	return file_admiral_api_environment_v1_environment_proto_rawDescData
 }
 
-var file_admiral_api_environment_v1_environment_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_admiral_api_environment_v1_environment_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_admiral_api_environment_v1_environment_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_admiral_api_environment_v1_environment_proto_goTypes = []any{
 	(Tracking_Kind)(0),                            // 0: admiral.api.environment.v1.Tracking.Kind
-	(*Environment)(nil),                           // 1: admiral.api.environment.v1.Environment
-	(*Tracking)(nil),                              // 2: admiral.api.environment.v1.Tracking
-	(*AgentAssignment)(nil),                       // 3: admiral.api.environment.v1.AgentAssignment
-	(*KubernetesSettings)(nil),                    // 4: admiral.api.environment.v1.KubernetesSettings
-	(*ApprovalRule)(nil),                          // 5: admiral.api.environment.v1.ApprovalRule
-	(*Hold)(nil),                                  // 6: admiral.api.environment.v1.Hold
-	(*LastApply)(nil),                             // 7: admiral.api.environment.v1.LastApply
-	(*CreateEnvironmentRequest)(nil),              // 8: admiral.api.environment.v1.CreateEnvironmentRequest
-	(*CreateEnvironmentResponse)(nil),             // 9: admiral.api.environment.v1.CreateEnvironmentResponse
-	(*GetEnvironmentRequest)(nil),                 // 10: admiral.api.environment.v1.GetEnvironmentRequest
-	(*GetEnvironmentResponse)(nil),                // 11: admiral.api.environment.v1.GetEnvironmentResponse
-	(*ListEnvironmentsRequest)(nil),               // 12: admiral.api.environment.v1.ListEnvironmentsRequest
-	(*ListEnvironmentsResponse)(nil),              // 13: admiral.api.environment.v1.ListEnvironmentsResponse
-	(*UpdateEnvironmentRequest)(nil),              // 14: admiral.api.environment.v1.UpdateEnvironmentRequest
-	(*UpdateEnvironmentResponse)(nil),             // 15: admiral.api.environment.v1.UpdateEnvironmentResponse
-	(*DeleteEnvironmentRequest)(nil),              // 16: admiral.api.environment.v1.DeleteEnvironmentRequest
-	(*DeleteEnvironmentResponse)(nil),             // 17: admiral.api.environment.v1.DeleteEnvironmentResponse
-	(*EnvironmentComponentOutput)(nil),            // 18: admiral.api.environment.v1.EnvironmentComponentOutput
-	(*EnvironmentComponent)(nil),                  // 19: admiral.api.environment.v1.EnvironmentComponent
-	(*ListEnvironmentComponentsRequest)(nil),      // 20: admiral.api.environment.v1.ListEnvironmentComponentsRequest
-	(*ListEnvironmentComponentsResponse)(nil),     // 21: admiral.api.environment.v1.ListEnvironmentComponentsResponse
-	(*GetEnvironmentComponentValuesRequest)(nil),  // 22: admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
-	(*GetEnvironmentComponentValuesResponse)(nil), // 23: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
-	nil,                                // 24: admiral.api.environment.v1.Environment.LabelsEntry
-	(*ApprovalRule_GroupApproval)(nil), // 25: admiral.api.environment.v1.ApprovalRule.GroupApproval
-	(*v1.ActorRef)(nil),                // 26: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),      // 27: google.protobuf.Timestamp
-	(*v11.InfraBackend)(nil),           // 28: admiral.api.changeset.v1.InfraBackend
-	(*v12.InfraEngineVersion)(nil),     // 29: admiral.api.registry.v1.InfraEngineVersion
-	(*fieldmaskpb.FieldMask)(nil),      // 30: google.protobuf.FieldMask
-	(*structpb.Value)(nil),             // 31: google.protobuf.Value
-	(v12.ComponentKind)(0),             // 32: admiral.api.registry.v1.ComponentKind
-	(*v11.VersionRef)(nil),             // 33: admiral.api.changeset.v1.VersionRef
-	(*v11.ValueSource)(nil),            // 34: admiral.api.changeset.v1.ValueSource
+	(Tracking_AfterMerge)(0),                      // 1: admiral.api.environment.v1.Tracking.AfterMerge
+	(*Environment)(nil),                           // 2: admiral.api.environment.v1.Environment
+	(*Tracking)(nil),                              // 3: admiral.api.environment.v1.Tracking
+	(*AgentAssignment)(nil),                       // 4: admiral.api.environment.v1.AgentAssignment
+	(*KubernetesSettings)(nil),                    // 5: admiral.api.environment.v1.KubernetesSettings
+	(*ApprovalRule)(nil),                          // 6: admiral.api.environment.v1.ApprovalRule
+	(*Hold)(nil),                                  // 7: admiral.api.environment.v1.Hold
+	(*LastApply)(nil),                             // 8: admiral.api.environment.v1.LastApply
+	(*CreateEnvironmentRequest)(nil),              // 9: admiral.api.environment.v1.CreateEnvironmentRequest
+	(*CreateEnvironmentResponse)(nil),             // 10: admiral.api.environment.v1.CreateEnvironmentResponse
+	(*GetEnvironmentRequest)(nil),                 // 11: admiral.api.environment.v1.GetEnvironmentRequest
+	(*GetEnvironmentResponse)(nil),                // 12: admiral.api.environment.v1.GetEnvironmentResponse
+	(*ListEnvironmentsRequest)(nil),               // 13: admiral.api.environment.v1.ListEnvironmentsRequest
+	(*ListEnvironmentsResponse)(nil),              // 14: admiral.api.environment.v1.ListEnvironmentsResponse
+	(*UpdateEnvironmentRequest)(nil),              // 15: admiral.api.environment.v1.UpdateEnvironmentRequest
+	(*UpdateEnvironmentResponse)(nil),             // 16: admiral.api.environment.v1.UpdateEnvironmentResponse
+	(*DeleteEnvironmentRequest)(nil),              // 17: admiral.api.environment.v1.DeleteEnvironmentRequest
+	(*DeleteEnvironmentResponse)(nil),             // 18: admiral.api.environment.v1.DeleteEnvironmentResponse
+	(*EnvironmentComponentOutput)(nil),            // 19: admiral.api.environment.v1.EnvironmentComponentOutput
+	(*EnvironmentComponent)(nil),                  // 20: admiral.api.environment.v1.EnvironmentComponent
+	(*ListEnvironmentComponentsRequest)(nil),      // 21: admiral.api.environment.v1.ListEnvironmentComponentsRequest
+	(*ListEnvironmentComponentsResponse)(nil),     // 22: admiral.api.environment.v1.ListEnvironmentComponentsResponse
+	(*GetEnvironmentComponentValuesRequest)(nil),  // 23: admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
+	(*GetEnvironmentComponentValuesResponse)(nil), // 24: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
+	nil,                                // 25: admiral.api.environment.v1.Environment.LabelsEntry
+	(*ApprovalRule_GroupApproval)(nil), // 26: admiral.api.environment.v1.ApprovalRule.GroupApproval
+	(*v1.ActorRef)(nil),                // 27: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),      // 28: google.protobuf.Timestamp
+	(*v11.InfraBackend)(nil),           // 29: admiral.api.changeset.v1.InfraBackend
+	(*v12.InfraEngineVersion)(nil),     // 30: admiral.api.registry.v1.InfraEngineVersion
+	(*fieldmaskpb.FieldMask)(nil),      // 31: google.protobuf.FieldMask
+	(*structpb.Value)(nil),             // 32: google.protobuf.Value
+	(v12.ComponentKind)(0),             // 33: admiral.api.registry.v1.ComponentKind
+	(*v11.VersionRef)(nil),             // 34: admiral.api.changeset.v1.VersionRef
+	(*v11.ValueSource)(nil),            // 35: admiral.api.changeset.v1.ValueSource
 }
 var file_admiral_api_environment_v1_environment_proto_depIdxs = []int32{
-	24, // 0: admiral.api.environment.v1.Environment.labels:type_name -> admiral.api.environment.v1.Environment.LabelsEntry
-	26, // 1: admiral.api.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
-	27, // 2: admiral.api.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
-	27, // 3: admiral.api.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
-	3,  // 4: admiral.api.environment.v1.Environment.agents:type_name -> admiral.api.environment.v1.AgentAssignment
-	5,  // 5: admiral.api.environment.v1.Environment.approval:type_name -> admiral.api.environment.v1.ApprovalRule
-	6,  // 6: admiral.api.environment.v1.Environment.hold:type_name -> admiral.api.environment.v1.Hold
-	7,  // 7: admiral.api.environment.v1.Environment.last_apply:type_name -> admiral.api.environment.v1.LastApply
-	28, // 8: admiral.api.environment.v1.Environment.infra_backend:type_name -> admiral.api.changeset.v1.InfraBackend
-	29, // 9: admiral.api.environment.v1.Environment.infra_engine:type_name -> admiral.api.registry.v1.InfraEngineVersion
-	2,  // 10: admiral.api.environment.v1.Environment.tracking:type_name -> admiral.api.environment.v1.Tracking
+	25, // 0: admiral.api.environment.v1.Environment.labels:type_name -> admiral.api.environment.v1.Environment.LabelsEntry
+	27, // 1: admiral.api.environment.v1.Environment.created_by:type_name -> admiral.common.v1.ActorRef
+	28, // 2: admiral.api.environment.v1.Environment.created_at:type_name -> google.protobuf.Timestamp
+	28, // 3: admiral.api.environment.v1.Environment.updated_at:type_name -> google.protobuf.Timestamp
+	4,  // 4: admiral.api.environment.v1.Environment.agents:type_name -> admiral.api.environment.v1.AgentAssignment
+	6,  // 5: admiral.api.environment.v1.Environment.approval:type_name -> admiral.api.environment.v1.ApprovalRule
+	7,  // 6: admiral.api.environment.v1.Environment.hold:type_name -> admiral.api.environment.v1.Hold
+	8,  // 7: admiral.api.environment.v1.Environment.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	29, // 8: admiral.api.environment.v1.Environment.infra_backend:type_name -> admiral.api.changeset.v1.InfraBackend
+	30, // 9: admiral.api.environment.v1.Environment.infra_engine:type_name -> admiral.api.registry.v1.InfraEngineVersion
+	3,  // 10: admiral.api.environment.v1.Environment.tracking:type_name -> admiral.api.environment.v1.Tracking
 	0,  // 11: admiral.api.environment.v1.Tracking.kind:type_name -> admiral.api.environment.v1.Tracking.Kind
-	4,  // 12: admiral.api.environment.v1.AgentAssignment.kubernetes:type_name -> admiral.api.environment.v1.KubernetesSettings
-	25, // 13: admiral.api.environment.v1.ApprovalRule.groups:type_name -> admiral.api.environment.v1.ApprovalRule.GroupApproval
-	27, // 14: admiral.api.environment.v1.Hold.held_at:type_name -> google.protobuf.Timestamp
-	27, // 15: admiral.api.environment.v1.LastApply.applied_at:type_name -> google.protobuf.Timestamp
-	1,  // 16: admiral.api.environment.v1.CreateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
-	1,  // 17: admiral.api.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	1,  // 18: admiral.api.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	1,  // 19: admiral.api.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.api.environment.v1.Environment
-	1,  // 20: admiral.api.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
-	30, // 21: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	1,  // 22: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
-	31, // 23: admiral.api.environment.v1.EnvironmentComponentOutput.value:type_name -> google.protobuf.Value
-	32, // 24: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
-	33, // 25: admiral.api.environment.v1.EnvironmentComponent.version:type_name -> admiral.api.changeset.v1.VersionRef
-	7,  // 26: admiral.api.environment.v1.EnvironmentComponent.last_apply:type_name -> admiral.api.environment.v1.LastApply
-	18, // 27: admiral.api.environment.v1.EnvironmentComponent.outputs:type_name -> admiral.api.environment.v1.EnvironmentComponentOutput
-	29, // 28: admiral.api.environment.v1.EnvironmentComponent.applied_engine:type_name -> admiral.api.registry.v1.InfraEngineVersion
-	33, // 29: admiral.api.environment.v1.EnvironmentComponent.newest_matching:type_name -> admiral.api.changeset.v1.VersionRef
-	19, // 30: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent
-	34, // 31: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.sources:type_name -> admiral.api.changeset.v1.ValueSource
-	7,  // 32: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.last_apply:type_name -> admiral.api.environment.v1.LastApply
-	8,  // 33: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.api.environment.v1.CreateEnvironmentRequest
-	10, // 34: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.api.environment.v1.GetEnvironmentRequest
-	12, // 35: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.api.environment.v1.ListEnvironmentsRequest
-	14, // 36: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.api.environment.v1.UpdateEnvironmentRequest
-	16, // 37: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.api.environment.v1.DeleteEnvironmentRequest
-	20, // 38: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.api.environment.v1.ListEnvironmentComponentsRequest
-	22, // 39: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:input_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
-	9,  // 40: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.api.environment.v1.CreateEnvironmentResponse
-	11, // 41: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.api.environment.v1.GetEnvironmentResponse
-	13, // 42: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.api.environment.v1.ListEnvironmentsResponse
-	15, // 43: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.api.environment.v1.UpdateEnvironmentResponse
-	17, // 44: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.api.environment.v1.DeleteEnvironmentResponse
-	21, // 45: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.api.environment.v1.ListEnvironmentComponentsResponse
-	23, // 46: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:output_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
-	40, // [40:47] is the sub-list for method output_type
-	33, // [33:40] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	1,  // 12: admiral.api.environment.v1.Tracking.after_merge:type_name -> admiral.api.environment.v1.Tracking.AfterMerge
+	5,  // 13: admiral.api.environment.v1.AgentAssignment.kubernetes:type_name -> admiral.api.environment.v1.KubernetesSettings
+	26, // 14: admiral.api.environment.v1.ApprovalRule.groups:type_name -> admiral.api.environment.v1.ApprovalRule.GroupApproval
+	28, // 15: admiral.api.environment.v1.Hold.held_at:type_name -> google.protobuf.Timestamp
+	28, // 16: admiral.api.environment.v1.LastApply.applied_at:type_name -> google.protobuf.Timestamp
+	2,  // 17: admiral.api.environment.v1.CreateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
+	2,  // 18: admiral.api.environment.v1.CreateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	2,  // 19: admiral.api.environment.v1.GetEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	2,  // 20: admiral.api.environment.v1.ListEnvironmentsResponse.environments:type_name -> admiral.api.environment.v1.Environment
+	2,  // 21: admiral.api.environment.v1.UpdateEnvironmentRequest.environment:type_name -> admiral.api.environment.v1.Environment
+	31, // 22: admiral.api.environment.v1.UpdateEnvironmentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	2,  // 23: admiral.api.environment.v1.UpdateEnvironmentResponse.environment:type_name -> admiral.api.environment.v1.Environment
+	32, // 24: admiral.api.environment.v1.EnvironmentComponentOutput.value:type_name -> google.protobuf.Value
+	33, // 25: admiral.api.environment.v1.EnvironmentComponent.kind:type_name -> admiral.api.registry.v1.ComponentKind
+	34, // 26: admiral.api.environment.v1.EnvironmentComponent.version:type_name -> admiral.api.changeset.v1.VersionRef
+	8,  // 27: admiral.api.environment.v1.EnvironmentComponent.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	19, // 28: admiral.api.environment.v1.EnvironmentComponent.outputs:type_name -> admiral.api.environment.v1.EnvironmentComponentOutput
+	30, // 29: admiral.api.environment.v1.EnvironmentComponent.applied_engine:type_name -> admiral.api.registry.v1.InfraEngineVersion
+	34, // 30: admiral.api.environment.v1.EnvironmentComponent.newest_matching:type_name -> admiral.api.changeset.v1.VersionRef
+	20, // 31: admiral.api.environment.v1.ListEnvironmentComponentsResponse.components:type_name -> admiral.api.environment.v1.EnvironmentComponent
+	35, // 32: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.sources:type_name -> admiral.api.changeset.v1.ValueSource
+	8,  // 33: admiral.api.environment.v1.GetEnvironmentComponentValuesResponse.last_apply:type_name -> admiral.api.environment.v1.LastApply
+	9,  // 34: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:input_type -> admiral.api.environment.v1.CreateEnvironmentRequest
+	11, // 35: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:input_type -> admiral.api.environment.v1.GetEnvironmentRequest
+	13, // 36: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:input_type -> admiral.api.environment.v1.ListEnvironmentsRequest
+	15, // 37: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:input_type -> admiral.api.environment.v1.UpdateEnvironmentRequest
+	17, // 38: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:input_type -> admiral.api.environment.v1.DeleteEnvironmentRequest
+	21, // 39: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:input_type -> admiral.api.environment.v1.ListEnvironmentComponentsRequest
+	23, // 40: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:input_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesRequest
+	10, // 41: admiral.api.environment.v1.EnvironmentAPI.CreateEnvironment:output_type -> admiral.api.environment.v1.CreateEnvironmentResponse
+	12, // 42: admiral.api.environment.v1.EnvironmentAPI.GetEnvironment:output_type -> admiral.api.environment.v1.GetEnvironmentResponse
+	14, // 43: admiral.api.environment.v1.EnvironmentAPI.ListEnvironments:output_type -> admiral.api.environment.v1.ListEnvironmentsResponse
+	16, // 44: admiral.api.environment.v1.EnvironmentAPI.UpdateEnvironment:output_type -> admiral.api.environment.v1.UpdateEnvironmentResponse
+	18, // 45: admiral.api.environment.v1.EnvironmentAPI.DeleteEnvironment:output_type -> admiral.api.environment.v1.DeleteEnvironmentResponse
+	22, // 46: admiral.api.environment.v1.EnvironmentAPI.ListEnvironmentComponents:output_type -> admiral.api.environment.v1.ListEnvironmentComponentsResponse
+	24, // 47: admiral.api.environment.v1.EnvironmentAPI.GetEnvironmentComponentValues:output_type -> admiral.api.environment.v1.GetEnvironmentComponentValuesResponse
+	41, // [41:48] is the sub-list for method output_type
+	34, // [34:41] is the sub-list for method input_type
+	34, // [34:34] is the sub-list for extension type_name
+	34, // [34:34] is the sub-list for extension extendee
+	0,  // [0:34] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_environment_v1_environment_proto_init() }
@@ -2008,7 +2080,7 @@ func file_admiral_api_environment_v1_environment_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_environment_v1_environment_proto_rawDesc), len(file_admiral_api_environment_v1_environment_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
