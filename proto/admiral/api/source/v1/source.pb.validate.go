@@ -462,6 +462,8 @@ func (m *GitSourceSettings) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for PullRequestComment
+
 	if len(errors) > 0 {
 		return GitSourceSettingsMultiError(errors)
 	}

@@ -202,6 +202,65 @@ func (Source_Status) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_source_v1_source_proto_rawDescGZIP(), []int{0, 2}
 }
 
+// PullRequestComment is what the App's one comment on a pull request of
+// this repository carries. The check run is posted whatever this says.
+type GitSourceSettings_PullRequestComment int32
+
+const (
+	// SUMMARY.
+	GitSourceSettings_PULL_REQUEST_COMMENT_UNSPECIFIED GitSourceSettings_PullRequestComment = 0
+	// Counts per component, with the resources listed only where a plan
+	// failed, destroys or replaces.
+	GitSourceSettings_PULL_REQUEST_COMMENT_SUMMARY GitSourceSettings_PullRequestComment = 1
+	// Every resource with its action.
+	GitSourceSettings_PULL_REQUEST_COMMENT_FULL GitSourceSettings_PullRequestComment = 2
+	// No comment; the check run only.
+	GitSourceSettings_PULL_REQUEST_COMMENT_OFF GitSourceSettings_PullRequestComment = 3
+)
+
+// Enum value maps for GitSourceSettings_PullRequestComment.
+var (
+	GitSourceSettings_PullRequestComment_name = map[int32]string{
+		0: "PULL_REQUEST_COMMENT_UNSPECIFIED",
+		1: "PULL_REQUEST_COMMENT_SUMMARY",
+		2: "PULL_REQUEST_COMMENT_FULL",
+		3: "PULL_REQUEST_COMMENT_OFF",
+	}
+	GitSourceSettings_PullRequestComment_value = map[string]int32{
+		"PULL_REQUEST_COMMENT_UNSPECIFIED": 0,
+		"PULL_REQUEST_COMMENT_SUMMARY":     1,
+		"PULL_REQUEST_COMMENT_FULL":        2,
+		"PULL_REQUEST_COMMENT_OFF":         3,
+	}
+)
+
+func (x GitSourceSettings_PullRequestComment) Enum() *GitSourceSettings_PullRequestComment {
+	p := new(GitSourceSettings_PullRequestComment)
+	*p = x
+	return p
+}
+
+func (x GitSourceSettings_PullRequestComment) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GitSourceSettings_PullRequestComment) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_source_v1_source_proto_enumTypes[3].Descriptor()
+}
+
+func (GitSourceSettings_PullRequestComment) Type() protoreflect.EnumType {
+	return &file_admiral_api_source_v1_source_proto_enumTypes[3]
+}
+
+func (x GitSourceSettings_PullRequestComment) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GitSourceSettings_PullRequestComment.Descriptor instead.
+func (GitSourceSettings_PullRequestComment) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_source_v1_source_proto_rawDescGZIP(), []int{2, 0}
+}
+
 // Kind says whether the version compares.
 type SourceVersion_Kind int32
 
@@ -238,11 +297,11 @@ func (x SourceVersion_Kind) String() string {
 }
 
 func (SourceVersion_Kind) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_source_v1_source_proto_enumTypes[3].Descriptor()
+	return file_admiral_api_source_v1_source_proto_enumTypes[4].Descriptor()
 }
 
 func (SourceVersion_Kind) Type() protoreflect.EnumType {
-	return &file_admiral_api_source_v1_source_proto_enumTypes[3]
+	return &file_admiral_api_source_v1_source_proto_enumTypes[4]
 }
 
 func (x SourceVersion_Kind) Number() protoreflect.EnumNumber {
@@ -535,9 +594,12 @@ type GitSourceSettings struct {
 	// is every branch. Required on a push source and ignored on a request
 	// source. Every publish tags the version with the branch name, floating,
 	// and `sha-<short>`.
-	Branches      []string `protobuf:"bytes,1,rep,name=branches,proto3" json:"branches,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Branches []string `protobuf:"bytes,1,rep,name=branches,proto3" json:"branches,omitempty"`
+	// What the comment on a pull request carries; unset is SUMMARY. Read on
+	// a push source only.
+	PullRequestComment GitSourceSettings_PullRequestComment `protobuf:"varint,2,opt,name=pull_request_comment,json=pullRequestComment,proto3,enum=admiral.api.source.v1.GitSourceSettings_PullRequestComment" json:"pull_request_comment,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *GitSourceSettings) Reset() {
@@ -575,6 +637,13 @@ func (x *GitSourceSettings) GetBranches() []string {
 		return x.Branches
 	}
 	return nil
+}
+
+func (x *GitSourceSettings) GetPullRequestComment() GitSourceSettings_PullRequestComment {
+	if x != nil {
+		return x.PullRequestComment
+	}
+	return GitSourceSettings_PULL_REQUEST_COMMENT_UNSPECIFIED
 }
 
 // SourceArtifact is one thing a source offers, as its catalog names it.
@@ -1516,9 +1585,15 @@ const file_admiral_api_source_v1_source_proto_rawDesc = "" +
 	"\x05grantJ\x04\b\x02\x10\x03R\ttenant_id\"V\n" +
 	"\x0eSourceSettings\x12<\n" +
 	"\x03git\x18\x01 \x01(\v2(.admiral.api.source.v1.GitSourceSettingsH\x00R\x03gitB\x06\n" +
-	"\x04kind\"l\n" +
+	"\x04kind\"\x81\x03\n" +
 	"\x11GitSourceSettings\x12W\n" +
-	"\bbranches\x18\x01 \x03(\tB;\xbaH8\x92\x015\x10 \x18\x01\"/r-\x18\x80\x022(^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)$R\bbranches\"m\n" +
+	"\bbranches\x18\x01 \x03(\tB;\xbaH8\x92\x015\x10 \x18\x01\"/r-\x18\x80\x022(^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)$R\bbranches\x12w\n" +
+	"\x14pull_request_comment\x18\x02 \x01(\x0e2;.admiral.api.source.v1.GitSourceSettings.PullRequestCommentB\b\xbaH\x05\x82\x01\x02\x10\x01R\x12pullRequestComment\"\x99\x01\n" +
+	"\x12PullRequestComment\x12$\n" +
+	" PULL_REQUEST_COMMENT_UNSPECIFIED\x10\x00\x12 \n" +
+	"\x1cPULL_REQUEST_COMMENT_SUMMARY\x10\x01\x12\x1d\n" +
+	"\x19PULL_REQUEST_COMMENT_FULL\x10\x02\x12\x1c\n" +
+	"\x18PULL_REQUEST_COMMENT_OFF\x10\x03\"m\n" +
 	"\x0eSourceArtifact\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12%\n" +
@@ -1618,77 +1693,79 @@ func file_admiral_api_source_v1_source_proto_rawDescGZIP() []byte {
 	return file_admiral_api_source_v1_source_proto_rawDescData
 }
 
-var file_admiral_api_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_admiral_api_source_v1_source_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
 var file_admiral_api_source_v1_source_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_admiral_api_source_v1_source_proto_goTypes = []any{
-	(Source_Kind)(0),                    // 0: admiral.api.source.v1.Source.Kind
-	(Source_Trigger)(0),                 // 1: admiral.api.source.v1.Source.Trigger
-	(Source_Status)(0),                  // 2: admiral.api.source.v1.Source.Status
-	(SourceVersion_Kind)(0),             // 3: admiral.api.source.v1.SourceVersion.Kind
-	(*Source)(nil),                      // 4: admiral.api.source.v1.Source
-	(*SourceSettings)(nil),              // 5: admiral.api.source.v1.SourceSettings
-	(*GitSourceSettings)(nil),           // 6: admiral.api.source.v1.GitSourceSettings
-	(*SourceArtifact)(nil),              // 7: admiral.api.source.v1.SourceArtifact
-	(*SourceVersion)(nil),               // 8: admiral.api.source.v1.SourceVersion
-	(*ListSourcesRequest)(nil),          // 9: admiral.api.source.v1.ListSourcesRequest
-	(*ListSourcesResponse)(nil),         // 10: admiral.api.source.v1.ListSourcesResponse
-	(*GetSourceRequest)(nil),            // 11: admiral.api.source.v1.GetSourceRequest
-	(*GetSourceResponse)(nil),           // 12: admiral.api.source.v1.GetSourceResponse
-	(*CreateSourceRequest)(nil),         // 13: admiral.api.source.v1.CreateSourceRequest
-	(*CreateSourceResponse)(nil),        // 14: admiral.api.source.v1.CreateSourceResponse
-	(*UpdateSourceRequest)(nil),         // 15: admiral.api.source.v1.UpdateSourceRequest
-	(*UpdateSourceResponse)(nil),        // 16: admiral.api.source.v1.UpdateSourceResponse
-	(*DeleteSourceRequest)(nil),         // 17: admiral.api.source.v1.DeleteSourceRequest
-	(*DeleteSourceResponse)(nil),        // 18: admiral.api.source.v1.DeleteSourceResponse
-	(*ListSourceArtifactsRequest)(nil),  // 19: admiral.api.source.v1.ListSourceArtifactsRequest
-	(*ListSourceArtifactsResponse)(nil), // 20: admiral.api.source.v1.ListSourceArtifactsResponse
-	(*ListSourceVersionsRequest)(nil),   // 21: admiral.api.source.v1.ListSourceVersionsRequest
-	(*ListSourceVersionsResponse)(nil),  // 22: admiral.api.source.v1.ListSourceVersionsResponse
-	(*v1.ActorRef)(nil),                 // 23: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),       // 24: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),       // 25: google.protobuf.FieldMask
+	(Source_Kind)(0),                          // 0: admiral.api.source.v1.Source.Kind
+	(Source_Trigger)(0),                       // 1: admiral.api.source.v1.Source.Trigger
+	(Source_Status)(0),                        // 2: admiral.api.source.v1.Source.Status
+	(GitSourceSettings_PullRequestComment)(0), // 3: admiral.api.source.v1.GitSourceSettings.PullRequestComment
+	(SourceVersion_Kind)(0),                   // 4: admiral.api.source.v1.SourceVersion.Kind
+	(*Source)(nil),                            // 5: admiral.api.source.v1.Source
+	(*SourceSettings)(nil),                    // 6: admiral.api.source.v1.SourceSettings
+	(*GitSourceSettings)(nil),                 // 7: admiral.api.source.v1.GitSourceSettings
+	(*SourceArtifact)(nil),                    // 8: admiral.api.source.v1.SourceArtifact
+	(*SourceVersion)(nil),                     // 9: admiral.api.source.v1.SourceVersion
+	(*ListSourcesRequest)(nil),                // 10: admiral.api.source.v1.ListSourcesRequest
+	(*ListSourcesResponse)(nil),               // 11: admiral.api.source.v1.ListSourcesResponse
+	(*GetSourceRequest)(nil),                  // 12: admiral.api.source.v1.GetSourceRequest
+	(*GetSourceResponse)(nil),                 // 13: admiral.api.source.v1.GetSourceResponse
+	(*CreateSourceRequest)(nil),               // 14: admiral.api.source.v1.CreateSourceRequest
+	(*CreateSourceResponse)(nil),              // 15: admiral.api.source.v1.CreateSourceResponse
+	(*UpdateSourceRequest)(nil),               // 16: admiral.api.source.v1.UpdateSourceRequest
+	(*UpdateSourceResponse)(nil),              // 17: admiral.api.source.v1.UpdateSourceResponse
+	(*DeleteSourceRequest)(nil),               // 18: admiral.api.source.v1.DeleteSourceRequest
+	(*DeleteSourceResponse)(nil),              // 19: admiral.api.source.v1.DeleteSourceResponse
+	(*ListSourceArtifactsRequest)(nil),        // 20: admiral.api.source.v1.ListSourceArtifactsRequest
+	(*ListSourceArtifactsResponse)(nil),       // 21: admiral.api.source.v1.ListSourceArtifactsResponse
+	(*ListSourceVersionsRequest)(nil),         // 22: admiral.api.source.v1.ListSourceVersionsRequest
+	(*ListSourceVersionsResponse)(nil),        // 23: admiral.api.source.v1.ListSourceVersionsResponse
+	(*v1.ActorRef)(nil),                       // 24: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),             // 25: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),             // 26: google.protobuf.FieldMask
 }
 var file_admiral_api_source_v1_source_proto_depIdxs = []int32{
 	0,  // 0: admiral.api.source.v1.Source.kind:type_name -> admiral.api.source.v1.Source.Kind
 	1,  // 1: admiral.api.source.v1.Source.trigger:type_name -> admiral.api.source.v1.Source.Trigger
-	5,  // 2: admiral.api.source.v1.Source.settings:type_name -> admiral.api.source.v1.SourceSettings
+	6,  // 2: admiral.api.source.v1.Source.settings:type_name -> admiral.api.source.v1.SourceSettings
 	2,  // 3: admiral.api.source.v1.Source.status:type_name -> admiral.api.source.v1.Source.Status
-	23, // 4: admiral.api.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
-	24, // 5: admiral.api.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
-	24, // 6: admiral.api.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
-	6,  // 7: admiral.api.source.v1.SourceSettings.git:type_name -> admiral.api.source.v1.GitSourceSettings
-	3,  // 8: admiral.api.source.v1.SourceVersion.kind:type_name -> admiral.api.source.v1.SourceVersion.Kind
-	24, // 9: admiral.api.source.v1.SourceVersion.created_at:type_name -> google.protobuf.Timestamp
-	4,  // 10: admiral.api.source.v1.ListSourcesResponse.sources:type_name -> admiral.api.source.v1.Source
-	4,  // 11: admiral.api.source.v1.GetSourceResponse.source:type_name -> admiral.api.source.v1.Source
-	4,  // 12: admiral.api.source.v1.CreateSourceRequest.source:type_name -> admiral.api.source.v1.Source
-	4,  // 13: admiral.api.source.v1.CreateSourceResponse.source:type_name -> admiral.api.source.v1.Source
-	4,  // 14: admiral.api.source.v1.UpdateSourceRequest.source:type_name -> admiral.api.source.v1.Source
-	25, // 15: admiral.api.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
-	4,  // 16: admiral.api.source.v1.UpdateSourceResponse.source:type_name -> admiral.api.source.v1.Source
-	7,  // 17: admiral.api.source.v1.ListSourceArtifactsResponse.artifacts:type_name -> admiral.api.source.v1.SourceArtifact
-	24, // 18: admiral.api.source.v1.ListSourceArtifactsResponse.refreshed_at:type_name -> google.protobuf.Timestamp
-	8,  // 19: admiral.api.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.api.source.v1.SourceVersion
-	24, // 20: admiral.api.source.v1.ListSourceVersionsResponse.refreshed_at:type_name -> google.protobuf.Timestamp
-	9,  // 21: admiral.api.source.v1.SourceAPI.ListSources:input_type -> admiral.api.source.v1.ListSourcesRequest
-	11, // 22: admiral.api.source.v1.SourceAPI.GetSource:input_type -> admiral.api.source.v1.GetSourceRequest
-	13, // 23: admiral.api.source.v1.SourceAPI.CreateSource:input_type -> admiral.api.source.v1.CreateSourceRequest
-	15, // 24: admiral.api.source.v1.SourceAPI.UpdateSource:input_type -> admiral.api.source.v1.UpdateSourceRequest
-	17, // 25: admiral.api.source.v1.SourceAPI.DeleteSource:input_type -> admiral.api.source.v1.DeleteSourceRequest
-	19, // 26: admiral.api.source.v1.SourceAPI.ListSourceArtifacts:input_type -> admiral.api.source.v1.ListSourceArtifactsRequest
-	21, // 27: admiral.api.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.api.source.v1.ListSourceVersionsRequest
-	10, // 28: admiral.api.source.v1.SourceAPI.ListSources:output_type -> admiral.api.source.v1.ListSourcesResponse
-	12, // 29: admiral.api.source.v1.SourceAPI.GetSource:output_type -> admiral.api.source.v1.GetSourceResponse
-	14, // 30: admiral.api.source.v1.SourceAPI.CreateSource:output_type -> admiral.api.source.v1.CreateSourceResponse
-	16, // 31: admiral.api.source.v1.SourceAPI.UpdateSource:output_type -> admiral.api.source.v1.UpdateSourceResponse
-	18, // 32: admiral.api.source.v1.SourceAPI.DeleteSource:output_type -> admiral.api.source.v1.DeleteSourceResponse
-	20, // 33: admiral.api.source.v1.SourceAPI.ListSourceArtifacts:output_type -> admiral.api.source.v1.ListSourceArtifactsResponse
-	22, // 34: admiral.api.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.api.source.v1.ListSourceVersionsResponse
-	28, // [28:35] is the sub-list for method output_type
-	21, // [21:28] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	24, // 4: admiral.api.source.v1.Source.created_by:type_name -> admiral.common.v1.ActorRef
+	25, // 5: admiral.api.source.v1.Source.created_at:type_name -> google.protobuf.Timestamp
+	25, // 6: admiral.api.source.v1.Source.updated_at:type_name -> google.protobuf.Timestamp
+	7,  // 7: admiral.api.source.v1.SourceSettings.git:type_name -> admiral.api.source.v1.GitSourceSettings
+	3,  // 8: admiral.api.source.v1.GitSourceSettings.pull_request_comment:type_name -> admiral.api.source.v1.GitSourceSettings.PullRequestComment
+	4,  // 9: admiral.api.source.v1.SourceVersion.kind:type_name -> admiral.api.source.v1.SourceVersion.Kind
+	25, // 10: admiral.api.source.v1.SourceVersion.created_at:type_name -> google.protobuf.Timestamp
+	5,  // 11: admiral.api.source.v1.ListSourcesResponse.sources:type_name -> admiral.api.source.v1.Source
+	5,  // 12: admiral.api.source.v1.GetSourceResponse.source:type_name -> admiral.api.source.v1.Source
+	5,  // 13: admiral.api.source.v1.CreateSourceRequest.source:type_name -> admiral.api.source.v1.Source
+	5,  // 14: admiral.api.source.v1.CreateSourceResponse.source:type_name -> admiral.api.source.v1.Source
+	5,  // 15: admiral.api.source.v1.UpdateSourceRequest.source:type_name -> admiral.api.source.v1.Source
+	26, // 16: admiral.api.source.v1.UpdateSourceRequest.update_mask:type_name -> google.protobuf.FieldMask
+	5,  // 17: admiral.api.source.v1.UpdateSourceResponse.source:type_name -> admiral.api.source.v1.Source
+	8,  // 18: admiral.api.source.v1.ListSourceArtifactsResponse.artifacts:type_name -> admiral.api.source.v1.SourceArtifact
+	25, // 19: admiral.api.source.v1.ListSourceArtifactsResponse.refreshed_at:type_name -> google.protobuf.Timestamp
+	9,  // 20: admiral.api.source.v1.ListSourceVersionsResponse.versions:type_name -> admiral.api.source.v1.SourceVersion
+	25, // 21: admiral.api.source.v1.ListSourceVersionsResponse.refreshed_at:type_name -> google.protobuf.Timestamp
+	10, // 22: admiral.api.source.v1.SourceAPI.ListSources:input_type -> admiral.api.source.v1.ListSourcesRequest
+	12, // 23: admiral.api.source.v1.SourceAPI.GetSource:input_type -> admiral.api.source.v1.GetSourceRequest
+	14, // 24: admiral.api.source.v1.SourceAPI.CreateSource:input_type -> admiral.api.source.v1.CreateSourceRequest
+	16, // 25: admiral.api.source.v1.SourceAPI.UpdateSource:input_type -> admiral.api.source.v1.UpdateSourceRequest
+	18, // 26: admiral.api.source.v1.SourceAPI.DeleteSource:input_type -> admiral.api.source.v1.DeleteSourceRequest
+	20, // 27: admiral.api.source.v1.SourceAPI.ListSourceArtifacts:input_type -> admiral.api.source.v1.ListSourceArtifactsRequest
+	22, // 28: admiral.api.source.v1.SourceAPI.ListSourceVersions:input_type -> admiral.api.source.v1.ListSourceVersionsRequest
+	11, // 29: admiral.api.source.v1.SourceAPI.ListSources:output_type -> admiral.api.source.v1.ListSourcesResponse
+	13, // 30: admiral.api.source.v1.SourceAPI.GetSource:output_type -> admiral.api.source.v1.GetSourceResponse
+	15, // 31: admiral.api.source.v1.SourceAPI.CreateSource:output_type -> admiral.api.source.v1.CreateSourceResponse
+	17, // 32: admiral.api.source.v1.SourceAPI.UpdateSource:output_type -> admiral.api.source.v1.UpdateSourceResponse
+	19, // 33: admiral.api.source.v1.SourceAPI.DeleteSource:output_type -> admiral.api.source.v1.DeleteSourceResponse
+	21, // 34: admiral.api.source.v1.SourceAPI.ListSourceArtifacts:output_type -> admiral.api.source.v1.ListSourceArtifactsResponse
+	23, // 35: admiral.api.source.v1.SourceAPI.ListSourceVersions:output_type -> admiral.api.source.v1.ListSourceVersionsResponse
+	29, // [29:36] is the sub-list for method output_type
+	22, // [22:29] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_source_v1_source_proto_init() }
@@ -1708,7 +1785,7 @@ func file_admiral_api_source_v1_source_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_source_v1_source_proto_rawDesc), len(file_admiral_api_source_v1_source_proto_rawDesc)),
-			NumEnums:      4,
+			NumEnums:      5,
 			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,

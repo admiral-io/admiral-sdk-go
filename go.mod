@@ -3,7 +3,7 @@ module go.admiral.io/sdk
 go 1.26.0
 
 require (
-	buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20261014011555-22b2905b9cfc.2
+	buf.build/gen/go/admiral/common/protocolbuffers/go v1.36.12-20261111034115-8b31320cbc3b.2
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
 	connectrpc.com/connect/v2 v2.0.2
 	github.com/google/gnostic v0.7.1
