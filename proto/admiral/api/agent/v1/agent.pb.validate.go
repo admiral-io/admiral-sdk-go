@@ -3396,6 +3396,35 @@ func (m *ComponentPlan) validate(all bool) error {
 
 	// no validation rules for PlanFileDigest
 
+	if all {
+		switch v := interface{}(m.GetDeferred()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ComponentPlanValidationError{
+					field:  "Deferred",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ComponentPlanValidationError{
+					field:  "Deferred",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDeferred()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ComponentPlanValidationError{
+				field:  "Deferred",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ComponentPlanMultiError(errors)
 	}
@@ -3473,6 +3502,244 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ComponentPlanValidationError{}
+
+// Validate checks the field values on DeferredPlan with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *DeferredPlan) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeferredPlan with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in DeferredPlanMultiError, or
+// nil if none found.
+func (m *DeferredPlan) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeferredPlan) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetWaitsFor() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, DeferredPlanValidationError{
+						field:  fmt.Sprintf("WaitsFor[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, DeferredPlanValidationError{
+						field:  fmt.Sprintf("WaitsFor[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return DeferredPlanValidationError{
+					field:  fmt.Sprintf("WaitsFor[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return DeferredPlanMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeferredPlanMultiError is an error wrapping multiple validation errors
+// returned by DeferredPlan.ValidateAll() if the designated constraints aren't met.
+type DeferredPlanMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeferredPlanMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeferredPlanMultiError) AllErrors() []error { return m }
+
+// DeferredPlanValidationError is the validation error returned by
+// DeferredPlan.Validate if the designated constraints aren't met.
+type DeferredPlanValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeferredPlanValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeferredPlanValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeferredPlanValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeferredPlanValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeferredPlanValidationError) ErrorName() string { return "DeferredPlanValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DeferredPlanValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeferredPlan.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeferredPlanValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeferredPlanValidationError{}
+
+// Validate checks the field values on PendingInput with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *PendingInput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PendingInput with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in PendingInputMultiError, or
+// nil if none found.
+func (m *PendingInput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PendingInput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Path
+
+	// no validation rules for Component
+
+	// no validation rules for Output
+
+	if len(errors) > 0 {
+		return PendingInputMultiError(errors)
+	}
+
+	return nil
+}
+
+// PendingInputMultiError is an error wrapping multiple validation errors
+// returned by PendingInput.ValidateAll() if the designated constraints aren't met.
+type PendingInputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PendingInputMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PendingInputMultiError) AllErrors() []error { return m }
+
+// PendingInputValidationError is the validation error returned by
+// PendingInput.Validate if the designated constraints aren't met.
+type PendingInputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PendingInputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PendingInputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PendingInputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PendingInputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PendingInputValidationError) ErrorName() string { return "PendingInputValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PendingInputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPendingInput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PendingInputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PendingInputValidationError{}
 
 // Validate checks the field values on ResourceChange with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

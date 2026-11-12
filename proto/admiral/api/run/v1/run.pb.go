@@ -742,8 +742,12 @@ type ApplyPhase struct {
 	AcceptedBy     *v11.ActorRef          `protobuf:"bytes,8,opt,name=accepted_by,json=acceptedBy,proto3" json:"accepted_by,omitempty"`
 	AcceptedReason string                 `protobuf:"bytes,9,opt,name=accepted_reason,json=acceptedReason,proto3" json:"accepted_reason,omitempty"`
 	AcceptedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=accepted_at,json=acceptedAt,proto3" json:"accepted_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// The components the reviewed plan deferred, planned by the apply once what
+	// each waited on had applied. Each names its changes and plan file as a
+	// plan does; `GetRunPlanDiff` carries their diffs beside the reviewed ones.
+	Planned       []*v1.ComponentPlan `protobuf:"bytes,12,rep,name=planned,proto3" json:"planned,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ApplyPhase) Reset() {
@@ -842,6 +846,13 @@ func (x *ApplyPhase) GetAcceptedReason() string {
 func (x *ApplyPhase) GetAcceptedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.AcceptedAt
+	}
+	return nil
+}
+
+func (x *ApplyPhase) GetPlanned() []*v1.ComponentPlan {
+	if x != nil {
+		return x.Planned
 	}
 	return nil
 }
@@ -1938,7 +1949,7 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\n" +
 	"started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12;\n" +
 	"\vfinished_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"finishedAtJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\x06job_idR\bagent_id\"\xb4\x04\n" +
+	"finishedAtJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\x06job_idR\bagent_id\"\xf3\x04\n" +
 	"\n" +
 	"ApplyPhase\x12.\n" +
 	"\x04jobs\x18\v \x03(\v2\x1a.admiral.api.run.v1.RunJobR\x04jobs\x12B\n" +
@@ -1960,7 +1971,8 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\x0faccepted_reason\x18\t \x01(\tR\x0eacceptedReason\x12;\n" +
 	"\vaccepted_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"acceptedAtB\r\n" +
+	"acceptedAt\x12=\n" +
+	"\aplanned\x18\f \x03(\v2#.admiral.api.agent.v1.ComponentPlanR\aplannedB\r\n" +
 	"\v_generationJ\x04\b\x01\x10\x02R\x06job_id\"\xdf\x02\n" +
 	"\x06RunJob\x123\n" +
 	"\x06job_id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^job-[0-9a-z]+$R\x05jobId\x12\x1e\n" +
@@ -2146,41 +2158,42 @@ var file_admiral_api_run_v1_run_proto_depIdxs = []int32{
 	30, // 21: admiral.api.run.v1.ApplyPhase.finished_at:type_name -> google.protobuf.Timestamp
 	29, // 22: admiral.api.run.v1.ApplyPhase.accepted_by:type_name -> admiral.common.v1.ActorRef
 	30, // 23: admiral.api.run.v1.ApplyPhase.accepted_at:type_name -> google.protobuf.Timestamp
-	33, // 24: admiral.api.run.v1.RunJob.status:type_name -> admiral.api.agent.v1.JobStatus
-	28, // 25: admiral.api.run.v1.RunJob.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
-	3,  // 26: admiral.api.run.v1.ComponentApply.status:type_name -> admiral.api.run.v1.ComponentApply.Status
-	29, // 27: admiral.api.run.v1.Approval.approved_by:type_name -> admiral.common.v1.ActorRef
-	30, // 28: admiral.api.run.v1.Approval.approved_at:type_name -> google.protobuf.Timestamp
-	4,  // 29: admiral.api.run.v1.CreateRunRequest.run:type_name -> admiral.api.run.v1.Run
-	4,  // 30: admiral.api.run.v1.CreateRunResponse.run:type_name -> admiral.api.run.v1.Run
-	4,  // 31: admiral.api.run.v1.GetRunResponse.run:type_name -> admiral.api.run.v1.Run
-	4,  // 32: admiral.api.run.v1.ListRunsResponse.runs:type_name -> admiral.api.run.v1.Run
-	11, // 33: admiral.api.run.v1.ApproveRunResponse.approval:type_name -> admiral.api.run.v1.Approval
-	4,  // 34: admiral.api.run.v1.ApplyRunResponse.run:type_name -> admiral.api.run.v1.Run
-	4,  // 35: admiral.api.run.v1.AcceptRunResponse.run:type_name -> admiral.api.run.v1.Run
-	4,  // 36: admiral.api.run.v1.CancelRunResponse.run:type_name -> admiral.api.run.v1.Run
-	34, // 37: admiral.api.run.v1.GetRunPlanDiffResponse.diff:type_name -> admiral.api.agent.v1.PlanDiff
-	12, // 38: admiral.api.run.v1.RunAPI.CreateRun:input_type -> admiral.api.run.v1.CreateRunRequest
-	14, // 39: admiral.api.run.v1.RunAPI.GetRun:input_type -> admiral.api.run.v1.GetRunRequest
-	16, // 40: admiral.api.run.v1.RunAPI.ListRuns:input_type -> admiral.api.run.v1.ListRunsRequest
-	18, // 41: admiral.api.run.v1.RunAPI.ApproveRun:input_type -> admiral.api.run.v1.ApproveRunRequest
-	20, // 42: admiral.api.run.v1.RunAPI.ApplyRun:input_type -> admiral.api.run.v1.ApplyRunRequest
-	22, // 43: admiral.api.run.v1.RunAPI.AcceptRun:input_type -> admiral.api.run.v1.AcceptRunRequest
-	24, // 44: admiral.api.run.v1.RunAPI.CancelRun:input_type -> admiral.api.run.v1.CancelRunRequest
-	26, // 45: admiral.api.run.v1.RunAPI.GetRunPlanDiff:input_type -> admiral.api.run.v1.GetRunPlanDiffRequest
-	13, // 46: admiral.api.run.v1.RunAPI.CreateRun:output_type -> admiral.api.run.v1.CreateRunResponse
-	15, // 47: admiral.api.run.v1.RunAPI.GetRun:output_type -> admiral.api.run.v1.GetRunResponse
-	17, // 48: admiral.api.run.v1.RunAPI.ListRuns:output_type -> admiral.api.run.v1.ListRunsResponse
-	19, // 49: admiral.api.run.v1.RunAPI.ApproveRun:output_type -> admiral.api.run.v1.ApproveRunResponse
-	21, // 50: admiral.api.run.v1.RunAPI.ApplyRun:output_type -> admiral.api.run.v1.ApplyRunResponse
-	23, // 51: admiral.api.run.v1.RunAPI.AcceptRun:output_type -> admiral.api.run.v1.AcceptRunResponse
-	25, // 52: admiral.api.run.v1.RunAPI.CancelRun:output_type -> admiral.api.run.v1.CancelRunResponse
-	27, // 53: admiral.api.run.v1.RunAPI.GetRunPlanDiff:output_type -> admiral.api.run.v1.GetRunPlanDiffResponse
-	46, // [46:54] is the sub-list for method output_type
-	38, // [38:46] is the sub-list for method input_type
-	38, // [38:38] is the sub-list for extension type_name
-	38, // [38:38] is the sub-list for extension extendee
-	0,  // [0:38] is the sub-list for field type_name
+	32, // 24: admiral.api.run.v1.ApplyPhase.planned:type_name -> admiral.api.agent.v1.ComponentPlan
+	33, // 25: admiral.api.run.v1.RunJob.status:type_name -> admiral.api.agent.v1.JobStatus
+	28, // 26: admiral.api.run.v1.RunJob.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
+	3,  // 27: admiral.api.run.v1.ComponentApply.status:type_name -> admiral.api.run.v1.ComponentApply.Status
+	29, // 28: admiral.api.run.v1.Approval.approved_by:type_name -> admiral.common.v1.ActorRef
+	30, // 29: admiral.api.run.v1.Approval.approved_at:type_name -> google.protobuf.Timestamp
+	4,  // 30: admiral.api.run.v1.CreateRunRequest.run:type_name -> admiral.api.run.v1.Run
+	4,  // 31: admiral.api.run.v1.CreateRunResponse.run:type_name -> admiral.api.run.v1.Run
+	4,  // 32: admiral.api.run.v1.GetRunResponse.run:type_name -> admiral.api.run.v1.Run
+	4,  // 33: admiral.api.run.v1.ListRunsResponse.runs:type_name -> admiral.api.run.v1.Run
+	11, // 34: admiral.api.run.v1.ApproveRunResponse.approval:type_name -> admiral.api.run.v1.Approval
+	4,  // 35: admiral.api.run.v1.ApplyRunResponse.run:type_name -> admiral.api.run.v1.Run
+	4,  // 36: admiral.api.run.v1.AcceptRunResponse.run:type_name -> admiral.api.run.v1.Run
+	4,  // 37: admiral.api.run.v1.CancelRunResponse.run:type_name -> admiral.api.run.v1.Run
+	34, // 38: admiral.api.run.v1.GetRunPlanDiffResponse.diff:type_name -> admiral.api.agent.v1.PlanDiff
+	12, // 39: admiral.api.run.v1.RunAPI.CreateRun:input_type -> admiral.api.run.v1.CreateRunRequest
+	14, // 40: admiral.api.run.v1.RunAPI.GetRun:input_type -> admiral.api.run.v1.GetRunRequest
+	16, // 41: admiral.api.run.v1.RunAPI.ListRuns:input_type -> admiral.api.run.v1.ListRunsRequest
+	18, // 42: admiral.api.run.v1.RunAPI.ApproveRun:input_type -> admiral.api.run.v1.ApproveRunRequest
+	20, // 43: admiral.api.run.v1.RunAPI.ApplyRun:input_type -> admiral.api.run.v1.ApplyRunRequest
+	22, // 44: admiral.api.run.v1.RunAPI.AcceptRun:input_type -> admiral.api.run.v1.AcceptRunRequest
+	24, // 45: admiral.api.run.v1.RunAPI.CancelRun:input_type -> admiral.api.run.v1.CancelRunRequest
+	26, // 46: admiral.api.run.v1.RunAPI.GetRunPlanDiff:input_type -> admiral.api.run.v1.GetRunPlanDiffRequest
+	13, // 47: admiral.api.run.v1.RunAPI.CreateRun:output_type -> admiral.api.run.v1.CreateRunResponse
+	15, // 48: admiral.api.run.v1.RunAPI.GetRun:output_type -> admiral.api.run.v1.GetRunResponse
+	17, // 49: admiral.api.run.v1.RunAPI.ListRuns:output_type -> admiral.api.run.v1.ListRunsResponse
+	19, // 50: admiral.api.run.v1.RunAPI.ApproveRun:output_type -> admiral.api.run.v1.ApproveRunResponse
+	21, // 51: admiral.api.run.v1.RunAPI.ApplyRun:output_type -> admiral.api.run.v1.ApplyRunResponse
+	23, // 52: admiral.api.run.v1.RunAPI.AcceptRun:output_type -> admiral.api.run.v1.AcceptRunResponse
+	25, // 53: admiral.api.run.v1.RunAPI.CancelRun:output_type -> admiral.api.run.v1.CancelRunResponse
+	27, // 54: admiral.api.run.v1.RunAPI.GetRunPlanDiff:output_type -> admiral.api.run.v1.GetRunPlanDiffResponse
+	47, // [47:55] is the sub-list for method output_type
+	39, // [39:47] is the sub-list for method input_type
+	39, // [39:39] is the sub-list for extension type_name
+	39, // [39:39] is the sub-list for extension extendee
+	0,  // [0:39] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_run_v1_run_proto_init() }

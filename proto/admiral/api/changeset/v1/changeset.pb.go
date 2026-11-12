@@ -883,8 +883,13 @@ type Entry struct {
 	// How Admiral deploys the component after this change set. Empty on
 	// ENTRY_ACTION_DESTROY.
 	Settings *ComponentSettings `protobuf:"bytes,8,opt,name=settings,proto3" json:"settings,omitempty"`
-	// Components this one applies after, after this change set.
-	DependsOn     []string `protobuf:"bytes,9,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
+	// Components this one applies after, after this change set. A component
+	// whose outputs this one's values reference is always among them.
+	DependsOn []string `protobuf:"bytes,9,rep,name=depends_on,json=dependsOn,proto3" json:"depends_on,omitempty"`
+	// Components whose outputs this one's values reference. An entry with no
+	// ops whose `consumes` names a changed component is planned because that
+	// component changes.
+	Consumes      []string `protobuf:"bytes,10,rep,name=consumes,proto3" json:"consumes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -971,6 +976,13 @@ func (x *Entry) GetSettings() *ComponentSettings {
 func (x *Entry) GetDependsOn() []string {
 	if x != nil {
 		return x.DependsOn
+	}
+	return nil
+}
+
+func (x *Entry) GetConsumes() []string {
+	if x != nil {
+		return x.Consumes
 	}
 	return nil
 }
@@ -4529,7 +4541,7 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\x11CAUSE_UNSPECIFIED\x10\x00\x12\x0e\n" +
 	"\n" +
 	"CAUSE_EDIT\x10\x01\x12\x10\n" +
-	"\fCAUSE_REBASE\x10\x02J\x04\b\a\x10\bR\x0fcreated_by_kind\"\x9b\x03\n" +
+	"\fCAUSE_REBASE\x10\x02J\x04\b\a\x10\bR\x0fcreated_by_kind\"\xbc\x03\n" +
 	"\x05Entry\x12\x1c\n" +
 	"\tcomponent\x18\x02 \x01(\tR\tcomponent\x12=\n" +
 	"\x06action\x18\x03 \x01(\x0e2%.admiral.api.changeset.v1.EntryActionR\x06action\x12>\n" +
@@ -4540,7 +4552,9 @@ const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\x03ops\x18\a \x03(\v2!.admiral.api.changeset.v1.ValueOpR\x03ops\x12G\n" +
 	"\bsettings\x18\b \x01(\v2+.admiral.api.changeset.v1.ComponentSettingsR\bsettings\x12\x1d\n" +
 	"\n" +
-	"depends_on\x18\t \x03(\tR\tdependsOnJ\x04\b\x01\x10\x02R\fcomponent_id\"\xd7\x01\n" +
+	"depends_on\x18\t \x03(\tR\tdependsOn\x12\x1f\n" +
+	"\bconsumes\x18\n" +
+	" \x03(\tB\x03\xe0A\x03R\bconsumesJ\x04\b\x01\x10\x02R\fcomponent_id\"\xd7\x01\n" +
 	"\n" +
 	"VersionRef\x12<\n" +
 	"\fcomponent_id\x18\x05 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^cmp-[0-9a-z]+$R\vcomponentId\x128\n" +

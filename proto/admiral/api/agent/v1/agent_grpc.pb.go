@@ -867,7 +867,8 @@ type AgentRuntimeAPIClient interface {
 	// UploadJobPlanFile stores a chunk of a Terraform PLAN attempt's saved plan
 	// file for one component, at `offset`. A chunk resent at an offset already
 	// written changes nothing. The last chunk returns the file's digest, which
-	// the component's plan names.
+	// the component's plan names. An APPLY attempt uploads one too, for a
+	// component the reviewed plan deferred, once the agent has planned it.
 	// A plan file holds the run's values unredacted, so Admiral stores it
 	// sealed like the run artifact.
 	//
@@ -1106,7 +1107,8 @@ type AgentRuntimeAPIServer interface {
 	// UploadJobPlanFile stores a chunk of a Terraform PLAN attempt's saved plan
 	// file for one component, at `offset`. A chunk resent at an offset already
 	// written changes nothing. The last chunk returns the file's digest, which
-	// the component's plan names.
+	// the component's plan names. An APPLY attempt uploads one too, for a
+	// component the reviewed plan deferred, once the agent has planned it.
 	// A plan file holds the run's values unredacted, so Admiral stores it
 	// sealed like the run artifact.
 	//
