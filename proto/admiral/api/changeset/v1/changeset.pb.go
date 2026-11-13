@@ -601,7 +601,7 @@ type ChangeSet struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// `cs-` and twelve lowercase base36 characters.
 	Id            string           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ApplicationId string           `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	ProjectId     string           `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	EnvironmentId string           `protobuf:"bytes,3,opt,name=environment_id,json=environmentId,proto3" json:"environment_id,omitempty"`
 	Title         string           `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string           `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
@@ -664,9 +664,9 @@ func (x *ChangeSet) GetId() string {
 	return ""
 }
 
-func (x *ChangeSet) GetApplicationId() string {
+func (x *ChangeSet) GetProjectId() string {
 	if x != nil {
-		return x.ApplicationId
+		return x.ProjectId
 	}
 	return ""
 }
@@ -4495,10 +4495,11 @@ var File_admiral_api_changeset_v1_changeset_proto protoreflect.FileDescriptor
 
 const file_admiral_api_changeset_v1_changeset_proto_rawDesc = "" +
 	"\n" +
-	"(admiral/api/changeset/v1/changeset.proto\x12\x18admiral.api.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd3\x06\n" +
+	"(admiral/api/changeset/v1/changeset.proto\x12\x18admiral.api.changeset.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xcb\x06\n" +
 	"\tChangeSet\x12+\n" +
-	"\x02id\x18\x01 \x01(\tB\x1b\xe0A\x03\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\x02id\x12*\n" +
-	"\x0eapplication_id\x18\x02 \x01(\tB\x03\xe0A\x03R\rapplicationId\x12*\n" +
+	"\x02id\x18\x01 \x01(\tB\x1b\xe0A\x03\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\x02id\x12\"\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tB\x03\xe0A\x03R\tprojectId\x12*\n" +
 	"\x0eenvironment_id\x18\x03 \x01(\tB\x03\xe0A\x03R\renvironmentId\x12\x1e\n" +
 	"\x05title\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\x05title\x12*\n" +
 	"\vdescription\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\x80 R\vdescription\x12G\n" +

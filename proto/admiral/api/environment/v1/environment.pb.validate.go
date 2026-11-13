@@ -63,7 +63,7 @@ func (m *Environment) validate(all bool) error {
 
 	// no validation rules for Id
 
-	// no validation rules for ApplicationId
+	// no validation rules for ProjectId
 
 	// no validation rules for Name
 
@@ -1230,7 +1230,7 @@ func (m *CreateEnvironmentRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ApplicationId
+	// no validation rules for ProjectId
 
 	if all {
 		switch v := interface{}(m.GetEnvironment()).(type) {
@@ -1735,8 +1735,8 @@ func (m *ListEnvironmentsRequest) validate(all bool) error {
 
 	// no validation rules for PageToken
 
-	if m.ApplicationId != nil {
-		// no validation rules for ApplicationId
+	if m.ProjectId != nil {
+		// no validation rules for ProjectId
 	}
 
 	if len(errors) > 0 {

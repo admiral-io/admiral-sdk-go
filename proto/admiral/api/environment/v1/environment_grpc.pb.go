@@ -32,12 +32,12 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// EnvironmentAPI manages environments within an application.
+// EnvironmentAPI manages environments within a project.
 //
-// An environment is a named place an application deploys to (dev, staging,
+// An environment is a named place a project deploys to (dev, staging,
 // prod). What it runs changes only through change sets.
 type EnvironmentAPIClient interface {
-	// CreateEnvironment creates a new environment for the specified application.
+	// CreateEnvironment creates a new environment for the specified project.
 	//
 	// Scope: `env:write`
 	CreateEnvironment(ctx context.Context, in *CreateEnvironmentRequest, opts ...grpc.CallOption) (*CreateEnvironmentResponse, error)
@@ -46,7 +46,7 @@ type EnvironmentAPIClient interface {
 	// Scope: `env:read`
 	GetEnvironment(ctx context.Context, in *GetEnvironmentRequest, opts ...grpc.CallOption) (*GetEnvironmentResponse, error)
 	// ListEnvironments returns a paginated list of environments, in one
-	// application or across all of them. Use the filter to narrow by name or
+	// project or across all of them. Use the filter to narrow by name or
 	// labels.
 	//
 	// Scope: `env:read`
@@ -163,12 +163,12 @@ func (c *environmentAPIClient) GetEnvironmentComponentValues(ctx context.Context
 // All implementations should embed UnimplementedEnvironmentAPIServer
 // for forward compatibility.
 //
-// EnvironmentAPI manages environments within an application.
+// EnvironmentAPI manages environments within a project.
 //
-// An environment is a named place an application deploys to (dev, staging,
+// An environment is a named place a project deploys to (dev, staging,
 // prod). What it runs changes only through change sets.
 type EnvironmentAPIServer interface {
-	// CreateEnvironment creates a new environment for the specified application.
+	// CreateEnvironment creates a new environment for the specified project.
 	//
 	// Scope: `env:write`
 	CreateEnvironment(context.Context, *CreateEnvironmentRequest) (*CreateEnvironmentResponse, error)
@@ -177,7 +177,7 @@ type EnvironmentAPIServer interface {
 	// Scope: `env:read`
 	GetEnvironment(context.Context, *GetEnvironmentRequest) (*GetEnvironmentResponse, error)
 	// ListEnvironments returns a paginated list of environments, in one
-	// application or across all of them. Use the filter to narrow by name or
+	// project or across all of them. Use the filter to narrow by name or
 	// labels.
 	//
 	// Scope: `env:read`

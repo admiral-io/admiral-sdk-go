@@ -33,7 +33,7 @@ const (
 // internal automation, CI -- is a property of the record its credential is bound
 // to, reached via binding_id, not a distinction the claim carries.
 //
-// Every principal is tenant-bound: there is no kind whose tokens omit `tid`.
+// Every principal is organization-bound: there is no kind whose tokens omit `tid`.
 const (
 	KindUser           = "user"
 	KindServiceAccount = "serviceaccount"
@@ -48,8 +48,6 @@ const (
 	AgentWrite          = "agent:write"
 	ApikeyRead          = "apikey:read"
 	ApikeyWrite         = "apikey:write"
-	AppRead             = "app:read"
-	AppWrite            = "app:write"
 	ChangesetRead       = "changeset:read"
 	ChangesetWrite      = "changeset:write"
 	ComponentPublish    = "component:publish"
@@ -61,6 +59,10 @@ const (
 	EnvWrite            = "env:write"
 	IntegrationRead     = "integration:read"
 	IntegrationWrite    = "integration:write"
+	OrganizationRead    = "organization:read"
+	OrganizationWrite   = "organization:write"
+	ProjectRead         = "project:read"
+	ProjectWrite        = "project:write"
 	RunRead             = "run:read"
 	RunWrite            = "run:write"
 	ServiceaccountRead  = "serviceaccount:read"
@@ -69,14 +71,12 @@ const (
 	SourceWrite         = "source:write"
 	StateRead           = "state:read"
 	StateWrite          = "state:write"
-	TenantRead          = "tenant:read"
-	TenantWrite         = "tenant:write"
 	UserRead            = "user:read"
 	UserWrite           = "user:write"
 )
 
 // Group is one scope prefix and what it covers, for anything that shows
-// scopes grouped: "app" for app:read and app:write.
+// scopes grouped: "app" for project:read and project:write.
 type Group struct {
 	Name        string
 	Description string
@@ -87,18 +87,18 @@ type Group struct {
 var Groups = map[string]Group{
 	"agent":          {Name: "agent", Description: "Agents, who may use each, and the jobs they run."},
 	"apikey":         {Name: "apikey", Description: "Your own API keys."},
-	"app":            {Name: "app", Description: "Applications."},
 	"changeset":      {Name: "changeset", Description: "Change sets, their revisions, and the component values they propose."},
 	"component":      {Name: "component", Description: "The component registry, where published Terraform modules, Helm charts and manifests live."},
 	"credential":     {Name: "credential", Description: "Credentials for external systems."},
 	"env":            {Name: "env", Description: "Deployment environments and the components in them."},
 	"integration":    {Name: "integration", Description: "Integrations your organization connects, such as the GitHub App."},
+	"organization":   {Name: "organization", Description: "Your organization."},
+	"project":        {Name: "project", Description: "Projects."},
 	"run":            {Name: "run", Description: "Runs of change sets and drift checks, plan through apply."},
 	"serviceaccount": {Name: "serviceaccount", Description: "Service accounts, and the issuers they accept tokens from."},
 	"source":         {Name: "source", Description: "Sources, the upstream locations components come from and the grants that reach them."},
 	"state":          {Name: "state", Description: "Hosted Terraform state and its versions."},
-	"tenant":         {Name: "tenant", Description: "Your tenant."},
-	"user":           {Name: "user", Description: "Members of your tenant."},
+	"user":           {Name: "user", Description: "Members of your organization."},
 }
 
 // GroupOf is the group a scope name falls under: everything before the
@@ -168,17 +168,6 @@ var Catalog = map[string]Scope{
 		Implies:      []string{ApikeyRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
-	AppRead: {
-		Name:         AppRead,
-		Description:  "Read applications.",
-		AssignableTo: []string{TokenTypePAT},
-	},
-	AppWrite: {
-		Name:         AppWrite,
-		Description:  "Create, update, and delete applications.",
-		Implies:      []string{AppRead},
-		AssignableTo: []string{TokenTypePAT},
-	},
 	ChangesetRead: {
 		Name:         ChangesetRead,
 		Description:  "Read change sets, their revisions and diffs, and the values they propose.",
@@ -240,6 +229,28 @@ var Catalog = map[string]Scope{
 		Implies:      []string{IntegrationRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
+	OrganizationRead: {
+		Name:         OrganizationRead,
+		Description:  "Read organizations, their name, slug, status and logo.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	OrganizationWrite: {
+		Name:         OrganizationWrite,
+		Description:  "Update an organization's settings, and register, suspend, reactivate and delete organizations.",
+		Implies:      []string{OrganizationRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ProjectRead: {
+		Name:         ProjectRead,
+		Description:  "Read projects.",
+		AssignableTo: []string{TokenTypePAT},
+	},
+	ProjectWrite: {
+		Name:         ProjectWrite,
+		Description:  "Create, update, and delete projects.",
+		Implies:      []string{ProjectRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
 	RunRead: {
 		Name:         RunRead,
 		Description:  "Read runs, their plans, applies and approvals.",
@@ -284,17 +295,6 @@ var Catalog = map[string]Scope{
 		Implies:      []string{StateRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
-	TenantRead: {
-		Name:         TenantRead,
-		Description:  "Read tenants, their name, slug, status and logo.",
-		AssignableTo: []string{TokenTypePAT},
-	},
-	TenantWrite: {
-		Name:         TenantWrite,
-		Description:  "Update a tenant's settings, and register, suspend, reactivate and delete tenants.",
-		Implies:      []string{TenantRead},
-		AssignableTo: []string{TokenTypePAT},
-	},
 	UserRead: {
 		Name:         UserRead,
 		Description:  "Read user profiles and invitations.",
@@ -313,18 +313,18 @@ var Catalog = map[string]Scope{
 var impliesClosure = map[string][]string{
 	AgentWrite:          []string{AgentRead},
 	ApikeyWrite:         []string{ApikeyRead},
-	AppWrite:            []string{AppRead},
 	ChangesetWrite:      []string{ChangesetRead},
 	ComponentPublish:    []string{ComponentRead},
 	ComponentWrite:      []string{ComponentPublish, ComponentRead},
 	CredentialWrite:     []string{CredentialRead},
 	EnvWrite:            []string{EnvRead},
 	IntegrationWrite:    []string{IntegrationRead},
+	OrganizationWrite:   []string{OrganizationRead},
+	ProjectWrite:        []string{ProjectRead},
 	RunWrite:            []string{RunRead},
 	ServiceaccountWrite: []string{ServiceaccountRead},
 	SourceWrite:         []string{SourceRead},
 	StateWrite:          []string{StateRead},
-	TenantWrite:         []string{TenantRead},
 	UserWrite:           []string{UserRead},
 }
 

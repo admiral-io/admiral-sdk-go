@@ -163,7 +163,7 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *v1.PublishComponentRequest) (*v1.PublishComponentResponse, error)
-	// ImportComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the organization does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
@@ -258,7 +258,7 @@ type RegistryAPIHandler interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *v1.PublishComponentRequest) (*v1.PublishComponentResponse, error)
-	// ImportComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the organization does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and

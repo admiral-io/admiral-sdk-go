@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UserAPI provides user profile retrieval and the list of a tenant's members.
+// UserAPI provides user profile retrieval and the list of an organization's members.
 // The caller's own API keys are managed through ApiKeyAPI.
 type UserAPIClient interface {
 	// GetMe retrieves the profile of the currently authenticated user.
@@ -40,7 +40,7 @@ type UserAPIClient interface {
 	//
 	// Scope: `user:read`
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// ListUsers returns a page of the caller's organization's members: everyone who
 	// has joined, whatever their role or status. People who have been invited but
 	// have not joined are not users yet; they are listed by InvitationAPI.
 	//
@@ -90,7 +90,7 @@ func (c *userAPIClient) ListUsers(ctx context.Context, in *ListUsersRequest, opt
 // All implementations should embed UnimplementedUserAPIServer
 // for forward compatibility.
 //
-// UserAPI provides user profile retrieval and the list of a tenant's members.
+// UserAPI provides user profile retrieval and the list of an organization's members.
 // The caller's own API keys are managed through ApiKeyAPI.
 type UserAPIServer interface {
 	// GetMe retrieves the profile of the currently authenticated user.
@@ -102,7 +102,7 @@ type UserAPIServer interface {
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// ListUsers returns a page of the caller's organization's members: everyone who
 	// has joined, whatever their role or status. People who have been invited but
 	// have not joined are not users yet; they are listed by InvitationAPI.
 	//

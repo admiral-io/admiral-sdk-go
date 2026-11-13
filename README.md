@@ -38,19 +38,19 @@ func main() {
 	// c.Job().MethodName(ctx, req)
 	// c.AgentRuntime().MethodName(ctx, req)
 	// c.ApiKey().MethodName(ctx, req)
-	// c.Application().MethodName(ctx, req)
 	// c.ChangeSet().MethodName(ctx, req)
 	// c.Credential().MethodName(ctx, req)
 	// c.Environment().MethodName(ctx, req)
 	// c.Healthcheck().MethodName(ctx, req)
 	// c.Integration().MethodName(ctx, req)
 	// c.Invitation().MethodName(ctx, req)
+	// c.Organization().MethodName(ctx, req)
+	// c.Project().MethodName(ctx, req)
 	// c.Registry().MethodName(ctx, req)
 	// c.Run().MethodName(ctx, req)
 	// c.ServiceAccount().MethodName(ctx, req)
 	// c.Issuer().MethodName(ctx, req)
 	// c.Source().MethodName(ctx, req)
-	// c.Tenant().MethodName(ctx, req)
 	// c.User().MethodName(ctx, req)
 }
 ```
@@ -63,19 +63,19 @@ func main() {
 | JobAPI | `Job()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | AgentRuntimeAPI | `AgentRuntime()` | `go.admiral.io/sdk/proto/admiral/api/agent/v1` |
 | ApiKeyAPI | `ApiKey()` | `go.admiral.io/sdk/proto/admiral/api/apikey/v1` |
-| ApplicationAPI | `Application()` | `go.admiral.io/sdk/proto/admiral/api/application/v1` |
 | ChangeSetAPI | `ChangeSet()` | `go.admiral.io/sdk/proto/admiral/api/changeset/v1` |
 | CredentialAPI | `Credential()` | `go.admiral.io/sdk/proto/admiral/api/credential/v1` |
 | EnvironmentAPI | `Environment()` | `go.admiral.io/sdk/proto/admiral/api/environment/v1` |
 | HealthcheckAPI | `Healthcheck()` | `go.admiral.io/sdk/proto/admiral/api/healthcheck/v1` |
 | IntegrationAPI | `Integration()` | `go.admiral.io/sdk/proto/admiral/api/integration/v1` |
 | InvitationAPI | `Invitation()` | `go.admiral.io/sdk/proto/admiral/api/invitation/v1` |
+| OrganizationAPI | `Organization()` | `go.admiral.io/sdk/proto/admiral/api/organization/v1` |
+| ProjectAPI | `Project()` | `go.admiral.io/sdk/proto/admiral/api/project/v1` |
 | RegistryAPI | `Registry()` | `go.admiral.io/sdk/proto/admiral/api/registry/v1` |
 | RunAPI | `Run()` | `go.admiral.io/sdk/proto/admiral/api/run/v1` |
 | ServiceAccountAPI | `ServiceAccount()` | `go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1` |
 | IssuerAPI | `Issuer()` | `go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1` |
 | SourceAPI | `Source()` | `go.admiral.io/sdk/proto/admiral/api/source/v1` |
-| TenantAPI | `Tenant()` | `go.admiral.io/sdk/proto/admiral/api/tenant/v1` |
 | UserAPI | `User()` | `go.admiral.io/sdk/proto/admiral/api/user/v1` |
 
 ## Configuration

@@ -61,7 +61,7 @@ var (
 
 // InvitationAPIClient is a client for the admiral.api.invitation.v1.InvitationAPI service.
 type InvitationAPIClient interface {
-	// CreateInvitation invites an address into the caller's tenant for a role and
+	// CreateInvitation invites an address into the caller's organization for a role and
 	// sends the mail. Returns the invitation; the link is only ever in the mail.
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
@@ -71,7 +71,7 @@ type InvitationAPIClient interface {
 	//
 	// Scope: `user:write`
 	CreateInvitation(context.Context, *v1.CreateInvitationRequest) (*v1.CreateInvitationResponse, error)
-	// ListInvitations returns a page of the caller's tenant's invitations, every
+	// ListInvitations returns a page of the caller's organization's invitations, every
 	// status included, so an administrator can see what is outstanding, what
 	// expired and what was withdrawn.
 	//
@@ -94,7 +94,7 @@ func NewInvitationAPIClient(client *connect.Client) InvitationAPIClient {
 
 // InvitationAPIHandler is an implementation of the admiral.api.invitation.v1.InvitationAPI service.
 type InvitationAPIHandler interface {
-	// CreateInvitation invites an address into the caller's tenant for a role and
+	// CreateInvitation invites an address into the caller's organization for a role and
 	// sends the mail. Returns the invitation; the link is only ever in the mail.
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
@@ -104,7 +104,7 @@ type InvitationAPIHandler interface {
 	//
 	// Scope: `user:write`
 	CreateInvitation(context.Context, *v1.CreateInvitationRequest) (*v1.CreateInvitationResponse, error)
-	// ListInvitations returns a page of the caller's tenant's invitations, every
+	// ListInvitations returns a page of the caller's organization's invitations, every
 	// status included, so an administrator can see what is outstanding, what
 	// expired and what was withdrawn.
 	//

@@ -146,16 +146,16 @@ func (Tracking_AfterMerge) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{1, 1}
 }
 
-// Environment is a named place an application deploys to (dev, staging,
+// Environment is a named place a project deploys to (dev, staging,
 // prod).
 type Environment struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the environment.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The application this environment belongs to.
-	ApplicationId string `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	// The project this environment belongs to.
+	ProjectId string `protobuf:"bytes,2,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	// URL-safe, human-readable identifier (e.g., "prod", "staging-us-east").
-	// Unique within the application. Lowercase alphanumeric and hyphens only,
+	// Unique within the project. Lowercase alphanumeric and hyphens only,
 	// must start with a letter and end with an alphanumeric character (1-63 chars).
 	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	// Optional longer-form description of the environment's purpose
@@ -246,9 +246,9 @@ func (x *Environment) GetId() string {
 	return ""
 }
 
-func (x *Environment) GetApplicationId() string {
+func (x *Environment) GetProjectId() string {
 	if x != nil {
-		return x.ApplicationId
+		return x.ProjectId
 	}
 	return ""
 }
@@ -421,7 +421,7 @@ func (x *Tracking) GetAfterMerge() Tracking_AfterMerge {
 type AgentAssignment struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The agent. Its owner must have granted it to the organization, a team,
-	// this application or this environment.
+	// this project or this environment.
 	AgentId string `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	// `asg-` and twelve base36 characters, what a component's settings name to
 	// run on this assignment. Empty on an assignment being added, which gets
@@ -512,7 +512,7 @@ func (*AgentAssignment_Kubernetes) isAgentAssignment_Settings() {}
 type KubernetesSettings struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The namespace a component renders into unless it names its own. Set to
-	// `<application>-<environment>` when the environment is created if left
+	// `<project>-<environment>` when the environment is created if left
 	// empty; at most 63 characters.
 	DefaultNamespace string `protobuf:"bytes,1,opt,name=default_namespace,json=defaultNamespace,proto3" json:"default_namespace,omitempty"`
 	// Whether a missing namespace is created at apply. The agent's own
@@ -761,11 +761,11 @@ func (x *LastApply) GetAppliedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreateEnvironmentRequest creates an environment under an application.
+// CreateEnvironmentRequest creates an environment under a project.
 type CreateEnvironmentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The application the environment belongs to.
-	ApplicationId string `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	// The project the environment belongs to.
+	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	// The environment to create. Server-populated fields are ignored.
 	Environment   *Environment `protobuf:"bytes,2,opt,name=environment,proto3" json:"environment,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -802,9 +802,9 @@ func (*CreateEnvironmentRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *CreateEnvironmentRequest) GetApplicationId() string {
+func (x *CreateEnvironmentRequest) GetProjectId() string {
 	if x != nil {
-		return x.ApplicationId
+		return x.ProjectId
 	}
 	return ""
 }
@@ -957,9 +957,9 @@ func (x *GetEnvironmentResponse) GetEnvironment() *Environment {
 // ListEnvironmentsRequest contains pagination and filter parameters.
 type ListEnvironmentsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The application to list environments of. Omitted lists every
-	// environment the caller can see, across applications.
-	ApplicationId *string `protobuf:"bytes,4,opt,name=application_id,json=applicationId,proto3,oneof" json:"application_id,omitempty"`
+	// The project to list environments of. Omitted lists every
+	// environment the caller can see, across projects.
+	ProjectId *string `protobuf:"bytes,4,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
 	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
 	// API documentation for the full operator and predicate reference).
 	//
@@ -1008,9 +1008,9 @@ func (*ListEnvironmentsRequest) Descriptor() ([]byte, []int) {
 	return file_admiral_api_environment_v1_environment_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ListEnvironmentsRequest) GetApplicationId() string {
-	if x != nil && x.ApplicationId != nil {
-		return *x.ApplicationId
+func (x *ListEnvironmentsRequest) GetProjectId() string {
+	if x != nil && x.ProjectId != nil {
+		return *x.ProjectId
 	}
 	return ""
 }
@@ -1786,10 +1786,11 @@ var File_admiral_api_environment_v1_environment_proto protoreflect.FileDescripto
 
 const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\n" +
-	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a&admiral/api/registry/v1/registry.proto\x1a(admiral/api/changeset/v1/changeset.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xed\t\n" +
+	",admiral/api/environment/v1/environment.proto\x12\x1aadmiral.api.environment.v1\x1a(admiral/api/changeset/v1/changeset.proto\x1a&admiral/api/registry/v1/registry.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe5\t\n" +
 	"\vEnvironment\x12,\n" +
-	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\x02id\x12C\n" +
-	"\x0eapplication_id\x18\x02 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^app-[0-9a-z]+$R\rapplicationId\x12@\n" +
+	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\x02id\x12;\n" +
+	"\n" +
+	"project_id\x18\x02 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^prj-[0-9a-z]+$R\tprojectId\x12@\n" +
 	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
 	"\vdescription\x18\x04 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\vdescription\x12d\n" +
 	"\x06labels\x18\a \x03(\v23.admiral.api.environment.v1.Environment.LabelsEntryB\x17\xbaH\x14\x9a\x01\x11\x10@\"\x06r\x04\x10\x01\x18?*\x05r\x03\x18\x80\x02R\x06labels\x12?\n" +
@@ -1861,23 +1862,25 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\vrevision_id\x18\x02 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^rev-[0-9a-z]+$R\n" +
 	"revisionId\x129\n" +
 	"\n" +
-	"applied_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tappliedAt\"\xb2\x01\n" +
-	"\x18CreateEnvironmentRequest\x12@\n" +
-	"\x0eapplication_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^app-[0-9a-z]+$R\rapplicationId\x12T\n" +
+	"applied_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tappliedAt\"\xaa\x01\n" +
+	"\x18CreateEnvironmentRequest\x128\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^prj-[0-9a-z]+$R\tprojectId\x12T\n" +
 	"\venvironment\x18\x02 \x01(\v2'.admiral.api.environment.v1.EnvironmentB\t\xe0A\x02\xbaH\x03\xc8\x01\x01R\venvironment\"f\n" +
 	"\x19CreateEnvironmentResponse\x12I\n" +
 	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"Y\n" +
 	"\x15GetEnvironmentRequest\x12@\n" +
 	"\x0eenvironment_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^env-[0-9a-z]+$R\renvironmentId\"c\n" +
 	"\x16GetEnvironmentResponse\x12I\n" +
-	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"\xd9\x01\n" +
-	"\x17ListEnvironmentsRequest\x12B\n" +
-	"\x0eapplication_id\x18\x04 \x01(\tB\x16\xbaH\x13r\x112\x0f^app-[0-9a-z]+$H\x00R\rapplicationId\x88\x01\x01\x12 \n" +
+	"\venvironment\x18\x01 \x01(\v2'.admiral.api.environment.v1.EnvironmentR\venvironment\"\xcd\x01\n" +
+	"\x17ListEnvironmentsRequest\x12:\n" +
+	"\n" +
+	"project_id\x18\x04 \x01(\tB\x16\xbaH\x13r\x112\x0f^prj-[0-9a-z]+$H\x00R\tprojectId\x88\x01\x01\x12 \n" +
 	"\x06filter\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\x80\bR\x06filter\x12&\n" +
 	"\tpage_size\x18\x02 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tR\tpageTokenB\x11\n" +
-	"\x0f_application_id\"\x8f\x01\n" +
+	"page_token\x18\x03 \x01(\tR\tpageTokenB\r\n" +
+	"\v_project_id\"\x8f\x01\n" +
 	"\x18ListEnvironmentsResponse\x12K\n" +
 	"\fenvironments\x18\x01 \x03(\v2'.admiral.api.environment.v1.EnvironmentR\fenvironments\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xad\x01\n" +

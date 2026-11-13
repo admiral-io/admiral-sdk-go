@@ -81,7 +81,7 @@ var (
 
 // CredentialAPIClient is a client for the admiral.api.credential.v1.CredentialAPI service.
 type CredentialAPIClient interface {
-	// CreateCredential registers a credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's organization.
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
@@ -92,7 +92,7 @@ type CredentialAPIClient interface {
 	//
 	// Scope: `credential:read`
 	GetCredential(context.Context, *v1.GetCredentialRequest) (*v1.GetCredentialResponse, error)
-	// ListCredentials pages through the caller's tenant's credentials.
+	// ListCredentials pages through the caller's organization's credentials.
 	// Secrets are never included.
 	//
 	// Scope: `credential:read`
@@ -121,7 +121,7 @@ func NewCredentialAPIClient(client *connect.Client) CredentialAPIClient {
 
 // CredentialAPIHandler is an implementation of the admiral.api.credential.v1.CredentialAPI service.
 type CredentialAPIHandler interface {
-	// CreateCredential registers a credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's organization.
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
@@ -132,7 +132,7 @@ type CredentialAPIHandler interface {
 	//
 	// Scope: `credential:read`
 	GetCredential(context.Context, *v1.GetCredentialRequest) (*v1.GetCredentialResponse, error)
-	// ListCredentials pages through the caller's tenant's credentials.
+	// ListCredentials pages through the caller's organization's credentials.
 	// Secrets are never included.
 	//
 	// Scope: `credential:read`

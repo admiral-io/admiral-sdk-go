@@ -39,7 +39,7 @@ const (
 // (admiral.*.serviceaccount.v1), made with it.
 //
 // An environment deploys through the agents assigned to it, and may be assigned
-// only an agent granted to the organization, a team, its application, or the
+// only an agent granted to the organization, a team, its project, or the
 // environment itself.
 type AgentAPIClient interface {
 	// CreateAgent records an agent and the service account it runs as, and
@@ -76,9 +76,9 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(ctx context.Context, in *CreateEnrollmentKeyRequest, opts ...grpc.CallOption) (*CreateEnrollmentKeyResponse, error)
-	// GrantAgentUse lets the organization, a team, an application's
+	// GrantAgentUse lets the organization, a team, a project's
 	// environments, or one environment be assigned an agent. Only the agent's owner
-	// or a tenant admin may.
+	// or an organization admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(ctx context.Context, in *GrantAgentUseRequest, opts ...grpc.CallOption) (*GrantAgentUseResponse, error)
@@ -202,7 +202,7 @@ func (c *agentAPIClient) ListAgentGrants(ctx context.Context, in *ListAgentGrant
 // (admiral.*.serviceaccount.v1), made with it.
 //
 // An environment deploys through the agents assigned to it, and may be assigned
-// only an agent granted to the organization, a team, its application, or the
+// only an agent granted to the organization, a team, its project, or the
 // environment itself.
 type AgentAPIServer interface {
 	// CreateAgent records an agent and the service account it runs as, and
@@ -239,9 +239,9 @@ type AgentAPIServer interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *CreateEnrollmentKeyRequest) (*CreateEnrollmentKeyResponse, error)
-	// GrantAgentUse lets the organization, a team, an application's
+	// GrantAgentUse lets the organization, a team, a project's
 	// environments, or one environment be assigned an agent. Only the agent's owner
-	// or a tenant admin may.
+	// or an organization admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *GrantAgentUseRequest) (*GrantAgentUseResponse, error)
@@ -803,7 +803,7 @@ const (
 type AgentRuntimeAPIClient interface {
 	// Enroll ties the agent's service account to an issuer and records its
 	// subject. The agent sends its issuer's keys and a token they verify. When
-	// the token also verifies against the keys of an issuer the tenant already
+	// the token also verifies against the keys of an issuer the organization already
 	// holds, the service account trusts that one; otherwise the sent keys become
 	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
 	// token's subject is recorded and fixed until the agent enrolls again. The
@@ -1043,7 +1043,7 @@ func (c *agentRuntimeAPIClient) FinishJob(ctx context.Context, in *FinishJobRequ
 type AgentRuntimeAPIServer interface {
 	// Enroll ties the agent's service account to an issuer and records its
 	// subject. The agent sends its issuer's keys and a token they verify. When
-	// the token also verifies against the keys of an issuer the tenant already
+	// the token also verifies against the keys of an issuer the organization already
 	// holds, the service account trusts that one; otherwise the sent keys become
 	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
 	// token's subject is recorded and fixed until the agent enrolls again. The

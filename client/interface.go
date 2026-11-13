@@ -3,18 +3,18 @@ package client
 import (
 	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
 	apikeyv1 "go.admiral.io/sdk/proto/admiral/api/apikey/v1"
-	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/api/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
 	integrationv1 "go.admiral.io/sdk/proto/admiral/api/integration/v1"
 	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
+	organizationv1 "go.admiral.io/sdk/proto/admiral/api/organization/v1"
+	projectv1 "go.admiral.io/sdk/proto/admiral/api/project/v1"
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	serviceaccountv1 "go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
-	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
 
@@ -28,8 +28,6 @@ type AdmiralClient interface {
 	AgentRuntime() agentv1.AgentRuntimeAPIClient
 	// ApiKey returns the ApiKeyAPI client.
 	ApiKey() apikeyv1.ApiKeyAPIClient
-	// Application returns the ApplicationAPI client.
-	Application() applicationv1.ApplicationAPIClient
 	// ChangeSet returns the ChangeSetAPI client.
 	ChangeSet() changesetv1.ChangeSetAPIClient
 	// Credential returns the CredentialAPI client.
@@ -42,6 +40,10 @@ type AdmiralClient interface {
 	Integration() integrationv1.IntegrationAPIClient
 	// Invitation returns the InvitationAPI client.
 	Invitation() invitationv1.InvitationAPIClient
+	// Organization returns the OrganizationAPI client.
+	Organization() organizationv1.OrganizationAPIClient
+	// Project returns the ProjectAPI client.
+	Project() projectv1.ProjectAPIClient
 	// Registry returns the RegistryAPI client.
 	Registry() registryv1.RegistryAPIClient
 	// Run returns the RunAPI client.
@@ -52,8 +54,6 @@ type AdmiralClient interface {
 	Issuer() serviceaccountv1.IssuerAPIClient
 	// Source returns the SourceAPI client.
 	Source() sourcev1.SourceAPIClient
-	// Tenant returns the TenantAPI client.
-	Tenant() tenantv1.TenantAPIClient
 	// User returns the UserAPI client.
 	User() userv1.UserAPIClient
 

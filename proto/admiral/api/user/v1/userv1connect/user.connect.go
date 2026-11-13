@@ -67,7 +67,7 @@ type UserAPIClient interface {
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error)
-	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// ListUsers returns a page of the caller's organization's members: everyone who
 	// has joined, whatever their role or status. People who have been invited but
 	// have not joined are not users yet; they are listed by InvitationAPI.
 	//
@@ -92,7 +92,7 @@ type UserAPIHandler interface {
 	//
 	// Scope: `user:read`
 	GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error)
-	// ListUsers returns a page of the caller's tenant's members: everyone who
+	// ListUsers returns a page of the caller's organization's members: everyone who
 	// has joined, whatever their role or status. People who have been invited but
 	// have not joined are not users yet; they are listed by InvitationAPI.
 	//

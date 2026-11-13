@@ -101,7 +101,7 @@ var (
 
 // EnvironmentAPIClient is a client for the admiral.api.environment.v1.EnvironmentAPI service.
 type EnvironmentAPIClient interface {
-	// CreateEnvironment creates a new environment for the specified application.
+	// CreateEnvironment creates a new environment for the specified project.
 	//
 	// Scope: `env:write`
 	CreateEnvironment(context.Context, *v1.CreateEnvironmentRequest) (*v1.CreateEnvironmentResponse, error)
@@ -110,7 +110,7 @@ type EnvironmentAPIClient interface {
 	// Scope: `env:read`
 	GetEnvironment(context.Context, *v1.GetEnvironmentRequest) (*v1.GetEnvironmentResponse, error)
 	// ListEnvironments returns a paginated list of environments, in one
-	// application or across all of them. Use the filter to narrow by name or
+	// project or across all of them. Use the filter to narrow by name or
 	// labels.
 	//
 	// Scope: `env:read`
@@ -154,7 +154,7 @@ func NewEnvironmentAPIClient(client *connect.Client) EnvironmentAPIClient {
 // EnvironmentAPIHandler is an implementation of the admiral.api.environment.v1.EnvironmentAPI
 // service.
 type EnvironmentAPIHandler interface {
-	// CreateEnvironment creates a new environment for the specified application.
+	// CreateEnvironment creates a new environment for the specified project.
 	//
 	// Scope: `env:write`
 	CreateEnvironment(context.Context, *v1.CreateEnvironmentRequest) (*v1.CreateEnvironmentResponse, error)
@@ -163,7 +163,7 @@ type EnvironmentAPIHandler interface {
 	// Scope: `env:read`
 	GetEnvironment(context.Context, *v1.GetEnvironmentRequest) (*v1.GetEnvironmentResponse, error)
 	// ListEnvironments returns a paginated list of environments, in one
-	// application or across all of them. Use the filter to narrow by name or
+	// project or across all of them. Use the filter to narrow by name or
 	// labels.
 	//
 	// Scope: `env:read`

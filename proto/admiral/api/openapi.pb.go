@@ -25,25 +25,25 @@ var File_admiral_api_openapi_proto protoreflect.FileDescriptor
 
 const file_admiral_api_openapi_proto_rawDesc = "" +
 	"\n" +
-	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xbb\x0f\xbaG\x90\x0e\x12\x91\x01\n" +
-	"\vAdmiral API\x12\x81\x01The Admiral REST API for managing applications, infrastructure, and runs. See https://admiral.io/docs for complete documentation.:?\n" +
-	"\fApplications\x12/Manage application lifecycle and configuration.:o\n" +
-	"\fEnvironments\x12_Manage deployment environments within an application, and view the components deployed to them.:\x88\x01\n" +
+	"\x19admiral/api/openapi.proto\x12\x0eadmiral.api.v1\x1a$gnostic/openapi/v3/annotations.protoB\xb6\x0f\xbaG\x8b\x0e\x12\x8c\x01\n" +
+	"\vAdmiral API\x12}The Admiral REST API for managing projects, infrastructure, and runs. See https://admiral.io/docs for complete documentation.:7\n" +
+	"\bProjects\x12+Manage project lifecycle and configuration.:j\n" +
+	"\fEnvironments\x12ZManage deployment environments within a project, and view the components deployed to them.:\x83\x01\n" +
 	"\n" +
-	"ChangeSets\x12zManage change sets: scoped, isolated proposals to mutate the deployed state of an application within a single environment.:_\n" +
+	"ChangeSets\x12uManage change sets: scoped, isolated proposals to mutate the deployed state of a project within a single environment.:_\n" +
 	"\x04Runs\x12WPlan and apply change sets, check environments for drift, and reapply what they desire.:e\n" +
 	"\n" +
-	"Components\x12WPublish, import and curate the component registry: components, their versions and tags.:=\n" +
-	"\x06Tenant\x123Your organization: its name, slug, status and logo.:A\n" +
+	"Components\x12WPublish, import and curate the component registry: components, their versions and tags.:C\n" +
+	"\fOrganization\x123Your organization: its name, slug, status and logo.:A\n" +
 	"\vCredentials\x122Manage credentials for accessing external systems.:\x86\x01\n" +
 	"\fIntegrations\x12vThe outside services your organization connects, such as Admiral's GitHub App, and the install flow that connects one.:\xb1\x01\n" +
 	"\aSources\x12\xa5\x01The upstream locations components come from, a repository, a Helm repository or a registry namespace, with the grant that reaches each and what may enter through it.:o\n" +
 	"\x10Service Accounts\x12[The non-human principals your agents run as, and the issuer and subject each signs in with.:i\n" +
 	"\aIssuers\x12^The token issuers your service accounts trust, by key URL, pasted keys, or keys agents report.:3\n" +
 	"\x06Agents\x12)Manage your agents, and who may use each.:.\n" +
-	"\x04Jobs\x12&Follow and cancel the work agents run.:C\n" +
-	"\x04User\x12;Retrieve user profiles and list the members of your tenant.:c\n" +
-	"\vInvitations\x12TInvite people into your tenant, see what is outstanding, and withdraw an invitation.:G\n" +
+	"\x04Jobs\x12&Follow and cancel the work agents run.:I\n" +
+	"\x04User\x12ARetrieve user profiles and list the members of your organization.:i\n" +
+	"\vInvitations\x12ZInvite people into your organization, see what is outstanding, and withdraw an invitation.:G\n" +
 	"\bAPI Keys\x12;Manage your own API keys for authenticating scripts and CI.:%\n" +
 	"\x06Health\x12\x1bCheck service availability.:[\n" +
 	"\rAgent Runtime\x12JWhat an agent calls while it works. Called as the agent's service account.\n" +

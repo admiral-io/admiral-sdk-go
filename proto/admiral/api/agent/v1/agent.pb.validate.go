@@ -2052,7 +2052,7 @@ func (m *AgentGrant) validate(all bool) error {
 			errors = append(errors, err)
 		}
 		// no validation rules for GroupId
-	case *AgentGrant_ApplicationId:
+	case *AgentGrant_ProjectId:
 		if v == nil {
 			err := AgentGrantValidationError{
 				field:  "Target",
@@ -2063,7 +2063,7 @@ func (m *AgentGrant) validate(all bool) error {
 			}
 			errors = append(errors, err)
 		}
-		// no validation rules for ApplicationId
+		// no validation rules for ProjectId
 	case *AgentGrant_EnvironmentId:
 		if v == nil {
 			err := AgentGrantValidationError{

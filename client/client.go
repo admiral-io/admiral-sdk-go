@@ -10,18 +10,18 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	agentv1 "go.admiral.io/sdk/proto/admiral/api/agent/v1"
 	apikeyv1 "go.admiral.io/sdk/proto/admiral/api/apikey/v1"
-	applicationv1 "go.admiral.io/sdk/proto/admiral/api/application/v1"
 	changesetv1 "go.admiral.io/sdk/proto/admiral/api/changeset/v1"
 	credentialv1 "go.admiral.io/sdk/proto/admiral/api/credential/v1"
 	environmentv1 "go.admiral.io/sdk/proto/admiral/api/environment/v1"
 	healthcheckv1 "go.admiral.io/sdk/proto/admiral/api/healthcheck/v1"
 	integrationv1 "go.admiral.io/sdk/proto/admiral/api/integration/v1"
 	invitationv1 "go.admiral.io/sdk/proto/admiral/api/invitation/v1"
+	organizationv1 "go.admiral.io/sdk/proto/admiral/api/organization/v1"
+	projectv1 "go.admiral.io/sdk/proto/admiral/api/project/v1"
 	registryv1 "go.admiral.io/sdk/proto/admiral/api/registry/v1"
 	runv1 "go.admiral.io/sdk/proto/admiral/api/run/v1"
 	serviceaccountv1 "go.admiral.io/sdk/proto/admiral/api/serviceaccount/v1"
 	sourcev1 "go.admiral.io/sdk/proto/admiral/api/source/v1"
-	tenantv1 "go.admiral.io/sdk/proto/admiral/api/tenant/v1"
 	userv1 "go.admiral.io/sdk/proto/admiral/api/user/v1"
 )
 
@@ -38,19 +38,19 @@ type Client struct {
 	job agentv1.JobAPIClient
 	agentRuntime agentv1.AgentRuntimeAPIClient
 	apiKey apikeyv1.ApiKeyAPIClient
-	application applicationv1.ApplicationAPIClient
 	changeSet changesetv1.ChangeSetAPIClient
 	credential credentialv1.CredentialAPIClient
 	environment environmentv1.EnvironmentAPIClient
 	healthcheck healthcheckv1.HealthcheckAPIClient
 	integration integrationv1.IntegrationAPIClient
 	invitation invitationv1.InvitationAPIClient
+	organization organizationv1.OrganizationAPIClient
+	project projectv1.ProjectAPIClient
 	registry registryv1.RegistryAPIClient
 	run runv1.RunAPIClient
 	serviceAccount serviceaccountv1.ServiceAccountAPIClient
 	issuer serviceaccountv1.IssuerAPIClient
 	source sourcev1.SourceAPIClient
-	tenant tenantv1.TenantAPIClient
 	user userv1.UserAPIClient
 }
 
@@ -98,19 +98,19 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		job: agentv1.NewJobAPIClient(conn),
 		agentRuntime: agentv1.NewAgentRuntimeAPIClient(conn),
 		apiKey: apikeyv1.NewApiKeyAPIClient(conn),
-		application: applicationv1.NewApplicationAPIClient(conn),
 		changeSet: changesetv1.NewChangeSetAPIClient(conn),
 		credential: credentialv1.NewCredentialAPIClient(conn),
 		environment: environmentv1.NewEnvironmentAPIClient(conn),
 		healthcheck: healthcheckv1.NewHealthcheckAPIClient(conn),
 		integration: integrationv1.NewIntegrationAPIClient(conn),
 		invitation: invitationv1.NewInvitationAPIClient(conn),
+		organization: organizationv1.NewOrganizationAPIClient(conn),
+		project: projectv1.NewProjectAPIClient(conn),
 		registry: registryv1.NewRegistryAPIClient(conn),
 		run: runv1.NewRunAPIClient(conn),
 		serviceAccount: serviceaccountv1.NewServiceAccountAPIClient(conn),
 		issuer: serviceaccountv1.NewIssuerAPIClient(conn),
 		source: sourcev1.NewSourceAPIClient(conn),
-		tenant: tenantv1.NewTenantAPIClient(conn),
 		user: userv1.NewUserAPIClient(conn),
 	}, nil
 }
@@ -133,11 +133,6 @@ func (c *Client) AgentRuntime() agentv1.AgentRuntimeAPIClient {
 // ApiKey returns the ApiKeyAPI client.
 func (c *Client) ApiKey() apikeyv1.ApiKeyAPIClient {
 	return c.apiKey
-}
-
-// Application returns the ApplicationAPI client.
-func (c *Client) Application() applicationv1.ApplicationAPIClient {
-	return c.application
 }
 
 // ChangeSet returns the ChangeSetAPI client.
@@ -170,6 +165,16 @@ func (c *Client) Invitation() invitationv1.InvitationAPIClient {
 	return c.invitation
 }
 
+// Organization returns the OrganizationAPI client.
+func (c *Client) Organization() organizationv1.OrganizationAPIClient {
+	return c.organization
+}
+
+// Project returns the ProjectAPI client.
+func (c *Client) Project() projectv1.ProjectAPIClient {
+	return c.project
+}
+
 // Registry returns the RegistryAPI client.
 func (c *Client) Registry() registryv1.RegistryAPIClient {
 	return c.registry
@@ -193,11 +198,6 @@ func (c *Client) Issuer() serviceaccountv1.IssuerAPIClient {
 // Source returns the SourceAPI client.
 func (c *Client) Source() sourcev1.SourceAPIClient {
 	return c.source
-}
-
-// Tenant returns the TenantAPI client.
-func (c *Client) Tenant() tenantv1.TenantAPIClient {
-	return c.tenant
 }
 
 // User returns the UserAPI client.

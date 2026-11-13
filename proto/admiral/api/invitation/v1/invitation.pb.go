@@ -89,7 +89,7 @@ func (Invitation_Status) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_invitation_v1_invitation_proto_rawDescGZIP(), []int{0, 0}
 }
 
-// Invitation is one person invited into the caller's tenant. Never carries
+// Invitation is one person invited into the caller's organization. Never carries
 // the link or its token.
 type Invitation struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -101,7 +101,7 @@ type Invitation struct {
 	Role   v1.UserRole       `protobuf:"varint,3,opt,name=role,proto3,enum=admiral.api.user.v1.UserRole" json:"role,omitempty"`
 	Status Invitation_Status `protobuf:"varint,4,opt,name=status,proto3,enum=admiral.api.invitation.v1.Invitation_Status" json:"status,omitempty"`
 	// The member who issued it. Absent when it was issued by an operator from
-	// outside the tenant.
+	// outside the organization.
 	InvitedBy *v11.ActorRef          `protobuf:"bytes,11,opt,name=invited_by,json=invitedBy,proto3" json:"invited_by,omitempty"`
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// After this instant the link no longer works.
@@ -216,7 +216,7 @@ func (x *Invitation) GetRevokedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreateInvitationRequest invites one address into the caller's tenant.
+// CreateInvitationRequest invites one address into the caller's organization.
 type CreateInvitationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The invitation to issue: `email` and `role`.
@@ -307,7 +307,7 @@ func (x *CreateInvitationResponse) GetInvitation() *Invitation {
 	return nil
 }
 
-// ListInvitationsRequest pages through the caller's tenant's invitations.
+// ListInvitationsRequest pages through the caller's organization's invitations.
 type ListInvitationsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
@@ -433,7 +433,7 @@ func (x *ListInvitationsResponse) GetNextPageToken() string {
 	return ""
 }
 
-// RevokeInvitationRequest names one invitation in the caller's tenant.
+// RevokeInvitationRequest names one invitation in the caller's organization.
 type RevokeInvitationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The invitation, from CreateInvitation or ListInvitations.
@@ -579,10 +579,10 @@ const file_admiral_api_invitation_v1_invitation_proto_rawDesc = "" +
 	"\x18RevokeInvitationResponse\x12E\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2%.admiral.api.invitation.v1.InvitationR\n" +
-	"invitation2\x9f\x05\n" +
-	"\rInvitationAPI\x12\xdf\x01\n" +
-	"\x10CreateInvitation\x122.admiral.api.invitation.v1.CreateInvitationRequest\x1a3.admiral.api.invitation.v1.CreateInvitationResponse\"b\xbaG5\n" +
-	"\vInvitations\x12&Invite someone into the current tenant\xa2\x97$\f\n" +
+	"invitation2\xa5\x05\n" +
+	"\rInvitationAPI\x12\xe5\x01\n" +
+	"\x10CreateInvitation\x122.admiral.api.invitation.v1.CreateInvitationRequest\x1a3.admiral.api.invitation.v1.CreateInvitationResponse\"h\xbaG;\n" +
+	"\vInvitations\x12,Invite someone into the current organization\xa2\x97$\f\n" +
 	"\n" +
 	"user:write\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/v1/invitations\x12\xc2\x01\n" +
 	"\x0fListInvitations\x121.admiral.api.invitation.v1.ListInvitationsRequest\x1a2.admiral.api.invitation.v1.ListInvitationsResponse\"H\xbaG\x1f\n" +

@@ -1566,7 +1566,7 @@ type AgentGrant struct {
 	//
 	//	*AgentGrant_Organization_
 	//	*AgentGrant_GroupId
-	//	*AgentGrant_ApplicationId
+	//	*AgentGrant_ProjectId
 	//	*AgentGrant_EnvironmentId
 	Target        isAgentGrant_Target `protobuf_oneof:"target"`
 	unknownFields protoimpl.UnknownFields
@@ -1628,10 +1628,10 @@ func (x *AgentGrant) GetGroupId() string {
 	return ""
 }
 
-func (x *AgentGrant) GetApplicationId() string {
+func (x *AgentGrant) GetProjectId() string {
 	if x != nil {
-		if x, ok := x.Target.(*AgentGrant_ApplicationId); ok {
-			return x.ApplicationId
+		if x, ok := x.Target.(*AgentGrant_ProjectId); ok {
+			return x.ProjectId
 		}
 	}
 	return ""
@@ -1661,8 +1661,8 @@ type AgentGrant_GroupId struct {
 	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3,oneof"`
 }
 
-type AgentGrant_ApplicationId struct {
-	ApplicationId string `protobuf:"bytes,3,opt,name=application_id,json=applicationId,proto3,oneof"`
+type AgentGrant_ProjectId struct {
+	ProjectId string `protobuf:"bytes,3,opt,name=project_id,json=projectId,proto3,oneof"`
 }
 
 type AgentGrant_EnvironmentId struct {
@@ -1673,7 +1673,7 @@ func (*AgentGrant_Organization_) isAgentGrant_Target() {}
 
 func (*AgentGrant_GroupId) isAgentGrant_Target() {}
 
-func (*AgentGrant_ApplicationId) isAgentGrant_Target() {}
+func (*AgentGrant_ProjectId) isAgentGrant_Target() {}
 
 func (*AgentGrant_EnvironmentId) isAgentGrant_Target() {}
 
@@ -4018,9 +4018,9 @@ type ListAgentsRequest struct {
 	// Filterable fields:
 	//   - `name`: filter by agent name.
 	//   - `kind`: filter by agent kind.
-	//   - `assignable_to`: agents an application's environments may be assigned (an application id).
+	//   - `assignable_to`: agents a project's environments may be assigned (a project id).
 	//
-	// Example: `field['kind'] = 'KIND_KUBERNETES' AND field['assignable_to'] = 'app-4m8q2x7k1p9c'`
+	// Example: `field['kind'] = 'KIND_KUBERNETES' AND field['assignable_to'] = 'prj-4m8q2x7k1p9c'`
 	Filter        string `protobuf:"bytes,5,opt,name=filter,proto3" json:"filter,omitempty"`
 	PageSize      int32  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -6861,7 +6861,7 @@ var File_admiral_api_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
-	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a,admiral/api/environment/v1/environment.proto\x1a&admiral/api/registry/v1/registry.proto\x1a2admiral/api/serviceaccount/v1/serviceaccount.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc1\a\n" +
+	" admiral/api/agent/v1/agent.proto\x12\x14admiral.api.agent.v1\x1a,admiral/api/environment/v1/environment.proto\x1a&admiral/api/registry/v1/registry.proto\x1a2admiral/api/serviceaccount/v1/serviceaccount.proto\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc1\a\n" +
 	"\x05Agent\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^agt-[0-9a-z]+$R\x02id\x12>\n" +
 	"\x04name\x18\x03 \x01(\tB*\xbaH'r%\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12?\n" +
@@ -6953,12 +6953,13 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x15can_create_namespaces\x18\x01 \x01(\bR\x13canCreateNamespaces\x12/\n" +
 	"\x13writable_namespaces\x18\x02 \x03(\tR\x12writableNamespaces\x12%\n" +
 	"\x0eall_namespaces\x18\x03 \x01(\bR\rallNamespaces\x127\n" +
-	"\x18can_write_cluster_scoped\x18\x04 \x01(\bR\x15canWriteClusterScoped\"\xcf\x02\n" +
+	"\x18can_write_cluster_scoped\x18\x04 \x01(\bR\x15canWriteClusterScoped\"\xc7\x02\n" +
 	"\n" +
 	"AgentGrant\x12S\n" +
 	"\forganization\x18\x05 \x01(\v2-.admiral.api.agent.v1.AgentGrant.OrganizationH\x00R\forganization\x123\n" +
-	"\bgroup_id\x18\x02 \x01(\tB\x16\xbaH\x13r\x112\x0f^grp-[0-9a-z]+$H\x00R\agroupId\x12?\n" +
-	"\x0eapplication_id\x18\x03 \x01(\tB\x16\xbaH\x13r\x112\x0f^app-[0-9a-z]+$H\x00R\rapplicationId\x12?\n" +
+	"\bgroup_id\x18\x02 \x01(\tB\x16\xbaH\x13r\x112\x0f^grp-[0-9a-z]+$H\x00R\agroupId\x127\n" +
+	"\n" +
+	"project_id\x18\x03 \x01(\tB\x16\xbaH\x13r\x112\x0f^prj-[0-9a-z]+$H\x00R\tprojectId\x12?\n" +
 	"\x0eenvironment_id\x18\x04 \x01(\tB\x16\xbaH\x13r\x112\x0f^env-[0-9a-z]+$H\x00R\renvironmentId\x1a\x0e\n" +
 	"\fOrganizationB\x0f\n" +
 	"\x06target\x12\x05\xbaH\x02\b\x01J\x04\b\x01\x10\x02J\x04\b\x06\x10\aR\bprofiles\"\xaa\a\n" +
@@ -7812,7 +7813,7 @@ func file_admiral_api_agent_v1_agent_proto_init() {
 	file_admiral_api_agent_v1_agent_proto_msgTypes[13].OneofWrappers = []any{
 		(*AgentGrant_Organization_)(nil),
 		(*AgentGrant_GroupId)(nil),
-		(*AgentGrant_ApplicationId)(nil),
+		(*AgentGrant_ProjectId)(nil),
 		(*AgentGrant_EnvironmentId)(nil),
 	}
 	file_admiral_api_agent_v1_agent_proto_msgTypes[16].OneofWrappers = []any{

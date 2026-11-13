@@ -37,7 +37,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// RegistryAPI is the component registry: what a tenant has published,
+// RegistryAPI is the component registry: what an organization has published,
 // addressed by digest.
 //
 // A component here is a REGISTRY ENTRY -- the thing `admiral component
@@ -77,7 +77,7 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(ctx context.Context, in *PublishComponentRequest, opts ...grpc.CallOption) (*PublishComponentResponse, error)
-	// ImportComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the organization does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and
@@ -278,7 +278,7 @@ func (c *registryAPIClient) DeleteTag(ctx context.Context, in *DeleteTagRequest,
 // All implementations should embed UnimplementedRegistryAPIServer
 // for forward compatibility.
 //
-// RegistryAPI is the component registry: what a tenant has published,
+// RegistryAPI is the component registry: what an organization has published,
 // addressed by digest.
 //
 // A component here is a REGISTRY ENTRY -- the thing `admiral component
@@ -318,7 +318,7 @@ type RegistryAPIServer interface {
 	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *PublishComponentRequest) (*PublishComponentResponse, error)
-	// ImportComponent publishes an artifact the tenant does not own: a chart in
+	// ImportComponent publishes an artifact the organization does not own: a chart in
 	// an HTTP repository or an OCI registry, a module in a module registry, a
 	// git repository at a ref, an archive. Admiral fetches it with the
 	// credentials named, closes it over what it reaches, scans it, and

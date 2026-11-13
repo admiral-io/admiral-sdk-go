@@ -59,7 +59,7 @@ func (m *ChangeSet) validate(all bool) error {
 
 	// no validation rules for Id
 
-	// no validation rules for ApplicationId
+	// no validation rules for ProjectId
 
 	// no validation rules for EnvironmentId
 

@@ -30,7 +30,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// CredentialAPI manages the credentials a tenant registers for reaching
+// CredentialAPI manages the credentials an organization registers for reaching
 // external systems at publish time: a git host, a Helm repository, an OCI
 // registry, a module registry.
 //
@@ -45,7 +45,7 @@ const (
 // decrypted only inside a publish, and never returned. Get and List return
 // metadata only.
 type CredentialAPIClient interface {
-	// CreateCredential registers a credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's organization.
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
@@ -56,7 +56,7 @@ type CredentialAPIClient interface {
 	//
 	// Scope: `credential:read`
 	GetCredential(ctx context.Context, in *GetCredentialRequest, opts ...grpc.CallOption) (*GetCredentialResponse, error)
-	// ListCredentials pages through the caller's tenant's credentials.
+	// ListCredentials pages through the caller's organization's credentials.
 	// Secrets are never included.
 	//
 	// Scope: `credential:read`
@@ -139,7 +139,7 @@ func (c *credentialAPIClient) DeleteCredential(ctx context.Context, in *DeleteCr
 // All implementations should embed UnimplementedCredentialAPIServer
 // for forward compatibility.
 //
-// CredentialAPI manages the credentials a tenant registers for reaching
+// CredentialAPI manages the credentials an organization registers for reaching
 // external systems at publish time: a git host, a Helm repository, an OCI
 // registry, a module registry.
 //
@@ -154,7 +154,7 @@ func (c *credentialAPIClient) DeleteCredential(ctx context.Context, in *DeleteCr
 // decrypted only inside a publish, and never returned. Get and List return
 // metadata only.
 type CredentialAPIServer interface {
-	// CreateCredential registers a credential within the caller's tenant.
+	// CreateCredential registers a credential within the caller's organization.
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
@@ -165,7 +165,7 @@ type CredentialAPIServer interface {
 	//
 	// Scope: `credential:read`
 	GetCredential(context.Context, *GetCredentialRequest) (*GetCredentialResponse, error)
-	// ListCredentials pages through the caller's tenant's credentials.
+	// ListCredentials pages through the caller's organization's credentials.
 	// Secrets are never included.
 	//
 	// Scope: `credential:read`

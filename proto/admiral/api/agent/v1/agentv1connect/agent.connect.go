@@ -189,9 +189,9 @@ type AgentAPIClient interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *v1.CreateEnrollmentKeyRequest) (*v1.CreateEnrollmentKeyResponse, error)
-	// GrantAgentUse lets the organization, a team, an application's
+	// GrantAgentUse lets the organization, a team, a project's
 	// environments, or one environment be assigned an agent. Only the agent's owner
-	// or a tenant admin may.
+	// or an organization admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *v1.GrantAgentUseRequest) (*v1.GrantAgentUseResponse, error)
@@ -250,9 +250,9 @@ type AgentAPIHandler interface {
 	//
 	// Scope: `agent:write`
 	CreateEnrollmentKey(context.Context, *v1.CreateEnrollmentKeyRequest) (*v1.CreateEnrollmentKeyResponse, error)
-	// GrantAgentUse lets the organization, a team, an application's
+	// GrantAgentUse lets the organization, a team, a project's
 	// environments, or one environment be assigned an agent. Only the agent's owner
-	// or a tenant admin may.
+	// or an organization admin may.
 	//
 	// Scope: `agent:write`
 	GrantAgentUse(context.Context, *v1.GrantAgentUseRequest) (*v1.GrantAgentUseResponse, error)
@@ -803,7 +803,7 @@ var (
 type AgentRuntimeAPIClient interface {
 	// Enroll ties the agent's service account to an issuer and records its
 	// subject. The agent sends its issuer's keys and a token they verify. When
-	// the token also verifies against the keys of an issuer the tenant already
+	// the token also verifies against the keys of an issuer the organization already
 	// holds, the service account trusts that one; otherwise the sent keys become
 	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
 	// token's subject is recorded and fixed until the agent enrolls again. The
@@ -909,7 +909,7 @@ func NewAgentRuntimeAPIClient(client *connect.Client) AgentRuntimeAPIClient {
 type AgentRuntimeAPIHandler interface {
 	// Enroll ties the agent's service account to an issuer and records its
 	// subject. The agent sends its issuer's keys and a token they verify. When
-	// the token also verifies against the keys of an issuer the tenant already
+	// the token also verifies against the keys of an issuer the organization already
 	// holds, the service account trusts that one; otherwise the sent keys become
 	// a new issuer. Issuers are never matched by `iss` or `cluster_uid`. The
 	// token's subject is recorded and fixed until the agent enrolls again. The

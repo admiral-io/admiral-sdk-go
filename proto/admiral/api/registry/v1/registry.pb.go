@@ -307,11 +307,11 @@ type Provenance_Kind int32
 
 const (
 	Provenance_KIND_UNSPECIFIED Provenance_Kind = 0
-	// The tenant's own code, published because they pushed it. Today that is
+	// The organization's own code, published because they pushed it. Today that is
 	// the CLI uploading a directory, from CI or a laptop; the repository,
 	// ref and commit are what the publisher reported.
 	Provenance_KIND_PUSH Provenance_Kind = 1
-	// A copy of an artifact the tenant does not own (a chart, a registry
+	// A copy of an artifact the organization does not own (a chart, a registry
 	// module, a git tree, an archive), fetched by Admiral. The upstream
 	// identity is recorded; the bytes are frozen here.
 	Provenance_KIND_IMPORT Provenance_Kind = 2
@@ -364,7 +364,7 @@ type Component struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Unique within the tenant, never changed: `cloud-sql`. Team grouping,
+	// Unique within the organization, never changed: `cloud-sql`. Team grouping,
 	// when it lands, is a `team/` segment of the name (`payments/cloud-sql`);
 	// moving a component means publishing under the new name and deprecating
 	// the old one with it as the successor.

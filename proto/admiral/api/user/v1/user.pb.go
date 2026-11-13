@@ -26,7 +26,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// UserRole is a member's standing in the tenant. The tiers imply one another
+// UserRole is a member's standing in the organization. The tiers imply one another
 // downward: an owner can do everything an administrator can, an administrator
 // everything a member can.
 type UserRole int32
@@ -34,10 +34,10 @@ type UserRole int32
 const (
 	// Default value. Must not be used.
 	UserRole_USER_ROLE_UNSPECIFIED UserRole = 0
-	// Owns the tenant. Exactly one per tenant; ownership moves by transfer, never
+	// Owns the organization. Exactly one per organization; ownership moves by transfer, never
 	// by invitation.
 	UserRole_USER_ROLE_OWNER UserRole = 1
-	// Manages members and tenant settings.
+	// Manages members and organization settings.
 	UserRole_USER_ROLE_ADMIN UserRole = 2
 	// Ordinary membership.
 	UserRole_USER_ROLE_MEMBER UserRole = 3
@@ -160,7 +160,7 @@ type User struct {
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// When the user was last updated.
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// The user's standing in the tenant.
+	// The user's standing in the organization.
 	Role UserRole `protobuf:"varint,10,opt,name=role,proto3,enum=admiral.api.user.v1.UserRole" json:"role,omitempty"`
 	// Whether the user can currently sign in.
 	Status        UserStatus `protobuf:"varint,11,opt,name=status,proto3,enum=admiral.api.user.v1.UserStatus" json:"status,omitempty"`
@@ -451,8 +451,8 @@ func (x *GetUserResponse) GetUser() *User {
 	return nil
 }
 
-// ListUsersRequest pages through the members of the caller's tenant. The
-// tenant is never a parameter: it is the caller's own.
+// ListUsersRequest pages through the members of the caller's organization. The
+// organization is never a parameter: it is the caller's own.
 type ListUsersRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Filter expression to narrow results. Uses the Admiral filter DSL (see the
@@ -629,15 +629,15 @@ const file_admiral_api_user_v1_user_proto_rawDesc = "" +
 	"UserStatus\x12\x1b\n" +
 	"\x17USER_STATUS_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12USER_STATUS_ACTIVE\x10\x01\x12\x19\n" +
-	"\x15USER_STATUS_SUSPENDED\x10\x022\xee\x03\n" +
+	"\x15USER_STATUS_SUSPENDED\x10\x022\xf4\x03\n" +
 	"\aUserAPI\x12\x8f\x01\n" +
 	"\x05GetMe\x12!.admiral.api.user.v1.GetMeRequest\x1a\".admiral.api.user.v1.GetMeResponse\"?\xbaG%\n" +
 	"\x04User\x12\x1dRetrieve current user profile\xa2\x97$\x00\x82\xd3\xe4\x93\x02\r\x12\v/v1/user/me\x12\xa0\x01\n" +
 	"\aGetUser\x12#.admiral.api.user.v1.GetUserRequest\x1a$.admiral.api.user.v1.GetUserResponse\"J\xbaG\x1d\n" +
 	"\x04User\x12\x15Retrieve a user by ID\xa2\x97$\v\n" +
-	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xad\x01\n" +
-	"\tListUsers\x12%.admiral.api.user.v1.ListUsersRequest\x1a&.admiral.api.user.v1.ListUsersResponse\"Q\xbaG.\n" +
-	"\x04User\x12&List the members of the current tenant\xa2\x97$\v\n" +
+	"\tuser:read\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/users/{user_id}\x12\xb3\x01\n" +
+	"\tListUsers\x12%.admiral.api.user.v1.ListUsersRequest\x1a&.admiral.api.user.v1.ListUsersResponse\"W\xbaG4\n" +
+	"\x04User\x12,List the members of the current organization\xa2\x97$\v\n" +
 	"\tuser:read\x82\xd3\xe4\x93\x02\v\x12\t/v1/usersB\xc7\x01\n" +
 	"\x17com.admiral.api.user.v1B\tUserProtoP\x01Z2go.admiral.io/sdk/proto/admiral/api/user/v1;userv1\xa2\x02\x03AAU\xaa\x02\x13Admiral.Api.User.V1\xca\x02\x13Admiral\\Api\\User\\V1\xe2\x02\x1fAdmiral\\Api\\User\\V1\\GPBMetadata\xea\x02\x16Admiral::Api::User::V1b\x06proto3"
 

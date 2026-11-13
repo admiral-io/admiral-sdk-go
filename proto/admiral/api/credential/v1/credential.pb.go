@@ -448,7 +448,7 @@ func (*AuthConfig_GithubApp) isAuthConfig_Variant() {}
 type Credential struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Unique within the tenant.
+	// Unique within the organization.
 	Name        string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// Immutable after creation.
@@ -580,7 +580,7 @@ func (x *Credential) GetLastUsedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreateCredentialRequest registers a credential in the caller's tenant.
+// CreateCredentialRequest registers a credential in the caller's organization.
 type CreateCredentialRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The credential to create: `name`, `type`, `auth_config`, and optionally

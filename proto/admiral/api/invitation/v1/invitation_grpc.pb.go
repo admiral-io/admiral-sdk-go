@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// InvitationAPI brings a person into the caller's tenant.
+// InvitationAPI brings a person into the caller's organization.
 //
 // An invitation is its own resource: it has a lifecycle (PENDING, ACCEPTED,
 // EXPIRED, REVOKED) and a user exists only once it is redeemed. Creating one
@@ -40,9 +40,9 @@ const (
 // for the same address retires the first and mails a new link, which is also
 // how "send it again" works; there is no resend procedure.
 //
-// Every request acts on the caller's own tenant; none names one.
+// Every request acts on the caller's own organization; none names one.
 type InvitationAPIClient interface {
-	// CreateInvitation invites an address into the caller's tenant for a role and
+	// CreateInvitation invites an address into the caller's organization for a role and
 	// sends the mail. Returns the invitation; the link is only ever in the mail.
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
@@ -52,7 +52,7 @@ type InvitationAPIClient interface {
 	//
 	// Scope: `user:write`
 	CreateInvitation(ctx context.Context, in *CreateInvitationRequest, opts ...grpc.CallOption) (*CreateInvitationResponse, error)
-	// ListInvitations returns a page of the caller's tenant's invitations, every
+	// ListInvitations returns a page of the caller's organization's invitations, every
 	// status included, so an administrator can see what is outstanding, what
 	// expired and what was withdrawn.
 	//
@@ -109,7 +109,7 @@ func (c *invitationAPIClient) RevokeInvitation(ctx context.Context, in *RevokeIn
 // All implementations should embed UnimplementedInvitationAPIServer
 // for forward compatibility.
 //
-// InvitationAPI brings a person into the caller's tenant.
+// InvitationAPI brings a person into the caller's organization.
 //
 // An invitation is its own resource: it has a lifecycle (PENDING, ACCEPTED,
 // EXPIRED, REVOKED) and a user exists only once it is redeemed. Creating one
@@ -121,9 +121,9 @@ func (c *invitationAPIClient) RevokeInvitation(ctx context.Context, in *RevokeIn
 // for the same address retires the first and mails a new link, which is also
 // how "send it again" works; there is no resend procedure.
 //
-// Every request acts on the caller's own tenant; none names one.
+// Every request acts on the caller's own organization; none names one.
 type InvitationAPIServer interface {
-	// CreateInvitation invites an address into the caller's tenant for a role and
+	// CreateInvitation invites an address into the caller's organization for a role and
 	// sends the mail. Returns the invitation; the link is only ever in the mail.
 	//
 	// A live invitation for the same address is retired and replaced, so a retry
@@ -133,7 +133,7 @@ type InvitationAPIServer interface {
 	//
 	// Scope: `user:write`
 	CreateInvitation(context.Context, *CreateInvitationRequest) (*CreateInvitationResponse, error)
-	// ListInvitations returns a page of the caller's tenant's invitations, every
+	// ListInvitations returns a page of the caller's organization's invitations, every
 	// status included, so an administrator can see what is outstanding, what
 	// expired and what was withdrawn.
 	//

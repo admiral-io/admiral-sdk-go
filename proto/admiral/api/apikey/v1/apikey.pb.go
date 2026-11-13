@@ -40,7 +40,7 @@ type ApiKey struct {
 	// from it. Must be a subset of the caller's own scopes.
 	Scopes []string        `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	Status v1.ApiKeyStatus `protobuf:"varint,5,opt,name=status,proto3,enum=admiral.common.v1.ApiKeyStatus" json:"status,omitempty"`
-	// When the key expires. Unset never expires. Fixed at creation; tenant
+	// When the key expires. Unset never expires. Fixed at creation; organization
 	// policy may cap it.
 	ExpiresAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	// When the key was last exchanged for an access token. Minted tokens are
