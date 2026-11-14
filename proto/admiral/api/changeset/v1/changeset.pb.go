@@ -4386,9 +4386,11 @@ type RevertChangeSetRequest struct {
 	// The new change set's title and description, when the revert opens one.
 	// An empty title becomes "Revert" and the reverted change set's title.
 	ChangeSet *ChangeSet `protobuf:"bytes,3,opt,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
-	// The components to return, by name, for a change set that holds its
-	// environment. Empty returns every component it touched. A change set that
-	// has closed is reverted whole, so naming components is refused.
+	// The components to return to their content from before the change set,
+	// by name. Empty returns every component it touched. For a change set that
+	// holds its environment the revert is a new revision of it; for one that
+	// has closed it opens a new change set, refused once the environment has
+	// moved past it.
 	Components    []string `protobuf:"bytes,4,rep,name=components,proto3" json:"components,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

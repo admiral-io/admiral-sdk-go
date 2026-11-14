@@ -152,8 +152,9 @@ type ChangeSetAPIClient interface {
 	// revision of the same change set, for the components named or every one it
 	// touched. When every component is back, it reads REVERTED; when some are
 	// kept, it reads APPLIED with what it kept. A change set that has closed is
-	// reverted whole by a new change set, which may apply only while the
-	// environment has not moved past it.
+	// reverted by a new change set, for the components named or every one it
+	// touched, which may apply only while the environment has not moved past
+	// it.
 	//
 	// Scope: `changeset:write`
 	RevertChangeSet(ctx context.Context, in *RevertChangeSetRequest, opts ...grpc.CallOption) (*RevertChangeSetResponse, error)
@@ -424,8 +425,9 @@ type ChangeSetAPIServer interface {
 	// revision of the same change set, for the components named or every one it
 	// touched. When every component is back, it reads REVERTED; when some are
 	// kept, it reads APPLIED with what it kept. A change set that has closed is
-	// reverted whole by a new change set, which may apply only while the
-	// environment has not moved past it.
+	// reverted by a new change set, for the components named or every one it
+	// touched, which may apply only while the environment has not moved past
+	// it.
 	//
 	// Scope: `changeset:write`
 	RevertChangeSet(context.Context, *RevertChangeSetRequest) (*RevertChangeSetResponse, error)

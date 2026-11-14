@@ -6231,6 +6231,8 @@ func (m *Step) validate(all bool) error {
 
 	// no validation rules for Message
 
+	// no validation rules for Failure
+
 	if len(errors) > 0 {
 		return StepMultiError(errors)
 	}

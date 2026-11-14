@@ -516,6 +516,60 @@ func (HookRun_Phase) EnumDescriptor() ([]byte, []int) {
 	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{35, 0}
 }
 
+// Failure is why a FAILED step failed.
+type Step_Failure int32
+
+const (
+	// Read as APPLY, so an agent that does not set it holds the environment.
+	Step_FAILURE_UNSPECIFIED Step_Failure = 0
+	// Not every object was written, or the engine errored.
+	Step_FAILURE_APPLY Step_Failure = 1
+	// Every object was written and the component did not become healthy
+	// before the wait ended, or the person stopped the wait.
+	Step_FAILURE_UNHEALTHY Step_Failure = 2
+)
+
+// Enum value maps for Step_Failure.
+var (
+	Step_Failure_name = map[int32]string{
+		0: "FAILURE_UNSPECIFIED",
+		1: "FAILURE_APPLY",
+		2: "FAILURE_UNHEALTHY",
+	}
+	Step_Failure_value = map[string]int32{
+		"FAILURE_UNSPECIFIED": 0,
+		"FAILURE_APPLY":       1,
+		"FAILURE_UNHEALTHY":   2,
+	}
+)
+
+func (x Step_Failure) Enum() *Step_Failure {
+	p := new(Step_Failure)
+	*p = x
+	return p
+}
+
+func (x Step_Failure) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Step_Failure) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[8].Descriptor()
+}
+
+func (Step_Failure) Type() protoreflect.EnumType {
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[8]
+}
+
+func (x Step_Failure) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Step_Failure.Descriptor instead.
+func (Step_Failure) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_agent_v1_agent_proto_rawDescGZIP(), []int{40, 0}
+}
+
 // Keys is how Admiral treated the keys the agent reported.
 type HeartbeatResponse_Keys int32
 
@@ -559,11 +613,11 @@ func (x HeartbeatResponse_Keys) String() string {
 }
 
 func (HeartbeatResponse_Keys) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_agent_v1_agent_proto_enumTypes[8].Descriptor()
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[9].Descriptor()
 }
 
 func (HeartbeatResponse_Keys) Type() protoreflect.EnumType {
-	return &file_admiral_api_agent_v1_agent_proto_enumTypes[8]
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[9]
 }
 
 func (x HeartbeatResponse_Keys) Number() protoreflect.EnumNumber {
@@ -613,11 +667,11 @@ func (x FinishJobResponse_Outcome) String() string {
 }
 
 func (FinishJobResponse_Outcome) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_agent_v1_agent_proto_enumTypes[9].Descriptor()
+	return file_admiral_api_agent_v1_agent_proto_enumTypes[10].Descriptor()
 }
 
 func (FinishJobResponse_Outcome) Type() protoreflect.EnumType {
-	return &file_admiral_api_agent_v1_agent_proto_enumTypes[9]
+	return &file_admiral_api_agent_v1_agent_proto_enumTypes[10]
 }
 
 func (x FinishJobResponse_Outcome) Number() protoreflect.EnumNumber {
@@ -3624,10 +3678,13 @@ func (x *StateAccess) GetExpiresAt() *timestamppb.Timestamp {
 
 // Step is one component's part of a job.
 type Step struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	Status        JobStatus              `protobuf:"varint,2,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
-	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Component string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	Status    JobStatus              `protobuf:"varint,2,opt,name=status,proto3,enum=admiral.api.agent.v1.JobStatus" json:"status,omitempty"`
+	Message   string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	// Set only when status is FAILED. Only the Kubernetes agent sets
+	// UNHEALTHY.
+	Failure       Step_Failure `protobuf:"varint,4,opt,name=failure,proto3,enum=admiral.api.agent.v1.Step_Failure" json:"failure,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3681,6 +3738,13 @@ func (x *Step) GetMessage() string {
 		return x.Message
 	}
 	return ""
+}
+
+func (x *Step) GetFailure() Step_Failure {
+	if x != nil {
+		return x.Failure
+	}
+	return Step_FAILURE_UNSPECIFIED
 }
 
 // Offer is work claimed for an agent, not yet started.
@@ -7133,11 +7197,16 @@ const file_admiral_api_agent_v1_agent_proto_rawDesc = "" +
 	"\x04host\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x18\xfd\x01R\x04host\x12\x19\n" +
 	"\x05token\x18\x02 \x01(\tB\x03\x80\x01\x01R\x05token\x129\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x81\x01\n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x97\x02\n" +
 	"\x04Step\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12A\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x1f.admiral.api.agent.v1.JobStatusB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06status\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"\xa0\x01\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12F\n" +
+	"\afailure\x18\x04 \x01(\x0e2\".admiral.api.agent.v1.Step.FailureB\b\xbaH\x05\x82\x01\x02\x10\x01R\afailure\"L\n" +
+	"\aFailure\x12\x17\n" +
+	"\x13FAILURE_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rFAILURE_APPLY\x10\x01\x12\x15\n" +
+	"\x11FAILURE_UNHEALTHY\x10\x02\"\xa0\x01\n" +
 	"\x05Offer\x12+\n" +
 	"\x03job\x18\x01 \x01(\v2\x19.admiral.api.agent.v1.JobR\x03job\x12\x18\n" +
 	"\aattempt\x18\x02 \x01(\x05R\aattempt\x12$\n" +
@@ -7496,7 +7565,7 @@ func file_admiral_api_agent_v1_agent_proto_rawDescGZIP() []byte {
 	return file_admiral_api_agent_v1_agent_proto_rawDescData
 }
 
-var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 10)
+var file_admiral_api_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 11)
 var file_admiral_api_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 98)
 var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(JobKind)(0),                        // 0: admiral.api.agent.v1.JobKind
@@ -7507,290 +7576,292 @@ var file_admiral_api_agent_v1_agent_proto_goTypes = []any{
 	(AmbientCredential_Source)(0),       // 5: admiral.api.agent.v1.AmbientCredential.Source
 	(ResourceChange_Action)(0),          // 6: admiral.api.agent.v1.ResourceChange.Action
 	(HookRun_Phase)(0),                  // 7: admiral.api.agent.v1.HookRun.Phase
-	(HeartbeatResponse_Keys)(0),         // 8: admiral.api.agent.v1.HeartbeatResponse.Keys
-	(FinishJobResponse_Outcome)(0),      // 9: admiral.api.agent.v1.FinishJobResponse.Outcome
-	(*Agent)(nil),                       // 10: admiral.api.agent.v1.Agent
-	(*AgentSettings)(nil),               // 11: admiral.api.agent.v1.AgentSettings
-	(*KubernetesAgentSettings)(nil),     // 12: admiral.api.agent.v1.KubernetesAgentSettings
-	(*InfraAgentSettings)(nil),          // 13: admiral.api.agent.v1.InfraAgentSettings
-	(*EngineSupport)(nil),               // 14: admiral.api.agent.v1.EngineSupport
-	(*KubernetesReport)(nil),            // 15: admiral.api.agent.v1.KubernetesReport
-	(*AgentReport)(nil),                 // 16: admiral.api.agent.v1.AgentReport
-	(*InfraReport)(nil),                 // 17: admiral.api.agent.v1.InfraReport
-	(*Runtime)(nil),                     // 18: admiral.api.agent.v1.Runtime
-	(*KubernetesRuntime)(nil),           // 19: admiral.api.agent.v1.KubernetesRuntime
-	(*MachineRuntime)(nil),              // 20: admiral.api.agent.v1.MachineRuntime
-	(*AmbientCredential)(nil),           // 21: admiral.api.agent.v1.AmbientCredential
-	(*KubernetesCapabilities)(nil),      // 22: admiral.api.agent.v1.KubernetesCapabilities
-	(*AgentGrant)(nil),                  // 23: admiral.api.agent.v1.AgentGrant
-	(*Job)(nil),                         // 24: admiral.api.agent.v1.Job
-	(*JobResult)(nil),                   // 25: admiral.api.agent.v1.JobResult
-	(*ResourceRef)(nil),                 // 26: admiral.api.agent.v1.ResourceRef
-	(*KubernetesResourceRef)(nil),       // 27: admiral.api.agent.v1.KubernetesResourceRef
-	(*TerraformResourceRef)(nil),        // 28: admiral.api.agent.v1.TerraformResourceRef
-	(*ComponentInventory)(nil),          // 29: admiral.api.agent.v1.ComponentInventory
-	(*PlanResult)(nil),                  // 30: admiral.api.agent.v1.PlanResult
-	(*ComponentPlan)(nil),               // 31: admiral.api.agent.v1.ComponentPlan
-	(*DeferredPlan)(nil),                // 32: admiral.api.agent.v1.DeferredPlan
-	(*PendingInput)(nil),                // 33: admiral.api.agent.v1.PendingInput
-	(*ResourceChange)(nil),              // 34: admiral.api.agent.v1.ResourceChange
-	(*PlanDiff)(nil),                    // 35: admiral.api.agent.v1.PlanDiff
-	(*ResourceDiff)(nil),                // 36: admiral.api.agent.v1.ResourceDiff
-	(*DiffPath)(nil),                    // 37: admiral.api.agent.v1.DiffPath
-	(*DiffPathSegment)(nil),             // 38: admiral.api.agent.v1.DiffPathSegment
-	(*SensitivePath)(nil),               // 39: admiral.api.agent.v1.SensitivePath
-	(*KubernetesChange)(nil),            // 40: admiral.api.agent.v1.KubernetesChange
-	(*TakenField)(nil),                  // 41: admiral.api.agent.v1.TakenField
-	(*TerraformChange)(nil),             // 42: admiral.api.agent.v1.TerraformChange
-	(*OutputChange)(nil),                // 43: admiral.api.agent.v1.OutputChange
-	(*PlanError)(nil),                   // 44: admiral.api.agent.v1.PlanError
-	(*HookRun)(nil),                     // 45: admiral.api.agent.v1.HookRun
-	(*HookFinding)(nil),                 // 46: admiral.api.agent.v1.HookFinding
-	(*ComponentOutputs)(nil),            // 47: admiral.api.agent.v1.ComponentOutputs
-	(*ComponentOutput)(nil),             // 48: admiral.api.agent.v1.ComponentOutput
-	(*StateAccess)(nil),                 // 49: admiral.api.agent.v1.StateAccess
-	(*Step)(nil),                        // 50: admiral.api.agent.v1.Step
-	(*Offer)(nil),                       // 51: admiral.api.agent.v1.Offer
-	(*CreateAgentRequest)(nil),          // 52: admiral.api.agent.v1.CreateAgentRequest
-	(*CreateAgentResponse)(nil),         // 53: admiral.api.agent.v1.CreateAgentResponse
-	(*EnrollmentKey)(nil),               // 54: admiral.api.agent.v1.EnrollmentKey
-	(*GetAgentRequest)(nil),             // 55: admiral.api.agent.v1.GetAgentRequest
-	(*GetAgentResponse)(nil),            // 56: admiral.api.agent.v1.GetAgentResponse
-	(*ListAgentsRequest)(nil),           // 57: admiral.api.agent.v1.ListAgentsRequest
-	(*ListAgentsResponse)(nil),          // 58: admiral.api.agent.v1.ListAgentsResponse
-	(*UpdateAgentRequest)(nil),          // 59: admiral.api.agent.v1.UpdateAgentRequest
-	(*UpdateAgentResponse)(nil),         // 60: admiral.api.agent.v1.UpdateAgentResponse
-	(*DeleteAgentRequest)(nil),          // 61: admiral.api.agent.v1.DeleteAgentRequest
-	(*DeleteAgentResponse)(nil),         // 62: admiral.api.agent.v1.DeleteAgentResponse
-	(*CreateEnrollmentKeyRequest)(nil),  // 63: admiral.api.agent.v1.CreateEnrollmentKeyRequest
-	(*CreateEnrollmentKeyResponse)(nil), // 64: admiral.api.agent.v1.CreateEnrollmentKeyResponse
-	(*GrantAgentUseRequest)(nil),        // 65: admiral.api.agent.v1.GrantAgentUseRequest
-	(*GrantAgentUseResponse)(nil),       // 66: admiral.api.agent.v1.GrantAgentUseResponse
-	(*RevokeAgentUseRequest)(nil),       // 67: admiral.api.agent.v1.RevokeAgentUseRequest
-	(*RevokeAgentUseResponse)(nil),      // 68: admiral.api.agent.v1.RevokeAgentUseResponse
-	(*ListAgentGrantsRequest)(nil),      // 69: admiral.api.agent.v1.ListAgentGrantsRequest
-	(*ListAgentGrantsResponse)(nil),     // 70: admiral.api.agent.v1.ListAgentGrantsResponse
-	(*GetJobRequest)(nil),               // 71: admiral.api.agent.v1.GetJobRequest
-	(*GetJobResponse)(nil),              // 72: admiral.api.agent.v1.GetJobResponse
-	(*ListJobsRequest)(nil),             // 73: admiral.api.agent.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),            // 74: admiral.api.agent.v1.ListJobsResponse
-	(*CancelJobRequest)(nil),            // 75: admiral.api.agent.v1.CancelJobRequest
-	(*CancelJobResponse)(nil),           // 76: admiral.api.agent.v1.CancelJobResponse
-	(*Attempt)(nil),                     // 77: admiral.api.agent.v1.Attempt
-	(*EnrollRequest)(nil),               // 78: admiral.api.agent.v1.EnrollRequest
-	(*KubernetesEnrollment)(nil),        // 79: admiral.api.agent.v1.KubernetesEnrollment
-	(*EnrollResponse)(nil),              // 80: admiral.api.agent.v1.EnrollResponse
-	(*HeartbeatRequest)(nil),            // 81: admiral.api.agent.v1.HeartbeatRequest
-	(*HeartbeatResponse)(nil),           // 82: admiral.api.agent.v1.HeartbeatResponse
-	(*Slots)(nil),                       // 83: admiral.api.agent.v1.Slots
-	(*ClaimJobRequest)(nil),             // 84: admiral.api.agent.v1.ClaimJobRequest
-	(*ClaimJobResponse)(nil),            // 85: admiral.api.agent.v1.ClaimJobResponse
-	(*StartJobRequest)(nil),             // 86: admiral.api.agent.v1.StartJobRequest
-	(*StartJobResponse)(nil),            // 87: admiral.api.agent.v1.StartJobResponse
-	(*Progress)(nil),                    // 88: admiral.api.agent.v1.Progress
-	(*RenewJobRequest)(nil),             // 89: admiral.api.agent.v1.RenewJobRequest
-	(*RenewJobResponse)(nil),            // 90: admiral.api.agent.v1.RenewJobResponse
-	(*GetJobArtifactRequest)(nil),       // 91: admiral.api.agent.v1.GetJobArtifactRequest
-	(*GetJobArtifactResponse)(nil),      // 92: admiral.api.agent.v1.GetJobArtifactResponse
-	(*UploadJobPlanDiffRequest)(nil),    // 93: admiral.api.agent.v1.UploadJobPlanDiffRequest
-	(*UploadJobPlanDiffResponse)(nil),   // 94: admiral.api.agent.v1.UploadJobPlanDiffResponse
-	(*UploadJobPlanFileRequest)(nil),    // 95: admiral.api.agent.v1.UploadJobPlanFileRequest
-	(*UploadJobPlanFileResponse)(nil),   // 96: admiral.api.agent.v1.UploadJobPlanFileResponse
-	(*GetJobPlanFileRequest)(nil),       // 97: admiral.api.agent.v1.GetJobPlanFileRequest
-	(*GetJobPlanFileResponse)(nil),      // 98: admiral.api.agent.v1.GetJobPlanFileResponse
-	(*FinishJobRequest)(nil),            // 99: admiral.api.agent.v1.FinishJobRequest
-	(*FinishJobResponse)(nil),           // 100: admiral.api.agent.v1.FinishJobResponse
-	(*CheckJobPlanRequest)(nil),         // 101: admiral.api.agent.v1.CheckJobPlanRequest
-	(*CheckJobPlanResponse)(nil),        // 102: admiral.api.agent.v1.CheckJobPlanResponse
-	(*AppendJobLogRequest)(nil),         // 103: admiral.api.agent.v1.AppendJobLogRequest
-	(*AppendJobLogResponse)(nil),        // 104: admiral.api.agent.v1.AppendJobLogResponse
-	(*GetJobLogRequest)(nil),            // 105: admiral.api.agent.v1.GetJobLogRequest
-	(*GetJobLogResponse)(nil),           // 106: admiral.api.agent.v1.GetJobLogResponse
-	(*AgentGrant_Organization)(nil),     // 107: admiral.api.agent.v1.AgentGrant.Organization
-	(*v1.ActorRef)(nil),                 // 108: admiral.common.v1.ActorRef
-	(*timestamppb.Timestamp)(nil),       // 109: google.protobuf.Timestamp
-	(*v11.ApprovalRule)(nil),            // 110: admiral.api.environment.v1.ApprovalRule
-	(v12.InfraEngine)(0),                // 111: admiral.api.registry.v1.InfraEngine
-	(*v12.InfraEngineVersion)(nil),      // 112: admiral.api.registry.v1.InfraEngineVersion
-	(*structpb.Value)(nil),              // 113: google.protobuf.Value
-	(*fieldmaskpb.FieldMask)(nil),       // 114: google.protobuf.FieldMask
-	(*v13.ServiceAccount)(nil),          // 115: admiral.api.serviceaccount.v1.ServiceAccount
-	(*v13.Issuer)(nil),                  // 116: admiral.api.serviceaccount.v1.Issuer
+	(Step_Failure)(0),                   // 8: admiral.api.agent.v1.Step.Failure
+	(HeartbeatResponse_Keys)(0),         // 9: admiral.api.agent.v1.HeartbeatResponse.Keys
+	(FinishJobResponse_Outcome)(0),      // 10: admiral.api.agent.v1.FinishJobResponse.Outcome
+	(*Agent)(nil),                       // 11: admiral.api.agent.v1.Agent
+	(*AgentSettings)(nil),               // 12: admiral.api.agent.v1.AgentSettings
+	(*KubernetesAgentSettings)(nil),     // 13: admiral.api.agent.v1.KubernetesAgentSettings
+	(*InfraAgentSettings)(nil),          // 14: admiral.api.agent.v1.InfraAgentSettings
+	(*EngineSupport)(nil),               // 15: admiral.api.agent.v1.EngineSupport
+	(*KubernetesReport)(nil),            // 16: admiral.api.agent.v1.KubernetesReport
+	(*AgentReport)(nil),                 // 17: admiral.api.agent.v1.AgentReport
+	(*InfraReport)(nil),                 // 18: admiral.api.agent.v1.InfraReport
+	(*Runtime)(nil),                     // 19: admiral.api.agent.v1.Runtime
+	(*KubernetesRuntime)(nil),           // 20: admiral.api.agent.v1.KubernetesRuntime
+	(*MachineRuntime)(nil),              // 21: admiral.api.agent.v1.MachineRuntime
+	(*AmbientCredential)(nil),           // 22: admiral.api.agent.v1.AmbientCredential
+	(*KubernetesCapabilities)(nil),      // 23: admiral.api.agent.v1.KubernetesCapabilities
+	(*AgentGrant)(nil),                  // 24: admiral.api.agent.v1.AgentGrant
+	(*Job)(nil),                         // 25: admiral.api.agent.v1.Job
+	(*JobResult)(nil),                   // 26: admiral.api.agent.v1.JobResult
+	(*ResourceRef)(nil),                 // 27: admiral.api.agent.v1.ResourceRef
+	(*KubernetesResourceRef)(nil),       // 28: admiral.api.agent.v1.KubernetesResourceRef
+	(*TerraformResourceRef)(nil),        // 29: admiral.api.agent.v1.TerraformResourceRef
+	(*ComponentInventory)(nil),          // 30: admiral.api.agent.v1.ComponentInventory
+	(*PlanResult)(nil),                  // 31: admiral.api.agent.v1.PlanResult
+	(*ComponentPlan)(nil),               // 32: admiral.api.agent.v1.ComponentPlan
+	(*DeferredPlan)(nil),                // 33: admiral.api.agent.v1.DeferredPlan
+	(*PendingInput)(nil),                // 34: admiral.api.agent.v1.PendingInput
+	(*ResourceChange)(nil),              // 35: admiral.api.agent.v1.ResourceChange
+	(*PlanDiff)(nil),                    // 36: admiral.api.agent.v1.PlanDiff
+	(*ResourceDiff)(nil),                // 37: admiral.api.agent.v1.ResourceDiff
+	(*DiffPath)(nil),                    // 38: admiral.api.agent.v1.DiffPath
+	(*DiffPathSegment)(nil),             // 39: admiral.api.agent.v1.DiffPathSegment
+	(*SensitivePath)(nil),               // 40: admiral.api.agent.v1.SensitivePath
+	(*KubernetesChange)(nil),            // 41: admiral.api.agent.v1.KubernetesChange
+	(*TakenField)(nil),                  // 42: admiral.api.agent.v1.TakenField
+	(*TerraformChange)(nil),             // 43: admiral.api.agent.v1.TerraformChange
+	(*OutputChange)(nil),                // 44: admiral.api.agent.v1.OutputChange
+	(*PlanError)(nil),                   // 45: admiral.api.agent.v1.PlanError
+	(*HookRun)(nil),                     // 46: admiral.api.agent.v1.HookRun
+	(*HookFinding)(nil),                 // 47: admiral.api.agent.v1.HookFinding
+	(*ComponentOutputs)(nil),            // 48: admiral.api.agent.v1.ComponentOutputs
+	(*ComponentOutput)(nil),             // 49: admiral.api.agent.v1.ComponentOutput
+	(*StateAccess)(nil),                 // 50: admiral.api.agent.v1.StateAccess
+	(*Step)(nil),                        // 51: admiral.api.agent.v1.Step
+	(*Offer)(nil),                       // 52: admiral.api.agent.v1.Offer
+	(*CreateAgentRequest)(nil),          // 53: admiral.api.agent.v1.CreateAgentRequest
+	(*CreateAgentResponse)(nil),         // 54: admiral.api.agent.v1.CreateAgentResponse
+	(*EnrollmentKey)(nil),               // 55: admiral.api.agent.v1.EnrollmentKey
+	(*GetAgentRequest)(nil),             // 56: admiral.api.agent.v1.GetAgentRequest
+	(*GetAgentResponse)(nil),            // 57: admiral.api.agent.v1.GetAgentResponse
+	(*ListAgentsRequest)(nil),           // 58: admiral.api.agent.v1.ListAgentsRequest
+	(*ListAgentsResponse)(nil),          // 59: admiral.api.agent.v1.ListAgentsResponse
+	(*UpdateAgentRequest)(nil),          // 60: admiral.api.agent.v1.UpdateAgentRequest
+	(*UpdateAgentResponse)(nil),         // 61: admiral.api.agent.v1.UpdateAgentResponse
+	(*DeleteAgentRequest)(nil),          // 62: admiral.api.agent.v1.DeleteAgentRequest
+	(*DeleteAgentResponse)(nil),         // 63: admiral.api.agent.v1.DeleteAgentResponse
+	(*CreateEnrollmentKeyRequest)(nil),  // 64: admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	(*CreateEnrollmentKeyResponse)(nil), // 65: admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	(*GrantAgentUseRequest)(nil),        // 66: admiral.api.agent.v1.GrantAgentUseRequest
+	(*GrantAgentUseResponse)(nil),       // 67: admiral.api.agent.v1.GrantAgentUseResponse
+	(*RevokeAgentUseRequest)(nil),       // 68: admiral.api.agent.v1.RevokeAgentUseRequest
+	(*RevokeAgentUseResponse)(nil),      // 69: admiral.api.agent.v1.RevokeAgentUseResponse
+	(*ListAgentGrantsRequest)(nil),      // 70: admiral.api.agent.v1.ListAgentGrantsRequest
+	(*ListAgentGrantsResponse)(nil),     // 71: admiral.api.agent.v1.ListAgentGrantsResponse
+	(*GetJobRequest)(nil),               // 72: admiral.api.agent.v1.GetJobRequest
+	(*GetJobResponse)(nil),              // 73: admiral.api.agent.v1.GetJobResponse
+	(*ListJobsRequest)(nil),             // 74: admiral.api.agent.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),            // 75: admiral.api.agent.v1.ListJobsResponse
+	(*CancelJobRequest)(nil),            // 76: admiral.api.agent.v1.CancelJobRequest
+	(*CancelJobResponse)(nil),           // 77: admiral.api.agent.v1.CancelJobResponse
+	(*Attempt)(nil),                     // 78: admiral.api.agent.v1.Attempt
+	(*EnrollRequest)(nil),               // 79: admiral.api.agent.v1.EnrollRequest
+	(*KubernetesEnrollment)(nil),        // 80: admiral.api.agent.v1.KubernetesEnrollment
+	(*EnrollResponse)(nil),              // 81: admiral.api.agent.v1.EnrollResponse
+	(*HeartbeatRequest)(nil),            // 82: admiral.api.agent.v1.HeartbeatRequest
+	(*HeartbeatResponse)(nil),           // 83: admiral.api.agent.v1.HeartbeatResponse
+	(*Slots)(nil),                       // 84: admiral.api.agent.v1.Slots
+	(*ClaimJobRequest)(nil),             // 85: admiral.api.agent.v1.ClaimJobRequest
+	(*ClaimJobResponse)(nil),            // 86: admiral.api.agent.v1.ClaimJobResponse
+	(*StartJobRequest)(nil),             // 87: admiral.api.agent.v1.StartJobRequest
+	(*StartJobResponse)(nil),            // 88: admiral.api.agent.v1.StartJobResponse
+	(*Progress)(nil),                    // 89: admiral.api.agent.v1.Progress
+	(*RenewJobRequest)(nil),             // 90: admiral.api.agent.v1.RenewJobRequest
+	(*RenewJobResponse)(nil),            // 91: admiral.api.agent.v1.RenewJobResponse
+	(*GetJobArtifactRequest)(nil),       // 92: admiral.api.agent.v1.GetJobArtifactRequest
+	(*GetJobArtifactResponse)(nil),      // 93: admiral.api.agent.v1.GetJobArtifactResponse
+	(*UploadJobPlanDiffRequest)(nil),    // 94: admiral.api.agent.v1.UploadJobPlanDiffRequest
+	(*UploadJobPlanDiffResponse)(nil),   // 95: admiral.api.agent.v1.UploadJobPlanDiffResponse
+	(*UploadJobPlanFileRequest)(nil),    // 96: admiral.api.agent.v1.UploadJobPlanFileRequest
+	(*UploadJobPlanFileResponse)(nil),   // 97: admiral.api.agent.v1.UploadJobPlanFileResponse
+	(*GetJobPlanFileRequest)(nil),       // 98: admiral.api.agent.v1.GetJobPlanFileRequest
+	(*GetJobPlanFileResponse)(nil),      // 99: admiral.api.agent.v1.GetJobPlanFileResponse
+	(*FinishJobRequest)(nil),            // 100: admiral.api.agent.v1.FinishJobRequest
+	(*FinishJobResponse)(nil),           // 101: admiral.api.agent.v1.FinishJobResponse
+	(*CheckJobPlanRequest)(nil),         // 102: admiral.api.agent.v1.CheckJobPlanRequest
+	(*CheckJobPlanResponse)(nil),        // 103: admiral.api.agent.v1.CheckJobPlanResponse
+	(*AppendJobLogRequest)(nil),         // 104: admiral.api.agent.v1.AppendJobLogRequest
+	(*AppendJobLogResponse)(nil),        // 105: admiral.api.agent.v1.AppendJobLogResponse
+	(*GetJobLogRequest)(nil),            // 106: admiral.api.agent.v1.GetJobLogRequest
+	(*GetJobLogResponse)(nil),           // 107: admiral.api.agent.v1.GetJobLogResponse
+	(*AgentGrant_Organization)(nil),     // 108: admiral.api.agent.v1.AgentGrant.Organization
+	(*v1.ActorRef)(nil),                 // 109: admiral.common.v1.ActorRef
+	(*timestamppb.Timestamp)(nil),       // 110: google.protobuf.Timestamp
+	(*v11.ApprovalRule)(nil),            // 111: admiral.api.environment.v1.ApprovalRule
+	(v12.InfraEngine)(0),                // 112: admiral.api.registry.v1.InfraEngine
+	(*v12.InfraEngineVersion)(nil),      // 113: admiral.api.registry.v1.InfraEngineVersion
+	(*structpb.Value)(nil),              // 114: google.protobuf.Value
+	(*fieldmaskpb.FieldMask)(nil),       // 115: google.protobuf.FieldMask
+	(*v13.ServiceAccount)(nil),          // 116: admiral.api.serviceaccount.v1.ServiceAccount
+	(*v13.Issuer)(nil),                  // 117: admiral.api.serviceaccount.v1.Issuer
 }
 var file_admiral_api_agent_v1_agent_proto_depIdxs = []int32{
 	3,   // 0: admiral.api.agent.v1.Agent.health:type_name -> admiral.api.agent.v1.Agent.Health
-	16,  // 1: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
-	108, // 2: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
-	109, // 3: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
+	17,  // 1: admiral.api.agent.v1.Agent.report:type_name -> admiral.api.agent.v1.AgentReport
+	109, // 2: admiral.api.agent.v1.Agent.created_by:type_name -> admiral.common.v1.ActorRef
+	110, // 3: admiral.api.agent.v1.Agent.created_at:type_name -> google.protobuf.Timestamp
 	4,   // 4: admiral.api.agent.v1.Agent.kind:type_name -> admiral.api.agent.v1.Agent.Kind
-	11,  // 5: admiral.api.agent.v1.Agent.settings:type_name -> admiral.api.agent.v1.AgentSettings
-	110, // 6: admiral.api.agent.v1.Agent.approval:type_name -> admiral.api.environment.v1.ApprovalRule
-	12,  // 7: admiral.api.agent.v1.AgentSettings.kubernetes:type_name -> admiral.api.agent.v1.KubernetesAgentSettings
-	13,  // 8: admiral.api.agent.v1.AgentSettings.infra:type_name -> admiral.api.agent.v1.InfraAgentSettings
-	14,  // 9: admiral.api.agent.v1.InfraAgentSettings.engines:type_name -> admiral.api.agent.v1.EngineSupport
-	111, // 10: admiral.api.agent.v1.EngineSupport.engine:type_name -> admiral.api.registry.v1.InfraEngine
-	22,  // 11: admiral.api.agent.v1.KubernetesReport.capabilities:type_name -> admiral.api.agent.v1.KubernetesCapabilities
-	18,  // 12: admiral.api.agent.v1.AgentReport.runtime:type_name -> admiral.api.agent.v1.Runtime
-	15,  // 13: admiral.api.agent.v1.AgentReport.kubernetes:type_name -> admiral.api.agent.v1.KubernetesReport
-	17,  // 14: admiral.api.agent.v1.AgentReport.infra:type_name -> admiral.api.agent.v1.InfraReport
-	21,  // 15: admiral.api.agent.v1.AgentReport.ambient_credentials:type_name -> admiral.api.agent.v1.AmbientCredential
-	109, // 16: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
-	112, // 17: admiral.api.agent.v1.InfraReport.engines:type_name -> admiral.api.registry.v1.InfraEngineVersion
-	19,  // 18: admiral.api.agent.v1.Runtime.kubernetes:type_name -> admiral.api.agent.v1.KubernetesRuntime
-	20,  // 19: admiral.api.agent.v1.Runtime.machine:type_name -> admiral.api.agent.v1.MachineRuntime
+	12,  // 5: admiral.api.agent.v1.Agent.settings:type_name -> admiral.api.agent.v1.AgentSettings
+	111, // 6: admiral.api.agent.v1.Agent.approval:type_name -> admiral.api.environment.v1.ApprovalRule
+	13,  // 7: admiral.api.agent.v1.AgentSettings.kubernetes:type_name -> admiral.api.agent.v1.KubernetesAgentSettings
+	14,  // 8: admiral.api.agent.v1.AgentSettings.infra:type_name -> admiral.api.agent.v1.InfraAgentSettings
+	15,  // 9: admiral.api.agent.v1.InfraAgentSettings.engines:type_name -> admiral.api.agent.v1.EngineSupport
+	112, // 10: admiral.api.agent.v1.EngineSupport.engine:type_name -> admiral.api.registry.v1.InfraEngine
+	23,  // 11: admiral.api.agent.v1.KubernetesReport.capabilities:type_name -> admiral.api.agent.v1.KubernetesCapabilities
+	19,  // 12: admiral.api.agent.v1.AgentReport.runtime:type_name -> admiral.api.agent.v1.Runtime
+	16,  // 13: admiral.api.agent.v1.AgentReport.kubernetes:type_name -> admiral.api.agent.v1.KubernetesReport
+	18,  // 14: admiral.api.agent.v1.AgentReport.infra:type_name -> admiral.api.agent.v1.InfraReport
+	22,  // 15: admiral.api.agent.v1.AgentReport.ambient_credentials:type_name -> admiral.api.agent.v1.AmbientCredential
+	110, // 16: admiral.api.agent.v1.AgentReport.reported_at:type_name -> google.protobuf.Timestamp
+	113, // 17: admiral.api.agent.v1.InfraReport.engines:type_name -> admiral.api.registry.v1.InfraEngineVersion
+	20,  // 18: admiral.api.agent.v1.Runtime.kubernetes:type_name -> admiral.api.agent.v1.KubernetesRuntime
+	21,  // 19: admiral.api.agent.v1.Runtime.machine:type_name -> admiral.api.agent.v1.MachineRuntime
 	5,   // 20: admiral.api.agent.v1.AmbientCredential.source:type_name -> admiral.api.agent.v1.AmbientCredential.Source
-	107, // 21: admiral.api.agent.v1.AgentGrant.organization:type_name -> admiral.api.agent.v1.AgentGrant.Organization
+	108, // 21: admiral.api.agent.v1.AgentGrant.organization:type_name -> admiral.api.agent.v1.AgentGrant.Organization
 	0,   // 22: admiral.api.agent.v1.Job.kind:type_name -> admiral.api.agent.v1.JobKind
 	1,   // 23: admiral.api.agent.v1.Job.status:type_name -> admiral.api.agent.v1.JobStatus
 	2,   // 24: admiral.api.agent.v1.Job.wait_reason:type_name -> admiral.api.agent.v1.WaitReason
-	25,  // 25: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
-	109, // 26: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
-	109, // 27: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
-	109, // 28: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
+	26,  // 25: admiral.api.agent.v1.Job.result:type_name -> admiral.api.agent.v1.JobResult
+	110, // 26: admiral.api.agent.v1.Job.created_at:type_name -> google.protobuf.Timestamp
+	110, // 27: admiral.api.agent.v1.Job.started_at:type_name -> google.protobuf.Timestamp
+	110, // 28: admiral.api.agent.v1.Job.finished_at:type_name -> google.protobuf.Timestamp
 	1,   // 29: admiral.api.agent.v1.JobResult.status:type_name -> admiral.api.agent.v1.JobStatus
-	50,  // 30: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
-	30,  // 31: admiral.api.agent.v1.JobResult.plan:type_name -> admiral.api.agent.v1.PlanResult
-	29,  // 32: admiral.api.agent.v1.JobResult.inventory:type_name -> admiral.api.agent.v1.ComponentInventory
-	47,  // 33: admiral.api.agent.v1.JobResult.outputs:type_name -> admiral.api.agent.v1.ComponentOutputs
-	45,  // 34: admiral.api.agent.v1.JobResult.hooks:type_name -> admiral.api.agent.v1.HookRun
-	27,  // 35: admiral.api.agent.v1.ResourceRef.kubernetes:type_name -> admiral.api.agent.v1.KubernetesResourceRef
-	28,  // 36: admiral.api.agent.v1.ResourceRef.terraform:type_name -> admiral.api.agent.v1.TerraformResourceRef
-	26,  // 37: admiral.api.agent.v1.ComponentInventory.resources:type_name -> admiral.api.agent.v1.ResourceRef
-	31,  // 38: admiral.api.agent.v1.PlanResult.components:type_name -> admiral.api.agent.v1.ComponentPlan
-	34,  // 39: admiral.api.agent.v1.ComponentPlan.changes:type_name -> admiral.api.agent.v1.ResourceChange
-	32,  // 40: admiral.api.agent.v1.ComponentPlan.deferred:type_name -> admiral.api.agent.v1.DeferredPlan
-	33,  // 41: admiral.api.agent.v1.DeferredPlan.waits_for:type_name -> admiral.api.agent.v1.PendingInput
-	26,  // 42: admiral.api.agent.v1.ResourceChange.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	51,  // 30: admiral.api.agent.v1.JobResult.steps:type_name -> admiral.api.agent.v1.Step
+	31,  // 31: admiral.api.agent.v1.JobResult.plan:type_name -> admiral.api.agent.v1.PlanResult
+	30,  // 32: admiral.api.agent.v1.JobResult.inventory:type_name -> admiral.api.agent.v1.ComponentInventory
+	48,  // 33: admiral.api.agent.v1.JobResult.outputs:type_name -> admiral.api.agent.v1.ComponentOutputs
+	46,  // 34: admiral.api.agent.v1.JobResult.hooks:type_name -> admiral.api.agent.v1.HookRun
+	28,  // 35: admiral.api.agent.v1.ResourceRef.kubernetes:type_name -> admiral.api.agent.v1.KubernetesResourceRef
+	29,  // 36: admiral.api.agent.v1.ResourceRef.terraform:type_name -> admiral.api.agent.v1.TerraformResourceRef
+	27,  // 37: admiral.api.agent.v1.ComponentInventory.resources:type_name -> admiral.api.agent.v1.ResourceRef
+	32,  // 38: admiral.api.agent.v1.PlanResult.components:type_name -> admiral.api.agent.v1.ComponentPlan
+	35,  // 39: admiral.api.agent.v1.ComponentPlan.changes:type_name -> admiral.api.agent.v1.ResourceChange
+	33,  // 40: admiral.api.agent.v1.ComponentPlan.deferred:type_name -> admiral.api.agent.v1.DeferredPlan
+	34,  // 41: admiral.api.agent.v1.DeferredPlan.waits_for:type_name -> admiral.api.agent.v1.PendingInput
+	27,  // 42: admiral.api.agent.v1.ResourceChange.resource:type_name -> admiral.api.agent.v1.ResourceRef
 	6,   // 43: admiral.api.agent.v1.ResourceChange.action:type_name -> admiral.api.agent.v1.ResourceChange.Action
-	36,  // 44: admiral.api.agent.v1.PlanDiff.resources:type_name -> admiral.api.agent.v1.ResourceDiff
-	43,  // 45: admiral.api.agent.v1.PlanDiff.outputs:type_name -> admiral.api.agent.v1.OutputChange
-	36,  // 46: admiral.api.agent.v1.PlanDiff.drift:type_name -> admiral.api.agent.v1.ResourceDiff
-	44,  // 47: admiral.api.agent.v1.PlanDiff.errors:type_name -> admiral.api.agent.v1.PlanError
-	26,  // 48: admiral.api.agent.v1.ResourceDiff.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	37,  // 44: admiral.api.agent.v1.PlanDiff.resources:type_name -> admiral.api.agent.v1.ResourceDiff
+	44,  // 45: admiral.api.agent.v1.PlanDiff.outputs:type_name -> admiral.api.agent.v1.OutputChange
+	37,  // 46: admiral.api.agent.v1.PlanDiff.drift:type_name -> admiral.api.agent.v1.ResourceDiff
+	45,  // 47: admiral.api.agent.v1.PlanDiff.errors:type_name -> admiral.api.agent.v1.PlanError
+	27,  // 48: admiral.api.agent.v1.ResourceDiff.resource:type_name -> admiral.api.agent.v1.ResourceRef
 	6,   // 49: admiral.api.agent.v1.ResourceDiff.action:type_name -> admiral.api.agent.v1.ResourceChange.Action
-	113, // 50: admiral.api.agent.v1.ResourceDiff.before:type_name -> google.protobuf.Value
-	113, // 51: admiral.api.agent.v1.ResourceDiff.after:type_name -> google.protobuf.Value
-	39,  // 52: admiral.api.agent.v1.ResourceDiff.sensitive_paths:type_name -> admiral.api.agent.v1.SensitivePath
-	37,  // 53: admiral.api.agent.v1.ResourceDiff.unknown_paths:type_name -> admiral.api.agent.v1.DiffPath
-	37,  // 54: admiral.api.agent.v1.ResourceDiff.replace_paths:type_name -> admiral.api.agent.v1.DiffPath
-	42,  // 55: admiral.api.agent.v1.ResourceDiff.terraform:type_name -> admiral.api.agent.v1.TerraformChange
-	40,  // 56: admiral.api.agent.v1.ResourceDiff.kubernetes:type_name -> admiral.api.agent.v1.KubernetesChange
-	38,  // 57: admiral.api.agent.v1.DiffPath.segments:type_name -> admiral.api.agent.v1.DiffPathSegment
-	37,  // 58: admiral.api.agent.v1.SensitivePath.path:type_name -> admiral.api.agent.v1.DiffPath
-	41,  // 59: admiral.api.agent.v1.KubernetesChange.taken:type_name -> admiral.api.agent.v1.TakenField
-	37,  // 60: admiral.api.agent.v1.TakenField.path:type_name -> admiral.api.agent.v1.DiffPath
+	114, // 50: admiral.api.agent.v1.ResourceDiff.before:type_name -> google.protobuf.Value
+	114, // 51: admiral.api.agent.v1.ResourceDiff.after:type_name -> google.protobuf.Value
+	40,  // 52: admiral.api.agent.v1.ResourceDiff.sensitive_paths:type_name -> admiral.api.agent.v1.SensitivePath
+	38,  // 53: admiral.api.agent.v1.ResourceDiff.unknown_paths:type_name -> admiral.api.agent.v1.DiffPath
+	38,  // 54: admiral.api.agent.v1.ResourceDiff.replace_paths:type_name -> admiral.api.agent.v1.DiffPath
+	43,  // 55: admiral.api.agent.v1.ResourceDiff.terraform:type_name -> admiral.api.agent.v1.TerraformChange
+	41,  // 56: admiral.api.agent.v1.ResourceDiff.kubernetes:type_name -> admiral.api.agent.v1.KubernetesChange
+	39,  // 57: admiral.api.agent.v1.DiffPath.segments:type_name -> admiral.api.agent.v1.DiffPathSegment
+	38,  // 58: admiral.api.agent.v1.SensitivePath.path:type_name -> admiral.api.agent.v1.DiffPath
+	42,  // 59: admiral.api.agent.v1.KubernetesChange.taken:type_name -> admiral.api.agent.v1.TakenField
+	38,  // 60: admiral.api.agent.v1.TakenField.path:type_name -> admiral.api.agent.v1.DiffPath
 	6,   // 61: admiral.api.agent.v1.OutputChange.action:type_name -> admiral.api.agent.v1.ResourceChange.Action
-	113, // 62: admiral.api.agent.v1.OutputChange.before:type_name -> google.protobuf.Value
-	113, // 63: admiral.api.agent.v1.OutputChange.after:type_name -> google.protobuf.Value
-	26,  // 64: admiral.api.agent.v1.PlanError.resource:type_name -> admiral.api.agent.v1.ResourceRef
+	114, // 62: admiral.api.agent.v1.OutputChange.before:type_name -> google.protobuf.Value
+	114, // 63: admiral.api.agent.v1.OutputChange.after:type_name -> google.protobuf.Value
+	27,  // 64: admiral.api.agent.v1.PlanError.resource:type_name -> admiral.api.agent.v1.ResourceRef
 	7,   // 65: admiral.api.agent.v1.HookRun.phase:type_name -> admiral.api.agent.v1.HookRun.Phase
-	46,  // 66: admiral.api.agent.v1.HookRun.findings:type_name -> admiral.api.agent.v1.HookFinding
-	48,  // 67: admiral.api.agent.v1.ComponentOutputs.outputs:type_name -> admiral.api.agent.v1.ComponentOutput
-	113, // 68: admiral.api.agent.v1.ComponentOutput.value:type_name -> google.protobuf.Value
-	109, // 69: admiral.api.agent.v1.StateAccess.expires_at:type_name -> google.protobuf.Timestamp
+	47,  // 66: admiral.api.agent.v1.HookRun.findings:type_name -> admiral.api.agent.v1.HookFinding
+	49,  // 67: admiral.api.agent.v1.ComponentOutputs.outputs:type_name -> admiral.api.agent.v1.ComponentOutput
+	114, // 68: admiral.api.agent.v1.ComponentOutput.value:type_name -> google.protobuf.Value
+	110, // 69: admiral.api.agent.v1.StateAccess.expires_at:type_name -> google.protobuf.Timestamp
 	1,   // 70: admiral.api.agent.v1.Step.status:type_name -> admiral.api.agent.v1.JobStatus
-	24,  // 71: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
-	10,  // 72: admiral.api.agent.v1.CreateAgentRequest.agent:type_name -> admiral.api.agent.v1.Agent
-	23,  // 73: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	10,  // 74: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	23,  // 75: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	54,  // 76: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
-	109, // 77: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
-	10,  // 78: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	10,  // 79: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
-	10,  // 80: admiral.api.agent.v1.UpdateAgentRequest.agent:type_name -> admiral.api.agent.v1.Agent
-	114, // 81: admiral.api.agent.v1.UpdateAgentRequest.update_mask:type_name -> google.protobuf.FieldMask
-	10,  // 82: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	54,  // 83: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
-	23,  // 84: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
-	23,  // 85: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
-	23,  // 86: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
-	24,  // 87: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
-	24,  // 88: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
-	24,  // 89: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
-	79,  // 90: admiral.api.agent.v1.EnrollRequest.kubernetes:type_name -> admiral.api.agent.v1.KubernetesEnrollment
-	10,  // 91: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
-	115, // 92: admiral.api.agent.v1.EnrollResponse.service_account:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
-	116, // 93: admiral.api.agent.v1.EnrollResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
-	18,  // 94: admiral.api.agent.v1.HeartbeatRequest.runtime:type_name -> admiral.api.agent.v1.Runtime
-	15,  // 95: admiral.api.agent.v1.HeartbeatRequest.kubernetes:type_name -> admiral.api.agent.v1.KubernetesReport
-	17,  // 96: admiral.api.agent.v1.HeartbeatRequest.infra:type_name -> admiral.api.agent.v1.InfraReport
-	21,  // 97: admiral.api.agent.v1.HeartbeatRequest.ambient_credentials:type_name -> admiral.api.agent.v1.AmbientCredential
-	8,   // 98: admiral.api.agent.v1.HeartbeatResponse.keys:type_name -> admiral.api.agent.v1.HeartbeatResponse.Keys
-	0,   // 99: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
-	83,  // 100: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
-	51,  // 101: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
-	77,  // 102: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	49,  // 103: admiral.api.agent.v1.StartJobResponse.state_access:type_name -> admiral.api.agent.v1.StateAccess
-	77,  // 104: admiral.api.agent.v1.RenewJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	88,  // 105: admiral.api.agent.v1.RenewJobRequest.progress:type_name -> admiral.api.agent.v1.Progress
-	77,  // 106: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	29,  // 107: admiral.api.agent.v1.GetJobArtifactResponse.previous_inventory:type_name -> admiral.api.agent.v1.ComponentInventory
-	77,  // 108: admiral.api.agent.v1.UploadJobPlanDiffRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	35,  // 109: admiral.api.agent.v1.UploadJobPlanDiffRequest.diff:type_name -> admiral.api.agent.v1.PlanDiff
-	77,  // 110: admiral.api.agent.v1.UploadJobPlanFileRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	77,  // 111: admiral.api.agent.v1.GetJobPlanFileRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	77,  // 112: admiral.api.agent.v1.FinishJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	25,  // 113: admiral.api.agent.v1.FinishJobRequest.result:type_name -> admiral.api.agent.v1.JobResult
-	9,   // 114: admiral.api.agent.v1.FinishJobResponse.outcome:type_name -> admiral.api.agent.v1.FinishJobResponse.Outcome
-	77,  // 115: admiral.api.agent.v1.CheckJobPlanRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	30,  // 116: admiral.api.agent.v1.CheckJobPlanRequest.plan:type_name -> admiral.api.agent.v1.PlanResult
-	77,  // 117: admiral.api.agent.v1.AppendJobLogRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
-	52,  // 118: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
-	55,  // 119: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
-	57,  // 120: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
-	59,  // 121: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
-	61,  // 122: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
-	63,  // 123: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
-	65,  // 124: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
-	67,  // 125: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
-	69,  // 126: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
-	71,  // 127: admiral.api.agent.v1.JobAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
-	105, // 128: admiral.api.agent.v1.JobAPI.GetJobLog:input_type -> admiral.api.agent.v1.GetJobLogRequest
-	73,  // 129: admiral.api.agent.v1.JobAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
-	75,  // 130: admiral.api.agent.v1.JobAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
-	78,  // 131: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
-	81,  // 132: admiral.api.agent.v1.AgentRuntimeAPI.Heartbeat:input_type -> admiral.api.agent.v1.HeartbeatRequest
-	84,  // 133: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
-	86,  // 134: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
-	89,  // 135: admiral.api.agent.v1.AgentRuntimeAPI.RenewJob:input_type -> admiral.api.agent.v1.RenewJobRequest
-	103, // 136: admiral.api.agent.v1.AgentRuntimeAPI.AppendJobLog:input_type -> admiral.api.agent.v1.AppendJobLogRequest
-	91,  // 137: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
-	93,  // 138: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanDiff:input_type -> admiral.api.agent.v1.UploadJobPlanDiffRequest
-	95,  // 139: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanFile:input_type -> admiral.api.agent.v1.UploadJobPlanFileRequest
-	97,  // 140: admiral.api.agent.v1.AgentRuntimeAPI.GetJobPlanFile:input_type -> admiral.api.agent.v1.GetJobPlanFileRequest
-	101, // 141: admiral.api.agent.v1.AgentRuntimeAPI.CheckJobPlan:input_type -> admiral.api.agent.v1.CheckJobPlanRequest
-	99,  // 142: admiral.api.agent.v1.AgentRuntimeAPI.FinishJob:input_type -> admiral.api.agent.v1.FinishJobRequest
-	53,  // 143: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
-	56,  // 144: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
-	58,  // 145: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
-	60,  // 146: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
-	62,  // 147: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
-	64,  // 148: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
-	66,  // 149: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
-	68,  // 150: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
-	70,  // 151: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
-	72,  // 152: admiral.api.agent.v1.JobAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
-	106, // 153: admiral.api.agent.v1.JobAPI.GetJobLog:output_type -> admiral.api.agent.v1.GetJobLogResponse
-	74,  // 154: admiral.api.agent.v1.JobAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
-	76,  // 155: admiral.api.agent.v1.JobAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
-	80,  // 156: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
-	82,  // 157: admiral.api.agent.v1.AgentRuntimeAPI.Heartbeat:output_type -> admiral.api.agent.v1.HeartbeatResponse
-	85,  // 158: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
-	87,  // 159: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
-	90,  // 160: admiral.api.agent.v1.AgentRuntimeAPI.RenewJob:output_type -> admiral.api.agent.v1.RenewJobResponse
-	104, // 161: admiral.api.agent.v1.AgentRuntimeAPI.AppendJobLog:output_type -> admiral.api.agent.v1.AppendJobLogResponse
-	92,  // 162: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
-	94,  // 163: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanDiff:output_type -> admiral.api.agent.v1.UploadJobPlanDiffResponse
-	96,  // 164: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanFile:output_type -> admiral.api.agent.v1.UploadJobPlanFileResponse
-	98,  // 165: admiral.api.agent.v1.AgentRuntimeAPI.GetJobPlanFile:output_type -> admiral.api.agent.v1.GetJobPlanFileResponse
-	102, // 166: admiral.api.agent.v1.AgentRuntimeAPI.CheckJobPlan:output_type -> admiral.api.agent.v1.CheckJobPlanResponse
-	100, // 167: admiral.api.agent.v1.AgentRuntimeAPI.FinishJob:output_type -> admiral.api.agent.v1.FinishJobResponse
-	143, // [143:168] is the sub-list for method output_type
-	118, // [118:143] is the sub-list for method input_type
-	118, // [118:118] is the sub-list for extension type_name
-	118, // [118:118] is the sub-list for extension extendee
-	0,   // [0:118] is the sub-list for field type_name
+	8,   // 71: admiral.api.agent.v1.Step.failure:type_name -> admiral.api.agent.v1.Step.Failure
+	25,  // 72: admiral.api.agent.v1.Offer.job:type_name -> admiral.api.agent.v1.Job
+	11,  // 73: admiral.api.agent.v1.CreateAgentRequest.agent:type_name -> admiral.api.agent.v1.Agent
+	24,  // 74: admiral.api.agent.v1.CreateAgentRequest.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	11,  // 75: admiral.api.agent.v1.CreateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	24,  // 76: admiral.api.agent.v1.CreateAgentResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	55,  // 77: admiral.api.agent.v1.CreateAgentResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	110, // 78: admiral.api.agent.v1.EnrollmentKey.expires_at:type_name -> google.protobuf.Timestamp
+	11,  // 79: admiral.api.agent.v1.GetAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	11,  // 80: admiral.api.agent.v1.ListAgentsResponse.agents:type_name -> admiral.api.agent.v1.Agent
+	11,  // 81: admiral.api.agent.v1.UpdateAgentRequest.agent:type_name -> admiral.api.agent.v1.Agent
+	115, // 82: admiral.api.agent.v1.UpdateAgentRequest.update_mask:type_name -> google.protobuf.FieldMask
+	11,  // 83: admiral.api.agent.v1.UpdateAgentResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	55,  // 84: admiral.api.agent.v1.CreateEnrollmentKeyResponse.enrollment_key:type_name -> admiral.api.agent.v1.EnrollmentKey
+	24,  // 85: admiral.api.agent.v1.GrantAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	24,  // 86: admiral.api.agent.v1.RevokeAgentUseRequest.grant:type_name -> admiral.api.agent.v1.AgentGrant
+	24,  // 87: admiral.api.agent.v1.ListAgentGrantsResponse.grants:type_name -> admiral.api.agent.v1.AgentGrant
+	25,  // 88: admiral.api.agent.v1.GetJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	25,  // 89: admiral.api.agent.v1.ListJobsResponse.jobs:type_name -> admiral.api.agent.v1.Job
+	25,  // 90: admiral.api.agent.v1.CancelJobResponse.job:type_name -> admiral.api.agent.v1.Job
+	80,  // 91: admiral.api.agent.v1.EnrollRequest.kubernetes:type_name -> admiral.api.agent.v1.KubernetesEnrollment
+	11,  // 92: admiral.api.agent.v1.EnrollResponse.agent:type_name -> admiral.api.agent.v1.Agent
+	116, // 93: admiral.api.agent.v1.EnrollResponse.service_account:type_name -> admiral.api.serviceaccount.v1.ServiceAccount
+	117, // 94: admiral.api.agent.v1.EnrollResponse.issuer:type_name -> admiral.api.serviceaccount.v1.Issuer
+	19,  // 95: admiral.api.agent.v1.HeartbeatRequest.runtime:type_name -> admiral.api.agent.v1.Runtime
+	16,  // 96: admiral.api.agent.v1.HeartbeatRequest.kubernetes:type_name -> admiral.api.agent.v1.KubernetesReport
+	18,  // 97: admiral.api.agent.v1.HeartbeatRequest.infra:type_name -> admiral.api.agent.v1.InfraReport
+	22,  // 98: admiral.api.agent.v1.HeartbeatRequest.ambient_credentials:type_name -> admiral.api.agent.v1.AmbientCredential
+	9,   // 99: admiral.api.agent.v1.HeartbeatResponse.keys:type_name -> admiral.api.agent.v1.HeartbeatResponse.Keys
+	0,   // 100: admiral.api.agent.v1.Slots.kind:type_name -> admiral.api.agent.v1.JobKind
+	84,  // 101: admiral.api.agent.v1.ClaimJobRequest.slots:type_name -> admiral.api.agent.v1.Slots
+	52,  // 102: admiral.api.agent.v1.ClaimJobResponse.offer:type_name -> admiral.api.agent.v1.Offer
+	78,  // 103: admiral.api.agent.v1.StartJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	50,  // 104: admiral.api.agent.v1.StartJobResponse.state_access:type_name -> admiral.api.agent.v1.StateAccess
+	78,  // 105: admiral.api.agent.v1.RenewJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	89,  // 106: admiral.api.agent.v1.RenewJobRequest.progress:type_name -> admiral.api.agent.v1.Progress
+	78,  // 107: admiral.api.agent.v1.GetJobArtifactRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	30,  // 108: admiral.api.agent.v1.GetJobArtifactResponse.previous_inventory:type_name -> admiral.api.agent.v1.ComponentInventory
+	78,  // 109: admiral.api.agent.v1.UploadJobPlanDiffRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	36,  // 110: admiral.api.agent.v1.UploadJobPlanDiffRequest.diff:type_name -> admiral.api.agent.v1.PlanDiff
+	78,  // 111: admiral.api.agent.v1.UploadJobPlanFileRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	78,  // 112: admiral.api.agent.v1.GetJobPlanFileRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	78,  // 113: admiral.api.agent.v1.FinishJobRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	26,  // 114: admiral.api.agent.v1.FinishJobRequest.result:type_name -> admiral.api.agent.v1.JobResult
+	10,  // 115: admiral.api.agent.v1.FinishJobResponse.outcome:type_name -> admiral.api.agent.v1.FinishJobResponse.Outcome
+	78,  // 116: admiral.api.agent.v1.CheckJobPlanRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	31,  // 117: admiral.api.agent.v1.CheckJobPlanRequest.plan:type_name -> admiral.api.agent.v1.PlanResult
+	78,  // 118: admiral.api.agent.v1.AppendJobLogRequest.attempt:type_name -> admiral.api.agent.v1.Attempt
+	53,  // 119: admiral.api.agent.v1.AgentAPI.CreateAgent:input_type -> admiral.api.agent.v1.CreateAgentRequest
+	56,  // 120: admiral.api.agent.v1.AgentAPI.GetAgent:input_type -> admiral.api.agent.v1.GetAgentRequest
+	58,  // 121: admiral.api.agent.v1.AgentAPI.ListAgents:input_type -> admiral.api.agent.v1.ListAgentsRequest
+	60,  // 122: admiral.api.agent.v1.AgentAPI.UpdateAgent:input_type -> admiral.api.agent.v1.UpdateAgentRequest
+	62,  // 123: admiral.api.agent.v1.AgentAPI.DeleteAgent:input_type -> admiral.api.agent.v1.DeleteAgentRequest
+	64,  // 124: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:input_type -> admiral.api.agent.v1.CreateEnrollmentKeyRequest
+	66,  // 125: admiral.api.agent.v1.AgentAPI.GrantAgentUse:input_type -> admiral.api.agent.v1.GrantAgentUseRequest
+	68,  // 126: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:input_type -> admiral.api.agent.v1.RevokeAgentUseRequest
+	70,  // 127: admiral.api.agent.v1.AgentAPI.ListAgentGrants:input_type -> admiral.api.agent.v1.ListAgentGrantsRequest
+	72,  // 128: admiral.api.agent.v1.JobAPI.GetJob:input_type -> admiral.api.agent.v1.GetJobRequest
+	106, // 129: admiral.api.agent.v1.JobAPI.GetJobLog:input_type -> admiral.api.agent.v1.GetJobLogRequest
+	74,  // 130: admiral.api.agent.v1.JobAPI.ListJobs:input_type -> admiral.api.agent.v1.ListJobsRequest
+	76,  // 131: admiral.api.agent.v1.JobAPI.CancelJob:input_type -> admiral.api.agent.v1.CancelJobRequest
+	79,  // 132: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:input_type -> admiral.api.agent.v1.EnrollRequest
+	82,  // 133: admiral.api.agent.v1.AgentRuntimeAPI.Heartbeat:input_type -> admiral.api.agent.v1.HeartbeatRequest
+	85,  // 134: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:input_type -> admiral.api.agent.v1.ClaimJobRequest
+	87,  // 135: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:input_type -> admiral.api.agent.v1.StartJobRequest
+	90,  // 136: admiral.api.agent.v1.AgentRuntimeAPI.RenewJob:input_type -> admiral.api.agent.v1.RenewJobRequest
+	104, // 137: admiral.api.agent.v1.AgentRuntimeAPI.AppendJobLog:input_type -> admiral.api.agent.v1.AppendJobLogRequest
+	92,  // 138: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:input_type -> admiral.api.agent.v1.GetJobArtifactRequest
+	94,  // 139: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanDiff:input_type -> admiral.api.agent.v1.UploadJobPlanDiffRequest
+	96,  // 140: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanFile:input_type -> admiral.api.agent.v1.UploadJobPlanFileRequest
+	98,  // 141: admiral.api.agent.v1.AgentRuntimeAPI.GetJobPlanFile:input_type -> admiral.api.agent.v1.GetJobPlanFileRequest
+	102, // 142: admiral.api.agent.v1.AgentRuntimeAPI.CheckJobPlan:input_type -> admiral.api.agent.v1.CheckJobPlanRequest
+	100, // 143: admiral.api.agent.v1.AgentRuntimeAPI.FinishJob:input_type -> admiral.api.agent.v1.FinishJobRequest
+	54,  // 144: admiral.api.agent.v1.AgentAPI.CreateAgent:output_type -> admiral.api.agent.v1.CreateAgentResponse
+	57,  // 145: admiral.api.agent.v1.AgentAPI.GetAgent:output_type -> admiral.api.agent.v1.GetAgentResponse
+	59,  // 146: admiral.api.agent.v1.AgentAPI.ListAgents:output_type -> admiral.api.agent.v1.ListAgentsResponse
+	61,  // 147: admiral.api.agent.v1.AgentAPI.UpdateAgent:output_type -> admiral.api.agent.v1.UpdateAgentResponse
+	63,  // 148: admiral.api.agent.v1.AgentAPI.DeleteAgent:output_type -> admiral.api.agent.v1.DeleteAgentResponse
+	65,  // 149: admiral.api.agent.v1.AgentAPI.CreateEnrollmentKey:output_type -> admiral.api.agent.v1.CreateEnrollmentKeyResponse
+	67,  // 150: admiral.api.agent.v1.AgentAPI.GrantAgentUse:output_type -> admiral.api.agent.v1.GrantAgentUseResponse
+	69,  // 151: admiral.api.agent.v1.AgentAPI.RevokeAgentUse:output_type -> admiral.api.agent.v1.RevokeAgentUseResponse
+	71,  // 152: admiral.api.agent.v1.AgentAPI.ListAgentGrants:output_type -> admiral.api.agent.v1.ListAgentGrantsResponse
+	73,  // 153: admiral.api.agent.v1.JobAPI.GetJob:output_type -> admiral.api.agent.v1.GetJobResponse
+	107, // 154: admiral.api.agent.v1.JobAPI.GetJobLog:output_type -> admiral.api.agent.v1.GetJobLogResponse
+	75,  // 155: admiral.api.agent.v1.JobAPI.ListJobs:output_type -> admiral.api.agent.v1.ListJobsResponse
+	77,  // 156: admiral.api.agent.v1.JobAPI.CancelJob:output_type -> admiral.api.agent.v1.CancelJobResponse
+	81,  // 157: admiral.api.agent.v1.AgentRuntimeAPI.Enroll:output_type -> admiral.api.agent.v1.EnrollResponse
+	83,  // 158: admiral.api.agent.v1.AgentRuntimeAPI.Heartbeat:output_type -> admiral.api.agent.v1.HeartbeatResponse
+	86,  // 159: admiral.api.agent.v1.AgentRuntimeAPI.ClaimJob:output_type -> admiral.api.agent.v1.ClaimJobResponse
+	88,  // 160: admiral.api.agent.v1.AgentRuntimeAPI.StartJob:output_type -> admiral.api.agent.v1.StartJobResponse
+	91,  // 161: admiral.api.agent.v1.AgentRuntimeAPI.RenewJob:output_type -> admiral.api.agent.v1.RenewJobResponse
+	105, // 162: admiral.api.agent.v1.AgentRuntimeAPI.AppendJobLog:output_type -> admiral.api.agent.v1.AppendJobLogResponse
+	93,  // 163: admiral.api.agent.v1.AgentRuntimeAPI.GetJobArtifact:output_type -> admiral.api.agent.v1.GetJobArtifactResponse
+	95,  // 164: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanDiff:output_type -> admiral.api.agent.v1.UploadJobPlanDiffResponse
+	97,  // 165: admiral.api.agent.v1.AgentRuntimeAPI.UploadJobPlanFile:output_type -> admiral.api.agent.v1.UploadJobPlanFileResponse
+	99,  // 166: admiral.api.agent.v1.AgentRuntimeAPI.GetJobPlanFile:output_type -> admiral.api.agent.v1.GetJobPlanFileResponse
+	103, // 167: admiral.api.agent.v1.AgentRuntimeAPI.CheckJobPlan:output_type -> admiral.api.agent.v1.CheckJobPlanResponse
+	101, // 168: admiral.api.agent.v1.AgentRuntimeAPI.FinishJob:output_type -> admiral.api.agent.v1.FinishJobResponse
+	144, // [144:169] is the sub-list for method output_type
+	119, // [119:144] is the sub-list for method input_type
+	119, // [119:119] is the sub-list for extension type_name
+	119, // [119:119] is the sub-list for extension extendee
+	0,   // [0:119] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_agent_v1_agent_proto_init() }
@@ -7841,7 +7912,7 @@ func file_admiral_api_agent_v1_agent_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_agent_v1_agent_proto_rawDesc), len(file_admiral_api_agent_v1_agent_proto_rawDesc)),
-			NumEnums:      10,
+			NumEnums:      11,
 			NumMessages:   98,
 			NumExtensions: 0,
 			NumServices:   3,

@@ -999,6 +999,8 @@ func (m *Hold) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for RunId
+
 	if len(errors) > 0 {
 		return HoldMultiError(errors)
 	}
@@ -1130,6 +1132,8 @@ func (m *LastApply) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for RunId
 
 	if len(errors) > 0 {
 		return LastApplyMultiError(errors)
@@ -2766,6 +2770,8 @@ func (m *EnvironmentComponent) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for UnhealthyReason
 
 	if len(errors) > 0 {
 		return EnvironmentComponentMultiError(errors)

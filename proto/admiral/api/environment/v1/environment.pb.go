@@ -647,7 +647,10 @@ type Hold struct {
 	// The change set whose partial apply holds the environment.
 	ChangeSetId string `protobuf:"bytes,1,opt,name=change_set_id,json=changeSetId,proto3" json:"change_set_id,omitempty"`
 	// When the partial apply finished.
-	HeldAt        *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=held_at,json=heldAt,proto3" json:"held_at,omitempty"`
+	HeldAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=held_at,json=heldAt,proto3" json:"held_at,omitempty"`
+	// The run whose apply took the hold. Hints are built from this run, never
+	// from the change set's latest run.
+	RunId         string `protobuf:"bytes,3,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -696,6 +699,13 @@ func (x *Hold) GetHeldAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Hold) GetRunId() string {
+	if x != nil {
+		return x.RunId
+	}
+	return ""
+}
+
 // LastApply points at the apply that produced an environment's current
 // generation.
 type LastApply struct {
@@ -705,7 +715,9 @@ type LastApply struct {
 	// The change set revision that was applied.
 	RevisionId string `protobuf:"bytes,2,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
 	// When the apply finished.
-	AppliedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=applied_at,json=appliedAt,proto3" json:"applied_at,omitempty"`
+	AppliedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=applied_at,json=appliedAt,proto3" json:"applied_at,omitempty"`
+	// The run whose apply this was.
+	RunId         string `protobuf:"bytes,4,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -759,6 +771,13 @@ func (x *LastApply) GetAppliedAt() *timestamppb.Timestamp {
 		return x.AppliedAt
 	}
 	return nil
+}
+
+func (x *LastApply) GetRunId() string {
+	if x != nil {
+		return x.RunId
+	}
+	return ""
 }
 
 // CreateEnvironmentRequest creates an environment under a project.
@@ -1365,8 +1384,13 @@ type EnvironmentComponent struct {
 	// it is not the one running. Absent when the environment is pinned or
 	// runs the newest match: how far behind the component is.
 	NewestMatching *v11.VersionRef `protobuf:"bytes,15,opt,name=newest_matching,json=newestMatching,proto3" json:"newest_matching,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Set when the apply that last changed it wrote every object and the
+	// component did not become healthy: the pod reasons and last log lines the
+	// agent reported. Nothing watches it afterwards, so a component that
+	// recovered on its own keeps this until its next apply.
+	UnhealthyReason string `protobuf:"bytes,16,opt,name=unhealthy_reason,json=unhealthyReason,proto3" json:"unhealthy_reason,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *EnvironmentComponent) Reset() {
@@ -1453,6 +1477,13 @@ func (x *EnvironmentComponent) GetNewestMatching() *v11.VersionRef {
 		return x.NewestMatching
 	}
 	return nil
+}
+
+func (x *EnvironmentComponent) GetUnhealthyReason() string {
+	if x != nil {
+		return x.UnhealthyReason
+	}
+	return ""
 }
 
 // ListEnvironmentComponentsRequest lists live components in one environment
@@ -1853,16 +1884,18 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\x1bapproval_rule.unique_groups\x12\x1ca group appears at most once\x1a this.map(g, g.group_id).unique()\x92\x01\x02\x10\x10R\x06groups\x1al\n" +
 	"\rGroupApproval\x124\n" +
 	"\bgroup_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^grp-[0-9a-z]+$R\agroupId\x12%\n" +
-	"\tapprovals\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\tapprovals\"y\n" +
+	"\tapprovals\x18\x02 \x01(\x05B\a\xbaH\x04\x1a\x02(\x01R\tapprovals\"\xab\x01\n" +
 	"\x04Hold\x12<\n" +
 	"\rchange_set_id\x18\x01 \x01(\tB\x18\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\vchangeSetId\x123\n" +
-	"\aheld_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x06heldAt\"\xc0\x01\n" +
+	"\aheld_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x06heldAt\x120\n" +
+	"\x06run_id\x18\x03 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^run-[0-9a-z]+$R\x05runId\"\xf2\x01\n" +
 	"\tLastApply\x12<\n" +
 	"\rchange_set_id\x18\x01 \x01(\tB\x18\xbaH\x15\xd8\x01\x01r\x102\x0e^cs-[0-9a-z]+$R\vchangeSetId\x12:\n" +
 	"\vrevision_id\x18\x02 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^rev-[0-9a-z]+$R\n" +
 	"revisionId\x129\n" +
 	"\n" +
-	"applied_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tappliedAt\"\xaa\x01\n" +
+	"applied_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tappliedAt\x120\n" +
+	"\x06run_id\x18\x04 \x01(\tB\x19\xbaH\x16\xd8\x01\x01r\x112\x0f^run-[0-9a-z]+$R\x05runId\"\xaa\x01\n" +
 	"\x18CreateEnvironmentRequest\x128\n" +
 	"\n" +
 	"project_id\x18\x01 \x01(\tB\x19\xe0A\x02\xbaH\x13r\x112\x0f^prj-[0-9a-z]+$R\tprojectId\x12T\n" +
@@ -1896,7 +1929,7 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"\x1aEnvironmentComponentOutput\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value\x12\x1c\n" +
-	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xfd\x04\n" +
+	"\tsensitive\x18\x03 \x01(\bR\tsensitive\"\xad\x05\n" +
 	"\x14EnvironmentComponent\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12C\n" +
 	"\x0eenvironment_id\x18\f \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^env-[0-9a-z]+$R\renvironmentId\x12:\n" +
@@ -1907,7 +1940,8 @@ const file_admiral_api_environment_v1_environment_proto_rawDesc = "" +
 	"last_apply\x18\v \x01(\v2%.admiral.api.environment.v1.LastApplyR\tlastApply\x12P\n" +
 	"\aoutputs\x18\r \x03(\v26.admiral.api.environment.v1.EnvironmentComponentOutputR\aoutputs\x12R\n" +
 	"\x0eapplied_engine\x18\x0e \x01(\v2+.admiral.api.registry.v1.InfraEngineVersionR\rappliedEngine\x12M\n" +
-	"\x0fnewest_matching\x18\x0f \x01(\v2$.admiral.api.changeset.v1.VersionRefR\x0enewestMatchingJ\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
+	"\x0fnewest_matching\x18\x0f \x01(\v2$.admiral.api.changeset.v1.VersionRefR\x0enewestMatching\x12.\n" +
+	"\x10unhealthy_reason\x18\x10 \x01(\tB\x03\xe0A\x03R\x0funhealthyReasonJ\x04\b\x06\x10\aJ\x04\b\a\x10\bJ\x04\b\b\x10\tJ\x04\b\t\x10\n" +
 	"R\x03refR\x10last_revision_idR\x14last_revision_statusR\x10last_deployed_at\"\xe8\x01\n" +
 	" ListEnvironmentComponentsRequest\x12B\n" +
 	"\x0eenvironment_id\x18\x05 \x01(\tB\x16\xbaH\x13r\x112\x0f^env-[0-9a-z]+$H\x00R\renvironmentId\x88\x01\x01\x12 \n" +
