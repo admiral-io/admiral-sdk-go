@@ -40,6 +40,9 @@ const (
 	// RegistryAPISetComponentStatusProcedure is the procedure name of the RegistryAPI's
 	// SetComponentStatus RPC.
 	RegistryAPISetComponentStatusProcedure = "/admiral.api.registry.v1.RegistryAPI/SetComponentStatus"
+	// RegistryAPISetComponentOriginProcedure is the procedure name of the RegistryAPI's
+	// SetComponentOrigin RPC.
+	RegistryAPISetComponentOriginProcedure = "/admiral.api.registry.v1.RegistryAPI/SetComponentOrigin"
 	// RegistryAPIDeleteComponentProcedure is the procedure name of the RegistryAPI's DeleteComponent
 	// RPC.
 	RegistryAPIDeleteComponentProcedure = "/admiral.api.registry.v1.RegistryAPI/DeleteComponent"
@@ -99,6 +102,13 @@ var (
 			Procedure:  RegistryAPISetComponentStatusProcedure,
 		}
 	})
+	registryAPISetComponentOriginSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_admiral_api_registry_v1_registry_proto.Services().ByName("RegistryAPI").Methods().ByName("SetComponentOrigin"),
+			Procedure:  RegistryAPISetComponentOriginProcedure,
+		}
+	})
 	registryAPIDeleteComponentSpec = sync.OnceValue(func() connect.Spec {
 		return connect.Spec{
 			StreamType: connect.StreamTypeUnary,
@@ -149,28 +159,67 @@ type RegistryAPIClient interface {
 	// the component on first use.
 	//
 	// The bundle is a gzipped tar of the component root, carried inline and
-	// capped at 64 MiB; a fully vendored tree that exceeds it will get a
-	// resumable upload path of its own. The server normalizes the bytes
-	// (strips `.git`, canonicalizes entry order and timestamps), digests them,
-	// runs the publish gate, stores the blob and answers with the version. If
-	// the digest already exists under the name, the existing version is
-	// returned with `unchanged` set and nothing is written, which is what makes
-	// a publish-everything CI recipe safe.
+	// capped at 64 MiB. Admiral normalizes the bytes (strips `.git`,
+	// canonicalizes entry order and timestamps), digests them, scans them,
+	// stores them and answers with the version. If the digest already exists
+	// under the name, the existing version is returned with `unchanged` set
+	// and nothing is written, which is what makes a publish-everything CI
+	// recipe safe.
 	//
 	// Any tags named in the request are set on the resulting version.
 	// Repointing a semver tag is refused with FAILED_PRECONDITION and the whole
 	// publish fails; the bytes are not kept.
 	//
+	// A publish that creates a component gives it the origin published by
+	// hand, and needs the right the organization's
+	// `component_creation_policy` names; PERMISSION_DENIED otherwise. A
+	// publish to an existing component needs publish rights on it. On a
+	// component whose origin is a source, the publish is refused with
+	// FAILED_PRECONDITION naming the source: its versions arrive through that
+	// source until an admin moves the origin with SetComponentOrigin. A hand
+	// publish is checked the same way as an import.
+	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *v1.PublishComponentRequest) (*v1.PublishComponentResponse, error)
-	// ImportComponent publishes an artifact the organization does not own: a chart in
-	// an HTTP repository or an OCI registry, a module in a module registry, a
-	// git repository at a ref, an archive. Admiral fetches it with the
-	// credentials named, closes it over what it reaches, scans it, and
-	// records the version with provenance saying where it came from. The
-	// bytes are a copy: upstream may move the tag and the version does not.
+	// ImportComponent publishes an artifact the organization does not own,
+	// through one of its sources. The source carries the grant and bounds what
+	// may enter, so no request names a credential. Admiral fetches the
+	// artifact at the version asked, copies in the remote modules and charts
+	// it depends on, scans it, and records the version with IMPORT provenance
+	// naming the source. The bytes are a copy: upstream may move the tag and
+	// the version does not.
 	// The same resolution under the same name is the same version, returned
 	// with `unchanged` set.
+	//
+	// `name` is the component, always. The import that creates it needs
+	// `source_id` and sets the component's origin to that source and
+	// artifact. A later import under the same name is a bump: `source_id` and
+	// `artifact` may be left empty, and the origin supplies them.
+	//
+	// `version` is an exact version as ListSourceVersions spells it, the
+	// keyword `latest`, or a semver range such as `^2`, `~2.39` or
+	// `>=2.39 <3`. Admiral resolves a range or `latest` once, against a
+	// fresh read of the upstream rather than the cached list
+	// ListSourceVersions serves, and only over the versions the source's
+	// `allows` permits. It stores the exact version. A range or a keyword
+	// never reaches a changeset or an environment pin.
+	//
+	// Any member who can read the source may import a new version of an
+	// existing component through its origin, since the caller chooses only
+	// which allowed version to take. Creating a component by import is bounded
+	// by the source, not by the organization's `component_creation_policy`.
+	//
+	//   - INVALID_ARGUMENT when the import would create the component and
+	//     names no `source_id`.
+	//   - FAILED_PRECONDITION when the component was published by hand, or
+	//     when `source_id` or `artifact` differs from its origin. The message
+	//     names SetComponentOrigin, which is how an admin moves the origin.
+	//   - FAILED_PRECONDITION when the artifact or the resolved version is
+	//     outside the source's `allows`, when the resolved version is
+	//     revoked, or when no permitted version matches `version`.
+	//
+	// An archive at a URL is not importable, since an archive has no
+	// versions. A git source at a tag covers it.
 	//
 	// Scope: `component:publish`
 	ImportComponent(context.Context, *v1.ImportComponentRequest) (*v1.ImportComponentResponse, error)
@@ -196,9 +245,21 @@ type RegistryAPIClient interface {
 	//
 	// Scope: `component:write`
 	SetComponentStatus(context.Context, *v1.SetComponentStatusRequest) (*v1.SetComponentStatusResponse, error)
+	// SetComponentOrigin moves where a component's new versions come from: to
+	// a source and an artifact in it, or to published by hand. It needs an
+	// organization admin; PERMISSION_DENIED otherwise. Every existing version
+	// keeps its own provenance, and only the origin of new versions changes.
+	// A source origin must name a source of this organization whose `allows`
+	// permits the artifact; FAILED_PRECONDITION otherwise, naming which.
+	// Admiral records each move with the old and the new origin.
+	// Setting the origin the component already has succeeds and changes
+	// nothing.
+	//
+	// Scope: `component:write`
+	SetComponentOrigin(context.Context, *v1.SetComponentOriginRequest) (*v1.SetComponentOriginResponse, error)
 	// DeleteComponent removes a component. FAILED_PRECONDITION while any
-	// environment runs one of its versions or an open change set uses it (the
-	// message names them). The change sets and runs that used it still read
+	// environment runs one of its versions or an open changeset uses it (the
+	// message names them). The changesets and runs that used it still read
 	// its versions. The name is then free: a later publish under it creates a
 	// new component with a new id.
 	//
@@ -215,6 +276,12 @@ type RegistryAPIClient interface {
 	GetVersion(context.Context, *v1.GetVersionRequest) (*v1.GetVersionResponse, error)
 	// SetVersionStatus moves a version between PUBLISHED, DEPRECATED and
 	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
+	//
+	// Revoking needs the component's owner or an organization admin;
+	// PERMISSION_DENIED otherwise. Plan and apply refuse a changeset that
+	// newly pins a revoked version, and check nothing else again. An
+	// environment already running it keeps running, and a revert to it is
+	// still allowed.
 	//
 	// Scope: `component:write`
 	SetVersionStatus(context.Context, *v1.SetVersionStatusRequest) (*v1.SetVersionStatusResponse, error)
@@ -244,28 +311,67 @@ type RegistryAPIHandler interface {
 	// the component on first use.
 	//
 	// The bundle is a gzipped tar of the component root, carried inline and
-	// capped at 64 MiB; a fully vendored tree that exceeds it will get a
-	// resumable upload path of its own. The server normalizes the bytes
-	// (strips `.git`, canonicalizes entry order and timestamps), digests them,
-	// runs the publish gate, stores the blob and answers with the version. If
-	// the digest already exists under the name, the existing version is
-	// returned with `unchanged` set and nothing is written, which is what makes
-	// a publish-everything CI recipe safe.
+	// capped at 64 MiB. Admiral normalizes the bytes (strips `.git`,
+	// canonicalizes entry order and timestamps), digests them, scans them,
+	// stores them and answers with the version. If the digest already exists
+	// under the name, the existing version is returned with `unchanged` set
+	// and nothing is written, which is what makes a publish-everything CI
+	// recipe safe.
 	//
 	// Any tags named in the request are set on the resulting version.
 	// Repointing a semver tag is refused with FAILED_PRECONDITION and the whole
 	// publish fails; the bytes are not kept.
 	//
+	// A publish that creates a component gives it the origin published by
+	// hand, and needs the right the organization's
+	// `component_creation_policy` names; PERMISSION_DENIED otherwise. A
+	// publish to an existing component needs publish rights on it. On a
+	// component whose origin is a source, the publish is refused with
+	// FAILED_PRECONDITION naming the source: its versions arrive through that
+	// source until an admin moves the origin with SetComponentOrigin. A hand
+	// publish is checked the same way as an import.
+	//
 	// Scope: `component:publish`
 	PublishComponent(context.Context, *v1.PublishComponentRequest) (*v1.PublishComponentResponse, error)
-	// ImportComponent publishes an artifact the organization does not own: a chart in
-	// an HTTP repository or an OCI registry, a module in a module registry, a
-	// git repository at a ref, an archive. Admiral fetches it with the
-	// credentials named, closes it over what it reaches, scans it, and
-	// records the version with provenance saying where it came from. The
-	// bytes are a copy: upstream may move the tag and the version does not.
+	// ImportComponent publishes an artifact the organization does not own,
+	// through one of its sources. The source carries the grant and bounds what
+	// may enter, so no request names a credential. Admiral fetches the
+	// artifact at the version asked, copies in the remote modules and charts
+	// it depends on, scans it, and records the version with IMPORT provenance
+	// naming the source. The bytes are a copy: upstream may move the tag and
+	// the version does not.
 	// The same resolution under the same name is the same version, returned
 	// with `unchanged` set.
+	//
+	// `name` is the component, always. The import that creates it needs
+	// `source_id` and sets the component's origin to that source and
+	// artifact. A later import under the same name is a bump: `source_id` and
+	// `artifact` may be left empty, and the origin supplies them.
+	//
+	// `version` is an exact version as ListSourceVersions spells it, the
+	// keyword `latest`, or a semver range such as `^2`, `~2.39` or
+	// `>=2.39 <3`. Admiral resolves a range or `latest` once, against a
+	// fresh read of the upstream rather than the cached list
+	// ListSourceVersions serves, and only over the versions the source's
+	// `allows` permits. It stores the exact version. A range or a keyword
+	// never reaches a changeset or an environment pin.
+	//
+	// Any member who can read the source may import a new version of an
+	// existing component through its origin, since the caller chooses only
+	// which allowed version to take. Creating a component by import is bounded
+	// by the source, not by the organization's `component_creation_policy`.
+	//
+	//   - INVALID_ARGUMENT when the import would create the component and
+	//     names no `source_id`.
+	//   - FAILED_PRECONDITION when the component was published by hand, or
+	//     when `source_id` or `artifact` differs from its origin. The message
+	//     names SetComponentOrigin, which is how an admin moves the origin.
+	//   - FAILED_PRECONDITION when the artifact or the resolved version is
+	//     outside the source's `allows`, when the resolved version is
+	//     revoked, or when no permitted version matches `version`.
+	//
+	// An archive at a URL is not importable, since an archive has no
+	// versions. A git source at a tag covers it.
 	//
 	// Scope: `component:publish`
 	ImportComponent(context.Context, *v1.ImportComponentRequest) (*v1.ImportComponentResponse, error)
@@ -291,9 +397,21 @@ type RegistryAPIHandler interface {
 	//
 	// Scope: `component:write`
 	SetComponentStatus(context.Context, *v1.SetComponentStatusRequest) (*v1.SetComponentStatusResponse, error)
+	// SetComponentOrigin moves where a component's new versions come from: to
+	// a source and an artifact in it, or to published by hand. It needs an
+	// organization admin; PERMISSION_DENIED otherwise. Every existing version
+	// keeps its own provenance, and only the origin of new versions changes.
+	// A source origin must name a source of this organization whose `allows`
+	// permits the artifact; FAILED_PRECONDITION otherwise, naming which.
+	// Admiral records each move with the old and the new origin.
+	// Setting the origin the component already has succeeds and changes
+	// nothing.
+	//
+	// Scope: `component:write`
+	SetComponentOrigin(context.Context, *v1.SetComponentOriginRequest) (*v1.SetComponentOriginResponse, error)
 	// DeleteComponent removes a component. FAILED_PRECONDITION while any
-	// environment runs one of its versions or an open change set uses it (the
-	// message names them). The change sets and runs that used it still read
+	// environment runs one of its versions or an open changeset uses it (the
+	// message names them). The changesets and runs that used it still read
 	// its versions. The name is then free: a later publish under it creates a
 	// new component with a new id.
 	//
@@ -310,6 +428,12 @@ type RegistryAPIHandler interface {
 	GetVersion(context.Context, *v1.GetVersionRequest) (*v1.GetVersionResponse, error)
 	// SetVersionStatus moves a version between PUBLISHED, DEPRECATED and
 	// REVOKED, recording why. Any move is allowed, including back to PUBLISHED.
+	//
+	// Revoking needs the component's owner or an organization admin;
+	// PERMISSION_DENIED otherwise. Plan and apply refuse a changeset that
+	// newly pins a revoked version, and check nothing else again. An
+	// environment already running it keeps running, and a revert to it is
+	// still allowed.
 	//
 	// Scope: `component:write`
 	SetVersionStatus(context.Context, *v1.SetVersionStatusRequest) (*v1.SetVersionStatusResponse, error)
@@ -338,6 +462,7 @@ func RegisterRegistryAPIHandler(server *connect.Server, svc RegistryAPIHandler) 
 		connect.Method{Spec: registryAPIGetComponentSpec(), Handler: adapter.getComponent},
 		connect.Method{Spec: registryAPIUpdateComponentSpec(), Handler: adapter.updateComponent},
 		connect.Method{Spec: registryAPISetComponentStatusSpec(), Handler: adapter.setComponentStatus},
+		connect.Method{Spec: registryAPISetComponentOriginSpec(), Handler: adapter.setComponentOrigin},
 		connect.Method{Spec: registryAPIDeleteComponentSpec(), Handler: adapter.deleteComponent},
 		connect.Method{Spec: registryAPIListVersionsSpec(), Handler: adapter.listVersions},
 		connect.Method{Spec: registryAPIGetVersionSpec(), Handler: adapter.getVersion},
@@ -372,6 +497,10 @@ func (UnimplementedRegistryAPIHandler) UpdateComponent(context.Context, *v1.Upda
 
 func (UnimplementedRegistryAPIHandler) SetComponentStatus(context.Context, *v1.SetComponentStatusRequest) (*v1.SetComponentStatusResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.registry.v1.RegistryAPI.SetComponentStatus is not implemented")
+}
+
+func (UnimplementedRegistryAPIHandler) SetComponentOrigin(context.Context, *v1.SetComponentOriginRequest) (*v1.SetComponentOriginResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "admiral.api.registry.v1.RegistryAPI.SetComponentOrigin is not implemented")
 }
 
 func (UnimplementedRegistryAPIHandler) DeleteComponent(context.Context, *v1.DeleteComponentRequest) (*v1.DeleteComponentResponse, error) {
@@ -445,6 +574,14 @@ func (c *registryAPIClient) UpdateComponent(ctx context.Context, req *v1.UpdateC
 func (c *registryAPIClient) SetComponentStatus(ctx context.Context, req *v1.SetComponentStatusRequest) (*v1.SetComponentStatusResponse, error) {
 	var res v1.SetComponentStatusResponse
 	if err := c.client.CallUnary(ctx, registryAPISetComponentStatusSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *registryAPIClient) SetComponentOrigin(ctx context.Context, req *v1.SetComponentOriginRequest) (*v1.SetComponentOriginResponse, error) {
+	var res v1.SetComponentOriginResponse
+	if err := c.client.CallUnary(ctx, registryAPISetComponentOriginSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -566,6 +703,18 @@ func (h registryAPIHandler) setComponentStatus(ctx context.Context, _ connect.Sp
 		return err
 	}
 	res, err := h.svc.SetComponentStatus(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h registryAPIHandler) setComponentOrigin(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SetComponentOriginRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.SetComponentOrigin(ctx, &req)
 	if err != nil {
 		return err
 	}

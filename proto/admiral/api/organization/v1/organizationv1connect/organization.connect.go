@@ -57,9 +57,11 @@ type OrganizationAPIClient interface {
 	GetOrganization(context.Context, *v1.GetOrganizationRequest) (*v1.GetOrganizationResponse, error)
 	// UpdateOrganization updates the caller's own organization's mutable settings.
 	//
-	// Only `display_name` is mutable. `slug` is part of the account's identity
-	// and `status` is set by lifecycle operations, neither of which an organization
-	// performs on itself. The logo is set in the console.
+	// `display_name`, `source_creation_policy` and `component_creation_policy`
+	// are mutable. `slug` is part of the account's identity and `status` is
+	// set by lifecycle operations, neither of which an organization performs
+	// on itself. The logo is set in the console. Changing either creation
+	// policy needs an organization admin; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `organization:write`
 	UpdateOrganization(context.Context, *v1.UpdateOrganizationRequest) (*v1.UpdateOrganizationResponse, error)
@@ -80,9 +82,11 @@ type OrganizationAPIHandler interface {
 	GetOrganization(context.Context, *v1.GetOrganizationRequest) (*v1.GetOrganizationResponse, error)
 	// UpdateOrganization updates the caller's own organization's mutable settings.
 	//
-	// Only `display_name` is mutable. `slug` is part of the account's identity
-	// and `status` is set by lifecycle operations, neither of which an organization
-	// performs on itself. The logo is set in the console.
+	// `display_name`, `source_creation_policy` and `component_creation_policy`
+	// are mutable. `slug` is part of the account's identity and `status` is
+	// set by lifecycle operations, neither of which an organization performs
+	// on itself. The logo is set in the console. Changing either creation
+	// policy needs an organization admin; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `organization:write`
 	UpdateOrganization(context.Context, *v1.UpdateOrganizationRequest) (*v1.UpdateOrganizationResponse, error)

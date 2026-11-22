@@ -28,9 +28,9 @@ const (
 )
 
 // Type is the protocol family a credential is presented as. Each
-// fetch takes the families its protocol speaks: a module registry, an
-// archive and an OCI token take a bearer token; git over https, a Helm
-// repository and an OCI login take basic auth; git over ssh takes a key.
+// fetch takes the families its protocol speaks: a module registry and an
+// OCI token take a bearer token; git over https, a Helm repository and an
+// OCI login take basic auth; git over ssh takes a key.
 type Credential_Type int32
 
 const (
@@ -38,14 +38,14 @@ const (
 	// An SSH private key, for git over ssh.
 	Credential_TYPE_SSH_KEY Credential_Type = 1
 	// A username and password: git over https, a Helm repository, an OCI
-	// registry, an authenticated archive.
+	// registry.
 	Credential_TYPE_BASIC_AUTH Credential_Type = 2
 	// One token. Presented as `Authorization: Bearer` to a module registry,
-	// a Helm repository, an OCI registry or an archive host, and as the
-	// basic-auth password with the `x-access-token` username to git over
-	// https, which is how GitHub and GitLab take a token.
+	// a Helm repository or an OCI registry, and as the basic-auth password
+	// with the `x-access-token` username to git over https, which is how
+	// GitHub and GitLab take a token.
 	Credential_TYPE_BEARER_TOKEN Credential_Type = 3
-	// A GitHub App installation. Not a secret that is presented: the platform
+	// A GitHub App installation. Not a secret that is presented: Admiral
 	// mints a short-lived installation token from the app's private key at
 	// fetch time and presents that as a bearer token. Works for github.com,
 	// GitHub Enterprise Cloud and GitHub Enterprise Server.
@@ -254,7 +254,7 @@ func (x *BearerTokenAuth) GetToken() string {
 }
 
 // GitHubAppAuth identifies a GitHub App installation and holds the app's
-// private key, from which the platform mints installation tokens.
+// private key, from which Admiral mints installation tokens.
 type GitHubAppAuth struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The app's numeric id, from the app's settings page.
@@ -459,14 +459,15 @@ type Credential struct {
 	CreatedBy  *v1.ActorRef           `protobuf:"bytes,7,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	CreatedAt  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt  *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// Hosts this credential may be presented to, as a guard: empty means any
-	// host its type fits; set means the platform refuses to present it
-	// anywhere else, whatever it is attached to. Hostnames, optionally with
-	// a port: `github.acme.example`, `harbor.acme.example:8443`. No scheme,
-	// no path.
+	// Hosts this credential may be presented to, as a guard: set means
+	// Admiral refuses to present it anywhere else. Empty, on a credential a
+	// source holds, means that source's host and nothing more. It is checked
+	// on every fetch, redirects and transitive fetches included. Hostnames,
+	// optionally with a port: `github.acme.example`,
+	// `harbor.acme.example:8443`. No scheme, no path.
 	AllowedHosts []string `protobuf:"bytes,10,rep,name=allowed_hosts,json=allowedHosts,proto3" json:"allowed_hosts,omitempty"`
-	// When a publish last decrypted this credential to present to a host,
-	// whether or not the host accepted it. Updated at most every few minutes.
+	// When Admiral last presented this credential to a host, whether or not
+	// the host accepted it. Updated at most every few minutes.
 	// Absent if it has never been used.
 	LastUsedAt    *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
 	unknownFields protoimpl.UnknownFields

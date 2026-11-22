@@ -34,9 +34,9 @@ const (
 // suspension, and deletion are administrative operations and are not part of
 // this API.
 //
-// No request names an organization. The caller's organization comes from their token, so
-// there is no id to pass and none to get wrong -- and no shape in which a caller
-// could name someone else's.
+// No request names an organization. The caller's organization comes from
+// their token, so there is no id to pass, none to get wrong, and no way to
+// name another organization.
 type OrganizationAPIClient interface {
 	// GetOrganization returns the caller's own organization.
 	//
@@ -44,9 +44,11 @@ type OrganizationAPIClient interface {
 	GetOrganization(ctx context.Context, in *GetOrganizationRequest, opts ...grpc.CallOption) (*GetOrganizationResponse, error)
 	// UpdateOrganization updates the caller's own organization's mutable settings.
 	//
-	// Only `display_name` is mutable. `slug` is part of the account's identity
-	// and `status` is set by lifecycle operations, neither of which an organization
-	// performs on itself. The logo is set in the console.
+	// `display_name`, `source_creation_policy` and `component_creation_policy`
+	// are mutable. `slug` is part of the account's identity and `status` is
+	// set by lifecycle operations, neither of which an organization performs
+	// on itself. The logo is set in the console. Changing either creation
+	// policy needs an organization admin; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `organization:write`
 	UpdateOrganization(ctx context.Context, in *UpdateOrganizationRequest, opts ...grpc.CallOption) (*UpdateOrganizationResponse, error)
@@ -91,9 +93,9 @@ func (c *organizationAPIClient) UpdateOrganization(ctx context.Context, in *Upda
 // suspension, and deletion are administrative operations and are not part of
 // this API.
 //
-// No request names an organization. The caller's organization comes from their token, so
-// there is no id to pass and none to get wrong -- and no shape in which a caller
-// could name someone else's.
+// No request names an organization. The caller's organization comes from
+// their token, so there is no id to pass, none to get wrong, and no way to
+// name another organization.
 type OrganizationAPIServer interface {
 	// GetOrganization returns the caller's own organization.
 	//
@@ -101,9 +103,11 @@ type OrganizationAPIServer interface {
 	GetOrganization(context.Context, *GetOrganizationRequest) (*GetOrganizationResponse, error)
 	// UpdateOrganization updates the caller's own organization's mutable settings.
 	//
-	// Only `display_name` is mutable. `slug` is part of the account's identity
-	// and `status` is set by lifecycle operations, neither of which an organization
-	// performs on itself. The logo is set in the console.
+	// `display_name`, `source_creation_policy` and `component_creation_policy`
+	// are mutable. `slug` is part of the account's identity and `status` is
+	// set by lifecycle operations, neither of which an organization performs
+	// on itself. The logo is set in the console. Changing either creation
+	// policy needs an organization admin; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `organization:write`
 	UpdateOrganization(context.Context, *UpdateOrganizationRequest) (*UpdateOrganizationResponse, error)

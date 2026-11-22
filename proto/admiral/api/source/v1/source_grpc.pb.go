@@ -32,26 +32,23 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// SourceAPI is the system-of-record service for an organization's sources: one
-// upstream location each, with the standing grant that reaches it and the
-// bound on what may enter through it (admiral-knowledge, "a source is one
-// upstream location with a standing credential, and a push to a repository
-// publishes through it", and "a GitHub repository source is reached through
-// the integration or through a credential").
+// SourceAPI manages an organization's sources. A source is one upstream
+// location, such as a git repository, a Helm repository or a registry
+// namespace. It holds the grant that reaches the location, when the location
+// needs one, and `allows`, which bounds what may come in through it. Every
+// component Admiral copies from outside the organization comes in through a
+// source.
 //
-// This is the PUBLISHED surface. The organization comes from the token, and
-// the edge forwards each call to the platform plane by field name.
+// The organization comes from the caller's token, so no request names it.
 //
-// A source's trigger says who causes a version to exist. REQUEST: a person
-// imports through it, choosing a version, and nothing imports on its own.
-// PUSH: Admiral's GitHub App publishes what the repository's admiral.yaml
-// declares when the repository is pushed. The push itself arrives on the
-// App's webhook stream and is consumed by the platform, so there is no RPC
-// for it here; the import through a REQUEST source is the registry's
-// ImportComponent naming a source and a version.
+// A source's trigger says what causes a version to exist. With REQUEST, a
+// person imports a version through the source with the registry's
+// ImportComponent, and nothing imports on its own. With PUSH, Admiral's
+// GitHub App publishes what the repository's admiral.yaml declares when a
+// listed branch or tag is pushed. A push needs no call to this API.
 //
 // Nothing on this service returns a credential or a token. A member who
-// imports through a source causes the grant's effects and never sees it.
+// imports through a source uses its grant and never sees it.
 type SourceAPIClient interface {
 	// ListSources pages through an organization's sources, every status included.
 	//
@@ -61,10 +58,21 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:read`
 	GetSource(ctx context.Context, in *GetSourceRequest, opts ...grpc.CallOption) (*GetSourceResponse, error)
-	// CreateSource records a source. Creating one is the curated act: it is
-	// where the location, the grant and `allows` are chosen, and no second
-	// endorsement exists. The grant must reach the location, which the
-	// platform checks differently per arm:
+	// CreateSource records a source. Creating a source is the approval: it
+	// chooses the location, the grant and `allows`, and nothing that comes in
+	// through the source is approved a second time.
+	//
+	// Creating a source needs the right the organization's
+	// `source_creation_policy` names: admins by default, or every member.
+	// Setting a grant (`credential_id` or `integration_id`) needs an
+	// organization admin, whoever creates the source. PERMISSION_DENIED names
+	// who can. A source on a public upstream needs no grant.
+	//
+	// Every way a component comes in (creating a source, an import, a GitHub
+	// push, a hand publish) is checked the same way, against the source's
+	// `allows`, revoked versions and the organization's creation policies. A
+	// grant, when set, must reach the location. Admiral checks that
+	// differently for each kind of grant:
 	//
 	//   - An integration grant is checked here, with no network call. The
 	//     integration must be a CONNECTED GitHub integration of this organization
@@ -81,19 +89,25 @@ type SourceAPIClient interface {
 	//
 	// Scope: `source:write`
 	CreateSource(ctx context.Context, in *CreateSourceRequest, opts ...grpc.CallOption) (*CreateSourceResponse, error)
-	// UpdateSource changes what may change: the description, the grant, the
-	// trigger, `allows` and the settings. The kind and the location are
-	// immutable, because a component records the source and path it came
-	// from, and moving a source would rewrite that lineage; make a new source
-	// instead. A changed grant is checked as CreateSource checks it.
-	// Tightening `allows` never touches a running environment, since applied
-	// bytes are frozen; it blocks new imports and new revisions.
+	// UpdateSource changes the description, the grant, the trigger, `allows`
+	// and the settings. The kind and the location are immutable: a component's
+	// origin and every version's provenance name the source, so a source
+	// always means one location. Another location is another source.
+	//
+	// Updating a source needs the right `source_creation_policy` names, and an
+	// organization admin when the source holds a grant or the update sets one.
+	// PERMISSION_DENIED names who can. A new grant is checked as CreateSource
+	// checks it.
+	//
+	// Tightening `allows` never touches a running environment, which runs its
+	// own stored copy; it bounds new imports and new pushes only.
 	//
 	// Scope: `source:write`
 	UpdateSource(ctx context.Context, in *UpdateSourceRequest, opts ...grpc.CallOption) (*UpdateSourceResponse, error)
-	// DeleteSource removes a source. Components that came through it keep
-	// their versions and their provenance; they can no longer gain versions
-	// through it. A PUSH source stops publishing at once.
+	// DeleteSource removes a source. FAILED_PRECONDITION while any
+	// component's origin names it, listing those components; move each with
+	// SetComponentOrigin or delete it first. Versions that came through the
+	// source keep their provenance. A PUSH source stops publishing at once.
 	//
 	// Scope: `source:write`
 	DeleteSource(ctx context.Context, in *DeleteSourceRequest, opts ...grpc.CallOption) (*DeleteSourceResponse, error)
@@ -102,8 +116,8 @@ type SourceAPIClient interface {
 	// registry's namespace. A container registry does not list, and a git
 	// repository's artifacts are paths, so for KIND_OCI_REGISTRY and KIND_GIT
 	// the answer is FAILED_PRECONDITION and the caller names the artifact.
-	// The list is bounded by `allows`; what the upstream has beyond it is
-	// not shown.
+	// The list is bounded by the name patterns in `allows`; what the
+	// upstream has beyond them is not shown.
 	//
 	// Scope: `source:read`
 	ListSourceArtifacts(ctx context.Context, in *ListSourceArtifactsRequest, opts ...grpc.CallOption) (*ListSourceArtifactsResponse, error)
@@ -113,6 +127,9 @@ type SourceAPIClient interface {
 	// when the upstream fails, never refreshed in the background. A version
 	// is ordered when the protocol orders it, a tag or a registry version; a
 	// branch is a moving head and carries the commit it points at.
+	//
+	// Only the versions `allows` permits are listed: an entry with a version
+	// range hides the artifact's versions outside it.
 	//
 	// FAILED_PRECONDITION when the artifact is outside `allows` or the grant
 	// no longer reaches the source.
@@ -203,26 +220,23 @@ func (c *sourceAPIClient) ListSourceVersions(ctx context.Context, in *ListSource
 // All implementations should embed UnimplementedSourceAPIServer
 // for forward compatibility.
 //
-// SourceAPI is the system-of-record service for an organization's sources: one
-// upstream location each, with the standing grant that reaches it and the
-// bound on what may enter through it (admiral-knowledge, "a source is one
-// upstream location with a standing credential, and a push to a repository
-// publishes through it", and "a GitHub repository source is reached through
-// the integration or through a credential").
+// SourceAPI manages an organization's sources. A source is one upstream
+// location, such as a git repository, a Helm repository or a registry
+// namespace. It holds the grant that reaches the location, when the location
+// needs one, and `allows`, which bounds what may come in through it. Every
+// component Admiral copies from outside the organization comes in through a
+// source.
 //
-// This is the PUBLISHED surface. The organization comes from the token, and
-// the edge forwards each call to the platform plane by field name.
+// The organization comes from the caller's token, so no request names it.
 //
-// A source's trigger says who causes a version to exist. REQUEST: a person
-// imports through it, choosing a version, and nothing imports on its own.
-// PUSH: Admiral's GitHub App publishes what the repository's admiral.yaml
-// declares when the repository is pushed. The push itself arrives on the
-// App's webhook stream and is consumed by the platform, so there is no RPC
-// for it here; the import through a REQUEST source is the registry's
-// ImportComponent naming a source and a version.
+// A source's trigger says what causes a version to exist. With REQUEST, a
+// person imports a version through the source with the registry's
+// ImportComponent, and nothing imports on its own. With PUSH, Admiral's
+// GitHub App publishes what the repository's admiral.yaml declares when a
+// listed branch or tag is pushed. A push needs no call to this API.
 //
 // Nothing on this service returns a credential or a token. A member who
-// imports through a source causes the grant's effects and never sees it.
+// imports through a source uses its grant and never sees it.
 type SourceAPIServer interface {
 	// ListSources pages through an organization's sources, every status included.
 	//
@@ -232,10 +246,21 @@ type SourceAPIServer interface {
 	//
 	// Scope: `source:read`
 	GetSource(context.Context, *GetSourceRequest) (*GetSourceResponse, error)
-	// CreateSource records a source. Creating one is the curated act: it is
-	// where the location, the grant and `allows` are chosen, and no second
-	// endorsement exists. The grant must reach the location, which the
-	// platform checks differently per arm:
+	// CreateSource records a source. Creating a source is the approval: it
+	// chooses the location, the grant and `allows`, and nothing that comes in
+	// through the source is approved a second time.
+	//
+	// Creating a source needs the right the organization's
+	// `source_creation_policy` names: admins by default, or every member.
+	// Setting a grant (`credential_id` or `integration_id`) needs an
+	// organization admin, whoever creates the source. PERMISSION_DENIED names
+	// who can. A source on a public upstream needs no grant.
+	//
+	// Every way a component comes in (creating a source, an import, a GitHub
+	// push, a hand publish) is checked the same way, against the source's
+	// `allows`, revoked versions and the organization's creation policies. A
+	// grant, when set, must reach the location. Admiral checks that
+	// differently for each kind of grant:
 	//
 	//   - An integration grant is checked here, with no network call. The
 	//     integration must be a CONNECTED GitHub integration of this organization
@@ -252,19 +277,25 @@ type SourceAPIServer interface {
 	//
 	// Scope: `source:write`
 	CreateSource(context.Context, *CreateSourceRequest) (*CreateSourceResponse, error)
-	// UpdateSource changes what may change: the description, the grant, the
-	// trigger, `allows` and the settings. The kind and the location are
-	// immutable, because a component records the source and path it came
-	// from, and moving a source would rewrite that lineage; make a new source
-	// instead. A changed grant is checked as CreateSource checks it.
-	// Tightening `allows` never touches a running environment, since applied
-	// bytes are frozen; it blocks new imports and new revisions.
+	// UpdateSource changes the description, the grant, the trigger, `allows`
+	// and the settings. The kind and the location are immutable: a component's
+	// origin and every version's provenance name the source, so a source
+	// always means one location. Another location is another source.
+	//
+	// Updating a source needs the right `source_creation_policy` names, and an
+	// organization admin when the source holds a grant or the update sets one.
+	// PERMISSION_DENIED names who can. A new grant is checked as CreateSource
+	// checks it.
+	//
+	// Tightening `allows` never touches a running environment, which runs its
+	// own stored copy; it bounds new imports and new pushes only.
 	//
 	// Scope: `source:write`
 	UpdateSource(context.Context, *UpdateSourceRequest) (*UpdateSourceResponse, error)
-	// DeleteSource removes a source. Components that came through it keep
-	// their versions and their provenance; they can no longer gain versions
-	// through it. A PUSH source stops publishing at once.
+	// DeleteSource removes a source. FAILED_PRECONDITION while any
+	// component's origin names it, listing those components; move each with
+	// SetComponentOrigin or delete it first. Versions that came through the
+	// source keep their provenance. A PUSH source stops publishing at once.
 	//
 	// Scope: `source:write`
 	DeleteSource(context.Context, *DeleteSourceRequest) (*DeleteSourceResponse, error)
@@ -273,8 +304,8 @@ type SourceAPIServer interface {
 	// registry's namespace. A container registry does not list, and a git
 	// repository's artifacts are paths, so for KIND_OCI_REGISTRY and KIND_GIT
 	// the answer is FAILED_PRECONDITION and the caller names the artifact.
-	// The list is bounded by `allows`; what the upstream has beyond it is
-	// not shown.
+	// The list is bounded by the name patterns in `allows`; what the
+	// upstream has beyond them is not shown.
 	//
 	// Scope: `source:read`
 	ListSourceArtifacts(context.Context, *ListSourceArtifactsRequest) (*ListSourceArtifactsResponse, error)
@@ -284,6 +315,9 @@ type SourceAPIServer interface {
 	// when the upstream fails, never refreshed in the background. A version
 	// is ordered when the protocol orders it, a tag or a registry version; a
 	// branch is a moving head and carries the commit it points at.
+	//
+	// Only the versions `allows` permits are listed: an entry with a version
+	// range hides the artifact's versions outside it.
 	//
 	// FAILED_PRECONDITION when the artifact is outside `allows` or the grant
 	// no longer reaches the source.

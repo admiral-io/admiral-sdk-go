@@ -102,8 +102,9 @@ const (
 	// imports on its own.
 	Source_TRIGGER_REQUEST Source_Trigger = 1
 	// Admiral's GitHub App publishes what the repository's admiral.yaml
-	// declares when the repository is pushed. KIND_GIT through an
-	// integration only.
+	// declares when a branch or a tag the git settings name is pushed. Each
+	// push is checked as an import is. KIND_GIT through an integration
+	// only.
 	Source_TRIGGER_PUSH Source_Trigger = 2
 )
 
@@ -152,12 +153,12 @@ type Source_Status int32
 
 const (
 	Source_STATUS_UNSPECIFIED Source_Status = 0
-	// The grant reaches the location as far as the platform knows.
+	// The grant reaches the location as far as Admiral knows.
 	Source_STATUS_READY Source_Status = 1
 	// The grant no longer reaches the location: the integration is not
 	// connected or its installation lost the repository, or the credential
 	// was deleted. `status_reason` says which. The source stays so what
-	// came through it keeps its lineage.
+	// came through it keeps its provenance.
 	Source_STATUS_NEEDS_ATTENTION Source_Status = 2
 )
 
@@ -207,7 +208,7 @@ func (Source_Status) EnumDescriptor() ([]byte, []int) {
 type GitSourceSettings_PullRequestComment int32
 
 const (
-	// SUMMARY.
+	// Unset, which means SUMMARY.
 	GitSourceSettings_PULL_REQUEST_COMMENT_UNSPECIFIED GitSourceSettings_PullRequestComment = 0
 	// Counts per component, with the resources listed only where a plan
 	// failed, destroys or replaces.
@@ -324,12 +325,17 @@ type Source struct {
 	// The narrowest thing the protocol addresses: one repository, one Helm
 	// repository URL, one registry namespace. Never a bare host, and never a
 	// whole GitHub organization. Picking the source is picking the grant, so
-	// the location is what bounds the grant's reach.
+	// the location is what bounds the grant's reach: no source presents its
+	// grant outside its own location. When an artifact depends on another
+	// private location, Admiral fetches the dependency with the grant of the
+	// source whose location covers it, within that source's `allows`, and
+	// with no grant when no source covers it.
 	Location string `protobuf:"bytes,6,opt,name=location,proto3" json:"location,omitempty"`
-	// The standing grant that reaches the location. Exactly one is set. A
-	// credential from the envelope reaches any kind; the GitHub integration,
-	// Admiral's App installed on the organization, reaches a git repository
-	// under that installation and is the only grant a push source may have.
+	// The standing grant that reaches the location. At most one is set, and
+	// none on a public upstream. A credential reaches any kind. The GitHub
+	// integration, Admiral's App installed on the organization, reaches a git
+	// repository under that installation and is the grant a push source must
+	// have. Setting or changing it needs an organization admin.
 	//
 	// Types that are valid to be assigned to Grant:
 	//
@@ -337,15 +343,29 @@ type Source struct {
 	//	*Source_IntegrationId
 	Grant   isSource_Grant `protobuf_oneof:"grant"`
 	Trigger Source_Trigger `protobuf:"varint,9,opt,name=trigger,proto3,enum=admiral.api.source.v1.Source_Trigger" json:"trigger,omitempty"`
-	// What may enter through the source: artifact names, exact or with a
-	// trailing `*`. For a git source an artifact is a path in the repository;
-	// for a Helm repository a chart name; for a registry a name under the
-	// namespace. Required and never empty; `*` alone is how a source says
-	// everything. An allow list, enforced on the server at import and at
-	// push, per artifact.
+	// What may enter through the source. Each entry is
+	// `<name pattern>[@<semver range>]`: `argo-rollouts`, `modules/*`, `*`,
+	// `argo-rollouts@>=2.39`, `cert-manager@~1.16`. The name is exact or ends
+	// in `*`. For a git source an artifact is a path in the repository; for a
+	// Helm repository a chart name; for a registry a name under the
+	// namespace.
+	//
+	// Names match by whole path segments, with `*` only as the last segment,
+	// so `modules/*` admits `modules/network` and never `modules-evil`. The
+	// most specific entry that matches a name decides its versions, so `*`
+	// beside `argo-rollouts@>=2.39` still bounds argo-rollouts to 2.39 and
+	// up. An entry with a range admits only ordered versions inside it, so a
+	// branch or a commit needs an entry with no range. A range excludes
+	// pre-releases unless it names one.
+	//
+	// Required and never empty; `*` alone means everything, so no empty list
+	// stands for it. The Admiral CLI sends `*` when it is left off. An allow
+	// list, enforced by Admiral at import and at push, per artifact and
+	// per version: a version outside an entry's range is refused as an
+	// artifact outside `allows` is. Plan and apply do not check it again.
 	Allows []string `protobuf:"bytes,10,rep,name=allows,proto3" json:"allows,omitempty"`
-	// The block for `kind`, where the kind has one. Only git has settings
-	// today, and only a push source needs them.
+	// The block for `kind`, where the kind has one. Only git has settings, and
+	// only a push source needs them.
 	Settings *SourceSettings `protobuf:"bytes,11,opt,name=settings,proto3" json:"settings,omitempty"`
 	Status   Source_Status   `protobuf:"varint,12,opt,name=status,proto3,enum=admiral.api.source.v1.Source_Status" json:"status,omitempty"`
 	// Why the status left READY. Empty while ready.
@@ -586,15 +606,39 @@ type SourceSettings_Git struct {
 
 func (*SourceSettings_Git) isSourceSettings_Kind() {}
 
-// GitSourceSettings is what a git source adds. Today that is only which
-// branches a push source listens to.
+// GitSourceSettings is what a git source adds: which branches and tags a
+// push source publishes on, how a tag names an artifact's version, and what
+// the App comments on a pull request. A push source names at least one
+// branch or tag.
 type GitSourceSettings struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Branches whose pushes publish, exact or with a trailing `*`; `*` alone
-	// is every branch. Required on a push source and ignored on a request
-	// source. Every publish tags the version with the branch name, floating,
-	// and `sha-<short>`.
+	// is every branch. Ignored on a request source. Every publish tags the
+	// version with the branch name, floating, and `sha-<short>`.
 	Branches []string `protobuf:"bytes,1,rep,name=branches,proto3" json:"branches,omitempty"`
+	// Tags whose pushes publish, exact or with a trailing `*`, such as `v*`.
+	// A push of a matching tag publishes what admiral.yaml declares at the
+	// tagged commit, tags the version `sha-<short>`, floating, and records
+	// the full git tag in the version's provenance `ref`. Without a
+	// `tag_template`, the git tag's own name is also the registry tag when it
+	// is a semver name the registry can hold, such as `v1.4.0`, and then it
+	// is immutable and a range or `latest` can match it. Any other name still
+	// publishes, carrying only `sha-<short>`. With a template, the registry
+	// tag is the version the template extracts. A tag that matches nothing
+	// here is ignored, and empty means no tag push publishes. When the source
+	// also names branches, a tag publishes only if its commit is reachable
+	// from a branch listed there. Ignored on a request source.
+	Tags []string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty"`
+	// How a tag names an artifact's version in a repository holding several,
+	// such as `{artifact}/v{version}` or `{name}-v{version}`. With it, an
+	// artifact's versions are the tags that fit, with the template stripped,
+	// and a tag push publishes only the component the tag names. The version
+	// is tagged with what the template extracts, `1.4.0` from
+	// `modules/network/v1.4.0` under `{artifact}/v{version}`, which makes it
+	// a semver tag and immutable; the full git tag stays in the version's
+	// provenance `ref`. Empty means every tag of the repository is a version
+	// of every artifact in it.
+	TagTemplate string `protobuf:"bytes,4,opt,name=tag_template,json=tagTemplate,proto3" json:"tag_template,omitempty"`
 	// What the comment on a pull request carries; unset is SUMMARY. Read on
 	// a push source only.
 	PullRequestComment GitSourceSettings_PullRequestComment `protobuf:"varint,2,opt,name=pull_request_comment,json=pullRequestComment,proto3,enum=admiral.api.source.v1.GitSourceSettings_PullRequestComment" json:"pull_request_comment,omitempty"`
@@ -637,6 +681,20 @@ func (x *GitSourceSettings) GetBranches() []string {
 		return x.Branches
 	}
 	return nil
+}
+
+func (x *GitSourceSettings) GetTags() []string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+func (x *GitSourceSettings) GetTagTemplate() string {
+	if x != nil {
+		return x.TagTemplate
+	}
+	return ""
 }
 
 func (x *GitSourceSettings) GetPullRequestComment() GitSourceSettings_PullRequestComment {
@@ -995,8 +1053,9 @@ func (x *GetSourceResponse) GetSource() *Source {
 
 type CreateSourceRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The source to create: `name`, `kind`, `location`, one grant, `trigger`,
-	// `allows`, and `settings` where the kind and trigger need them.
+	// The source to create: `name`, `kind`, `location`, at most one grant,
+	// `trigger`, `allows`, and `settings` where the kind and trigger need
+	// them.
 	Source        *Source `protobuf:"bytes,2,opt,name=source,proto3" json:"source,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1398,8 +1457,9 @@ type ListSourceVersionsRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	SourceId string                 `protobuf:"bytes,2,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 	// The artifact whose versions to list, as `allows` names it: a chart
-	// name, `name/provider`, a name under the namespace. Empty for a git
-	// source, whose versions are the repository's tags and branches.
+	// name, `name/provider`, a name under the namespace, a path in a git
+	// repository. For a git source with no `tag_template`, every artifact's
+	// versions are the repository's tags and branches, so it may be empty.
 	Artifact      string `protobuf:"bytes,3,opt,name=artifact,proto3" json:"artifact,omitempty"`
 	PageSize      int32  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	PageToken     string `protobuf:"bytes,5,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
@@ -1541,7 +1601,7 @@ var File_admiral_api_source_v1_source_proto protoreflect.FileDescriptor
 
 const file_admiral_api_source_v1_source_proto_rawDesc = "" +
 	"\n" +
-	"\"admiral/api/source/v1/source.proto\x12\x15admiral.api.source.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbc\x0f\n" +
+	"\"admiral/api/source/v1/source.proto\x12\x15admiral.api.source.v1\x1a\x1dadmiral/common/v1/actor.proto\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8e\x10\n" +
 	"\x06Source\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^src-[0-9a-z]+$R\x02id\x12@\n" +
 	"\x04name\x18\x03 \x01(\tB,\xbaH)r'\x10\x01\x18?2!^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$R\x04name\x12*\n" +
@@ -1551,9 +1611,9 @@ const file_admiral_api_source_v1_source_proto_rawDesc = "" +
 	"\rcredential_id\x18\a \x01(\tB\x17\xbaH\x14r\x122\x10^cred-[0-9a-z]+$H\x00R\fcredentialId\x12?\n" +
 	"\x0eintegration_id\x18\b \x01(\tB\x16\xbaH\x13r\x112\x0f^int-[0-9a-z]+$H\x00R\rintegrationId\x12K\n" +
 	"\atrigger\x18\t \x01(\x0e2%.admiral.api.source.v1.Source.TriggerB\n" +
-	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\atrigger\x12U\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\atrigger\x12x\n" +
 	"\x06allows\x18\n" +
-	" \x03(\tB=\xbaH:\x92\x017\b\x01\x10@\x18\x01\"/r-\x18\x80\x022(^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)$R\x06allows\x12A\n" +
+	" \x03(\tB`\xbaH]\x92\x01Z\b\x01\x10@\x18\x01\"RrP\x18\x80\x022K^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)(@[A-Za-z0-9._+^~<>=*,| -]{1,128})?$R\x06allows\x12A\n" +
 	"\bsettings\x18\v \x01(\v2%.admiral.api.source.v1.SourceSettingsR\bsettings\x12A\n" +
 	"\x06status\x18\f \x01(\x0e2$.admiral.api.source.v1.Source.StatusB\x03\xe0A\x03R\x06status\x12(\n" +
 	"\rstatus_reason\x18\r \x01(\tB\x03\xe0A\x03R\fstatusReason\x12?\n" +
@@ -1576,18 +1636,20 @@ const file_admiral_api_source_v1_source_proto_rawDesc = "" +
 	"\x06Status\x12\x16\n" +
 	"\x12STATUS_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fSTATUS_READY\x10\x01\x12\x1a\n" +
-	"\x16STATUS_NEEDS_ATTENTION\x10\x02:\xe4\x05\xbaH\xe0\x05\x1a\x95\x01\n" +
-	"\x14source.grant_present\x12Ba source carries exactly one grant, a credential or an integration\x1a9(this.credential_id != '') != (this.integration_id != '')\x1a\x88\x01\n" +
+	"\x16STATUS_NEEDS_ATTENTION\x10\x02:\x93\x06\xbaH\x8f\x06\x1a\x94\x01\n" +
+	"\x14source.grant_present\x12Ba source carries at most one grant, a credential or an integration\x1a8!(this.credential_id != '' && this.integration_id != '')\x1a\x88\x01\n" +
 	"\x1dsource.push_needs_integration\x127a push source is reached through the GitHub integration\x1a.this.trigger != 2 || this.integration_id != ''\x1aq\n" +
 	"\x19source.integration_is_git\x12'an integration reaches a git repository\x1a+this.integration_id == '' || this.kind == 1\x1a\x83\x01\n" +
-	"\x1asource.settings_match_kind\x12#git settings belong to a git source\x1a@!has(this.settings) || !has(this.settings.git) || this.kind == 1\x1a\xc1\x01\n" +
-	"\x1asource.push_names_branches\x125a push source names the branches whose pushes publish\x1althis.trigger != 2 || (has(this.settings) && has(this.settings.git) && this.settings.git.branches.size() > 0)B\a\n" +
+	"\x1asource.settings_match_kind\x12#git settings belong to a git source\x1a@!has(this.settings) || !has(this.settings.git) || this.kind == 1\x1a\xf1\x01\n" +
+	"\x1asource.push_names_branches\x12=a push source names the branches or tags whose pushes publish\x1a\x93\x01this.trigger != 2 || (has(this.settings) && has(this.settings.git) && (this.settings.git.branches.size() > 0 || this.settings.git.tags.size() > 0))B\a\n" +
 	"\x05grantJ\x04\b\x02\x10\x03R\ttenant_id\"V\n" +
 	"\x0eSourceSettings\x12<\n" +
 	"\x03git\x18\x01 \x01(\v2(.admiral.api.source.v1.GitSourceSettingsH\x00R\x03gitB\x06\n" +
-	"\x04kind\"\x81\x03\n" +
+	"\x04kind\"\x8d\x04\n" +
 	"\x11GitSourceSettings\x12W\n" +
-	"\bbranches\x18\x01 \x03(\tB;\xbaH8\x92\x015\x10 \x18\x01\"/r-\x18\x80\x022(^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)$R\bbranches\x12w\n" +
+	"\bbranches\x18\x01 \x03(\tB;\xbaH8\x92\x015\x10 \x18\x01\"/r-\x18\x80\x022(^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)$R\bbranches\x12O\n" +
+	"\x04tags\x18\x03 \x03(\tB;\xbaH8\x92\x015\x10 \x18\x01\"/r-\x18\x80\x022(^(\\*|[A-Za-z0-9._-][A-Za-z0-9._/-]*\\*?)$R\x04tags\x129\n" +
+	"\ftag_template\x18\x04 \x01(\tB\x16\xbaH\x13\xd8\x01\x01r\x0e\x18\x80\x02J\t{version}R\vtagTemplate\x12w\n" +
 	"\x14pull_request_comment\x18\x02 \x01(\x0e2;.admiral.api.source.v1.GitSourceSettings.PullRequestCommentB\b\xbaH\x05\x82\x01\x02\x10\x01R\x12pullRequestComment\"\x99\x01\n" +
 	"\x12PullRequestComment\x12$\n" +
 	" PULL_REQUEST_COMMENT_UNSPECIFIED\x10\x00\x12 \n" +

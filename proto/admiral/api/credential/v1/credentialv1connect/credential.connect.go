@@ -85,6 +85,8 @@ type CredentialAPIClient interface {
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
+	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	//
 	// Scope: `credential:write`
 	CreateCredential(context.Context, *v1.CreateCredentialRequest) (*v1.CreateCredentialResponse, error)
 	// GetCredential retrieves a credential's metadata by id. The secret is
@@ -102,12 +104,16 @@ type CredentialAPIClient interface {
 	// replaces the old one whole; a rotation is an update with `auth_config`
 	// in the mask.
 	//
+	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *v1.UpdateCredentialRequest) (*v1.UpdateCredentialResponse, error)
-	// DeleteCredential removes a credential and destroys its secret. Nothing
-	// stores a reference to it: versions already published are unaffected,
-	// their provenance keeps the credential's id and name as history, and the
-	// next pull that names it fails naming the missing credential.
+	// DeleteCredential removes a credential and destroys its secret. Versions
+	// already published are unaffected, and their provenance keeps the
+	// credential's id and name as history. A source that held it moves to
+	// NEEDS_ATTENTION.
+	//
+	// Needs an organization admin; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *v1.DeleteCredentialRequest) (*v1.DeleteCredentialResponse, error)
@@ -125,6 +131,8 @@ type CredentialAPIHandler interface {
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
+	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	//
 	// Scope: `credential:write`
 	CreateCredential(context.Context, *v1.CreateCredentialRequest) (*v1.CreateCredentialResponse, error)
 	// GetCredential retrieves a credential's metadata by id. The secret is
@@ -142,12 +150,16 @@ type CredentialAPIHandler interface {
 	// replaces the old one whole; a rotation is an update with `auth_config`
 	// in the mask.
 	//
+	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *v1.UpdateCredentialRequest) (*v1.UpdateCredentialResponse, error)
-	// DeleteCredential removes a credential and destroys its secret. Nothing
-	// stores a reference to it: versions already published are unaffected,
-	// their provenance keeps the credential's id and name as history, and the
-	// next pull that names it fails naming the missing credential.
+	// DeleteCredential removes a credential and destroys its secret. Versions
+	// already published are unaffected, and their provenance keeps the
+	// credential's id and name as history. A source that held it moves to
+	// NEEDS_ATTENTION.
+	//
+	// Needs an organization admin; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *v1.DeleteCredentialRequest) (*v1.DeleteCredentialResponse, error)

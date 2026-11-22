@@ -27,6 +27,60 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// CreationPolicy is who in an organization may create a kind of resource.
+type CreationPolicy int32
+
+const (
+	// Accepted on input only, meaning the default of the field that holds
+	// it. Never returned.
+	CreationPolicy_CREATION_POLICY_UNSPECIFIED CreationPolicy = 0
+	// Organization admins only.
+	CreationPolicy_CREATION_POLICY_ADMINS CreationPolicy = 1
+	// Every member.
+	CreationPolicy_CREATION_POLICY_MEMBERS CreationPolicy = 2
+)
+
+// Enum value maps for CreationPolicy.
+var (
+	CreationPolicy_name = map[int32]string{
+		0: "CREATION_POLICY_UNSPECIFIED",
+		1: "CREATION_POLICY_ADMINS",
+		2: "CREATION_POLICY_MEMBERS",
+	}
+	CreationPolicy_value = map[string]int32{
+		"CREATION_POLICY_UNSPECIFIED": 0,
+		"CREATION_POLICY_ADMINS":      1,
+		"CREATION_POLICY_MEMBERS":     2,
+	}
+)
+
+func (x CreationPolicy) Enum() *CreationPolicy {
+	p := new(CreationPolicy)
+	*p = x
+	return p
+}
+
+func (x CreationPolicy) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CreationPolicy) Descriptor() protoreflect.EnumDescriptor {
+	return file_admiral_api_organization_v1_organization_proto_enumTypes[0].Descriptor()
+}
+
+func (CreationPolicy) Type() protoreflect.EnumType {
+	return &file_admiral_api_organization_v1_organization_proto_enumTypes[0]
+}
+
+func (x CreationPolicy) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CreationPolicy.Descriptor instead.
+func (CreationPolicy) EnumDescriptor() ([]byte, []int) {
+	return file_admiral_api_organization_v1_organization_proto_rawDescGZIP(), []int{0}
+}
+
 // Status is the account's lifecycle state. A caller sees it but cannot
 // set it: suspension and reactivation are imposed, not requested.
 type Organization_Status int32
@@ -65,11 +119,11 @@ func (x Organization_Status) String() string {
 }
 
 func (Organization_Status) Descriptor() protoreflect.EnumDescriptor {
-	return file_admiral_api_organization_v1_organization_proto_enumTypes[0].Descriptor()
+	return file_admiral_api_organization_v1_organization_proto_enumTypes[1].Descriptor()
 }
 
 func (Organization_Status) Type() protoreflect.EnumType {
-	return &file_admiral_api_organization_v1_organization_proto_enumTypes[0]
+	return &file_admiral_api_organization_v1_organization_proto_enumTypes[1]
 }
 
 func (x Organization_Status) Number() protoreflect.EnumNumber {
@@ -92,6 +146,18 @@ type Organization struct {
 	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
 	// Human-readable name.
 	DisplayName string `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	// Who may create a source. It gates CreateSource. A read returns the
+	// effective value, ADMINS unless an admin chose MEMBERS, and never
+	// UNSPECIFIED; UNSPECIFIED is accepted on input only and means ADMINS.
+	// Changing it needs an organization admin.
+	SourceCreationPolicy CreationPolicy `protobuf:"varint,9,opt,name=source_creation_policy,json=sourceCreationPolicy,proto3,enum=admiral.api.organization.v1.CreationPolicy" json:"source_creation_policy,omitempty"`
+	// Who may create a component by publishing a new name by hand. It gates a
+	// PublishComponent that creates a component, and not an import, which a
+	// source already bounds. A read returns the effective value, MEMBERS
+	// unless an admin chose ADMINS, and never UNSPECIFIED; UNSPECIFIED is
+	// accepted on input only and means MEMBERS. Changing it needs an
+	// organization admin.
+	ComponentCreationPolicy CreationPolicy `protobuf:"varint,10,opt,name=component_creation_policy,json=componentCreationPolicy,proto3,enum=admiral.api.organization.v1.CreationPolicy" json:"component_creation_policy,omitempty"`
 	// Lifecycle state.
 	Status Organization_Status `protobuf:"varint,4,opt,name=status,proto3,enum=admiral.api.organization.v1.Organization_Status" json:"status,omitempty"`
 	// The organization's logo, shown on its sign-in page and in the console.
@@ -152,6 +218,20 @@ func (x *Organization) GetDisplayName() string {
 		return x.DisplayName
 	}
 	return ""
+}
+
+func (x *Organization) GetSourceCreationPolicy() CreationPolicy {
+	if x != nil {
+		return x.SourceCreationPolicy
+	}
+	return CreationPolicy_CREATION_POLICY_UNSPECIFIED
+}
+
+func (x *Organization) GetComponentCreationPolicy() CreationPolicy {
+	if x != nil {
+		return x.ComponentCreationPolicy
+	}
+	return CreationPolicy_CREATION_POLICY_UNSPECIFIED
 }
 
 func (x *Organization) GetStatus() Organization_Status {
@@ -270,7 +350,8 @@ type UpdateOrganizationRequest struct {
 	// applied.
 	Organization *Organization `protobuf:"bytes,4,opt,name=organization,proto3" json:"organization,omitempty"`
 	// The set of fields to update. Optional; if omitted, all populated fields
-	// are updated. Supported fields: `display_name`.
+	// are updated. Supported fields: `display_name`,
+	// `source_creation_policy`, `component_creation_policy`.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,3,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -368,11 +449,14 @@ var File_admiral_api_organization_v1_organization_proto protoreflect.FileDescrip
 
 const file_admiral_api_organization_v1_organization_proto_rawDesc = "" +
 	"\n" +
-	".admiral/api/organization/v1/organization.proto\x12\x1badmiral.api.organization.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf8\x03\n" +
+	".admiral/api/organization/v1/organization.proto\x12\x1badmiral.api.organization.v1\x1a#admiral/common/v1/annotations.proto\x1a\x1bbuf/validate/validate.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd8\x05\n" +
 	"\fOrganization\x12,\n" +
 	"\x02id\x18\x01 \x01(\tB\x1c\xe0A\x03\xbaH\x16\xd8\x01\x01r\x112\x0f^org-[0-9a-z]+$R\x02id\x12\x17\n" +
 	"\x04slug\x18\x02 \x01(\tB\x03\xe0A\x03R\x04slug\x12+\n" +
-	"\fdisplay_name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\vdisplayName\x12M\n" +
+	"\fdisplay_name\x18\x03 \x01(\tB\b\xbaH\x05r\x03\x18\x80\x02R\vdisplayName\x12k\n" +
+	"\x16source_creation_policy\x18\t \x01(\x0e2+.admiral.api.organization.v1.CreationPolicyB\b\xbaH\x05\x82\x01\x02\x10\x01R\x14sourceCreationPolicy\x12q\n" +
+	"\x19component_creation_policy\x18\n" +
+	" \x01(\x0e2+.admiral.api.organization.v1.CreationPolicyB\b\xbaH\x05\x82\x01\x02\x10\x01R\x17componentCreationPolicy\x12M\n" +
 	"\x06status\x18\x04 \x01(\x0e20.admiral.api.organization.v1.Organization.StatusB\x03\xe0A\x03R\x06status\x12'\n" +
 	"\n" +
 	"avatar_url\x18\b \x01(\tB\x03\xe0A\x03H\x00R\tavatarUrl\x88\x01\x01\x12>\n" +
@@ -393,7 +477,11 @@ const file_admiral_api_organization_v1_organization_proto_rawDesc = "" +
 	"\vupdate_mask\x18\x03 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMaskJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\fdisplay_nameR\x06labels\"k\n" +
 	"\x1aUpdateOrganizationResponse\x12M\n" +
-	"\forganization\x18\x01 \x01(\v2).admiral.api.organization.v1.OrganizationR\forganization2\xdf\x03\n" +
+	"\forganization\x18\x01 \x01(\v2).admiral.api.organization.v1.OrganizationR\forganization*j\n" +
+	"\x0eCreationPolicy\x12\x1f\n" +
+	"\x1bCREATION_POLICY_UNSPECIFIED\x10\x00\x12\x1a\n" +
+	"\x16CREATION_POLICY_ADMINS\x10\x01\x12\x1b\n" +
+	"\x17CREATION_POLICY_MEMBERS\x10\x022\xdf\x03\n" +
 	"\x0fOrganizationAPI\x12\xdc\x01\n" +
 	"\x0fGetOrganization\x123.admiral.api.organization.v1.GetOrganizationRequest\x1a4.admiral.api.organization.v1.GetOrganizationResponse\"^\xbaG,\n" +
 	"\fOrganization\x12\x1cGet the current organization\xa2\x97$\x13\n" +
@@ -415,35 +503,38 @@ func file_admiral_api_organization_v1_organization_proto_rawDescGZIP() []byte {
 	return file_admiral_api_organization_v1_organization_proto_rawDescData
 }
 
-var file_admiral_api_organization_v1_organization_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_admiral_api_organization_v1_organization_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_admiral_api_organization_v1_organization_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_admiral_api_organization_v1_organization_proto_goTypes = []any{
-	(Organization_Status)(0),           // 0: admiral.api.organization.v1.Organization.Status
-	(*Organization)(nil),               // 1: admiral.api.organization.v1.Organization
-	(*GetOrganizationRequest)(nil),     // 2: admiral.api.organization.v1.GetOrganizationRequest
-	(*GetOrganizationResponse)(nil),    // 3: admiral.api.organization.v1.GetOrganizationResponse
-	(*UpdateOrganizationRequest)(nil),  // 4: admiral.api.organization.v1.UpdateOrganizationRequest
-	(*UpdateOrganizationResponse)(nil), // 5: admiral.api.organization.v1.UpdateOrganizationResponse
-	(*timestamppb.Timestamp)(nil),      // 6: google.protobuf.Timestamp
-	(*fieldmaskpb.FieldMask)(nil),      // 7: google.protobuf.FieldMask
+	(CreationPolicy)(0),                // 0: admiral.api.organization.v1.CreationPolicy
+	(Organization_Status)(0),           // 1: admiral.api.organization.v1.Organization.Status
+	(*Organization)(nil),               // 2: admiral.api.organization.v1.Organization
+	(*GetOrganizationRequest)(nil),     // 3: admiral.api.organization.v1.GetOrganizationRequest
+	(*GetOrganizationResponse)(nil),    // 4: admiral.api.organization.v1.GetOrganizationResponse
+	(*UpdateOrganizationRequest)(nil),  // 5: admiral.api.organization.v1.UpdateOrganizationRequest
+	(*UpdateOrganizationResponse)(nil), // 6: admiral.api.organization.v1.UpdateOrganizationResponse
+	(*timestamppb.Timestamp)(nil),      // 7: google.protobuf.Timestamp
+	(*fieldmaskpb.FieldMask)(nil),      // 8: google.protobuf.FieldMask
 }
 var file_admiral_api_organization_v1_organization_proto_depIdxs = []int32{
-	0, // 0: admiral.api.organization.v1.Organization.status:type_name -> admiral.api.organization.v1.Organization.Status
-	6, // 1: admiral.api.organization.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
-	6, // 2: admiral.api.organization.v1.Organization.updated_at:type_name -> google.protobuf.Timestamp
-	1, // 3: admiral.api.organization.v1.GetOrganizationResponse.organization:type_name -> admiral.api.organization.v1.Organization
-	1, // 4: admiral.api.organization.v1.UpdateOrganizationRequest.organization:type_name -> admiral.api.organization.v1.Organization
-	7, // 5: admiral.api.organization.v1.UpdateOrganizationRequest.update_mask:type_name -> google.protobuf.FieldMask
-	1, // 6: admiral.api.organization.v1.UpdateOrganizationResponse.organization:type_name -> admiral.api.organization.v1.Organization
-	2, // 7: admiral.api.organization.v1.OrganizationAPI.GetOrganization:input_type -> admiral.api.organization.v1.GetOrganizationRequest
-	4, // 8: admiral.api.organization.v1.OrganizationAPI.UpdateOrganization:input_type -> admiral.api.organization.v1.UpdateOrganizationRequest
-	3, // 9: admiral.api.organization.v1.OrganizationAPI.GetOrganization:output_type -> admiral.api.organization.v1.GetOrganizationResponse
-	5, // 10: admiral.api.organization.v1.OrganizationAPI.UpdateOrganization:output_type -> admiral.api.organization.v1.UpdateOrganizationResponse
-	9, // [9:11] is the sub-list for method output_type
-	7, // [7:9] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	0,  // 0: admiral.api.organization.v1.Organization.source_creation_policy:type_name -> admiral.api.organization.v1.CreationPolicy
+	0,  // 1: admiral.api.organization.v1.Organization.component_creation_policy:type_name -> admiral.api.organization.v1.CreationPolicy
+	1,  // 2: admiral.api.organization.v1.Organization.status:type_name -> admiral.api.organization.v1.Organization.Status
+	7,  // 3: admiral.api.organization.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
+	7,  // 4: admiral.api.organization.v1.Organization.updated_at:type_name -> google.protobuf.Timestamp
+	2,  // 5: admiral.api.organization.v1.GetOrganizationResponse.organization:type_name -> admiral.api.organization.v1.Organization
+	2,  // 6: admiral.api.organization.v1.UpdateOrganizationRequest.organization:type_name -> admiral.api.organization.v1.Organization
+	8,  // 7: admiral.api.organization.v1.UpdateOrganizationRequest.update_mask:type_name -> google.protobuf.FieldMask
+	2,  // 8: admiral.api.organization.v1.UpdateOrganizationResponse.organization:type_name -> admiral.api.organization.v1.Organization
+	3,  // 9: admiral.api.organization.v1.OrganizationAPI.GetOrganization:input_type -> admiral.api.organization.v1.GetOrganizationRequest
+	5,  // 10: admiral.api.organization.v1.OrganizationAPI.UpdateOrganization:input_type -> admiral.api.organization.v1.UpdateOrganizationRequest
+	4,  // 11: admiral.api.organization.v1.OrganizationAPI.GetOrganization:output_type -> admiral.api.organization.v1.GetOrganizationResponse
+	6,  // 12: admiral.api.organization.v1.OrganizationAPI.UpdateOrganization:output_type -> admiral.api.organization.v1.UpdateOrganizationResponse
+	11, // [11:13] is the sub-list for method output_type
+	9,  // [9:11] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_admiral_api_organization_v1_organization_proto_init() }
@@ -457,7 +548,7 @@ func file_admiral_api_organization_v1_organization_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_admiral_api_organization_v1_organization_proto_rawDesc), len(file_admiral_api_organization_v1_organization_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
