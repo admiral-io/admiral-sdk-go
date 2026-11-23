@@ -63,10 +63,6 @@ func (m *Organization) validate(all bool) error {
 
 	// no validation rules for DisplayName
 
-	// no validation rules for SourceCreationPolicy
-
-	// no validation rules for ComponentCreationPolicy
-
 	// no validation rules for Status
 
 	if all {

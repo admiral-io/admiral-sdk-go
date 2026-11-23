@@ -34,13 +34,13 @@ const (
 // external systems at publish time: a git host, a Helm repository, an OCI
 // registry, a module registry.
 //
-// A credential is never selected for the caller, and no request names one
-// for a fetch. An organization admin binds a credential to a source, and
-// Admiral presents it only for that source's location. A credential may
-// carry `allowed_hosts`, a guard that restricts where it is ever presented.
-// Only an organization admin creates, changes or deletes a credential, the
-// guard included. Credentials exist for publish only; nothing on the deploy
-// path reads one.
+// A credential is never selected for the caller, and no request names one for a
+// fetch. A credential is bound to a source by whoever may grant sources, and
+// Admiral presents it only for that source's location. A credential may carry
+// `allowed_hosts`, a guard that restricts where it is ever presented. Creating,
+// changing or deleting a credential, the guard included, needs permission to
+// manage credentials, which organization admins hold by default. Credentials
+// exist for publish only; nothing on the deploy path reads one.
 //
 // Secrets are write-only: accepted on create and update, encrypted at rest,
 // decrypted only inside a publish, and never returned. Get and List return
@@ -50,7 +50,8 @@ type CredentialAPIClient interface {
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
-	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	// Needs permission to manage credentials, which organization admins hold by
+	// default; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	CreateCredential(ctx context.Context, in *CreateCredentialRequest, opts ...grpc.CallOption) (*CreateCredentialResponse, error)
@@ -69,7 +70,8 @@ type CredentialAPIClient interface {
 	// replaces the old one whole; a rotation is an update with `auth_config`
 	// in the mask.
 	//
-	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	// Needs permission to manage credentials, which organization admins hold by
+	// default; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(ctx context.Context, in *UpdateCredentialRequest, opts ...grpc.CallOption) (*UpdateCredentialResponse, error)
@@ -78,7 +80,8 @@ type CredentialAPIClient interface {
 	// credential's id and name as history. A source that held it moves to
 	// NEEDS_ATTENTION.
 	//
-	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	// Needs permission to manage credentials, which organization admins hold by
+	// default; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(ctx context.Context, in *DeleteCredentialRequest, opts ...grpc.CallOption) (*DeleteCredentialResponse, error)
@@ -150,13 +153,13 @@ func (c *credentialAPIClient) DeleteCredential(ctx context.Context, in *DeleteCr
 // external systems at publish time: a git host, a Helm repository, an OCI
 // registry, a module registry.
 //
-// A credential is never selected for the caller, and no request names one
-// for a fetch. An organization admin binds a credential to a source, and
-// Admiral presents it only for that source's location. A credential may
-// carry `allowed_hosts`, a guard that restricts where it is ever presented.
-// Only an organization admin creates, changes or deletes a credential, the
-// guard included. Credentials exist for publish only; nothing on the deploy
-// path reads one.
+// A credential is never selected for the caller, and no request names one for a
+// fetch. A credential is bound to a source by whoever may grant sources, and
+// Admiral presents it only for that source's location. A credential may carry
+// `allowed_hosts`, a guard that restricts where it is ever presented. Creating,
+// changing or deleting a credential, the guard included, needs permission to
+// manage credentials, which organization admins hold by default. Credentials
+// exist for publish only; nothing on the deploy path reads one.
 //
 // Secrets are write-only: accepted on create and update, encrypted at rest,
 // decrypted only inside a publish, and never returned. Get and List return
@@ -166,7 +169,8 @@ type CredentialAPIServer interface {
 	//
 	// The `type` and the populated `auth_config` variant must agree.
 	//
-	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	// Needs permission to manage credentials, which organization admins hold by
+	// default; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	CreateCredential(context.Context, *CreateCredentialRequest) (*CreateCredentialResponse, error)
@@ -185,7 +189,8 @@ type CredentialAPIServer interface {
 	// replaces the old one whole; a rotation is an update with `auth_config`
 	// in the mask.
 	//
-	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	// Needs permission to manage credentials, which organization admins hold by
+	// default; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	UpdateCredential(context.Context, *UpdateCredentialRequest) (*UpdateCredentialResponse, error)
@@ -194,7 +199,8 @@ type CredentialAPIServer interface {
 	// credential's id and name as history. A source that held it moves to
 	// NEEDS_ATTENTION.
 	//
-	// Needs an organization admin; PERMISSION_DENIED otherwise.
+	// Needs permission to manage credentials, which organization admins hold by
+	// default; PERMISSION_DENIED otherwise.
 	//
 	// Scope: `credential:write`
 	DeleteCredential(context.Context, *DeleteCredentialRequest) (*DeleteCredentialResponse, error)

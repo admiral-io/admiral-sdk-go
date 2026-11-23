@@ -514,10 +514,9 @@ func (x *Component) GetSuccessorComponentId() string {
 	return ""
 }
 
-// ComponentOrigin is where a component's new versions come from. The
-// publish or import that creates the component sets it, and an organization
-// admin moves it with SetComponentOrigin. Each version keeps its own
-// provenance whatever the origin later becomes.
+// ComponentOrigin is where a component's new versions come from. The publish or
+// import that creates the component sets it, and SetComponentOrigin moves it.
+// Each version keeps its own provenance whatever the origin later becomes.
 type ComponentOrigin struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Kind:

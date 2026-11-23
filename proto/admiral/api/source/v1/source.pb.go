@@ -331,11 +331,12 @@ type Source struct {
 	// source whose location covers it, within that source's `allows`, and
 	// with no grant when no source covers it.
 	Location string `protobuf:"bytes,6,opt,name=location,proto3" json:"location,omitempty"`
-	// The standing grant that reaches the location. At most one is set, and
-	// none on a public upstream. A credential reaches any kind. The GitHub
+	// The standing grant that reaches the location. At most one is set, and none
+	// on a public upstream. A credential reaches any kind. The GitHub
 	// integration, Admiral's App installed on the organization, reaches a git
 	// repository under that installation and is the grant a push source must
-	// have. Setting or changing it needs an organization admin.
+	// have. Setting or changing it needs permission to grant sources, which
+	// organization admins hold.
 	//
 	// Types that are valid to be assigned to Grant:
 	//
