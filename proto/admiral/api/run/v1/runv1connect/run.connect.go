@@ -145,13 +145,13 @@ type RunAPIClient interface {
 	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
 	// drift check.
 	//
-	// Scope: `run:write`
+	// Scope: `run:apply`
 	ApplyRun(context.Context, *v1.ApplyRunRequest) (*v1.ApplyRunResponse, error)
 	// AcceptRun takes a PARTIAL run's apply as the environment's new state and
 	// releases the hold. It is recorded with its reason, and a change set run's
 	// change set becomes APPLIED.
 	//
-	// Scope: `run:write`
+	// Scope: `run:apply`
 	AcceptRun(context.Context, *v1.AcceptRunRequest) (*v1.AcceptRunResponse, error)
 	// CancelRun stops a run that is preparing, queued, planning or applying.
 	// An apply already changing the environment stops at the next component
@@ -220,13 +220,13 @@ type RunAPIHandler interface {
 	// `required_approval` is missing, the change set is behind, the environment is held, or the run is a
 	// drift check.
 	//
-	// Scope: `run:write`
+	// Scope: `run:apply`
 	ApplyRun(context.Context, *v1.ApplyRunRequest) (*v1.ApplyRunResponse, error)
 	// AcceptRun takes a PARTIAL run's apply as the environment's new state and
 	// releases the hold. It is recorded with its reason, and a change set run's
 	// change set becomes APPLIED.
 	//
-	// Scope: `run:write`
+	// Scope: `run:apply`
 	AcceptRun(context.Context, *v1.AcceptRunRequest) (*v1.AcceptRunResponse, error)
 	// CancelRun stops a run that is preparing, queued, planning or applying.
 	// An apply already changing the environment stops at the next component

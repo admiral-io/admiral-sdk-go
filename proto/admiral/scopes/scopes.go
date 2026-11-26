@@ -63,6 +63,7 @@ const (
 	OrganizationWrite   = "organization:write"
 	ProjectRead         = "project:read"
 	ProjectWrite        = "project:write"
+	RunApply            = "run:apply"
 	RunRead             = "run:read"
 	RunWrite            = "run:write"
 	ServiceaccountRead  = "serviceaccount:read"
@@ -251,6 +252,12 @@ var Catalog = map[string]Scope{
 		Implies:      []string{ProjectRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
+	RunApply: {
+		Name:         RunApply,
+		Description:  "Apply runs, and accept a run that stopped partway.",
+		Implies:      []string{RunRead},
+		AssignableTo: []string{TokenTypePAT},
+	},
 	RunRead: {
 		Name:         RunRead,
 		Description:  "Read runs, their plans, applies and approvals.",
@@ -258,7 +265,7 @@ var Catalog = map[string]Scope{
 	},
 	RunWrite: {
 		Name:         RunWrite,
-		Description:  "Start, approve, apply, accept and cancel runs.",
+		Description:  "Start, approve and cancel runs.",
 		Implies:      []string{RunRead},
 		AssignableTo: []string{TokenTypePAT},
 	},
@@ -321,6 +328,7 @@ var impliesClosure = map[string][]string{
 	IntegrationWrite:    []string{IntegrationRead},
 	OrganizationWrite:   []string{OrganizationRead},
 	ProjectWrite:        []string{ProjectRead},
+	RunApply:            []string{RunRead},
 	RunWrite:            []string{RunRead},
 	ServiceaccountWrite: []string{ServiceaccountRead},
 	SourceWrite:         []string{SourceRead},

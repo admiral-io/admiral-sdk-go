@@ -2080,10 +2080,10 @@ const file_admiral_api_run_v1_run_proto_rawDesc = "" +
 	"\trun:write\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v1/runs/{run_id}/approve\x12\x9e\x01\n" +
 	"\bApplyRun\x12#.admiral.api.run.v1.ApplyRunRequest\x1a$.admiral.api.run.v1.ApplyRunResponse\"G\xbaG\x13\n" +
 	"\x04Runs\x12\vApply a run\xa2\x97$\v\n" +
-	"\trun:write\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/runs/{run_id}/apply\x12\xad\x01\n" +
+	"\trun:apply\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/runs/{run_id}/apply\x12\xad\x01\n" +
 	"\tAcceptRun\x12$.admiral.api.run.v1.AcceptRunRequest\x1a%.admiral.api.run.v1.AcceptRunResponse\"S\xbaG\x1e\n" +
 	"\x04Runs\x12\x16Accept a partial apply\xa2\x97$\v\n" +
-	"\trun:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/runs/{run_id}/accept\x12\xa3\x01\n" +
+	"\trun:apply\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/runs/{run_id}/accept\x12\xa3\x01\n" +
 	"\tCancelRun\x12$.admiral.api.run.v1.CancelRunRequest\x1a%.admiral.api.run.v1.CancelRunResponse\"I\xbaG\x14\n" +
 	"\x04Runs\x12\fCancel a run\xa2\x97$\v\n" +
 	"\trun:write\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/v1/runs/{run_id}/cancel\x12\xc0\x01\n" +
